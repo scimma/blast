@@ -36,4 +36,4 @@ class PropsectorBuildObsTest(TestCase):
     ]
 
     def test_build_obs(self):
-       pass
+        pass

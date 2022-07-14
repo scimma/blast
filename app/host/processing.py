@@ -120,7 +120,6 @@ class TaskRunner(ABC):
         except model.DoesNotExist:
             model.objects.create(**object_data)
 
-
     def run_process(self):
         """
         Runs task runner process.
@@ -144,7 +143,7 @@ class TaskRunner(ABC):
                     status = Status.objects.get(message__exact=status_message)
                 except:
                     raise ValueError(
-                    f"The status message you entered ({status_message}) is not in the database, you need to add it."
+                        f"The status message you entered ({status_message}) is not in the database, you need to add it."
                     )
 
                 update_status(task_register_item, status)
@@ -328,15 +327,17 @@ class GlobalApertureConstructionRunner(TaskRunner):
         aperture = construct_aperture(image, transient.host.sky_coord)
 
         query = {"name": f"{aperture_cutout[0].name}_global"}
-        data = {"name": f"{aperture_cutout[0].name}_global",
+        data = {
+            "name": f"{aperture_cutout[0].name}_global",
             "cutout": aperture_cutout[0],
-            "orientation_deg":(180 / np.pi) * aperture.theta.value,
+            "orientation_deg": (180 / np.pi) * aperture.theta.value,
             "ra_deg": aperture.positions.ra.degree,
             "dec_deg": aperture.positions.dec.degree,
             "semi_major_axis_arcsec": aperture.a.value,
             "semi_minor_axis_arcsec": aperture.b.value,
             "transient": transient,
-            "type": "global"}
+            "type": "global",
+        }
 
         self._overwrite_or_create_object(Aperture, query, data)
         return "processed"
@@ -370,14 +371,16 @@ class LocalAperturePhotometry(TaskRunner):
         """Code goes here"""
 
         query = {"name__exact": f"{transient.name}_local"}
-        data = {"name": f"{transient.name}_local",
-                "orientation_deg": 0.0,
-                "ra_deg": transient.sky_coord.ra.degree,
-                "dec_deg": transient.sky_coord.dec.degree,
-                "semi_major_axis_arcsec": 1.0,
-                "semi_minor_axis_arcsec": 1.0,
-                "transient":transient,
-                "type": "local"}
+        data = {
+            "name": f"{transient.name}_local",
+            "orientation_deg": 0.0,
+            "ra_deg": transient.sky_coord.ra.degree,
+            "dec_deg": transient.sky_coord.dec.degree,
+            "semi_major_axis_arcsec": 1.0,
+            "semi_minor_axis_arcsec": 1.0,
+            "transient": transient,
+            "type": "local",
+        }
 
         self._overwrite_or_create_object(Aperture, query, data)
         aperture = Aperture.objects.get(**query)
@@ -391,26 +394,30 @@ class LocalAperturePhotometry(TaskRunner):
                     image, aperture.sky_aperture, cutout.filter
                 )
 
-                query = {'aperture': aperture,
-                         'transient': transient,
-                      'filter': cutout.filter}
+                query = {
+                    "aperture": aperture,
+                    "transient": transient,
+                    "filter": cutout.filter,
+                }
 
-                data = {'aperture': aperture,
-                        'transient': transient,
-                         'filter': cutout.filter,
-                        'flux':  photometry["flux"],
-                        'flux_error': photometry["flux_error"],
-                        'magnitude': photometry["magnitude"],
-                        'magnitude_error': photometry["magnitude_error"]}
-
+                data = {
+                    "aperture": aperture,
+                    "transient": transient,
+                    "filter": cutout.filter,
+                    "flux": photometry["flux"],
+                    "flux_error": photometry["flux_error"],
+                    "magnitude": photometry["magnitude"],
+                    "magnitude_error": photometry["magnitude_error"],
+                }
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-            except Exception as e: print(e)
+            except Exception as e:
+                print(e)
 
-            #photometry = do_aperture_photometry(
+            # photometry = do_aperture_photometry(
             #    image, aperture.sky_aperture, cutout.filter
-            #)
-            #AperturePhotometry.objects.create(
+            # )
+            # AperturePhotometry.objects.create(
             #    aperture=aperture,
             #    transient=transient,
             #    filter=cutout.filter,
@@ -418,7 +425,7 @@ class LocalAperturePhotometry(TaskRunner):
             #    flux_error=photometry["flux_error"],
             #    magnitude=photometry["magnitude"],
             #    magnitude_error=photometry["magnitude_error"],
-            #)
+            # )
 
         return "processed"
 
@@ -462,22 +469,25 @@ class GlobalAperturePhotometry(TaskRunner):
                     image, aperture[0].sky_aperture, cutout.filter
                 )
 
-                query = {'aperture': aperture[0],
-                         'transient': transient,
-                      'filter': cutout.filter}
+                query = {
+                    "aperture": aperture[0],
+                    "transient": transient,
+                    "filter": cutout.filter,
+                }
 
-                data = {'aperture': aperture[0],
-                        'transient': transient,
-                         'filter': cutout.filter,
-                        'flux':  photometry["flux"],
-                        'flux_error': photometry["flux_error"],
-                        'magnitude': photometry["magnitude"],
-                        'magnitude_error': photometry["magnitude_error"]}
-
+                data = {
+                    "aperture": aperture[0],
+                    "transient": transient,
+                    "filter": cutout.filter,
+                    "flux": photometry["flux"],
+                    "flux_error": photometry["flux_error"],
+                    "magnitude": photometry["magnitude"],
+                    "magnitude_error": photometry["magnitude_error"],
+                }
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-            except Exception as e: print(e)
-
+            except Exception as e:
+                print(e)
 
         return "processed"
 

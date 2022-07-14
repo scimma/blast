@@ -1,5 +1,6 @@
 # Utils and wrappers for the prospector SED fitting code
 import numpy as np
+
 from .models import AperturePhotometry
 from .models import Filter
 from .photometric_calibration import jansky_to_maggies

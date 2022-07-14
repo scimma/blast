@@ -238,7 +238,9 @@ class Filter(models.Model):
         curve_name = f"{settings.TRANSMISSION_CURVES_ROOT}/{self.name}.txt"
 
         try:
-            transmission_curve = pd.read_csv(curve_name, delim_whitespace=True, header=None)
+            transmission_curve = pd.read_csv(
+                curve_name, delim_whitespace=True, header=None
+            )
         except:
             raise ValueError(f"{self.name}: Problem loading filter transmission curve")
 
