@@ -207,6 +207,7 @@ def get_dust_maps(position, media_root=settings.MEDIA_ROOT):
     config["data_dir"] = f"{media_root}../dustmaps/"
     dustmaps.sfd.fetch()
     ebv = SFDQuery().sfd(position)
+
     # see Schlegel, Finkbeiner 2011 for the 0.86 correction term
     return 0.86 * ebv
 
