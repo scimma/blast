@@ -25,11 +25,17 @@ or if you want the full stack:
 
     bash run/blast.run.sh old_full_dev
 
-Finally, to run tests,
+To run tests,
 
 .. code:: none
 
     bash run/blast.run.sh old_test
+
+And finally, to build the docs locally,
+
+.. code:: none
+
+    bash run/blast.run.sh old_docs
 
 But be warned, I will remove this at some point. So getting the most recent
 version of docker installed is the best solution.

@@ -136,3 +136,11 @@ services:
       default:
         aliases:
           - ${WEB_APP_HOST}
+  docs:
+    extends:
+      file: docker-compose.blast_base.yml
+      service: blast_base
+    command: bash entrypoints/docker-entrypoint.docs.sh
+    volumes:
+      - ../docs:/docs
+    profiles: ["docs"]

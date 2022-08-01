@@ -9,6 +9,7 @@ Welcome to blast's documentation!
 .. image:: https://readthedocs.org/projects/blast/badge/?version=latest
 .. image:: https://github.com/astrophpeter/blast/actions/workflows/continuous-integration.yml/badge.svg
 .. image:: https://results.pre-commit.ci/badge/github/astrophpeter/blast/main.svg
+.. image:: https://codecov.io/gh/astrophpeter/blast/branch/main/graph/badge.svg?token=Y9JPAF8HVD
 
 Blast is developed on `github <https://github.com/astrophpeter/blast>`_.
 

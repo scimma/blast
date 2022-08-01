@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  docs:
+    extends:
+      file: docker-compose.blast_base.yml
+      service: blast_base
+    command: bash entrypoints/docker-entrypoint.docs.sh
+    volumes:
+      - ../docs:/docs

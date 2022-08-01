@@ -1,0 +1,9 @@
+ignore:
+  - "app/host/tests/*"
+  - "app/host/migrations/*"
+  - "app/app/*"
+  - "app/host/urls.py"
+  - "app/host/admin.py"
+  - "app/host/apps.py"
+  - "app/host/__init__.py"
+  - "app/manage.py"

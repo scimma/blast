@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   blast_base:
-    restart: always
+    #restart: always
     build:
       context: ../app/
     volumes:
