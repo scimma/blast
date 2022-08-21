@@ -101,3 +101,4 @@ healpy==1.14.0
 dustmaps
 astro-sedpy
 django-revproxy
+fsps==0.4.1

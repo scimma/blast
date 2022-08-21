@@ -12,6 +12,7 @@ services:
       - ../data/tns_staging:/tns_staging
       - ../data/transmission:/transmission
       - ../data/dustmaps:/dustmaps
+      - ../data/fsps/:/fsps
   nginx_base:
     restart: always
     image: nginx:1.21-alpine
@@ -37,3 +38,4 @@ services:
       - ../data/tns_staging:/tns_staging
       - ../data/transmission:/transmission
       - ../data/dustmaps:/dustmaps
+      - ../data/fsps/:/fsps

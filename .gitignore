@@ -157,3 +157,5 @@ data/cutout_cdn/2010ai/*
 static/
 
 .DS_Store
+
+data/fsps/*

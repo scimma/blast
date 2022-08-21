@@ -18,6 +18,7 @@ jobs:
       - name: docker compose up
         run: |
           touch env/.env.dev
+          bash run/get_fsps_files.sh
           bash run/blast.run.sh ci
       - uses: codecov/codecov-action@v3
         with:
