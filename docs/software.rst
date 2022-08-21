@@ -50,4 +50,3 @@ please raise an `issue on github <https://github.com/astrophpeter/blast/issues>`
      - `<https://ui.adsabs.harvard.edu/abs/2019JOSS....4.1298Z/abstract>`_
    * - Python-FSPS
      - `<https://dfm.io/python-fsps/current/>`_
-
