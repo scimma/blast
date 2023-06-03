@@ -102,11 +102,8 @@ def build_model(observations=None, **extras):
     model_params = TemplateLibrary["parametric_sfh"]
     model_params.update(TemplateLibrary["nebular"])
     model_params["zred"]["init"] = 0.1
-    model = SpecModel(model_params)
-    sps = CSPSpecBasis(zcontinuous=1)
-    noise_model = (None, None)
 
-    return model  ###{"model": model, "sps": sps, "noise_model": noise_model}
+    return SpecModel(model_params)
 
 
 def build_sps(zcontinuous=2, compute_vega_mags=False, **extras):

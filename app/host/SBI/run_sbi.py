@@ -30,8 +30,6 @@ import corner
 import matplotlib.pyplot as plt
 import matplotlib_inline.backend_inline
 
-matplotlib_inline.backend_inline.set_matplotlib_formats("retina")
-
 # all the functions implementing SBI++ are contained in `sbi_pp.py`
 from host.SBI import sbi_pp
 import h5py
