@@ -102,7 +102,7 @@ def build_model(observations=None, **extras):
     model_params = TemplateLibrary["parametric_sfh"]
     model_params.update(TemplateLibrary["nebular"])
     model_params["zred"]["init"] = 0.1
-    
+
     return SpecModel(model_params)
 
 
