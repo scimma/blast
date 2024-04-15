@@ -198,9 +198,9 @@ def analytics(request):
         else:
             transients_current = None
 
-        analytics_results[
-            f"{aggregate}_transients_current".replace(" ", "_")
-        ] = transients_current
+        analytics_results[f"{aggregate}_transients_current".replace(" ", "_")] = (
+            transients_current
+        )
         bokeh_processing_context = plot_timeseries()
 
     return render(

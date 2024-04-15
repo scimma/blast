@@ -195,12 +195,12 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         wavelengths = np.append(wavelengths, f.transmission_curve().wave_effective)
 
     obs = {}
-    obs[
-        "mags"
-    ] = mags  ##np.array([maggies_to_asinh(p) for p in observations['maggies']])
-    obs[
-        "mags_unc"
-    ] = mags_unc  ##2.5/np.log(10)*observations['maggies_unc']/observations['maggies']
+    obs["mags"] = (
+        mags  ##np.array([maggies_to_asinh(p) for p in observations['maggies']])
+    )
+    obs["mags_unc"] = (
+        mags_unc  ##2.5/np.log(10)*observations['maggies_unc']/observations['maggies']
+    )
     obs["redshift"] = observations["redshift"]
     obs["wavelengths"] = wavelengths
     obs["filternames"] = filternames

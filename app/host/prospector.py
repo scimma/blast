@@ -36,6 +36,7 @@ from .models import Filter
 from .models import hdf5_file_path
 from .photometric_calibration import mJy_to_maggies  ##jansky_to_maggies
 
+
 # add redshift scaling to agebins, such that
 # t_max = t_univ
 def zred_to_agebins(zred=None, **extras):
@@ -82,7 +83,6 @@ def psi_from_sfh(mass, tage, tau):
 
 
 def build_obs(transient, aperture_type, use_mag_offset=True):
-
     """
     This functions is required by prospector and should return
     a dictionary defined by

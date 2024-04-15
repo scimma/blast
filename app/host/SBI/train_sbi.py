@@ -59,7 +59,6 @@ def maggies_to_asinh(x):
 
 
 def build_obs(**extras):  ##transient, aperture_type):
-
     """
     This functions is required by prospector and should return
     a dictionary defined by
@@ -573,7 +572,7 @@ class TrainSBI(CronJobBase):
 
                 try:
                     hf_phot.close()
-                except (AttributeError):
+                except AttributeError:
                     pass
 
         if do_train:

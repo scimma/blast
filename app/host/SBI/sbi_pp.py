@@ -51,6 +51,7 @@ if torch.cuda.is_available():
 else:
     device = "cpu"
 
+
 # prior
 def prior_from_train(ll_or_ul, x_train):
     """We will only need the lower & upper limits to be passed to sbi as 'priors'

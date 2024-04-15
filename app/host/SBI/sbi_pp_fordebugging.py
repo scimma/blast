@@ -69,7 +69,6 @@ def build_all(**kwargs):
 
 
 def build_obs(**extras):  ##transient, aperture_type):
-
     """
     This functions is required by prospector and should return
     a dictionary defined by
