@@ -1,5 +1,5 @@
 {% extends "host/card_template.html"%}
-
+{% load latexify %}
 
 <!-- title -->
 {% block title %}
@@ -24,6 +24,7 @@
         <div class="">
             <br>
             <h4>Local parameter details</h4>
+	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
 	    {% if local_sed_results %}
 	    <div>
 	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'local' %}','_self')">
@@ -33,30 +34,69 @@
               <span>Download Percentiles</span>
             </button>
 	    </div>
-	    {% endif %}
+
             <br>
+
+	    {% with table_type="normal Metallicity Dust AGN" %}
+	    {% for ttype in table_type.split %}
+	    {% if ttype != 'normal' %}
+	        <br>
+	        <h5>{{ttype}} parameters</h5>
+	    {% endif %}
+
             <table class="table-condensed table-striped">
             <thead>
             <tr>
                 <th scope="col">Parameter</th>
-                <th scope="col">Lower Bound (16%)</th>
-                <th scope="col">Median</th>
-                <th scope="col">Upper Bound (84%)</th>
+                <th scope="col" align="right">Lower (16%)  </th>
+                <th scope="col" align="right">Median (50%)  </th>
+                <th scope="col" align="right">Upper (84%)  </th>
             </tr>
             </thead>
             <tbody>
               {% for item in local_sed_results %}
-	      {% if item.2 %}
+	      {% if item.2 and item.4 == ttype %}
             <tr>
-                <td>{{item.0}}</td>
-                <td>{{item.1|floatformat:3}}</td>
-                <td>{{item.2|floatformat:3}}</td>
-                <td>{{item.3|floatformat:3}}</td>
+                <td>{% latexify item.0 math_inline=True %}</td>
+                <td align="right">{{item.1|floatformat:3}}</td>
+                <td align="right">{{item.2|floatformat:3}}</td>
+                <td align="right">{{item.3|floatformat:3}}</td>
             </tr>
 	    {% endif %}
             {% endfor %}
             </tbody>
-        </table>
+            </table>
+	    {% endfor %}
+	    {% endwith %}
+
+	    {% if local_sfh_results %}
+	        <br>
+	        <h5>Binned star formation history</h5>
+
+            <table class="table-condensed table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Lookback time  </th>
+                <th scope="col" align="right">Lower (16%)  </th>
+                <th scope="col" align="right">Median (50%)  </th>
+                <th scope="col" align="right">Upper (84%)  </th>
+            </tr>
+            </thead>
+            <tbody>
+              {% for item in local_sfh_results %}
+	      {% if item.2  %}
+            <tr>
+                <td>{{item.3|floatformat:2}}-{{item.4|floatformat:2}} Gyr</td>
+                <td align="right">{{item.0|floatformat:3}}</td>
+                <td align="right">{{item.1|floatformat:3}}</td>
+                <td align="right">{{item.2|floatformat:3}}</td>
+            </tr>
+	    {% endif %}
+            {% endfor %}
+            </tbody>
+            </table>
+	    {% endif %}
+	{% endif %}
         </div>
     </div>
     <div class="tab-pane active" id="global-params" role="tabpanel" aria-labelledby="global-params-tab">
@@ -64,6 +104,7 @@
         <div class="">
             <br>
             <h4>Global parameter details</h4>
+	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
 	    {% if global_sed_results %}
 	    <div>
 	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'global' %}','_self')">
@@ -74,34 +115,70 @@
             </button>
 
 	    </div>
-	    {% endif %}
+
             <br>
 
-
+	    {% with table_type="normal Metallicity Dust AGN" %}
+	    {% for ttype in table_type.split %}
+	    {% if ttype != 'normal' %}
+	        <br>
+	        <h5>{{ttype}} parameters</h5>
+	    {% endif %}
             <table class="table-condensed table-striped">
             <thead>
             <tr>
                 <th scope="col">Parameter</th>
-                <th scope="col">Lower Bound (16%)</th>
-                <th scope="col">Median</th>
-                <th scope="col">Upper Bound (84%)</th>
+                <th scope="col" align="right">Lower (16%)  </th>
+                <th scope="col" align="right">Median (50%)  </th>
+                <th scope="col" align="right">Upper (84%)  </th>
             </tr>
             </thead>
             <tbody>
               {% for item in global_sed_results %}
-	      {% if item.2 %}
+	      {% if item.2 and item.4 == ttype %}
             <tr>
-                <td>{{item.0}}</td>
-                <td>{{item.1|floatformat:3}}</td>
-                <td>{{item.2|floatformat:3}}</td>
-                <td>{{item.3|floatformat:3}}</td>
+                <td>{% latexify item.0 math_inline=True %}</td>
+                <td align="right">{{item.1|floatformat:3}}</td>
+                <td align="right">{{item.2|floatformat:3}}</td>
+                <td align="right">{{item.3|floatformat:3}}</td>
             </tr>
 	    {% endif %}
             {% endfor %}
             </tbody>
-        </table>
+            </table>
+	    {% endfor %}
+	    {% endwith %}
+
+	    {% if global_sfh_results %}
+	        <br>
+	        <h5>Binned star formation history</h5>
+
+            <table class="table-condensed table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Lookback time  </th>
+                <th scope="col" align="right">Lower (16%)  </th>
+                <th scope="col" align="right">Median (50%)  </th>
+                <th scope="col" align="right">Upper (84%)  </th>
+            </tr>
+            </thead>
+            <tbody>
+              {% for item in global_sfh_results %}
+	      {% if item.2  %}
+            <tr>
+                <td>{{item.3|floatformat:2}}-{{item.4|floatformat:2}} Gyr</td>
+                <td align="right">{{item.0|floatformat:3}}</td>
+                <td align="right">{{item.1|floatformat:3}}</td>
+                <td align="right">{{item.2|floatformat:3}}</td>
+            </tr>
+	    {% endif %}
+            {% endfor %}
+            </tbody>
+            </table>
+	    {% endif %}	    
+	{% endif %}
         </div>
     </div>
 </div>
-
+{% include "latexify/scripts.html" %}
 {% endblock %}

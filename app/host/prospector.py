@@ -881,7 +881,7 @@ def prospector_result_to_blast(
             hdf5_file_name,
             hdf5_file_name.replace(".h5", "_chain.npz"),
             hdf5_file_name.replace(".h5", "_perc.npz"),
-            model_components["model"].init_config["zred"]["init"],
+            model_components["model"]._zred[0],
             prior="p-alpha",
             mod_fsps=model_components["model"],
             sps=model_components["sps"],
@@ -900,6 +900,37 @@ def prospector_result_to_blast(
     age16, age50, age84 = perc["mwa"]
     logsfr16, logsfr50, logsfr84 = np.log10(perc["sfr"][0])
     logssfr16, logssfr50, logssfr84 = np.log10(perc["ssfr"][0])
+    logzsol16,logzsol50,logzsol84 = perc['logzsol']
+    dust2_16,dust2_50,dust2_84 = perc['dust2']
+    dust_index_16,dust_index_50,dust_index_84 = perc['dust_index']
+    dust1_fraction_16,dust1_fraction_50,dust1_fraction_84 = perc['dust1_fraction']
+    log_fagn_16,log_fagn_50,log_fagn_84 = perc['log_fagn']
+    log_agn_tau_16,log_agn_tau_50,log_agn_tau_84 = perc['log_agn_tau']
+    gas_logz_16,gas_logz_50,gas_logz_84 = perc['gas_logz']
+    duste_qpah_16,duste_qpah_50,duste_qpah_84 = perc['duste_qpah']
+    duste_umin_16,duste_umin_50,duste_umin_84 = perc['duste_umin']
+    log_duste_gamma_16,log_duste_gamma_50,log_duste_gamma_84 = perc['log_duste_gamma']
+
+    # just use allsfhs from postprocess_prosp
+    # and z_to_agebins
+    # re-work in terms of lookback time and un-log the ages
+    # and then we don't have to be quite so annoying about what's what
+    agebins = pp.z_to_agebins(observations["redshift"])
+    agebins_ago = 10**agebins / 1e9
+    
+    sfh_results = []
+    unique_sfh = np.unique(perc['sfh'][:,1])
+    for a,s in zip(agebins_ago,perc['sfh_binned']):
+        sfh_results += [
+            {
+                'transient':transient,
+                'logsfr_16':np.log10(s[0]),
+                'logsfr_50':np.log10(s[1]),
+                'logsfr_84':np.log10(s[2]),
+                'logsfr_tmin':a[0],
+                'logsfr_tmax':a[1]
+            }
+        ]
 
     if parametric_sfh:
         tau = resultpars["chain"][
@@ -926,13 +957,43 @@ def prospector_result_to_blast(
         "log_age_16": age16,
         "log_age_50": age50,
         "log_age_84": age84,
+        "logzsol_16":logzsol16,
+        "logzsol_50":logzsol50,
+        "logzsol_84":logzsol84,
+        "dust2_16":dust2_16,
+        "dust2_50":dust2_50,
+        "dust2_84":dust2_84,
+        "dust_index_16":dust_index_16,
+        "dust_index_50":dust_index_50,
+        "dust_index_84":dust_index_84,
+        "dust1_fraction_16":dust1_fraction_16,
+        "dust1_fraction_50":dust1_fraction_50,
+        "dust1_fraction_84":dust1_fraction_84,
+        "log_fagn_16":log_fagn_16,
+        "log_fagn_50":log_fagn_50,
+        "log_fagn_84":log_fagn_84,
+        "log_agn_tau_16":log_agn_tau_16,
+        "log_agn_tau_50":log_agn_tau_50,
+        "log_agn_tau_84":log_agn_tau_84,
+        "gas_logz_16":gas_logz_16,
+        "gas_logz_50":gas_logz_50,
+        "gas_logz_84":gas_logz_84,
+        "duste_qpah_16":duste_qpah_16,
+        "duste_qpah_50":duste_qpah_50,
+        "duste_qpah_84":duste_qpah_84,
+        "duste_umin_16":duste_umin_16,
+        "duste_umin_50":duste_umin_50,
+        "duste_umin_84":duste_umin_84,
+        "log_duste_gamma_16":log_duste_gamma_16,
+        "log_duste_gamma_50":log_duste_gamma_50,
+        "log_duste_gamma_84":log_duste_gamma_84,
         "mass_surviving_ratio": mfrac,
     }
     if parametric_sfh:
         prosp_results["log_tau_16"] = (tau16,)
         prosp_results["log_tau_50"] = (tau50,)
         prosp_results["log_tau_84"] = (tau84,)
-
+        
     np.savez(
         hdf5_file_name.replace(".h5", "_modeldata.npz"),
         rest_wavelength=model_components["sps"].wavelengths,
@@ -944,4 +1005,4 @@ def prospector_result_to_blast(
         phot_84=phot_84,
     )
 
-    return prosp_results
+    return prosp_results,sfh_results

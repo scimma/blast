@@ -27,6 +27,14 @@ services:
     env_file:
       - ../env/.env.default
       - ../env/.env.dev
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 1G
+        limits:
+          cpus: "${CELERY_WORKER_LIMIT_CPUS:-4.0}"
+          memory: ${CELERY_WORKER_LIMIT_MEMORY:-4G}
   celery_beat:
     extends:
       file: docker-compose.blast_base.yml

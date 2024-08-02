@@ -62,7 +62,8 @@ INSTALLED_APPS = [
     "django_cron",
     "django_filters",
     'django_celery_results',
-    "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk)
+    "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
+    "latexify",
 ]
 
 MIDDLEWARE = [

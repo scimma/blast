@@ -183,13 +183,14 @@ def getSFH(
             )
 
     if rtn_chains:
-        return (age_interp, allsfhs_interp, allMWA, allsfrs)
+        return (age_interp, allsfhs_interp, allMWA, allsfrs, allsfhs)
     else:
         # sfr and MWA percentiles
         sfh = np.percentile(allsfhs_interp, percents, axis=0)
         mwa = np.percentile(allMWA, percents)
         sfr = np.percentile(allsfrs, percents, axis=0)
-        return (age_interp, sfh.T, mwa, sfr.T)
+        allsfh_nointerp = np.percentile(allsfhs, percents, axis=0)
+        return (age_interp, sfh.T, mwa, sfr.T, allsfh_nointerp.T)
 
 
 def get_all_outputs_and_chains(
@@ -236,7 +237,7 @@ def get_all_outputs_and_chains(
             -1.79931691,
         ]
     )
-    age_interp, allsfhs_interp, allMWA, allsfrs = getSFH(
+    age_interp, allsfhs_interp, allMWA, allsfrs, allsfhs_nointerp = getSFH(
         chain, theta_index=theta_index, rtn_chains=True, zred=zred
     )
     # import pdb; pdb.set_trace()
@@ -246,13 +247,15 @@ def get_all_outputs_and_chains(
     sfh = np.percentile(allsfhs_interp, percents, axis=0)
     mwa = np.percentile(allMWA, percents)
     sfr = np.percentile(allsfrs, percents, axis=0)
-
+    sfh_noint = np.percentile(allsfhs_nointerp, percents, axis=0)
+    
     # each of these keys is a (xpix x ypix x nparam x 16/50/84%) map
     percentiles["age_interp"] = age_interp
     percentiles["sfh"] = sfh.T
     percentiles["mwa"] = mwa
     percentiles["sfr"] = sfr.T
-
+    percentiles["sfh_binned"] = sfh_noint.T
+    
     # saved chains are subsampled, so that we can plot stellar mass on the corner plot
     chain_len = res["chain"].shape[0]
     if nsamp > chain_len:

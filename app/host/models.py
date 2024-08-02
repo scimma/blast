@@ -475,6 +475,22 @@ class AperturePhotometry(models.Model):
         return round(self.flux_error, 2)
 
 
+class StarFormationHistoryResult(models.Model):
+
+    transient = models.ForeignKey(
+        Transient, on_delete=models.CASCADE, null=True, blank=True
+    )
+    aperture = models.ForeignKey(
+        Aperture, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    logsfr_16 = models.FloatField(null=True, blank=True)
+    logsfr_50 = models.FloatField(null=True, blank=True)
+    logsfr_84 = models.FloatField(null=True, blank=True)
+    logsfr_tmin = models.FloatField(null=True, blank=True)
+    logsfr_tmax = models.FloatField(null=True, blank=True)
+
+
 class SEDFittingResult(models.Model):
     """Model to store prospector results"""
 
@@ -501,8 +517,6 @@ class SEDFittingResult(models.Model):
     log_ssfr_50 = models.FloatField(null=True, blank=True)
     log_ssfr_84 = models.FloatField(null=True, blank=True)
 
-    # SFR ~ exp(-age/tau)
-    # https://prospect.readthedocs.io/en/latest/sfhs.html?highlight=tau#parametric-sfh
     log_age_16 = models.FloatField(null=True, blank=True)
     log_age_50 = models.FloatField(null=True, blank=True)
     log_age_84 = models.FloatField(null=True, blank=True)
@@ -511,6 +525,42 @@ class SEDFittingResult(models.Model):
     log_tau_50 = models.FloatField(null=True, blank=True)
     log_tau_84 = models.FloatField(null=True, blank=True)
 
+    ## prospector params
+    logzsol_16 = models.FloatField(null=True, blank=True)
+    logzsol_50 = models.FloatField(null=True, blank=True)
+    logzsol_84 = models.FloatField(null=True, blank=True)
+    dust2_16 = models.FloatField(null=True, blank=True)
+    dust2_50 = models.FloatField(null=True, blank=True)
+    dust2_84 = models.FloatField(null=True, blank=True)
+    dust_index_16 = models.FloatField(null=True, blank=True)
+    dust_index_50 = models.FloatField(null=True, blank=True)
+    dust_index_84 = models.FloatField(null=True, blank=True)
+    dust1_fraction_16 = models.FloatField(null=True, blank=True)
+    dust1_fraction_50 = models.FloatField(null=True, blank=True)
+    dust1_fraction_84 = models.FloatField(null=True, blank=True)
+    log_fagn_16 = models.FloatField(null=True, blank=True)
+    log_fagn_50 = models.FloatField(null=True, blank=True)
+    log_fagn_84 = models.FloatField(null=True, blank=True)
+    log_agn_tau_16 = models.FloatField(null=True, blank=True)
+    log_agn_tau_50 = models.FloatField(null=True, blank=True)
+    log_agn_tau_84 = models.FloatField(null=True, blank=True)
+    gas_logz_16 = models.FloatField(null=True, blank=True)
+    gas_logz_50 = models.FloatField(null=True, blank=True)
+    gas_logz_84 = models.FloatField(null=True, blank=True)
+    duste_qpah_16 = models.FloatField(null=True, blank=True)
+    duste_qpah_50 = models.FloatField(null=True, blank=True)
+    duste_qpah_84 = models.FloatField(null=True, blank=True)
+    duste_umin_16 = models.FloatField(null=True, blank=True)
+    duste_umin_50 = models.FloatField(null=True, blank=True)
+    duste_umin_84 = models.FloatField(null=True, blank=True)
+    log_duste_gamma_16 = models.FloatField(null=True, blank=True)
+    log_duste_gamma_50 = models.FloatField(null=True, blank=True)
+    log_duste_gamma_84 = models.FloatField(null=True, blank=True)
+
+    # non-parametric SFH
+    logsfh = models.ManyToManyField(StarFormationHistoryResult, blank=True)
+
+    
     chains_file = models.FileField(
         upload_to=npz_chains_file_path, null=True, blank=True
     )
@@ -518,8 +568,7 @@ class SEDFittingResult(models.Model):
         upload_to=npz_percentiles_file_path, null=True, blank=True
     )
     model_file = models.FileField(upload_to=npz_model_file_path, null=True, blank=True)
-
-
+    
 class TaskRegisterSnapshot(models.Model):
     """
     Model to keep track of how many unprocessed transients exist

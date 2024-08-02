@@ -26,6 +26,8 @@ RUN git clone https://github.com/manning-ncsa/astro_ghost.git /tmp/blast && cd /
     pip uninstall --yes astro_ghost && pip install --no-cache-dir . && \
     cd / && rm -rf /tmp/blast
 
+RUN pip install --no-cache-dir django-latexify
+
 RUN mkdir /app
 COPY . /app
 WORKDIR /app

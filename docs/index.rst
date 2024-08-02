@@ -21,7 +21,6 @@ new transient reported to the IAU in real-time after the transient is
 announced. This information is not provided by any existing transient
 broker service.
 
-Blast is currently developed by the `UCSC Transients Team <https://transients.ucsc.edu/>`_.
 
 Usage
 -----
@@ -32,6 +31,7 @@ Usage
 
    usage/web_pages
    usage/web_api
+   usage/sed_params
    usage/batch
 
 

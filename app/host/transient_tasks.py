@@ -23,6 +23,7 @@ from .models import Aperture
 from .models import AperturePhotometry
 from .models import Cutout
 from .models import SEDFittingResult
+from .models import StarFormationHistoryResult
 from .models import Transient
 from .prospector import build_model
 from .prospector import build_obs
@@ -769,7 +770,7 @@ class HostSEDFitting(TransientTaskRunner):
             return "not enough filters"
 
         if mode == "test":
-            prosp_results = prospector_result_to_blast(
+            prosp_results,sfh_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -778,7 +779,7 @@ class HostSEDFitting(TransientTaskRunner):
                 sed_output_root="/tmp",
             )
         else:
-            prosp_results = prospector_result_to_blast(
+            prosp_results,sfh_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -792,8 +793,20 @@ class HostSEDFitting(TransientTaskRunner):
             )
             if len(pr):
                 pr.update(**prosp_results)
+                pr = pr[0]
             else:
                 pr = SEDFittingResult.objects.create(**prosp_results)
+            for sfh_r in sfh_results:
+                ps = pr.logsfh.filter(
+                    logsfr_tmin=sfh_r['logsfr_tmin']
+                )
+                sfh_r['transient'] = transient
+                sfh_r['aperture'] = aperture[0]
+                if len(ps):
+                    ps.update(**sfh_r)
+                else:
+                    ps = StarFormationHistoryResult.objects.create(**sfh_r)
+                    pr.logsfh.add(ps)
         else:
             print("printing results")
             print(prosp_results)

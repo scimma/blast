@@ -1,3 +1,4 @@
+{% load latexify %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -70,6 +71,8 @@
   }
   </style>
   {% load static %}
+  {% include 'latexify/stylesheets.html' %}
+
   <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" >
 </head>
 

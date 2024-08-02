@@ -211,6 +211,7 @@ def analytics(request):
 
 
 def results(request, slug):
+
     transients = Transient.objects.all()
     transient = transients.get(name__exact=slug)
 
@@ -240,26 +241,61 @@ def results(request, slug):
     )
     # ugly, but effective?
     local_sed_results, global_sed_results = (), ()
-    for param in ["mass", "sfr", "ssfr", "age"]:
+    for param,var,ptype in zip(
+            ["{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,", "{\\rm log}_{10}({\\rm SFR})", "{\\rm log}_{10}({\\rm sSFR})", "{\\rm stellar\ age}", "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})", "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",
+             "\\tau_2", "\delta", "\\tau_1/\\tau_2", "Q_{PAH}", "U_{min}", "{\\rm log}_{10}(\gamma_e)\,",
+             "{\\rm log}_{10}(f_{AGN})\,", "{\\rm log}_{10}(\\tau_{AGN})\,"],
+            ["log_mass", "log_sfr", "log_ssfr", "log_age", "logzsol","gas_logz",
+             "dust2","dust_index","dust1_fraction","duste_qpah", "duste_umin", "log_duste_gamma",
+             "log_fagn","log_agn_tau"],
+            ["normal","normal","normal","normal","Metallicity","Metallicity","Dust","Dust","Dust","Dust","Dust","Dust","AGN","AGN"]
+    ):
+
         if local_sed_obj.exists():
             local_sed_results += (
                 (
                     param,
-                    local_sed_obj[0].__dict__[f"log_{param}_16"],
-                    local_sed_obj[0].__dict__[f"log_{param}_50"],
-                    local_sed_obj[0].__dict__[f"log_{param}_84"],
+                    local_sed_obj[0].__dict__[f"{var}_16"],
+                    local_sed_obj[0].__dict__[f"{var}_50"],
+                    local_sed_obj[0].__dict__[f"{var}_84"],
+                    ptype,
                 ),
             )
         if global_sed_obj.exists():
             global_sed_results += (
                 (
                     param,
-                    global_sed_obj[0].__dict__[f"log_{param}_16"],
-                    global_sed_obj[0].__dict__[f"log_{param}_50"],
-                    global_sed_obj[0].__dict__[f"log_{param}_84"],
+                    global_sed_obj[0].__dict__[f"{var}_16"],
+                    global_sed_obj[0].__dict__[f"{var}_50"],
+                    global_sed_obj[0].__dict__[f"{var}_84"],
+                    ptype,
                 ),
             )
-
+    local_sfh_results, global_sfh_results = (), ()
+    if local_sed_obj.exists():
+        for sh in local_sed_obj[0].logsfh.all():
+            local_sfh_results += (
+                (
+                    sh.logsfr_16,
+                    sh.logsfr_50,
+                    sh.logsfr_84,
+                    sh.logsfr_tmin,
+                    sh.logsfr_tmax
+                ),
+            )
+                
+    if global_sed_obj.exists():
+        for sh in global_sed_obj[0].logsfh.all():
+            global_sfh_results += (
+                (
+                    sh.logsfr_16,
+                    sh.logsfr_50,
+                    sh.logsfr_84,
+                    sh.logsfr_tmin,
+                    sh.logsfr_tmax
+                ),
+            )
+        
     if local_sed_obj.exists():
         local_sed_file = local_sed_obj[0].posterior.name
     else:
@@ -307,7 +343,6 @@ def results(request, slug):
         global_aperture=global_aperture.prefetch_related(),
         local_aperture=local_aperture.prefetch_related(),
     )
-
     bokeh_sed_local_context = plot_sed(
         transient=transient,
         type="local",
@@ -344,6 +379,8 @@ def results(request, slug):
             "global_aperture": global_aperture,
             "local_sed_results": local_sed_results,
             "global_sed_results": global_sed_results,
+            "local_sfh_results": local_sfh_results,
+            "global_sfh_results": global_sfh_results,
             "warning": is_warning,
             "contam_warning": contam_warning,
             "is_auth": request.user.is_authenticated,
