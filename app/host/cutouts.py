@@ -126,10 +126,12 @@ def download_and_save_cutouts(
                     os.makedirs(save_dir, exist_ok=True)
                     path_to_fits = save_dir + f"{filter.name}.fits"
                     fits.writeto(path_to_fits, overwrite=True)
+                    # TODO: S3: Upload new FITS file to bucket
 
             # if there is data, save path to the file
             # otherwise record that we searched and couldn't find anything
             if file_exists or fits:
+                # TODO: S3: replace fits.name with object key
                 cutout_object.fits.name = path_to_fits
                 cutout_object.save()
 
