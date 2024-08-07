@@ -134,6 +134,7 @@ def plot_cutout_image(
     title = cutout.filter if cutout is not None else "No cutout selected"
 
     if cutout is not None:
+        # TODO: S3: Download FITS file from bucket prior to opening
         with fits.open(cutout.fits.name) as fits_file:
             image_data = fits_file[0].data
             wcs = WCS(fits_file[0].header)

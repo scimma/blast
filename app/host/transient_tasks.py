@@ -255,6 +255,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         aperture = None
         while aperture is None and choice <= 8:
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
+            # TODO: S3: Download FITS file from bucket prior to opening
             image = fits.open(aperture_cutout[0].fits.name)
             aperture = construct_aperture(image, transient.host.sky_coord)
             choice += 1
@@ -329,6 +330,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
         for cutout in cutouts:
+            # TODO: S3: Download FITS file from bucket prior to opening
             image = fits.open(cutout.fits.name)
 
             try:
@@ -402,6 +404,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
         for cutout in cutouts:
+            # TODO: S3: Download FITS file from bucket prior to opening
             image = fits.open(cutout.fits.name)
 
             # make new aperture

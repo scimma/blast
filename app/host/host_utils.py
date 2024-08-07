@@ -344,6 +344,7 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
             continue
 
         # copy the steps to build segmentation map
+        # TODO: S3: Download FITS file from bucket prior to opening
         image = fits.open(cutout_name)
         wcs = WCS(image[0].header)
         background = estimate_background(image)

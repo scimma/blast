@@ -1004,5 +1004,5 @@ def prospector_result_to_blast(
         phot_16=phot_16,
         phot_84=phot_84,
     )
-
+    # TODO: S3: Upload all files to bucket (HDF, chain, perc, modeldata)
     return prosp_results,sfh_results
