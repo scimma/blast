@@ -41,6 +41,11 @@ case "$PROFILE" in
     COMPOSE_FILE="docker-compose.docs.yaml"
     COMPOSE_LOG_LIST="sphinx"
     ;;
+  "batch")
+    ENV_FILE=".env.dev"
+    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
+    ;;
   *)
     echo "ERROR: You must specify a valid profile (e.g. $(basename $0) full_dev)"
     exit 1
