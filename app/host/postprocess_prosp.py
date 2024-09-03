@@ -68,7 +68,9 @@ def getPercentiles(
 
 
 def z_to_agebins(zred=None, agebins=None, nbins_sfh=7, amin=7.1295, **extras):
-    """new agebins defined in Wang+2023:uncover_sps_catalog"""
+    """new agebins defined in Wang+2024
+    https://ui.adsabs.harvard.edu/abs/2024ApJS..270...12W/abstract
+    """
     tuniv = cosmo.age(zred).value * 1e9
     tbinmax = tuniv * 0.9
     if zred <= 3.0:
@@ -165,22 +167,22 @@ def getSFH(
     # define the grid as going from lookback time = 0 to the oldest time in all the samples
     # with 1000 log-spaced samples in between (might want to update this later!)
     allagebins_ago = 10**allagebins / 1e9
-    age_interp = (
-        np.logspace(1, np.log10(np.max(allagebins_ago * 1e9)), tbins) / 1e9
-    )  # lookback time in Gyr
+    age_interp = (np.logspace(1, np.log10(np.max(allagebins_ago * 1e9)), tbins) / 1e9)  # lookback time in Gyr
+    age_interp_linear = np.linspace(0, 100, 51) / 1e3 # for <sfr> only; Myr -> Gyr
     allsfhs_interp = np.zeros((nsamples, len(age_interp)))
+    allsfhs_interp_linear = np.zeros((nsamples, len(age_interp_linear)))
     allsfrs = np.zeros((nsamples, len(sfrtimes)))
-    dt = (age_interp - np.insert(age_interp, 0, 0)[:-1]) * 1e9  # in *years* to calc sfr
     for iteration in range(nsamples):
-        allsfhs_interp[iteration, :] = stepInterp(
-            allagebins_ago[iteration, :], allsfhs[iteration, :], age_interp
-        )
+        allsfhs_interp[iteration, :] = stepInterp(allagebins_ago[iteration, :], allsfhs[iteration, :], age_interp)
+
+        allsfhs_interp_linear[iteration, :] = stepInterp(allagebins_ago[iteration,:], allsfhs[iteration,:], age_interp_linear)
+        nan_idx = np.isnan(allsfhs_interp_linear[iteration, :])
+        foo = allsfhs_interp_linear[iteration, ~nan_idx]
+        allsfhs_interp_linear[iteration, nan_idx] = foo[0]
 
         # also get SFR averaged over all the timescales we want
         for i, time in enumerate(sfrtimes):
-            allsfrs[iteration, i] = np.mean(
-                allsfhs_interp[iteration, (age_interp <= time * 1e-9)]
-            )
+            allsfrs[iteration, i] = np.mean(allsfhs_interp_linear[iteration, (age_interp_linear<=time*1e-3)])
 
     if rtn_chains:
         return (age_interp, allsfhs_interp, allMWA, allsfrs, allsfhs)
