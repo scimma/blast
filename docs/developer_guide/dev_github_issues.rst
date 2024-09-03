@@ -46,14 +46,14 @@ Slim stack
 ----------
 
 An issues tagged with :code:`Slim stack` only requires the Blast web app and
-database, so you can work on these issues by running :code:`bash run/blast.up.sh slim`
+database, so you can work on these issues by running :code:`bash run/blastctl slim_dev up`
 See :doc:`Running Blast <dev_running_blast>` documentation for more details.
 
 Full stack
 ----------
 
 An issue tagged with :code:`Full stack` requires all the Blast services to
-be worked on which means you will need to run :code:`bash run/blast.up.sh full`
+be worked on which means you will need to run :code:`bash run/blastctl full_dev up`
 to work on them. See :doc:`Running Blast <dev_running_blast>` documentation
 for more details.
 

@@ -1,4 +1,4 @@
-name: ce-docs
+name: blast-docs
 
 networks:
   internal:
@@ -7,8 +7,6 @@ networks:
 services:
 
   nginx:
-    profiles:
-      - "docs"
     image: nginx:1.26
     ports:
       - 127.0.0.1:4001:80
@@ -16,10 +14,10 @@ services:
       - internal
     volumes:
       - ../docs/build:/usr/share/nginx/html:ro
-
-  sphinx:
     profiles:
       - "docs"
+
+  sphinx:
     image: blast-docs
     build:
       context: ..
@@ -33,3 +31,5 @@ services:
     volumes:
       - ../docs:/opt/docs
       - ../app:/opt/app
+    profiles:
+      - "docs"

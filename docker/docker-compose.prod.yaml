@@ -1,0 +1,31 @@
+name: blast-prod
+
+networks:
+  internal:
+    external: false
+
+volumes:
+  blast-db: {}
+  django-static: {}
+  blast-data:
+    name: "blast-data"
+
+services:
+
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
