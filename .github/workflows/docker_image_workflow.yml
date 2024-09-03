@@ -64,7 +64,7 @@ jobs:
           load: true
 
       - name: Run tests
-        run: bash run/blast.up.sh ci
+        run: bash run/blastctl ci up
 
       # - uses: codecov/codecov-action@v4
       #   with:
