@@ -33,8 +33,8 @@ a2d9e3280d951a6d4adeade2493adb4f  transmission/DES_Y.txt
 6f3a89528bba7d1b7bd55838da86b639  ghost_data/dust_model/sfddata-master/SFD_dust_4096_ngp.fits
 fa02d1ff37c0fbd18944c5e1badb679c  ghost_data/dust_model/sfddata-master/README.md
 7df289ef00782d1df034bd6aabf967e5  ghost_data/photoz_model/MLP_lupton.hdf5
-6982cbc316eba497325e638f4301f954  sbipp_phot/sbi_phot_global.h5
-9ac7a45e404fe1d0df4efa7ab0e4beca  sbipp_phot/sbi_phot_local.h5
+d4bf229955919c304cb47cd6b2b157b9  sbipp_phot/sbi_phot_global.h5
+9293618796a9c9ff7757607f097ce3d1  sbipp_phot/sbi_phot_local.h5
 adcf684149ffb3a05c2f12975fd07da9  cutout_cdn/2010ag/SDSS/SDSS_i.fits
 0053f57d0f8c7d184bf243c394442bea  cutout_cdn/2010ag/SDSS/SDSS_z.fits
 698da634eedd6447b80e3ca12eaca1ff  cutout_cdn/2010ag/SDSS/SDSS_u.fits
@@ -90,9 +90,9 @@ a6699d16bb41806c510e3acde92d2484  cutout_cdn/2010H/WISE/WISE_W3.fits
 7a9b42b247dc4c81b217962bbe8949f0  cutout_cdn/2010H/WISE/WISE_W4.fits
 3114b65b447d70c1bdfd67b67862cc90  cutout_cdn/2010H/WISE/WISE_W1.fits
 111d4a85bb95e458d289fbd829fd9b18  sbipp/.gitattributes
-a6f71f1d7e192e6030ab9aa44ce43482  sbipp/SBI_model_global.pt
-895813766015ab51188350416a409b68  sbipp/SBI_model_local.pt
-0d7533b064cb205701fd981977a921ec  sbipp/SBI_model.pt
+c15b54e3054dbe02b56f044eff22a61d  sbipp/SBI_model_global.pt
+255865b021f6c77945bfe0af430bf69e  sbipp/SBI_model_local.pt
+c15b54e3054dbe02b56f044eff22a61d  sbipp/SBI_model.pt
 d3999c206242a52677918ce8b2929919  fsps/pro/read_indx.pro
 f165bdbb7c8a92e6617cc6ff9797f764  fsps/pro/read_spec.pro
 c5b828d34039f0b9498fef007e93f74d  fsps/pro/read_mags.pro

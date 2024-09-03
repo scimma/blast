@@ -52,7 +52,8 @@ download_data_archive() {
   echo "INFO: Downloading data from archive..."
   mc alias set blast https://js2.jetstream-cloud.org:8001 anonymous
   # The trailing slashes are important!
-  mc mirror --overwrite --json blast/blast-astro-data/v1/data/ "$(readlink -f "${data_root_dir}")/"
+  mc mirror --overwrite --json blast/blast-astro-data/v2/data/ "$(readlink -f "${data_root_dir}")/"
+  mc mirror             --json blast/blast-astro-data/v1/data/ "$(readlink -f "${data_root_dir}")/"
 }
 
 # Verify data file integrity and attempt to (re)install required files if necessary
