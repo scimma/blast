@@ -60,6 +60,10 @@ case "$PROFILE" in
   *)
     ENV_FILES="--env-file env/.env.default --env-file env/${ENV_FILE}"
     COMPOSE_FILES="--file docker/docker-compose.yml"
+    # Create extra env var file if it does not exist
+    if [[ ! -f "env/${ENV_FILE}" ]]; then
+      touch "env/${ENV_FILE}"
+    fi
     ;;
 esac
 
