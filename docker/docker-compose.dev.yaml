@@ -22,11 +22,22 @@ services:
       - 127.0.0.1:8000:${WEB_APP_PORT}
     environment:
       - "DEV_MODE=1"
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
     volumes:
       - blast-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
       - ../app:/app
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
 
   celery-worker:
     extends:
@@ -34,6 +45,9 @@ services:
       service: celery-worker
     build:
       context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
     volumes:
       - blast-data:/mnt/data
       - django-static:/app/static
@@ -46,11 +60,22 @@ services:
       service: celery-beat
     build:
       context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
     volumes:
       - blast-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
       - ../app:/app
+
+  rabbitmq:
+    extends:
+      file: docker-compose.yml
+      service: rabbitmq
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
 
   flower:
     extends:
@@ -58,8 +83,19 @@ services:
       service: flower
     build:
       context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
     volumes:
       - blast-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
       - ../app:/app
+
+  batch:
+    extends:
+      file: docker-compose.yml
+      service: batch
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
