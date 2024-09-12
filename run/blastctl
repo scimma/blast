@@ -1,0 +1,140 @@
+#!/bin/bash
+
+set -e
+
+cd "$(dirname "$(readlink -f "$0")")/.."
+
+PROFILE=$1
+ACTION=$2
+
+COMPOSE_ARGS_UP="--build --remove-orphans"
+COMPOSE_ARGS_DOWN="--remove-orphans"
+COMPOSE_ARGS_LOGS="--follow"
+COMPOSE_LOG_LIST="app celery-worker"
+COMPOSE_FILE=""
+
+case "$PROFILE" in
+  "full_dev")
+    COMPOSE_FILE="docker-compose.dev.yaml"
+    ENV_FILE=".env.dev"
+    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} -d"
+    ;;
+  "slim_dev")
+    COMPOSE_FILE="docker-compose.dev.yaml"
+    ENV_FILE=".env.dev"
+    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
+    ;;
+  "slim_prod" | "full_prod")
+    COMPOSE_FILE="docker-compose.prod.yaml"
+    ENV_FILE=".env.prod"
+    COMPOSE_PROJECT_NAME="blast-prod"
+    ;;
+  "ci")
+    COMPOSE_FILE="docker-compose.ci.yaml"
+    ENV_FILE=".env.ci"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --exit-code-from app"
+    COMPOSE_PROJECT_NAME="blast-ci"
+    ;;
+  "docs")
+    COMPOSE_FILE="docker-compose.docs.yaml"
+    COMPOSE_LOG_LIST="sphinx"
+    ;;
+  "batch")
+    ENV_FILE=".env.dev"
+    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
+    ;;
+  *)
+    echo "ERROR: You must specify a valid profile (e.g. $(basename $0) full_dev)"
+    exit 1
+    ;;
+esac
+
+case "$PROFILE" in
+  "docs")
+    ENV_FILES="--env-file env/.env.default"
+    COMPOSE_FILES=""
+    ;;
+  *)
+    ENV_FILES="--env-file env/.env.default --env-file env/${ENV_FILE}"
+    COMPOSE_FILES="--file docker/docker-compose.yml"
+    # Create extra env var file if it does not exist
+    if [[ ! -f "env/${ENV_FILE}" ]]; then
+      touch "env/${ENV_FILE}"
+    fi
+    ;;
+esac
+
+if [[ "${COMPOSE_FILE}x" != "x" ]]; then
+  COMPOSE_FILES="${COMPOSE_FILES} --file docker/${COMPOSE_FILE}"
+fi
+
+case "$ACTION" in
+  "up")
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        up \
+        ${COMPOSE_ARGS_UP}
+    set +x
+    ;;
+  "logs")
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        logs \
+        ${COMPOSE_ARGS_LOGS} \
+        ${COMPOSE_LOG_LIST}
+    set +x
+    ;;
+  "down")
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        down \
+        ${COMPOSE_ARGS_DOWN}
+    set +x
+    ;;
+  "purge-all")
+    echo "Purging all data volumes..."
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        down \
+        ${COMPOSE_ARGS_DOWN} \
+        --volumes
+    set +x
+    ;;
+  "purge-db")
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        down \
+        ${COMPOSE_ARGS_DOWN}
+    set +x
+    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-db ${COMPOSE_PROJECT_NAME:-blast}_django-static"
+    echo "Purging Django database and static file volumes..."
+    set -x
+    docker volume rm ${PURGE_VOLUMES}
+    set +x
+    ;;
+  "purge-data")
+    set -x
+    docker compose \
+        ${COMPOSE_FILES} ${ENV_FILES} --profile ${PROFILE} \
+        down \
+        ${COMPOSE_ARGS_DOWN}
+    set +x
+    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-data"
+    echo "Purging astro data volume..."
+    set -x
+    docker volume rm ${PURGE_VOLUMES}
+    set +x
+    ;;
+  *)
+    echo "ERROR: You must specify a valid action (e.g. $(basename $0) up)"
+    exit 1
+    ;;
+esac

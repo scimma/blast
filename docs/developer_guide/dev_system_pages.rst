@@ -23,7 +23,7 @@ Once logged in, you should see a page like this:
 .. note::
 
     To see the following system pages you will need to be running the full
-    Blast stack with :code:`bash run/blast.up.sh full_dev`, and not the slim version.
+    Blast stack with :code:`bash run/blastctl full_dev up`, and not the slim version.
 
 Flower
 ------

@@ -815,18 +815,6 @@ def prospector_result_to_blast(
     # load up the hdf5 file to get the results
     resultpars, obs, _ = reader.results_from(hdf5_file, dangerous=False)
 
-    # if sbipp:
-    #     theta_max = resultpars["chain"][100] #np.mean(resultpars["chain"], axis=0) # + np.std(resultpars["chain"], axis=0)
-    # else:
-    #    imax = np.argmax(resultpars["lnprobability"])
-    #    csz = resultpars["chain"].shape
-    #    if resultpars["chain"].ndim > 2:
-    # emcee
-    #        i, j = np.unravel_index(imax, resultpars["lnprobability"].shape)
-    #        theta_max = resultpars["chain"][i, j, :].copy()
-    #    else:
-    # dynesty
-    #        theta_max = resultpars["chain"][imax, :].copy()
 
     model_init = copy.deepcopy(model_components["model"])
     tstart = time.time()
@@ -842,24 +830,12 @@ def prospector_result_to_blast(
                 theta, obs=observations, sps=model_components["sps"]
             )
 
-            theta[1] -= np.log10(mfrac)
-            ### we need our mass to be conv to total \
-            ###    formed mass for the model to be accurate
-            best_spec, best_phot, mfrac = model_init.predict(
-                theta, obs=observations, sps=model_components["sps"]
-            )
             best_phot_store = best_phot[:]
             best_spec_store = best_spec[:]
         else:
             best_spec_single, best_phot_single, mfrac_single = model_components[
                 "model"
             ].predict(theta, obs=observations, sps=model_components["sps"])
-            theta[1] -= np.log10(mfrac)
-            ### we need our mass to be conv to total \
-            ###    formed mass for the model to be accurate
-            best_spec_single, best_phot_single, mfrac_single = model_init.predict(
-                theta, obs=observations, sps=model_components["sps"]
-            )
 
             # iteratively update the mean
             best_spec = (best_spec * i + best_spec_single) / (i + 1)
@@ -898,8 +874,9 @@ def prospector_result_to_blast(
 
     logmass16, logmass50, logmass84 = perc["stellar_mass"]
     age16, age50, age84 = perc["mwa"]
-    logsfr16, logsfr50, logsfr84 = np.log10(perc["sfr"][0])
-    logssfr16, logssfr50, logssfr84 = np.log10(perc["ssfr"][0])
+    # 2nd index is 100-Myr averaged sfr/ssfr
+    logsfr16, logsfr50, logsfr84 = np.log10(perc["sfr"][2])
+    logssfr16, logssfr50, logssfr84 = np.log10(perc["ssfr"][2])
     logzsol16,logzsol50,logzsol84 = perc['logzsol']
     dust2_16,dust2_50,dust2_84 = perc['dust2']
     dust_index_16,dust_index_50,dust_index_84 = perc['dust_index']

@@ -53,7 +53,7 @@ Blast directory,
 
 .. code::
 
-    bash run/blast.up.sh batch
+    bash run/blastctl batch up
 
 This will spin up a local version of Blast that will take your batch of transients
 as input and process them. Results will be periodically written to your results

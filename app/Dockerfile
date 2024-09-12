@@ -12,6 +12,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-
     libhdf5-serial-dev \
     netcdf-bin \
     libnetcdf-dev \
+    jq \
+    xxd \
     && rm -rf /var/lib/apt/list/*
 
 COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
