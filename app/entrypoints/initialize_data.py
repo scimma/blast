@@ -58,12 +58,20 @@ class ObjectStore:
             object_name=path)
         return response
 
-    def download_object(self, path="", file_path=""):
-        self.client.fget_object(
-            bucket_name=self.bucket,
-            object_name=path,
-            file_path=file_path,
-        )
+    def download_object(self, path="", file_path="", version_id=""):
+        if version_id:
+            self.client.fget_object(
+                bucket_name=self.bucket,
+                object_name=path,
+                file_path=file_path,
+                version_id=version_id,
+            )
+        else:
+            self.client.fget_object(
+                bucket_name=self.bucket,
+                object_name=path,
+                file_path=file_path,
+            )
 
     def md5_checksum(self, file_path):
         '''https://stackoverflow.com/a/58239738'''
@@ -86,7 +94,8 @@ class ObjectStore:
             chunk_size = min_chunk_size
         chunk_size_mib = int(chunk_size / 1024**2)
         file_size_mib = int(file_size / 1024**2)
-        logger.debug(f"chunk_size is {chunk_size_mib} MiB for file size {file_size_mib} bytes (etag parts: {etag_parts})")
+        logger.debug(f"chunk_size is {chunk_size_mib} MiB for file size {file_size_mib} bytes"
+                     "(etag parts: {etag_parts})")
         with open(file_path, 'rb') as fh:
             for data in iter(lambda: fh.read(chunk_size), b''):
                 md5s.append(hashlib.md5(data).digest())
@@ -112,7 +121,7 @@ class ObjectStore:
         return False
 
 
-def gather_file_data():
+def generate_file_manifest():
     '''Collect metadata for the latest versions of the objects in a JSON file'''
     s3 = ObjectStore()
     root_path = 'init/data/'
@@ -121,7 +130,7 @@ def gather_file_data():
     for obj in objs:
         info = {
             'path': obj.object_name.replace(root_path, ''),
-            'versionId': obj.version_id,
+            'version_id': obj.version_id,
             'etag': obj.etag,
             'size': obj.size,
         }
@@ -147,7 +156,10 @@ def verify_data_integrity(download=False):
             if not download:
                 sys.exit(1)
             logger.info(f'''Downloading file "{bucket_path}"...''')
-            s3.download_object(path=os.path.join('init/data', bucket_path), file_path=file_path)
+            s3.download_object(
+                path=os.path.join('init/data', bucket_path),
+                file_path=file_path,
+                version_id=data_object['version_id'])
         etag = data_object['etag']
         size = data_object['size']
         # logger.debug(f'source etag: {etag}')
@@ -160,7 +172,10 @@ def verify_data_integrity(download=False):
             if not download:
                 sys.exit(1)
             logger.info(f'''Downloading file "{bucket_path}"...''')
-            s3.download_object(path=os.path.join('init/data', bucket_path), file_path=file_path)
+            s3.download_object(
+                path=os.path.join('init/data', bucket_path),
+                file_path=file_path,
+                version_id=data_object['version_id'])
             checksum_match = s3.etag_compare(file_path, etag, size)
             log_msg = f'''Comparing "{file_path}"... {checksum_match}'''
             if not checksum_match:
@@ -181,6 +196,6 @@ if __name__ == '__main__':
     if cmd == 'download':
         # Verify uploads against local files
         verify_data_integrity(download=True)
-    elif cmd == 'gather':
-        gather_file_data()
+    elif cmd == 'manifest':
+        generate_file_manifest()
     sys.exit()
