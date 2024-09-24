@@ -223,10 +223,12 @@ def results(request, slug):
         aperture__type__exact="local",
         flux__isnull=False,
         is_validated="true",
-    )
+    ).order_by('filter__wavelength_eff_angstrom')
     global_aperture_photometry = AperturePhotometry.objects.filter(
         transient=transient, aperture__type__exact="global", flux__isnull=False
-    ).filter(Q(is_validated="true") | Q(is_validated="contamination warning"))
+    ).filter(
+        Q(is_validated="true") | Q(is_validated="contamination warning")
+    ).order_by('filter__wavelength_eff_angstrom')
     contam_warning = (
         True
         if len(global_aperture_photometry.filter(is_validated="contamination warning"))
