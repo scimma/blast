@@ -3,7 +3,8 @@ Software
 
 Blast is largely glue between already established software projects. It could not
 exist without them. If you use Blast, you must acknowledge and cite all
-of the following projects which Blast uses.
+of the following projects which Blast uses.  We include a file with all citations
+in `BibTex format <../_static/acknowledgements.bib>`_.
 
 If you see your software being used in Blast and we have not cited you properly,
 please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
@@ -51,3 +52,9 @@ please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
    * - Python FSPS
      - `<https://github.com/dfm/python-fsps/tree/v0.4.1rc1>`_
      - `<https://doi.org/10.5281/zenodo.4737461>`_
+   * - SBI
+     - `<https://sbi-dev.github.io/sbi/latest/>`_
+     - `<https://doi.org/10.21105/joss.02505>`_
+   * - SBI++
+     - `<https://github.com/wangbingjie/sbi_pp>`_
+     - `<https://doi.org/10.3847/2041-8213/ace361>`_
