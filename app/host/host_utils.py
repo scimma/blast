@@ -304,11 +304,11 @@ def get_dust_maps(position):
     return 0.86 * ebv
 
 
-def get_local_aperture_size(redshift):
+def get_local_aperture_size(redshift,apr_kpc=2):
     """find the size of a 2 kpc radius in arcsec"""
 
     dadist = cosmo.angular_diameter_distance(redshift).value
-    apr_arcsec = 2 / (
+    apr_arcsec = apr_kpc / (
         dadist * 1000 * (np.pi / 180.0 / 3600.0)
     )  # 2 kpc aperture radius is this many arcsec
 
