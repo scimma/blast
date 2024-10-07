@@ -12,6 +12,7 @@ from host.base_tasks import SystemTaskRunner
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.workflow import transient_workflow
+from host.trim_images import trim_images
 
 from .models import Status
 from .models import TaskRegister
@@ -76,6 +77,7 @@ class TNSDataIngestion(SystemTaskRunner):
                 ]
                 for k in keys_to_del:
                     del new_transient_dict[k]
+                new_transient_dict['tasks_initialized'] = False
                 saved_transients.filter(name__exact=transient.name).update(
                     **new_transient_dict
                 )
@@ -266,8 +268,37 @@ class LogTransientProgress(SystemTaskRunner):
     def task_initially_enabled(self):
         return False
 
+class TrimTransientImages(SystemTaskRunner):
+    def run_process(self):
+        """
+        Updates the processing status for all transients.
+        """
+        transients = Transient.objects.filter(image_trim_status="ready")
 
+        for transient in transients:
+            trim_images(transient)
+
+    @property
+    def task_name(self):
+        return "Trim transient images"
+
+    @property
+    def task_frequency_seconds(self):
+        return 3600
+
+    @property
+    def task_initially_enabled(self):
+        return True
+
+            
 # Periodic tasks
+@shared_task(
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def trim_transient_images():
+    TrimTransientImages().run_process()
+
 
 @shared_task(
     time_limit=task_time_limit,
