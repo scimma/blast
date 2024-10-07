@@ -211,7 +211,7 @@ class ImageDownload(TransientTaskRunner):
         Download cutout images
         """
 
-        if transient.image_trim_status = "processed":
+        if transient.image_trim_status == "processed":
             overwrite = "True"
         else:
             overwrite = "False"
