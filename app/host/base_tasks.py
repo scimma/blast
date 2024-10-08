@@ -95,12 +95,13 @@ def get_processing_status(transient):
     # save transient progress
     return progress
 
+
 def get_image_trim_status(transient):
     # for image trimming to be ready, we need either
     # 1) image trimming is already finished
     # 2) local AND global photometry validation are not 'not processed'
     # 3) progress is complete
-    
+
     if transient.image_trim_status == "processed":
         return "processed"
     elif transient.processing_status == "completed" or transient.processing_status == "blocked":
@@ -112,6 +113,7 @@ def get_image_trim_status(transient):
             return "ready"
         else:
             return "not ready"
+
 
 class TaskRunner(ABC):
     """
