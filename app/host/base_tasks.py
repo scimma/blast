@@ -103,7 +103,7 @@ def get_image_trim_status(transient):
     
     if transient.image_trim_status == "processed":
         return "processed"
-    elif transient.processing_status == "completed":
+    elif transient.processing_status == "completed" or transient.processing_status == "blocked":
         return "ready"
     else:
         global_valid_status = TaskRegister.objects.filter(task__name="Validate local photometry",transient=transient)[0].status.message
