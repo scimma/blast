@@ -986,7 +986,7 @@ def load_cutouts(apps, schema_editor):
             name='2010ag_PanSTARRS_z',
             filter=Filter.objects.get(name__exact='PanSTARRS_z'),
             transient=Transient.objects.get(name__exact='2010ag'),
-            fits='/data/cutout_cdn/2010H/PanSTARRS/PanSTARRS_z.fits',
+            fits='/data/cutout_cdn/2010ag/PanSTARRS/PanSTARRS_z.fits',
         ),
         Cutout(
             name='2010ag_PanSTARRS_y',
@@ -1011,12 +1011,6 @@ def load_cutouts(apps, schema_editor):
             filter=Filter.objects.get(name__exact='SDSS_i'),
             transient=Transient.objects.get(name__exact='2010ag'),
             fits='/data/cutout_cdn/2010ag/SDSS/SDSS_i.fits',
-        ),
-        Cutout(
-            name='2010H_SDSS_z',
-            filter=Filter.objects.get(name__exact='SDSS_z'),
-            transient=Transient.objects.get(name__exact='2010ag'),
-            fits='/data/cutout_cdn/2010H/SDSS/SDSS_z.fits',
         ),
         Cutout(
             name='2010ag_GALEX_NUV',
@@ -1061,13 +1055,13 @@ def load_cutouts(apps, schema_editor):
             fits='/data/cutout_cdn/2010ag/WISE/WISE_W2.fits',
         ),
         Cutout(
-            name='2010H_WISE_W3',
+            name='2010ag_WISE_W3',
             filter=Filter.objects.get(name__exact='WISE_W3'),
             transient=Transient.objects.get(name__exact='2010ag'),
             fits='/data/cutout_cdn/2010ag/WISE/WISE_W3.fits',
         ),
         Cutout(
-            name='2010H_WISE_W4',
+            name='2010ag_WISE_W4',
             filter=Filter.objects.get(name__exact='WISE_W4'),
             transient=Transient.objects.get(name__exact='2010ag'),
             fits='/data/cutout_cdn/2010ag/WISE/WISE_W4.fits',
