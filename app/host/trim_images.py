@@ -5,6 +5,7 @@ from astropy.wcs import WCS
 from astropy.nddata import Cutout2D
 import astropy.units as u
 import numpy as np
+import os
 
 from host.models import Cutout
 from host.models import Aperture
@@ -15,7 +16,7 @@ def trim_images(transient):
     
     cutouts = Cutout.objects.filter(transient=transient) #,filter__name='DES_r')
     for c in cutouts:
-        if c.fits.name:
+        if c.fits.name and os.path.exists(c.fits.name):
             trim_image(c)
 
     transient = Transient.objects.get(pk=transient.pk)
@@ -32,7 +33,7 @@ def trim_image(cutout):
         SkyCoord(offset_ra,offset_dec,unit=u.deg)
     ).arcsec/10.
 
-    if transient.host is None and transient.best_redshift is None:
+    if transient.best_redshift is None:
         # no host, no redshift: 5 kpc at z = 0.01
         size_arcsec = get_local_aperture_size(0.01,5)
         size_pix_5kpc = 2*size_arcsec/arcsec2pix

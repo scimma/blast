@@ -55,7 +55,7 @@ class TNSDataIngestion(SystemTaskRunner):
                     tasks = TaskRegister.objects.filter(
                         transient=saved_transient)
                     for t in tasks:
-                        ### this could be smarter
+                        ### TODO: this could be smarter
                         ### we don't *always* need to re-process every stage
                         t.status = Status.objects.get(message="not processed")
                         t.save()
