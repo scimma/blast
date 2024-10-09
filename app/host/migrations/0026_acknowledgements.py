@@ -1,17 +1,4 @@
 from django.db import migrations
-from django.core import serializers
-
-
-def load_fixtures(apps, schema_editor):
-    for fixture_file in [
-        '/app/host/fixtures/initial/setup_acknowledgements.yaml',
-    ]:
-        # print(f'''  Loading fixture "{fixture_file}"...''')
-        with open(fixture_file) as fp:
-            # Inspired by https://stackoverflow.com/a/25981899
-            objects = serializers.deserialize('yaml', fp, ignorenonexistent=True)
-            for obj in objects:
-                obj.save()
 
 
 class Migration(migrations.Migration):
@@ -21,5 +8,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(load_fixtures),
+        # THIS MIGRATION WAS REMOVED AFTER REFACTORING 0024_load_fixtures
     ]
