@@ -270,6 +270,7 @@ class LogTransientProgress(SystemTaskRunner):
     def task_initially_enabled(self):
         return False
 
+
 class TrimTransientImages(SystemTaskRunner):
     def run_process(self):
         """

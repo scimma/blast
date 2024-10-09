@@ -15,6 +15,7 @@
     dec_deg: 2.1707639
     host:
     - PSO J080624.103+010209.859
+    image_trim_status: "not ready"
 - model: host.Survey
   pk: 1
   fields:

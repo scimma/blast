@@ -20,6 +20,7 @@
     spectroscopic_class: SN Ia
     milkyway_dust_reddening: 0.026
     tasks_initialized: true
+    image_trim_status: "not ready"
 - model: host.TaskRegister
   pk: 21
   fields:
