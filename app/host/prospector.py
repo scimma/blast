@@ -153,13 +153,16 @@ def build_obs(transient, aperture_type, use_mag_offset=True):
             0
         ]
         flux_mwcorr = (
-            datapoint.flux * 10 ** (-0.4 * filter.ab_offset) * 10 ** (0.4 * ext_corr)
+            datapoint.flux * 10 ** (0.4 * ext_corr)
+            # fluxes are already AB now (uJy)
+            #datapoint.flux * 10 ** (-0.4 * filter.ab_offset) * 10 ** (0.4 * ext_corr)
         )
         # 1% error floor
         fluxerr_mwcorr = np.sqrt(
             (
                 datapoint.flux_error
-                * 10 ** (-0.4 * filter.ab_offset)
+                #fluxes are already AB now (uJy)
+                #* 10 ** (-0.4 * filter.ab_offset)
                 * 10 ** (0.4 * ext_corr)
             )
             ** 2.0
