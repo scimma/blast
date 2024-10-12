@@ -34,7 +34,7 @@ def trim_image(cutout):
         SkyCoord(offset_ra, offset_dec, unit=u.deg)
     ).arcsec / 10.
 
-    if transient.best_redshift is None:
+    if transient.best_redshift is None or transient.best_redshift < 0.002:
         # no host, no redshift: 5 kpc at z = 0.01
         size_arcsec = get_local_aperture_size(0.01, 5)
         size_pix_5kpc = 2 * size_arcsec / arcsec2pix

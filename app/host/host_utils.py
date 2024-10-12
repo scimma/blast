@@ -279,7 +279,10 @@ def do_aperture_photometry(image, sky_aperture, filter):
         zpt = filter.magnitude_zero_point + 2.5 * np.log10(image[0].header["EXPTIME"])
 
     flux = flux_to_mJy_flux(uncalibrated_flux, zpt)
+    flux = flux*10 ** (-0.4 * filter.ab_offset)
     flux_error = fluxerr_to_mJy_fluxerr(uncalibrated_flux_err, zpt)
+    flux_error = flux_error*10 ** (-0.4 * filter.ab_offset)
+
     magnitude = flux_to_mag(uncalibrated_flux, zpt)
     magnitude_error = fluxerr_to_magerr(uncalibrated_flux, uncalibrated_flux_err)
     if magnitude != magnitude:
