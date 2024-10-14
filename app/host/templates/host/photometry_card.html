@@ -1,5 +1,6 @@
 {% extends "host/card_template.html" %}
-
+{% load latexify %}
+{% include "latexify/scripts.html" %}
 <!-- title -->
 {% block title %}
 
@@ -30,8 +31,8 @@
                     <thead>
                         <tr>
                             <th scope="col">Filter</th>
-                            <th scope="col">Flux (mJy)</th>
-                            <th scope="col">Flux error (mJy)</th>
+                            <th scope="col">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                            <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
                             <th scope="col">Mag</th>
                             <th scope="col">Mag error</th>
                         </tr>
@@ -67,8 +68,8 @@
 		    <thead>
 			<tr>
 			    <th scope="col">Filter</th>
-			    <th scope="col">Flux (mJy)</th>
-			    <th scope="col">Flux error (mJy)</th>
+                            <th scope="col">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                            <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
 			    <th scope="col">Mag</th>
 			    <th scope="col">Mag error</th>
 			</tr>
@@ -90,3 +91,4 @@
     </div>
 </div>
 {% endblock %}
+

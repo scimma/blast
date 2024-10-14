@@ -482,45 +482,37 @@ def SDSS_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    sdss_baseurl = "https://dr14.sdss.org/sas"
+    sdss_baseurl = "https://data.sdss.org/sas"
     print(position)
 
-    # xid = SDSS.query_region(position, radius=0.05 * u.deg)
-    # ramin,ramax,decmin,decmax = getRADecBox(position.ra.deg,position.dec.deg,size=0.02)
-    # sqlquery = f"""SELECT DISTINCT p.ra, p.dec, p.objid, p.run, p.rerun, p.camcol, p.field FROM PhotoObjAll AS p WHERE p.ra between {ramin} and {ramax} and p.dec between {decmin} and {decmax}"""
-    # import pdb; pdb.set_trace()
-    # xid = SkyServer.sqlSearch(sqlquery)
+    xid = SDSS.query_region(position, radius=0.05 * u.deg)
+    if xid is None or len(xid) == 0:
+        return None
+    
+    image_pos = SkyCoord(xid['ra'],xid['dec'],unit=u.deg)
+    sep = position.separation(image_pos)
+    iSep = np.where(sep == np.min(sep))[0]
+    
 
-    url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
-    print(url)
-    rt = requests.get(url)
+    # old (better, but deprecated) version
+    #url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
+    #print(url)
+    #rt = requests.get(url)
+
+
+
+    regex = "<dt>run<\/dt>.*<dd>.*<\/dd>"
+    run = xid['run'][iSep][0] #re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    rerun = xid['rerun'][iSep][0] #re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    camcol = xid['camcol'][iSep][0] #re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    field = xid['field'][iSep][0] #re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
 
     # a little latency so that we don't look like a bot to SDSS?
     time.sleep(1)
-    if "Error: Couldn't find field covering" in rt.text:
-        return None
-
-    # if not len(xid):
-    #    return None
-    # if xid is not None and 'titleSkyserver_Errortitle' in xid.keys():
-    #    RuntimeWarning(f'SDSS query fail for position {position.ra.deg},{position.dec.deg}')
-    #    return None
-
-    # if len(xid) and xid is not None:
-    # sc = SkyCoord(xid["ra"], xid["dec"], unit=u.deg)
-    # sep = position.separation(sc).arcsec
-    # iSep = np.where(sep == min(sep))[0][0]
-
-    regex = "<dt>run<\/dt>.*<dd>.*<\/dd>"
-    run = re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    rerun = re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    camcol = re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    field = re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-
     link = SDSS.IMAGING_URL_SUFFIX.format(
         base=sdss_baseurl,
         run=int(run),
-        dr=14,
+        dr=16,
         instrument="eboss",
         rerun=int(rerun),
         camcol=int(camcol),
