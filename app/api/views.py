@@ -24,6 +24,14 @@ class TransientFilter(django_filters.FilterSet):
         field_name="redshift", lookup_expr="lte")
     redshift_gte = django_filters.NumberFilter(
         field_name="redshift", lookup_expr="gte")
+    host_redshift_lte = django_filters.NumberFilter(
+        field_name="host__redshift", lookup_expr="lte")
+    host_redshift_gte = django_filters.NumberFilter(
+        field_name="host__redshift", lookup_expr="gte")
+    host_photometric_redshift_lte = django_filters.NumberFilter(
+        field_name="host__photometric_redshift", lookup_expr="lte")
+    host_photometric_redshift_gte = django_filters.NumberFilter(
+        field_name="host__photometric_redshift", lookup_expr="gte")
 
     class Meta:
         model = Transient
@@ -103,9 +111,8 @@ class SEDFittingResultFilter(django_filters.FilterSet):
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transient.objects.all()
     serializer_class = serializers.TransientSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = TransientFilter
-
 
 class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Aperture.objects.all()
@@ -207,6 +214,7 @@ def get_transient_science_payload(request, transient_name):
     ]
     components = datamodel.unpack_component_groups(component_groups)
     data = datamodel.serialize_blast_science_data(components)
+
     return Response(data, status=status.HTTP_200_OK)
 
 

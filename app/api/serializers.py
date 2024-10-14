@@ -19,6 +19,7 @@ class TransientSerializer(serializers.ModelSerializer):
             "tasks_initialized",
             "photometric_class",
             "processing_status",
+            "added_by",
         ]
 
 
@@ -35,13 +36,11 @@ class ApertureSerializer(serializers.ModelSerializer):
         depth = 1
         fields = "__all__"
 
-
 class AperturePhotometrySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AperturePhotometry
         depth = 1
         fields = "__all__"
-
 
 class SEDFittingResultSerializer(serializers.ModelSerializer):
     class Meta:

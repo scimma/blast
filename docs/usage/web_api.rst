@@ -61,6 +61,10 @@ Transient filtering options
 * :code:`name=` - search on transient name
 * :code:`redshift_gte=` - filter on redshifts greater than or equal to the value provided
 * :code:`redshift_lte=` - filter on redshifts less than or equal to the value provided
+* :code:`host_redshift_gte=` - filter on host redshifts greater than or equal to the value provided
+* :code:`host_redshift_lte=` - filter on host redshifts less than or equal to the value provided
+* :code:`host_photometric_redshift_gte=` - filter on host photometric redshifts greater than or equal to the value provided
+* :code:`host_photometric_redshift_lte=` - filter on host photometric redshifts less than or equal to the value provided
 
 Example:
 :code:`<blast_base_url>/api/transient/?redshift_gte=0.02`
@@ -73,7 +77,7 @@ API link: :code:`/api/host/`
 * :code:`name` - name of the host e.g., NGC123
 * :code:`ra_deg` - host Right Ascension in decimal degrees e.g., 132.34564
 * :code:`dec_deg` - host declination in decimal degrees e.g., 60.123424
-* :code:`redshift` - transient redshift e.g., 0.01
+* :code:`redshift` - host redshift e.g., 0.01
 * :code:`milkyway_dust_reddening` - host E(B-V) e.g, 0.2
 
 Host filtering options
@@ -81,7 +85,7 @@ Host filtering options
 * :code:`name=` - search on host name
 * :code:`redshift_gte=` - filter on redshifts greater than or equal to the value provided
 * :code:`redshift_lte=` - filter on redshifts less than or equal to the value provided
-* :code:`_photometric_redshift_gte=` - filter on photometric  redshifts greater than or equal to the value provided
+* :code:`photometric_redshift_gte=` - filter on photometric  redshifts greater than or equal to the value provided
 * :code:`photometric_redshift_lte=` - filter on photometric redshifts less than or equal to the value provided
 
 Example:
