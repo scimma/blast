@@ -2,6 +2,15 @@ from dataclasses import dataclass
 
 from host import models
 from rest_framework import serializers
+from datetime import datetime, timezone
+from django.conf import settings
+
+
+def get_api_metadata():
+    return {
+        'app_version': settings.APP_VERSION,
+        'date_accessed': datetime.now(timezone.utc),
+    }
 
 
 class CutoutField(serializers.RelatedField):
@@ -9,7 +18,15 @@ class CutoutField(serializers.RelatedField):
         return value.filter.name
 
 
-class TransientSerializer(serializers.ModelSerializer):
+class ModelSerializerWithMetadata(serializers.ModelSerializer):
+    metadata = serializers.SerializerMethodField('generate_metadata')
+
+    def generate_metadata(self, obj):
+        return get_api_metadata()
+
+
+class TransientSerializer(ModelSerializerWithMetadata):
+
     class Meta:
         model = models.Transient
         depth = 1
@@ -21,42 +38,55 @@ class TransientSerializer(serializers.ModelSerializer):
             "processing_status",
             "added_by",
         ]
+        read_only_fields = ('metadata',)
 
 
 class HostSerializer(serializers.HyperlinkedModelSerializer):
+    metadata = serializers.SerializerMethodField('generate_metadata')
+
+    def generate_metadata(self, obj):
+        return get_api_metadata()
+
     class Meta:
         model = models.Host
         depth = 1
-        fields = ["name", "ra_deg", "dec_deg", "redshift", "milkyway_dust_reddening"]
+        fields = ["name", "ra_deg", "dec_deg", "redshift", "milkyway_dust_reddening", "metadata"]
+        read_only_fields = ('metadata',)
 
 
-class ApertureSerializer(serializers.ModelSerializer):
+class ApertureSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.Aperture
         depth = 1
         fields = "__all__"
+        read_only_fields = ('metadata',)
 
-class AperturePhotometrySerializer(serializers.ModelSerializer):
+
+class AperturePhotometrySerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.AperturePhotometry
         depth = 1
         fields = "__all__"
+        read_only_fields = ('metadata',)
 
-class SEDFittingResultSerializer(serializers.ModelSerializer):
+
+class SEDFittingResultSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.SEDFittingResult
         depth = 1
         exclude = ["log_tau_16", "log_tau_50", "log_tau_84", "posterior"]
+        read_only_fields = ('metadata',)
 
 
-class CutoutSerializer(serializers.ModelSerializer):
+class CutoutSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.Cutout
         depth = 1
         exclude = ["fits"]
+        read_only_fields = ('metadata',)
 
 
-class FilterSerializer(serializers.ModelSerializer):
+class FilterSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.Filter
         depth = 1
@@ -67,16 +97,18 @@ class FilterSerializer(serializers.ModelSerializer):
             "wavelength_eff_angstrom",
             "ab_offset",
         ]
+        read_only_fields = ('metadata',)
 
 
-class TaskRegisterSerializer(serializers.ModelSerializer):
+class TaskRegisterSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.TaskRegister
         depth = 1
         fields = "__all__"
+        read_only_fields = ('metadata',)
 
 
-class TaskSerializer(serializers.ModelSerializer):
+class TaskSerializer(ModelSerializerWithMetadata):
     class Meta:
         model = models.Task
         depth = 1

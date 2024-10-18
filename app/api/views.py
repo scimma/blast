@@ -11,6 +11,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from api.serializers import get_api_metadata
 
 from . import datamodel
 from . import serializers
@@ -213,7 +214,8 @@ def get_transient_science_payload(request, transient_name):
         component_group(transient_name) for component_group in data_model_components
     ]
     components = datamodel.unpack_component_groups(component_groups)
-    data = datamodel.serialize_blast_science_data(components)
+    data = get_api_metadata()
+    data = {**data, **datamodel.serialize_blast_science_data(components)}
 
     return Response(data, status=status.HTTP_200_OK)
 
