@@ -70,6 +70,22 @@
   .form-control.is-valid, .form-control:focus {
     border-color:#d15e00;
   }
+  .loader {
+    border: 12px solid #f3f3f3;
+    border-top: 12px solid #d15e00;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: 2rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
   </style>
   {% load static %}
   {% include 'latexify/stylesheets.html' %}

@@ -7,6 +7,7 @@
 
 <!-- body -->
 {% block body %}
+<div id="loading-indicator" class="loader"></div>
 {{ bokeh_cutout_div | safe }}
 <form class="form" , method="POST">
     {% csrf_token %}
