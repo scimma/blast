@@ -1,4 +1,5 @@
 {% load latexify %}
+{% load host_tags %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -147,6 +148,8 @@
         <span style="margin-left:2px">
           <span class="text-muted">| UCSC Transient team web pages
             <a href="https://transients.ucsc.edu/">here</a>
+          </span>
+          <span class="text-muted">| {% app_version "v" %}
           </span>
         </span>
       </span>
