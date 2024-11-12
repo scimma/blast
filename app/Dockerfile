@@ -1,6 +1,6 @@
 FROM registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:20240912 AS deps
 
-FROM python:3.11
+FROM python:3.11.10
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \
