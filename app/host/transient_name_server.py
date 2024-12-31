@@ -42,8 +42,8 @@ def query_tns(data, headers, search_url):
     response_id_code = response.get("id_code")
 
     response_status_good = response_id_code == 200
-    data = response.get("data", {}).get("reply") if response_status_good else []
-    response_reset_time = response.get("data", {}).get("total", {}).get("reset")
+    data = response.get("data", {}) if response_status_good else []
+    response_reset_time = response.headers['x-rate-limit-reset']
 
     response_return = {
         "response_message": response_message,
