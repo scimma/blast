@@ -124,6 +124,6 @@ services:
       - ../app/entrypoints/wait-for-it.sh:/wait-for-it.sh:ro
       - ../batch/docker-entrypoint.batch.sh:/docker-entrypoint.batch.sh:ro
       - ${BATCH_CSV}:/input.csv:ro
-      - ${OUTPUT_CSV}:/results.csv
+      - ${OUTPUT_DIR}:/results
     profiles:
       - "batch"

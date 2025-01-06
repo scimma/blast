@@ -93,17 +93,19 @@ def transient_processing_progress(path_to_output_csv: str) -> float:
 
 if __name__ == "__main__":
     import os
+    from datetime import datetime, timezone
     localhost = f'''http://{os.getenv('WEB_APP_HOST')}:{os.getenv('WEB_APP_PORT')}'''
     post_endpoint = "/api/transient/post/"
     get_endpoint = "/api/transient/get/"
 
     input_csv = str(sys.argv[1])
+    timestamp = datetime.now(timezone.utc).strftime("%m%d%Y%H%M%S")
     post_transient_from_csv(input_csv, f"{localhost}{post_endpoint}")
-    download_data_snapshot(input_csv, "/results.csv", f"{localhost}{get_endpoint}")
-    batch_progress = transient_processing_progress("/results.csv")
+    download_data_snapshot(input_csv, f"/results/blast_results.{timestamp}.csv", f"{localhost}{get_endpoint}")
+    batch_progress = transient_processing_progress(f"/results/blast_results.{timestamp}.csv")
 
     while batch_progress < 1.0:
         print(batch_progress)
         time.sleep(10)
-        download_data_snapshot(input_csv, "/results.csv", f"{localhost}{get_endpoint}")
-        batch_progress = transient_processing_progress("/results.csv")
+        download_data_snapshot(input_csv, f"/results/blast_results.{timestamp}.csv", f"{localhost}{get_endpoint}")
+        batch_progress = transient_processing_progress(f"/results/blast_results.{timestamp}.csv")
