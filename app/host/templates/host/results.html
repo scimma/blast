@@ -1,7 +1,7 @@
 {% extends 'host/base.html' %}
 {% load latexify %}
 
-{% block title %} Results {% endblock %}
+{% block title %} {{transient.name}} results {% endblock %}
 {% block script %} {{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }}  {% endblock %}
 
 {% load crispy_forms_tags %}
