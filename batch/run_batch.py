@@ -4,6 +4,7 @@ import sys
 import time
 from urllib.request import Request
 from urllib.request import urlopen
+from urllib.error import HTTPError
 
 
 def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
@@ -27,6 +28,9 @@ def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
                 data = json.loads(response.read())
                 post_message = data.get("message", "no message returned by blast")
                 print(f"{post_message}")
+            except HTTPError as e:
+                print(e.code)
+                print(e.read())
             except Exception as e:
                 print(f"{name}: {e}")
 
@@ -76,18 +80,20 @@ def transient_processing_progress(path_to_output_csv: str) -> float:
     with open(path_to_output_csv, newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         for transient in reader:
-            status = transient["transient_processing_status"]
-
-            if status == "processing":
+            progress = int(transient["transient_progress"])
+            # TODO: This progress monitor is not ideal, because if a transient fails to begin (0) or the workflow
+            #       fails to complete (<100), the script will idle indefinitely.
+            if progress >= 0:
                 processing = +1
-            else:
+            elif progress == 100:
                 completed = +1
 
     return completed / (processing + completed)
 
 
 if __name__ == "__main__":
-    localhost = "http://0.0.0.0:8000"
+    import os
+    localhost = f'''http://{os.getenv('WEB_APP_HOST')}:{os.getenv('WEB_APP_PORT')}'''
     post_endpoint = "/api/transient/post/"
     get_endpoint = "/api/transient/get/"
 
