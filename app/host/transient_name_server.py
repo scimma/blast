@@ -44,6 +44,12 @@ def query_tns(data, headers, search_url):
     response_status_good = response_id_code == 200
     data = response_json.get("data", {}) if response_status_good else []
     response_reset_time = response.headers['x-rate-limit-reset']
+    try:
+        response_reset_time = int(response_reset_time)
+    except ValueError:
+        # If the reset time is for some reason not an integer value, set to the default value.
+        # See https://www.wis-tns.org/comment/26286#comment-26286 for details.
+        response_reset_time = 60
 
     response_return = {
         "response_message": response_message,
