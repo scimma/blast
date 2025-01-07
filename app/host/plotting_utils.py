@@ -24,6 +24,7 @@ from bokeh.transform import cumsum
 from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
 from host.prospector import build_obs
+from bokeh.models import CustomJS
 
 # import extinction
 # from bokeh.models import Circle
@@ -215,6 +216,10 @@ def plot_cutout_image(
         fig.xgrid.visible = False
         fig.ygrid.visible = False
 
+    hide_loading_indicator = CustomJS(args=dict(), code="""
+        document.getElementById('loading-indicator').style.display = "none";
+    """)
+    fig.x_range.js_on_change('end', hide_loading_indicator)
     plot_image(image_data, fig)
 
     script, div = components(fig)

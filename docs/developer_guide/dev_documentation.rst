@@ -14,9 +14,10 @@ have made changes to the documentation you can preview those changes by running,
 
 .. code:: none
 
-    bash run/blast.up.sh docs
+    bash run/blastctl docs up
 
-Then open :code:`blast/docs/build/index.html` in your web browser to see the
+Then visit `http://localhost:4001/` or open :code:`blast/docs/build/index.html` 
+in your web browser to see the
 changes. Every time you make changes to the documentation code you have to re-run
 the above command.
 

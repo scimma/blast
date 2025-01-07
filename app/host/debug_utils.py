@@ -118,8 +118,10 @@ def populate_sed_quantities():
         agebins_ago = 10**agebins / 1e9
 
         theta_index = pp.theta_index()
-        sfh_binned = pp.getSFH(res['chain'],zred=s.transient.best_redshift,theta_index=theta_index,rtn_chains=True)[-1]
+        _,_,allMWA,_,sfh_binned = pp.getSFH(res['chain'],zred=s.transient.best_redshift,theta_index=theta_index,rtn_chains=True)
         sfh_binned = np.percentile(sfh_binned, [15.9,50,84.1], axis=0).T
+        mwa = np.percentile(allMWA, [15.9,50,84.1])
+        age16, age50, age84 = mwa
 
         sfh_results = []
         unique_sfh = np.unique(perc['sfh'][:,1])
@@ -188,8 +190,8 @@ def populate_sed_quantities():
             ps = s.logsfh.filter(
                 logsfr_tmin=sfh_r['logsfr_tmin']
             )
-            sfh_r['transient'] = transient
-            sfh_r['aperture'] = aperture[0]
+            sfh_r['transient'] = s.transient
+            sfh_r['aperture'] = s.aperture
             if len(ps):
                 ps.update(**sfh_r)
             else:

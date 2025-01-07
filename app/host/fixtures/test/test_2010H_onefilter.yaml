@@ -20,6 +20,7 @@
     spectroscopic_class: SN Ia
     milkyway_dust_reddening: 0.026
     tasks_initialized: true
+    image_trim_status: "not ready"
 - model: host.TaskRegister
   pk: 21
   fields:
@@ -141,15 +142,6 @@
     - processed
     last_modified: 2000-01-23 01:23:45.678000+00:00
     last_processing_time_seconds: 50.0
-- model: host.Cutout
-  pk: 37
-  fields:
-    name: 2010H_PanSTARRS_g
-    filter:
-    - PanSTARRS_g
-    transient:
-    - 2010H
-    fits: ../data/cutout_cdn/2010H/PanSTARRS/PanSTARRS_g.fits
 - model: host.Aperture
   pk: 1
   fields:

@@ -37,6 +37,7 @@ Developer Guide
 
    developer_guide/dev_getting_started
    developer_guide/dev_running_blast
+   developer_guide/dev_initial_dataset
    developer_guide/dev_system_pages
    developer_guide/dev_workflow
    developer_guide/dev_overview_of_repo

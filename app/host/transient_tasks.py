@@ -210,7 +210,16 @@ class ImageDownload(TransientTaskRunner):
         """
         Download cutout images
         """
-        message = download_and_save_cutouts(transient)
+
+        if transient.image_trim_status == "processed":
+            overwrite = "True"
+        else:
+            overwrite = "False"
+
+        message = download_and_save_cutouts(
+            transient,
+            overwrite=overwrite
+        )
 
         return message
 

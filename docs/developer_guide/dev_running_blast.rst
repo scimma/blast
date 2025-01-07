@@ -40,17 +40,17 @@ If you need to ingest real transient data from the Transient Name Server (TNS), 
 Run the Blast app
 -----------------
 
-You are encouraged to use the helper scripts to start (:code:`run/blast.up.sh`)
-and stop (:code:`run/blast.down.sh`) the application. These scripts use a
+You are encouraged to use the Blast control script (:code:`run/blastctl`)
+to start and stop the application. This script uses a
 combination of :code:`docker compose` and :code:`docker` commands to properly
 manage the container lifecycles.
 
-To launch the full Blast stack, invoke the :code:`run/blast.up.sh` script with
+To launch the full Blast stack, invoke the :code:`run/blastctl` script with
 the :code:`full_dev` Docker Compose profile:
 
 .. code:: bash
 
-    bash run/blast.up.sh full_dev
+    bash run/blastctl full_dev up
 
 Alternatively, if you are only interested in running the web server and database, which is
 usually sufficient for front end web development, you can use the :code:`slim_dev` Docker Compose
@@ -58,26 +58,30 @@ profile:
 
 .. code:: bash
 
-    bash run/blast.up.sh slim_dev
+    bash run/blastctl slim_dev up
 
 Then go to `http://0.0.0.0:8000/ <http://0.0.0.0:8000/>`_  in your web browser
 after all the containers have started, and Blast should be running.
+
+To watch container logs run
+
+.. code:: bash
+
+    bash run/blastctl $PROFILE logs
 
 Running Blast in these two modes means you can edit most code and you will see
 the resulting live changes in the web interface.
 
 .. tip::
-    If you want to run multiple independent instances of Blast (unusual) or you want 
-    to customize the default Docker Compose project name ``blast``, set the 
-    ``COMPOSE_PROJECT_NAME`` prior to running the up/down scripts; for example: 
-    ``export COMPOSE_PROJECT_NAME=dev-blast``.
-
+    Multiple instances of Blast can run concurrently using the different profiles. It 
+    is possible, for example, to be running :code:`full_dev` and simultaneously run 
+    the :code:`ci` profile to execute unit tests.
 
 To terminate Blast and remove the containers, open a new terminal window and run:
 
 .. code:: bash
 
-    bash run/blast.down.sh $PROFILE
+    bash run/blastctl $PROFILE down
 
 where :code:`$PROFILE` is the active Docker Compose profile as described above
 (for example, :code:`slim_dev`).
@@ -97,26 +101,30 @@ The :code:`blast-db` volume stores the Django SQL database, and it is provisione
 
 The :code:`blast-data` volume stores astronomical data. During initialization, all required data files are downloaded and installed.
 
-The Docker volume names are prepended by the Docker Compose project name (default ``blast``) and joined with an underscore. You can list them like so:
+The Docker volume names are prepended by the Docker Compose project name (e.g. ``blast-dev``) and joined with an underscore. You can list them like so:
 
 .. code:: bash
 
     $ docker volume ls
     ...
-    local     blast_blast-data
-    local     blast_blast-db
-    local     blast_django-static
+    local     blast-data
+    local     blast-dev_blast-db
+    local     blast-dev_django-static
 
-To restart the application with a clean Django database, add the :code:`--purge-db` option to the stopping command as shown below. Alternative options include :code:`--purge-data` (delete only astro data) and :code:`--purge-all` (delete astro data AND Django database). These options are mutually exclusive, and only one can be used.
+Due to the size of the initial data files, the :code:`blast-data` volume is shared between the 
+different profiles to avoid redundant downloads and because this data will rarely be in a conflicted
+state. The static files and database files, however, are specific to each profile.
+
+To restart the application with a clean Django database, use the :code:`purge-db` launcher action as shown below. Alternative options include :code:`purge-data` (delete only astro data) and :code:`purge-all` (delete astro data AND Django database). These options are mutually exclusive, and only one can be used.
 
 .. code:: bash
 
     # Stop and remove services and internal networks
-    bash run/blast.down.sh $PROFILE --purge-db
+    bash run/blastctl $PROFILE purge-db
 
 The initialization process is idempotent, meaning that it is safe to repeatedly restart the services with or without existing application data.
 
-The initialization process generates temporary files on the astro data volume (:code:`/mnt/data/.initializing_db` and :code:`/mnt/data/.initializing_data`) to support the scenario where multiple replicas of service containers are running concurrently. These files are automatically removed by the :code:`run/blast.up.sh` script.
+The initialization process generates temporary files on the astro data volume (:code:`/mnt/data/.initializing_db` and :code:`/mnt/data/.initializing_data`) to support the scenario where multiple replicas of service containers are running concurrently. These files are automatically removed when data initialization is complete, but they can also be forcefully purged (in the case of a failed installation for example) by setting the env var :code:`FORCE_INITIALIZATION` to true.
 
 
 Testing the Blast app
@@ -127,7 +135,9 @@ up, in a separate terminal run
 
 .. code:: bash
 
-    bash run/blast.test.sh slim_dev
+    $ docker exec -it blast-dev-app-1 bash
+    root@491edb948cfb:/app# coverage run manage.py test \
+        --exclude-tag=download -v2 host.tests api.tests users.tests 
 
 This allows you to run the tests without stopping the containers. *Some of the tests are excluded in this mode* because the assumption is that you are iterating on the unit tests themselves and probably do not want a slow iteration cycle, for example when cutout data is downloaded.
 
@@ -135,4 +145,27 @@ To run all tests from scratch in an dedicated container that does not mount any 
 
 .. code:: bash
 
-    bash run/blast.up.sh ci
+    bash run/blastctl ci up
+    bash run/blastctl ci purge-db
+
+
+Building the Blast app image
+----------------------------
+
+The Blast app image is a multi-stage build, where the base image is built separately because it is so large and does not often need to change, and it minimizes the duration of the CI pipeline that automatically builds and pushes the official image. To build the base image, use the following pattern, where :code:`$YYYYMMDD` is some immutable tag:
+
+.. code:: bash
+
+    docker build app/ \
+        -f app/Dockerfile.deps \
+        -t registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:latest \
+        -t registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:$YYYYMMDD
+
+Update :code:`app/Dockerfile` with the new tag :code:`$YYYYMMDD`. Then rebuild the app image -- incorporating the updated dependencies -- by launching the :code:`slim_dev` Compose profile:
+
+.. code:: bash
+
+    bash run/blastctl slim_dev up
+    bash run/blastctl slim_dev purge-db
+
+And, finally, run the unit tests as described in the previous section before opening a pull request.

@@ -39,11 +39,12 @@ path to you input batch file, absolute or relative to the docker-compose.yml fil
 
     BATCH_CSV=<path_to_your_transient_input_file>
 
-You must also specify the path to the empty results file
+You must also specify the path to the target output directory, in which a timestamped
+CSV file will be generated (:code:`/tmp/blast_results` by default):
 
 .. code::
 
-    OUTPUT_CSV=<path_to_your_results_file>
+    OUTPUT_DIR=<path_to_output_results>
 
 Running in batch mode
 ---------------------
@@ -53,7 +54,7 @@ Blast directory,
 
 .. code::
 
-    bash run/blast.up.sh batch
+    bash run/blastctl batch up
 
 This will spin up a local version of Blast that will take your batch of transients
 as input and process them. Results will be periodically written to your results

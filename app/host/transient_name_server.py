@@ -36,14 +36,20 @@ def query_tns(data, headers, search_url):
     """
 
     response = requests.post(search_url, headers=headers, data=data)
-    response = json.loads(response.text)
+    response_json = json.loads(response.text)
 
-    response_message = response.get("id_message")
-    response_id_code = response.get("id_code")
+    response_message = response_json.get("id_message")
+    response_id_code = response_json.get("id_code")
 
     response_status_good = response_id_code == 200
-    data = response.get("data", {}).get("reply") if response_status_good else []
-    response_reset_time = response.get("data", {}).get("total", {}).get("reset")
+    data = response_json.get("data", {}) if response_status_good else []
+    response_reset_time = response.headers['x-rate-limit-reset']
+    try:
+        response_reset_time = int(response_reset_time)
+    except ValueError:
+        # If the reset time is for some reason not an integer value, set to the default value.
+        # See https://www.wis-tns.org/comment/26286#comment-26286 for details.
+        response_reset_time = 60
 
     response_return = {
         "response_message": response_message,

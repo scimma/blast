@@ -8,8 +8,16 @@ contributed to Blast's development.
 
 * Peter McGill
 * David Jones
-* Dave Coulter
+* T. Andrew Manning
 * Lila Braff
-* Kayla Loertscher
-* Zhisen Lai
+* Dave Coulter
+* Diego Farias
+* Ryan Foley
+* Alex Gagliano
 * Jack Kutcka
+* Zhisen Lai
+* Kayla Loertscher
+* Gautham Narayan
+* Stephen Thorp
+* Ashley Villar
+* Bingjie Wang

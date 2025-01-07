@@ -96,6 +96,30 @@ def get_processing_status(transient):
     return progress
 
 
+def get_image_trim_status(transient):
+    # for image trimming to be ready, we need either
+    # 1) image trimming is already finished
+    # 2) local AND global photometry validation are not 'not processed'
+    # 3) progress is complete
+
+    if transient.image_trim_status == "processed":
+        return "processed"
+    elif transient.processing_status == "completed" or transient.processing_status == "blocked":
+        return "ready"
+    else:
+        global_valid_status = TaskRegister.objects.filter(task__name="Validate local photometry",transient=transient)
+        local_valid_status = TaskRegister.objects.filter(task__name="Validate global photometry",transient=transient)
+        if not len(global_valid_status) or not len(local_valid_status):
+            return "not ready"
+        
+        global_valid_status = TaskRegister.objects.filter(task__name="Validate local photometry",transient=transient)[0].status.message
+        local_valid_status = TaskRegister.objects.filter(task__name="Validate global photometry",transient=transient)[0].status.message
+        if global_valid_status != "not processed" and local_valid_status != "not processed":
+            return "ready"
+        else:
+            return "not ready"
+
+
 class TaskRunner(ABC):
     """
     Abstract base class for a TaskRunner.
@@ -308,6 +332,7 @@ class TransientTaskRunner(TaskRunner):
                 task_register_item.save()
                 transient.progress = get_progress(transient.name)
                 transient.processing_status = get_processing_status(transient)
+                transient.image_trim_status = get_image_trim_status(transient)
                 transient.save()
             return transient.name
 

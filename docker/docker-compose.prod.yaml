@@ -1,0 +1,86 @@
+name: blast-prod
+
+networks:
+  internal:
+    external: false
+
+volumes:
+  blast-db: {}
+  django-static: {}
+  blast-data:
+    name: "blast-data"
+
+services:
+
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  celery-worker:
+    extends:
+      file: docker-compose.yml
+      service: celery-worker
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  celery-beat:
+    extends:
+      file: docker-compose.yml
+      service: celery-beat
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  rabbitmq:
+    extends:
+      file: docker-compose.yml
+      service: rabbitmq
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  flower:
+    extends:
+      file: docker-compose.yml
+      service: flower
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  nginx:
+    image: nginx:1.21-alpine
+    restart: always
+    networks:
+      - internal
+    ports:
+      - 127.0.0.1:80:${WEB_SERVER_PORT}
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+    volumes:
+      - django-static:/static
+      - blast-data:/data
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf
+    profiles:
+      - "full_prod"
