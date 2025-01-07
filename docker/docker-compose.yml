@@ -117,12 +117,13 @@ services:
   batch:
     image: python:3.9-buster
     command: bash docker-entrypoint.batch.sh
-    network_mode: "host"
+    networks:
+      - internal
     volumes:
-      - ../batch/run_batch.py:/run_batch.py
-      - ../app/entrypoints/wait-for-it.sh:/wait-for-it.sh
-      - ../batch/docker-entrypoint.batch.sh:/docker-entrypoint.batch.sh
-      - ${BATCH_CSV}:/input.csv
-      - ${OUTPUT_CSV}:/results.csv
+      - ../batch/run_batch.py:/run_batch.py:ro
+      - ../app/entrypoints/wait-for-it.sh:/wait-for-it.sh:ro
+      - ../batch/docker-entrypoint.batch.sh:/docker-entrypoint.batch.sh:ro
+      - ${BATCH_CSV}:/input.csv:ro
+      - ${OUTPUT_DIR}:/results
     profiles:
       - "batch"

@@ -39,11 +39,12 @@ path to you input batch file, absolute or relative to the docker-compose.yml fil
 
     BATCH_CSV=<path_to_your_transient_input_file>
 
-You must also specify the path to the empty results file
+You must also specify the path to the target output directory, in which a timestamped
+CSV file will be generated (:code:`/tmp/blast_results` by default):
 
 .. code::
 
-    OUTPUT_CSV=<path_to_your_results_file>
+    OUTPUT_DIR=<path_to_output_results>
 
 Running in batch mode
 ---------------------

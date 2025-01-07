@@ -42,6 +42,7 @@ case "$PROFILE" in
     COMPOSE_LOG_LIST="sphinx"
     ;;
   "batch")
+    COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
     COMPOSE_PROJECT_NAME="blast-dev"
     COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
