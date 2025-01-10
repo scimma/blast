@@ -95,7 +95,7 @@ def download_and_save_cutouts(
         Dictionary of images with the survey names as keys and fits images
         as values.
     """
-
+    processed_value = "processed"
     for filter in Filter.objects.all():
         save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
         path_to_fits = save_dir + f"{filter.name}.fits"
@@ -119,38 +119,34 @@ def download_and_save_cutouts(
             cutout_object = cutout_object[0]
             cutout_exists = True
 
+        # If we know there is no image to download, exit.
+        if cutout_object.message == "No image found":
+            return processed_value
+
         fits = None
-        if (
-            (not file_exists or not cutout_exists)
-            and cutout_object.message != "No image found"
-        ) or not overwrite == "False":
-            status = 0
-            if cutout_object.message != "No image found":
-                fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
-
-                if fits:
-                    save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
-                    os.makedirs(save_dir, exist_ok=True)
-                    path_to_fits = save_dir + f"{filter.name}.fits"
-                    fits.writeto(path_to_fits, overwrite=True)
-                    # TODO: S3: Upload new FITS file to bucket and delete local copy
-
-            # if there is data, save path to the file
-            # otherwise record that we searched and couldn't find anything
-            if file_exists or fits:
-                # TODO: S3: replace fits.name with object key
-                cutout_object.fits.name = path_to_fits
-                cutout_object.save()
-
-            elif status == 1:
+        # If we are explicitly overwriting any existing downloads, or if either the FITS
+        # file or the Cutout object are missing, redownload the data
+        if not overwrite == "False" or not file_exists or not cutout_exists:
+            fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
+            # If a download error occurred, report it and exit.
+            if status == 1:
                 cutout_object.message = "Download error"
                 cutout_object.save()
+                return processed_value
+        if fits:
+            os.makedirs(save_dir, exist_ok=True)
+            fits.writeto(path_to_fits, overwrite=True)
 
-            else:
-                cutout_object.message = "No image found"
-                cutout_object.save()
+        # If the FITS file exists now, save and exit.
+        # Otherwise record that no image was found.
+        if os.path.exists(path_to_fits):
+            cutout_object.fits.name = path_to_fits
+            cutout_object.save()
+        else:
+            cutout_object.message = "No image found"
+            cutout_object.save()
 
-    return "processed"
+    return processed_value
 
 
 def panstarrs_image_filename(position, image_size=None, filter=None):
