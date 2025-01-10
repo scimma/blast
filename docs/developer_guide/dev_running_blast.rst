@@ -60,7 +60,7 @@ profile:
 
     bash run/blastctl slim_dev up
 
-Then go to `http://0.0.0.0:8000/ <http://0.0.0.0:8000/>`_  in your web browser
+Then go to `http://localhost:8000/ <http://localhost:8000/>`_  in your web browser
 after all the containers have started, and Blast should be running.
 
 To watch container logs run
