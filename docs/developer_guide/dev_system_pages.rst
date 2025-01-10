@@ -12,7 +12,7 @@ The Blast Django admin site (see the docs
 to view, edit, and launch periodic tasks, and add data to the database through
 a web interface.
 
-Once Blast is running locally to see the Django admin dashboard go to `http://0.0.0.0:8000/ <http://0.0.0.0:8000/>`_ where you will be prompted for a login. The login user and
+Once Blast is running locally to see the Django admin dashboard go to `http://localhost:8000/ <http://localhost:8000/>`_ where you will be prompted for a login. The login user and
 password are set by :code:`DJANGO_SUPERUSER_PASSWORD`
 :code:`DJANGO_SUPERUSER_USERNAME` defined in your :code:`env/.env.dev` file.
 
@@ -32,7 +32,7 @@ The Flower dashboard (see the docs `here <https://flower.readthedocs.io/en/lates
 allows you to monitor the backend computation tasks being run in Blast. This allows
 you to see which tasks are being run and which tasks are failing.
 
-Once Blast is running locally to see the Flower dashboard go to `<0.0.0.0:8888>`_.
+Once Blast is running locally to see the Flower dashboard go to `<localhost:8888>`_.
 
 .. image::../_static/flower_dashboard.png
 
@@ -45,7 +45,7 @@ allows you to see the message broker traffic where Blast computation tasks are
 sent to workers.
 
 Once Blast is running locally to see the RabbitMQ management dashboard go
-to `<0.0.0.0:15672>`_. where you will be prompted for a login. The login user and
+to `<localhost:15672>`_. where you will be prompted for a login. The login user and
 password are set by :code:`RABBITMQ_USERNAME`
 :code:`RABBITMQ_PASSWORD` defined in your :code:`env/.env.dev` file.
 
