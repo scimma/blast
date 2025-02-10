@@ -118,7 +118,8 @@ def download_and_save_cutouts(
             (not file_exists or not cutout_exists)
             and cutout_object.message != "No image found"
         ) or not overwrite == "False":
-            if not file_exists and cutout_object.message != "No image found":
+            status = 0
+            if cutout_object.message != "No image found":
                 fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
 
                 if fits:

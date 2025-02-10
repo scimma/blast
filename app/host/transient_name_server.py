@@ -152,7 +152,7 @@ def get_transients_from_tns_by_name(
 
     transients = []
     for t in transient_list:
-        transients += [{"objname": t, "objid": t}]
+        transients += [{"objname": t}]
 
     blast_transients = []
 
@@ -303,7 +303,6 @@ def build_tns_get_query_data(tns_bot_api_key, transient):
     """
     get_obj = [
         ("objname", transient["objname"]),
-        ("objid", transient["objid"]),
         ("photometry", "0"),
         ("spectra", "0"),
     ]
