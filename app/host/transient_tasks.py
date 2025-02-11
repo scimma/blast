@@ -422,15 +422,20 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 if not len(
                     Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
                 ):
+                    if cutout.filter.image_fwhm_arcsec > aperture.cutout.filter.image_fwhm_arcsec:
+                        cutout_diff = np.sqrt(cutout.filter.image_fwhm_arcsec**2. - \
+                                              aperture.cutout.filter.image_fwhm_arcsec**2.)
+                    else:
+                        cutout_diff = -1*np.sqrt(aperture.cutout.filter.image_fwhm_arcsec**2. - \
+                                                 cutout.filter.image_fwhm_arcsec**2.)
+                    
                     semi_major_axis = (
                         aperture.semi_major_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        + cutout_diff
                     )
                     semi_minor_axis = (
                         aperture.semi_minor_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        + cutout_diff
                     )
 
                     query = {"name": f"{cutout.name}_global"}

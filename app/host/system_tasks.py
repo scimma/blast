@@ -35,7 +35,6 @@ class TNSDataIngestion(SystemTaskRunner):
         recent_transients = get_transients_from_tns(
             now - time_delta, tns_credentials=tns_credentials
         )
-
         print("TNS DONE")
         saved_transients = Transient.objects.all()
         count = 0
@@ -44,9 +43,14 @@ class TNSDataIngestion(SystemTaskRunner):
             try:
                 saved_transient = saved_transients.get(
                     name__exact=transient.name)
-                if saved_transient.public_timestamp.replace(tzinfo=None) - parser.parse(
+                if (not saved_transient.redshift and transient.redshift) or \
+                   (saved_transient.redshift and \
+                    transient.redshift and \
+                    saved_transient.redshift!=transient.redshift):
+                    pass
+                elif (saved_transient.public_timestamp.replace(tzinfo=None) - parser.parse(
                     transient.public_timestamp
-                ) == datetime.timedelta(0):
+                ) == datetime.timedelta(0)):
                     continue
 
                 # if there was *not* a redshift before and there *is* one now
@@ -59,7 +63,6 @@ class TNSDataIngestion(SystemTaskRunner):
                         ### we don't *always* need to re-process every stage
                         t.status = Status.objects.get(message="not processed")
                         t.save()
-
                 # update info
                 new_transient_dict = transient.__dict__
                 if "host_id" in new_transient_dict.keys():
