@@ -36,7 +36,11 @@ def run_ghost(transient, output_dir=settings.GHOST_OUTPUT_ROOT):
     except Exception as e:
         transient_name = transient.name
 
-    ### some issues with Pan-STARRS downloads
+    # Due to a bug in astro_ghost version 2.2.2.dev19, we must ensure that
+    # the output path has a trailing slash.
+    output_dir = os.path.join(output_dir, '')
+
+    # some issues with Pan-STARRS downloads
     host_data = getTransientHosts(
         transientCoord=[transient_position],
         transientName=[transient_name],
