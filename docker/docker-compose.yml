@@ -11,6 +11,21 @@ volumes:
     name: "blast-data"
 
 services:
+  nginx:
+    image: nginx:1.21-alpine
+    restart: always
+    networks:
+      - internal
+    volumes:
+      - django-static:/static
+      - blast-data:/data
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf
+    profiles:
+      - "full_prod"
+      - "slim_prod"
+      - "full_dev"
+      - "slim_dev"
+
   app:
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.app.sh

@@ -35,7 +35,7 @@ SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
 HOSTNAMES = os.environ.get("DJANGO_HOSTNAMES", "localhost").split(",")
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_WHITELIST = ["*"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://localhost:8000"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://localhost:8000", "http://localhost:4000"]
 for hostname in HOSTNAMES:
     CSRF_TRUSTED_ORIGINS.append(f"""https://{hostname}""")
 CSRF_COOKIE_SECURE = True

@@ -32,6 +32,10 @@ from host.tasks import import_transient_list
 from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from host.workflow import transient_workflow
+from django.template.loader import render_to_string
+import os
+from django.conf import settings
+from celery import shared_task
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -485,6 +489,18 @@ def acknowledgements(request):
 
 
 def home(request):
+    # This view can only reached in development mode where the webserver proxy, which serves
+    # static content and governs endpoints, either does not exist or can be bypassed.
+    # In this case it is assumed that the home page should be rendered on-the-fly without
+    # reliance on the periodic task in Celery Beat that typically updates the rendering.
+    update_home_page_statistics()
+    with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'r') as fp:
+        html_content = fp.read()
+    return HttpResponse(html_content)
+
+
+@shared_task
+def update_home_page_statistics():
     analytics_results = {}
 
     task_register_qs = TaskRegister.objects.filter(
@@ -510,22 +526,6 @@ def home(request):
             )
         )
 
-    #    transients = TaskRegisterSnapshot.objects.filter(
-    #        aggregate_type__exact=aggregate
-    #    )
-
-    #    transients_ordered = transients.order_by("-time")
-
-    #    if transients_ordered.exists():
-    #        transients_current = transients_ordered[0].number_of_transients
-    #    else:
-    #        transients_current = None
-
-    #    analytics_results[f"{aggregate}".replace("_", " ")] = transients_current
-
-    # total = analytics_results["total"]
-    # del analytics_results["total"]
-
     processed = len(
         Transient.objects.filter(
             Q(processing_status="blocked") | Q(processing_status="completed")
@@ -536,8 +536,7 @@ def home(request):
     # bokeh_processing_context = plot_pie_chart(analytics_results)
     bokeh_processing_context = plot_bar_chart(analytics_results)
 
-    return render(
-        request,
+    html_body = render_to_string(
         "index.html",
         {
             "processed": processed,
@@ -545,6 +544,8 @@ def home(request):
             **bokeh_processing_context,
         },
     )
+    with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
+        fp.write(html_body)
 
 
 # @user_passes_test(lambda u: u.is_staff and u.is_superuser)
