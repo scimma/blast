@@ -56,8 +56,7 @@ def filter_transient_categories(qs, value, task_register=None):
                     task__name="Local aperture photometry",
                     status__message="processed",
                 ).values("transient")
-            )
-            | Q(
+            ) | Q(
                 pk__in=task_register.filter(
                     task__name="Global aperture photometry",
                     status__message="processed",
@@ -71,8 +70,7 @@ def filter_transient_categories(qs, value, task_register=None):
                     task__name="Local host SED inference",
                     status__message="processed",
                 ).values("transient")
-            )
-            | Q(
+            ) | Q(
                 pk__in=task_register.filter(
                     task__name="Global host SED inference",
                     status__message="processed",
@@ -243,14 +241,54 @@ def results(request, slug):
     )
     # ugly, but effective?
     local_sed_results, global_sed_results = (), ()
-    for param,var,ptype in zip(
-            ["{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,", "{\\rm log}_{10}({\\rm SFR})", "{\\rm log}_{10}({\\rm sSFR})", "{\\rm stellar\ age}", "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})", "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",
-             "\\tau_2", "\delta", "\\tau_1/\\tau_2", "Q_{PAH}", "U_{min}", "{\\rm log}_{10}(\gamma_e)\,",
-             "{\\rm log}_{10}(f_{AGN})\,", "{\\rm log}_{10}(\\tau_{AGN})\,"],
-            ["log_mass", "log_sfr", "log_ssfr", "log_age", "logzsol","gas_logz",
-             "dust2","dust_index","dust1_fraction","duste_qpah", "duste_umin", "log_duste_gamma",
-             "log_fagn","log_agn_tau"],
-            ["normal","normal","normal","normal","Metallicity","Metallicity","Dust","Dust","Dust","Dust","Dust","Dust","AGN","AGN"]
+    for param, var, ptype in zip(
+        [
+            "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
+            "{\\rm log}_{10}({\\rm SFR})",  # noqa
+            "{\\rm log}_{10}({\\rm sSFR})",  # noqa
+            "{\\rm stellar\ age}",  # noqa
+            "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})",  # noqa
+            "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",  # noqa
+            "\\tau_2",
+            "\delta",  # noqa
+            "\\tau_1/\\tau_2",
+            "Q_{PAH}",
+            "U_{min}",
+            "{\\rm log}_{10}(\gamma_e)\,",  # noqa
+            "{\\rm log}_{10}(f_{AGN})\,",  # noqa
+            "{\\rm log}_{10}(\\tau_{AGN})\,"  # noqa
+        ],
+        [
+            "log_mass",
+            "log_sfr",
+            "log_ssfr",
+            "log_age",
+            "logzsol",
+            "gas_logz",
+            "dust2",
+            "dust_index",
+            "dust1_fraction",
+            "duste_qpah",
+            "duste_umin",
+            "log_duste_gamma",
+            "log_fagn",
+            "log_agn_tau"
+        ],
+        [
+            "normal",
+            "normal",
+            "normal",
+            "normal",
+            "Metallicity",
+            "Metallicity",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "AGN",
+            "AGN"]
     ):
 
         if local_sed_obj.exists():
@@ -285,7 +323,7 @@ def results(request, slug):
                     sh.logsfr_tmax
                 ),
             )
-                
+
     if global_sed_obj.exists():
         for sh in global_sed_obj[0].logsfh.all():
             global_sfh_results += (
@@ -297,7 +335,7 @@ def results(request, slug):
                     sh.logsfr_tmax
                 ),
             )
-        
+
     if local_sed_obj.exists():
         local_sed_file = local_sed_obj[0].posterior.name
     else:
