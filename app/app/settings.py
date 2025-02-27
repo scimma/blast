@@ -161,6 +161,9 @@ SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")  # noqa
 SBI_TRAINING_ROOT = os.environ.get(
     "SBI_TRAINING_ROOT", "/data/sbi_training_sets"
 )  # noqa
+# TODO: S3: GHOST_OUTPUT_ROOT is where the astro_ghost library function outputs
+#           data, but it can be ignored because the relevant information is stored
+#           in the SQL database within a Host object.
 GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/data/ghost_output")  # noqa
 GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")  # noqa
 GHOST_DUST_PATH = os.environ.get(
@@ -177,6 +180,24 @@ TRANSMISSION_CURVES_ROOT = os.environ.get(
 )  # noqa
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
+
+S3_ENABLED = os.getenv("S3_ENABLED", "False").lower() in ["true", "1", "yes"]
+# S3_ENDPOINT_URL example: "https://js2.jetstream-cloud.org:8001"
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
+S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
+# S3_BUCKET is the entire base path to the astro data storage.
+# S3_BUCKET example: "blast-astro-data/apps/blast/astro-data"
+S3_BUCKET_SEDFITTING = os.getenv("S3_BUCKET_SEDFITTING", "")
+S3_BUCKET_CUTOUTS = os.getenv("S3_BUCKET_CUTOUTS", "")
+# The S3 URL will be constructed for example for fits.open() as
+#     s3://{S3_BUCKET_CUTOUTS}/{TRANSIENT_NAME}}/WISE/WISE_W4.fits
+# with corresponding kwargs
+#     fsspec_kwargs = {
+#         "endpoint_url": {S3_ENDPOINT_URL},
+#         "key": {S3_ACCESS_KEY_ID},
+#         "secret": {S3_SECRET_ACCESS_KEY},
+#     }
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "UTC"

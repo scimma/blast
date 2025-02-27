@@ -375,6 +375,8 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
         if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
             is_contam = True
 
+        # TODO: S3: Delete temporary local FITS file
+
     return is_contam
 
 

@@ -9,6 +9,7 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+  object-data: {}
 
 services:
   app:
@@ -26,6 +27,7 @@ services:
       - "full_prod"
       - "slim_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "slim_dev"
       - "ci"
       - "batch"
@@ -44,6 +46,7 @@ services:
       - "full_prod"
       - "slim_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "slim_dev"
       - "ci"
       - "batch"
@@ -70,6 +73,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "batch"
 
   celery-beat:
@@ -84,6 +88,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "batch"
 
   rabbitmq:
@@ -100,6 +105,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "batch"
 
   flower:
@@ -112,6 +118,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
+      - "full_dev_s3"
       - "batch"
 
   batch:
@@ -127,3 +134,20 @@ services:
       - ${OUTPUT_DIR}:/results
     profiles:
       - "batch"
+
+  object-store:
+    image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
+    ports:
+      - 127.0.0.1:${S3_CONSOLE_PORT:-9001}:${S3_CONSOLE_PORT:-9001}
+      - 127.0.0.1:${S3_SERVER_PORT:-9000}:${S3_SERVER_PORT:-9000}
+    networks:
+      - internal
+    command:
+    - server
+    - /data
+    - --console-address
+    - ":${S3_CONSOLE_PORT:-9001}"
+    volumes:
+      - object-data:/data
+    profiles:
+      - "full_dev_s3"

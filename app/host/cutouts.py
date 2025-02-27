@@ -99,6 +99,7 @@ def download_and_save_cutouts(
     for filter in Filter.objects.all():
         save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
         path_to_fits = save_dir + f"{filter.name}.fits"
+        # TODO: S3: Use object_exists function to query bucket URL
         file_exists = os.path.exists(path_to_fits)
 
         cutout_name = f"{transient.name}_{filter.name}"
@@ -127,7 +128,7 @@ def download_and_save_cutouts(
                     os.makedirs(save_dir, exist_ok=True)
                     path_to_fits = save_dir + f"{filter.name}.fits"
                     fits.writeto(path_to_fits, overwrite=True)
-                    # TODO: S3: Upload new FITS file to bucket
+                    # TODO: S3: Upload new FITS file to bucket and delete local copy
 
             # if there is data, save path to the file
             # otherwise record that we searched and couldn't find anything

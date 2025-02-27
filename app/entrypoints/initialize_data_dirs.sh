@@ -16,6 +16,11 @@ if [[ ! -L "${CUTOUT_ROOT}" ]]; then
   mkdir -p "$(dirname "${CUTOUT_ROOT}")"
   ln -s "${DATA_ROOT_DIR}/cutout_cdn" "${CUTOUT_ROOT}"
 fi
+if [[ ! -L "${CUTOUT_SCRATCH_ROOT}" ]]; then
+  mkdir -p "${DATA_ROOT_DIR}"/cutout_scratch
+  mkdir -p "$(dirname "${CUTOUT_SCRATCH_ROOT}")"
+  ln -s "${DATA_ROOT_DIR}/cutout_scratch" "${CUTOUT_SCRATCH_ROOT}"
+fi
 if [[ ! -L "${SED_OUTPUT_ROOT}" ]]; then
   mkdir -p "${DATA_ROOT_DIR}"/sed_output
   mkdir -p "$(dirname "${SED_OUTPUT_ROOT}")"
