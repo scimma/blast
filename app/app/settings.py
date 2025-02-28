@@ -216,5 +216,5 @@ REST_FRAMEWORK = {
 }
 
 
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/transient_uploads"
 LOGOUT_REDIRECT_URL = "/"
