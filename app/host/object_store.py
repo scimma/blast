@@ -4,7 +4,7 @@ from minio.deleteobjects import DeleteObject
 import io
 import os
 import json
-from calculation_engine.log import get_logger
+from host.log import get_logger
 logger = get_logger(__name__)
 
 
@@ -16,9 +16,11 @@ class ObjectStore:
             'region-name': os.getenv("S3_REGION_NAME", ""),
             'aws_access_key_id': os.getenv("AWS_S3_ACCESS_KEY_ID"),
             'aws_secret_access_key': os.getenv("AWS_S3_SECRET_ACCESS_KEY"),
-            'bucket': os.getenv("S3_BUCKET", "calculation-engine"),
+            'bucket': os.getenv("S3_BUCKET", "blast-astro-data"),
+            'base_path': os.getenv("S3_BASE_PATH", "/apps/blast/astro"),
         }
         self.bucket = self.config['bucket']
+        self.base_path = self.config['base_path']
         self.client = None
         # If endpoint URL is empty, do not attempt to initialize a client
         if not self.config['endpoint-url']:

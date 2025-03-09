@@ -100,6 +100,11 @@ def download_and_save_cutouts(
         save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
         path_to_fits = save_dir + f"{filter.name}.fits"
         # TODO: S3: Use object_exists function to query bucket URL
+        #           object key is joined path of basepath and `media_root`, e.g.
+        #           base_path:  /apps/blast/astro
+        #           media_root: /data/cutout_cdn
+        #           object key: /apps/blast/astro/data/cutout_cdn
+
         file_exists = os.path.exists(path_to_fits)
 
         cutout_name = f"{transient.name}_{filter.name}"
