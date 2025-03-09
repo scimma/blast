@@ -66,7 +66,7 @@ class Ghost(TransientTaskRunner):
         Run the GHOST matching algorithm.
         """
         host = run_ghost(transient)
-
+        
         if host is not None:
             host.save()
             transient.host = host
@@ -592,7 +592,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         global_aperture_photometry = AperturePhotometry.objects.filter(
             transient=transient, aperture__type="global"
         )
-
+        
         if not len(global_aperture_photometry):
             return "global photometry validation failed"
 
@@ -816,6 +816,7 @@ class HostSEDFitting(TransientTaskRunner):
                 )
                 sfh_r['transient'] = transient
                 sfh_r['aperture'] = aperture[0]
+
                 if len(ps):
                     ps.update(**sfh_r)
                 else:

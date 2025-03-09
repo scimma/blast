@@ -66,6 +66,9 @@ class SkyObject(models.Model):
         """
         return self.sky_coord.dec.to_string(precision=2)
 
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(SkyObject, self).save(*args, **kwargs)
 
 class Host(SkyObject):
     """
@@ -85,7 +88,8 @@ class Host(SkyObject):
     photometric_redshift = models.FloatField(null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     objects = HostManager()
-
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+    
 
 class Transient(SkyObject):
     """
@@ -125,7 +129,8 @@ class Transient(SkyObject):
     image_trim_status = models.CharField(max_length=20, default="not ready")
     added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     progress = models.IntegerField(default=0)
-
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+    
     @property
     def best_redshift(self):
         """get the best redshift for a transient"""
@@ -405,10 +410,15 @@ class Cutout(models.Model):
     )
     fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
     message = models.CharField(max_length=50, null=True, blank=True)
-
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+    
     # used if some downloads fail
     # warning = models.BooleanField(default=False)
     objects = CutoutManager()
+
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(Cutout, self).save(*args, **kwargs)
 
 
 class Aperture(SkyObject):
@@ -425,6 +435,8 @@ class Aperture(SkyObject):
     semi_major_axis_arcsec = models.FloatField()
     semi_minor_axis_arcsec = models.FloatField()
     type = models.CharField(max_length=20)
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+    
     objects = ApertureManager()
 
     def __str__(self):
@@ -468,7 +480,8 @@ class AperturePhotometry(models.Model):
     magnitude = models.FloatField(blank=True, null=True)
     magnitude_error = models.FloatField(blank=True, null=True)
     is_validated = models.CharField(blank=True, null=True, max_length=40)
-
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+    
     @property
     def flux_rounded(self):
         return round(self.flux, 2)
@@ -476,6 +489,10 @@ class AperturePhotometry(models.Model):
     @property
     def flux_error_rounded(self):
         return round(self.flux_error, 2)
+
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(AperturePhotometry, self).save(*args, **kwargs)
 
 
 class StarFormationHistoryResult(models.Model):
@@ -493,7 +510,13 @@ class StarFormationHistoryResult(models.Model):
     logsfr_tmin = models.FloatField(null=True, blank=True)
     logsfr_tmax = models.FloatField(null=True, blank=True)
 
+    software_version = models.CharField(max_length=50, blank=True, null=True)
 
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(StarFormationHistoryResult, self).save(*args, **kwargs)
+
+    
 class SEDFittingResult(models.Model):
     """Model to store prospector results"""
 
@@ -571,6 +594,12 @@ class SEDFittingResult(models.Model):
         upload_to=npz_percentiles_file_path, null=True, blank=True
     )
     model_file = models.FileField(upload_to=npz_model_file_path, null=True, blank=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(SEDFittingResult, self).save(*args, **kwargs)
+
     
 class TaskRegisterSnapshot(models.Model):
     """
