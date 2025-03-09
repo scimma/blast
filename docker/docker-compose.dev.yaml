@@ -12,6 +12,20 @@ volumes:
 
 services:
 
+  nginx:
+    extends:
+      file: docker-compose.yml
+      service: nginx
+    ports:
+      - 127.0.0.1:4000:${WEB_SERVER_PORT}
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - django-static:/static
+      - blast-data:/data
+      - ../nginx/default_slim.conf:/etc/nginx/conf.d/default.conf
+
   app:
     extends:
       file: docker-compose.yml

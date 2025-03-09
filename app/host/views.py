@@ -32,6 +32,10 @@ from host.tasks import import_transient_list
 from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from host.workflow import transient_workflow
+from django.template.loader import render_to_string
+import os
+from django.conf import settings
+from celery import shared_task
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -56,8 +60,7 @@ def filter_transient_categories(qs, value, task_register=None):
                     task__name="Local aperture photometry",
                     status__message="processed",
                 ).values("transient")
-            )
-            | Q(
+            ) | Q(
                 pk__in=task_register.filter(
                     task__name="Global aperture photometry",
                     status__message="processed",
@@ -71,8 +74,7 @@ def filter_transient_categories(qs, value, task_register=None):
                     task__name="Local host SED inference",
                     status__message="processed",
                 ).values("transient")
-            )
-            | Q(
+            ) | Q(
                 pk__in=task_register.filter(
                     task__name="Global host SED inference",
                     status__message="processed",
@@ -243,14 +245,54 @@ def results(request, slug):
     )
     # ugly, but effective?
     local_sed_results, global_sed_results = (), ()
-    for param,var,ptype in zip(
-            ["{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,", "{\\rm log}_{10}({\\rm SFR})", "{\\rm log}_{10}({\\rm sSFR})", "{\\rm stellar\ age}", "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})", "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",
-             "\\tau_2", "\delta", "\\tau_1/\\tau_2", "Q_{PAH}", "U_{min}", "{\\rm log}_{10}(\gamma_e)\,",
-             "{\\rm log}_{10}(f_{AGN})\,", "{\\rm log}_{10}(\\tau_{AGN})\,"],
-            ["log_mass", "log_sfr", "log_ssfr", "log_age", "logzsol","gas_logz",
-             "dust2","dust_index","dust1_fraction","duste_qpah", "duste_umin", "log_duste_gamma",
-             "log_fagn","log_agn_tau"],
-            ["normal","normal","normal","normal","Metallicity","Metallicity","Dust","Dust","Dust","Dust","Dust","Dust","AGN","AGN"]
+    for param, var, ptype in zip(
+        [
+            "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
+            "{\\rm log}_{10}({\\rm SFR})",  # noqa
+            "{\\rm log}_{10}({\\rm sSFR})",  # noqa
+            "{\\rm stellar\ age}",  # noqa
+            "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})",  # noqa
+            "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",  # noqa
+            "\\tau_2",
+            "\delta",  # noqa
+            "\\tau_1/\\tau_2",
+            "Q_{PAH}",
+            "U_{min}",
+            "{\\rm log}_{10}(\gamma_e)\,",  # noqa
+            "{\\rm log}_{10}(f_{AGN})\,",  # noqa
+            "{\\rm log}_{10}(\\tau_{AGN})\,"  # noqa
+        ],
+        [
+            "log_mass",
+            "log_sfr",
+            "log_ssfr",
+            "log_age",
+            "logzsol",
+            "gas_logz",
+            "dust2",
+            "dust_index",
+            "dust1_fraction",
+            "duste_qpah",
+            "duste_umin",
+            "log_duste_gamma",
+            "log_fagn",
+            "log_agn_tau"
+        ],
+        [
+            "normal",
+            "normal",
+            "normal",
+            "normal",
+            "Metallicity",
+            "Metallicity",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "Dust",
+            "AGN",
+            "AGN"]
     ):
 
         if local_sed_obj.exists():
@@ -285,7 +327,7 @@ def results(request, slug):
                     sh.logsfr_tmax
                 ),
             )
-                
+
     if global_sed_obj.exists():
         for sh in global_sed_obj[0].logsfh.all():
             global_sfh_results += (
@@ -297,7 +339,7 @@ def results(request, slug):
                     sh.logsfr_tmax
                 ),
             )
-        
+
     if local_sed_obj.exists():
         local_sed_file = local_sed_obj[0].posterior.name
     else:
@@ -447,6 +489,18 @@ def acknowledgements(request):
 
 
 def home(request):
+    # This view can only reached in development mode where the webserver proxy, which serves
+    # static content and governs endpoints, either does not exist or can be bypassed.
+    # In this case it is assumed that the home page should be rendered on-the-fly without
+    # reliance on the periodic task in Celery Beat that typically updates the rendering.
+    update_home_page_statistics()
+    with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'r') as fp:
+        html_content = fp.read()
+    return HttpResponse(html_content)
+
+
+@shared_task
+def update_home_page_statistics():
     analytics_results = {}
 
     task_register_qs = TaskRegister.objects.filter(
@@ -472,22 +526,6 @@ def home(request):
             )
         )
 
-    #    transients = TaskRegisterSnapshot.objects.filter(
-    #        aggregate_type__exact=aggregate
-    #    )
-
-    #    transients_ordered = transients.order_by("-time")
-
-    #    if transients_ordered.exists():
-    #        transients_current = transients_ordered[0].number_of_transients
-    #    else:
-    #        transients_current = None
-
-    #    analytics_results[f"{aggregate}".replace("_", " ")] = transients_current
-
-    # total = analytics_results["total"]
-    # del analytics_results["total"]
-
     processed = len(
         Transient.objects.filter(
             Q(processing_status="blocked") | Q(processing_status="completed")
@@ -498,15 +536,17 @@ def home(request):
     # bokeh_processing_context = plot_pie_chart(analytics_results)
     bokeh_processing_context = plot_bar_chart(analytics_results)
 
-    return render(
-        request,
+    html_body = render_to_string(
         "index.html",
         {
             "processed": processed,
             "in_progress": in_progress,
             **bokeh_processing_context,
+            "hide_login": True,
         },
     )
+    with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
+        fp.write(html_body)
 
 
 # @user_passes_test(lambda u: u.is_staff and u.is_superuser)
