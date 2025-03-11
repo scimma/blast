@@ -13,7 +13,6 @@ from host.system_tasks import LogTransientProgress
 from host.system_tasks import SnapshotTaskRegister
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import TrimTransientImages
-from .transient_name_server import get_transients_from_tns_by_name
 
 
 periodic_tasks = [

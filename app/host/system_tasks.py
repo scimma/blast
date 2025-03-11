@@ -11,6 +11,7 @@ from host.base_tasks import initialise_all_tasks_status
 from host.base_tasks import SystemTaskRunner
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
+from host.workflow import reprocess_transient
 from host.workflow import transient_workflow
 from host.trim_images import trim_images
 
@@ -40,58 +41,65 @@ class TNSDataIngestion(SystemTaskRunner):
         count = 0
         for transient in recent_transients:
             print(transient.name)
-            try:
-                saved_transient = saved_transients.get(
-                    name__exact=transient.name)
-                if (not saved_transient.redshift and transient.redshift) or \
-                   (saved_transient.redshift and \
-                    transient.redshift and \
-                    saved_transient.redshift!=transient.redshift):
-                    pass
-                elif (saved_transient.public_timestamp.replace(tzinfo=None) - parser.parse(
-                    transient.public_timestamp
-                ) == datetime.timedelta(0)):
-                    continue
 
-                # if there was *not* a redshift before and there *is* one now
-                # then it would be safest to reprocess everything
-                if not saved_transient.redshift and transient.redshift:
-                    tasks = TaskRegister.objects.filter(
-                        transient=saved_transient)
-                    for t in tasks:
-                        ### TODO: this could be smarter
-                        ### we don't *always* need to re-process every stage
-                        t.status = Status.objects.get(message="not processed")
-                        t.save()
-                # update info
-                new_transient_dict = transient.__dict__
-
-                # This wasn't doing anything
-                #if "host_id" in new_transient_dict.keys():
-                #    if saved_transient.host_id is not None:
-                #        new_transient_dict["host_id"] = saved_transient.host_id
-                #    else:
-                #        del new_transient_dict["host_id"]
-
-                keys_to_del = [
-                    "_state",
-                    "id",
-                    "progress",
-                    "tasks_initialized",
-                    "photometric_class",
-                    "milkyway_dust_reddening",
-                    "processing_status",
-                ]
-                for k in keys_to_del:
-                    del new_transient_dict[k]
-                new_transient_dict['tasks_initialized'] = False
-                saved_transients.filter(name__exact=transient.name).update(
-                    **new_transient_dict
-                )
-
-            except Transient.DoesNotExist:
+            # If the transient has not already been ingested, save the TNS
+            # data and proceed to the next transient
+            saved_transient = saved_transients.filter(name__exact=transient.name)
+            if not saved_transient:
                 transient.save()
                 count += 1
+                continue
+            # If the transient was previously ingested, compare to the current TNS data.
+            saved_transient = saved_transient[0]
+
+            # If the timestamps are identical, assume no further processing is necessary.
+            # Andrew this is my annoying new shit
+            ######
+            if (not saved_transient.redshift and transient.redshift) or \
+               (saved_transient.redshift and \
+                transient.redshift and \
+                saved_transient.redshift!=transient.redshift):
+                pass
+            ######
+            elif (saved_transient.public_timestamp.replace(tzinfo=None) - parser.parse(
+                transient.public_timestamp
+            ) == datetime.timedelta(0)):
+                continue
+
+            # Update the saved transient data with the latest TNS data after some processing.
+            new_transient_dict = transient.__dict__
+            # If the incoming data includes a "host_id", then the "transient" object being ingested is not
+            # actually from TNS but is instead from an internal source from a special execution of this
+            # function. In this case, if a host has already been associate with the saved transient, update
+            # the value to the new one; however, if the saved transient does not have a host match, then
+            # discard the new value.
+            if "host_id" in new_transient_dict.keys():
+                if saved_transient.host_id is not None:
+                    new_transient_dict["host_id"] = saved_transient.host_id
+                else:
+                    del new_transient_dict["host_id"]
+            # Remove specific key value pairs from the incoming data
+            keys_to_del = [
+                "_state",
+                "id",
+                "progress",
+                "photometric_class",
+                "milkyway_dust_reddening",
+                "processing_status",
+            ]
+            for key in keys_to_del:
+                del new_transient_dict[key]
+            # Reinitialize the transient state so that its processing workflow will run again
+            new_transient_dict['tasks_initialized'] = False
+            # Save the updates to the database
+            saved_transient.update(**new_transient_dict)
+
+            # If the current TNS data includes redshift info missing from the saved transient,
+            # reprocess the entire workflow.
+            # TODO: This could be smarter. We don't *always* need to re-process every stage.
+            if transient.redshift and not saved_transient.redshift:
+                reprocess_transient(slug=saved_transient.name)
+
         print(f"Added {count} new transients")
         print("TNS UPLOADED")
 

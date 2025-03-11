@@ -5,6 +5,7 @@ from django.urls import path
 from django.urls import re_path
 from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
+from host.workflow import reprocess_transient
 
 schema_view = get_schema_view(title="Blast API")
 
@@ -40,7 +41,7 @@ urlpatterns = [
     path(f"""{base_path}flower/""", views.flower_view),
     path(
         f"""{base_path}reprocess_transient/<slug:slug>""",
-        views.reprocess_transient,
+        reprocess_transient,
         name="reprocess_transient",
     ),
     path(
