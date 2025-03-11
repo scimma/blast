@@ -65,11 +65,13 @@ class TNSDataIngestion(SystemTaskRunner):
                         t.save()
                 # update info
                 new_transient_dict = transient.__dict__
-                if "host_id" in new_transient_dict.keys():
-                    if saved_transient.host_id is not None:
-                        new_transient_dict["host_id"] = saved_transient.host_id
-                    else:
-                        del new_transient_dict["host_id"]
+
+                # This wasn't doing anything
+                #if "host_id" in new_transient_dict.keys():
+                #    if saved_transient.host_id is not None:
+                #        new_transient_dict["host_id"] = saved_transient.host_id
+                #    else:
+                #        del new_transient_dict["host_id"]
 
                 keys_to_del = [
                     "_state",
