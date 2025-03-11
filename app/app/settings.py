@@ -186,6 +186,8 @@ S3_ENABLED = os.getenv("S3_ENABLED", "False").lower() in ["true", "1", "yes"]
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
 S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
 S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
+S3_BUCKET = os.getenv("S3_BUCKET", "")
+S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 # S3_BUCKET is the entire base path to the astro data storage.
 # S3_BUCKET example: "blast-astro-data/apps/blast/astro-data"
 S3_BUCKET_SEDFITTING = os.getenv("S3_BUCKET_SEDFITTING", "")

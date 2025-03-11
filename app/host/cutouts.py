@@ -23,6 +23,7 @@ from dl import authClient as ac
 from dl import queryClient as qc
 from dl import storeClient as sc
 from pyvo.dal import sia
+from host.object_store import ObjectStore
 
 from .models import Cutout
 from .models import Filter
@@ -97,36 +98,37 @@ def download_and_save_cutouts(
     """
     processed_value = "processed"
     for filter in Filter.objects.all():
+        # Does cutout file exist on the local disk?
         save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
         path_to_fits = save_dir + f"{filter.name}.fits"
+        cutout_file_exists = os.path.exists(path_to_fits)
         # TODO: S3: Use object_exists function to query bucket URL
-        #           object key is joined path of basepath and `media_root`, e.g.
-        #           base_path:  /apps/blast/astro
-        #           media_root: /data/cutout_cdn
-        #           object key: /apps/blast/astro/data/cutout_cdn
-
-        file_exists = os.path.exists(path_to_fits)
+        object_key = os.path.join(settings.S3_BASE_PATH,
+                                  transient.name,
+                                  filter.survey.name,
+                                  f"{filter.name}.fits")
+        s3 = ObjectStore()
+        # Does cutout file exist in the S3 bucket?
+        cutout_file_exists = s3.object_exists(object_key)
 
         cutout_name = f"{transient.name}_{filter.name}"
+        # Fetch or create the associated cutout object in the database.
         cutout_object = Cutout.objects.filter(
             name=cutout_name, filter=filter, transient=transient
         )
-
-        if not cutout_object.exists():
-            cutout_object = Cutout(name=cutout_name, filter=filter, transient=transient)
-            cutout_exists = False
-        else:
-            cutout_object = cutout_object[0]
-            cutout_exists = True
+        cutout_object_exists = cutout_object.exists()
+        cutout_object = (cutout_object[0]
+                         if cutout_object_exists
+                         else Cutout(name=cutout_name, filter=filter, transient=transient))
 
         # If we know there is no image to download, exit.
         if cutout_object.message == "No image found":
             return processed_value
 
         fits = None
-        # If we are explicitly overwriting any existing downloads, or if either the FITS
+        # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
         # file or the Cutout object are missing, redownload the data
-        if not overwrite == "False" or not file_exists or not cutout_exists:
+        if not overwrite == "False" or not cutout_file_exists or not cutout_object_exists:
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
             # If a download error occurred, report it and exit.
             if status == 1:
@@ -137,14 +139,13 @@ def download_and_save_cutouts(
             os.makedirs(save_dir, exist_ok=True)
             fits.writeto(path_to_fits, overwrite=True)
 
-        # If the FITS file exists now, save and exit.
-        # Otherwise record that no image was found.
+        # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
+        # update the database object. Otherwise record that no image was found.
         if os.path.exists(path_to_fits):
             cutout_object.fits.name = path_to_fits
-            cutout_object.save()
         else:
             cutout_object.message = "No image found"
-            cutout_object.save()
+        cutout_object.save()
 
     return processed_value
 
