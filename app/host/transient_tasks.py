@@ -416,13 +416,11 @@ class GlobalAperturePhotometry(TransientTaskRunner):
             # make new aperture
             # adjust semi-major/minor axes for size
             if f"{cutout.name}_global" != aperture.name:
-                # quadrature differences in resolution
-                # so should be sqrt((aperture size)**2. +/- (new_psf_size**2. +- old_psf_size**2.) )
                 
                 if not len(
                     Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
                 ):
-
+                    # quadrature differences in resolution
                     semi_major_axis = (
                         np.sqrt(
                             aperture.semi_major_axis_arcsec**2.
