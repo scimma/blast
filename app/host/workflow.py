@@ -34,6 +34,7 @@ def reprocess_transient(request=None, slug=''):
     tasks = TaskRegister.objects.filter(transient__name=transient_name)
     if tasks:
         for task in tasks:
+            # TODO: This could be smarter. We don't *always* need to re-process every stage.
             task.status = Status.objects.get(message="not processed")
             task.save()
         result = transient_workflow.delay(transient_name)
