@@ -270,7 +270,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             choice += 1
         if aperture is None:
             return "failed"
-
+        import pdb; pdb.set_trace()
         query = {"name": f"{aperture_cutout[0].name}_global"}
         data = {
             "name": f"{aperture_cutout[0].name}_global",
@@ -419,23 +419,24 @@ class GlobalAperturePhotometry(TransientTaskRunner):
             # make new aperture
             # adjust semi-major/minor axes for size
             if f"{cutout.name}_global" != aperture.name:
+                
                 if not len(
                     Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
                 ):
-                    if cutout.filter.image_fwhm_arcsec > aperture.cutout.filter.image_fwhm_arcsec:
-                        cutout_diff = np.sqrt(cutout.filter.image_fwhm_arcsec**2. - \
-                                              aperture.cutout.filter.image_fwhm_arcsec**2.)
-                    else:
-                        cutout_diff = -1*np.sqrt(aperture.cutout.filter.image_fwhm_arcsec**2. - \
-                                                 cutout.filter.image_fwhm_arcsec**2.)
-                    
+                    # quadrature differences in resolution
                     semi_major_axis = (
-                        aperture.semi_major_axis_arcsec
-                        + cutout_diff
+                        np.sqrt(
+                            aperture.semi_major_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                        )
                     )
                     semi_minor_axis = (
-                        aperture.semi_minor_axis_arcsec
-                        + cutout_diff
+                        np.sqrt(
+                            aperture.semi_minor_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                        )
                     )
 
                     query = {"name": f"{cutout.name}_global"}
