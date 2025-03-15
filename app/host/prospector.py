@@ -778,9 +778,9 @@ def prospector_result_to_blast(
     parent_dir = os.path.join(sed_output_root, transient.name)
     base_file_path = os.path.join(parent_dir, f'''{transient.name}_{aperture.type}''')
     hdf5_file_path = f'''{base_file_path}.h5'''
-    chain_file_path = f'''{base_file_path}._chain.npz'''
-    perc_file_path = f'''{base_file_path}._perc.npz'''
-    modeldata_file_path = f'''{base_file_path}._modeldata.npz'''
+    chain_file_path = f'''{base_file_path}_chain.npz'''
+    perc_file_path = f'''{base_file_path}_perc.npz'''
+    modeldata_file_path = f'''{base_file_path}_modeldata.npz'''
     if not os.path.isdir(parent_dir):
         os.makedirs(parent_dir)
     if os.path.exists(hdf5_file_path):
