@@ -181,25 +181,10 @@ TRANSMISSION_CURVES_ROOT = os.environ.get(
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 
-S3_ENABLED = os.getenv("S3_ENABLED", "False").lower() in ["true", "1", "yes"]
 # S3_ENDPOINT_URL example: "https://js2.jetstream-cloud.org:8001"
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
-S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
-S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
-# S3_BUCKET is the entire base path to the astro data storage.
-# S3_BUCKET example: "blast-astro-data/apps/blast/astro-data"
-S3_BUCKET_SEDFITTING = os.getenv("S3_BUCKET_SEDFITTING", "")
-S3_BUCKET_CUTOUTS = os.getenv("S3_BUCKET_CUTOUTS", "")
-# The S3 URL will be constructed for example for fits.open() as
-#     s3://{S3_BUCKET_CUTOUTS}/{TRANSIENT_NAME}}/WISE/WISE_W4.fits
-# with corresponding kwargs
-#     fsspec_kwargs = {
-#         "endpoint_url": {S3_ENDPOINT_URL},
-#         "key": {S3_ACCESS_KEY_ID},
-#         "secret": {S3_SECRET_ACCESS_KEY},
-#     }
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "UTC"
@@ -219,7 +204,7 @@ CELERY_BROKER_URL = (
     f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
 )
 
-# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend
+# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend  # noqa
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
 

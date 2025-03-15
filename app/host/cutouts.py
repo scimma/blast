@@ -74,7 +74,7 @@ def getRADecBox(ra, dec, size):
 def download_and_save_cutouts(
     transient,
     fov=Quantity(0.1, unit="deg"),
-    media_root=settings.CUTOUT_ROOT,
+    cutout_base_path=settings.CUTOUT_ROOT,
     overwrite=settings.CUTOUT_OVERWRITE,
 ):
     """
@@ -99,18 +99,12 @@ def download_and_save_cutouts(
     processed_value = "processed"
     for filter in Filter.objects.all():
         # Does cutout file exist on the local disk?
-        save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
-        path_to_fits = save_dir + f"{filter.name}.fits"
-        cutout_file_exists = os.path.exists(path_to_fits)
-        # TODO: S3: Use object_exists function to query bucket URL
-        object_key = os.path.join(settings.S3_BASE_PATH,
-                                  transient.name,
-                                  filter.survey.name,
-                                  f"{filter.name}.fits")
+        save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
+        local_fits_path = save_dir + f"{filter.name}.fits"
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         s3 = ObjectStore()
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
-
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
         cutout_object = Cutout.objects.filter(
@@ -136,13 +130,17 @@ def download_and_save_cutouts(
                 cutout_object.save()
                 return processed_value
         if fits:
+            # Write FITS file to local cache
             os.makedirs(save_dir, exist_ok=True)
-            fits.writeto(path_to_fits, overwrite=True)
-
+            fits.writeto(local_fits_path, overwrite=True)
+            # Upload file to bucket and delete local copy
+            s3.put_object(path=object_key, file_path=local_fits_path)
+            assert s3.object_exists(object_key)
+            os.remove(local_fits_path)
         # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
         # update the database object. Otherwise record that no image was found.
-        if os.path.exists(path_to_fits):
-            cutout_object.fits.name = path_to_fits
+        if s3.object_exists(object_key):
+            cutout_object.fits.name = local_fits_path
         else:
             cutout_object.message = "No image found"
         cutout_object.save()

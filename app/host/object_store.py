@@ -1,9 +1,11 @@
 from minio import Minio
 from minio.commonconfig import CopySource
 from minio.deleteobjects import DeleteObject
+from minio.error import S3Error
 import io
 import os
 import json
+from uuid import uuid4
 from host.log import get_logger
 logger = get_logger(__name__)
 
@@ -11,13 +13,15 @@ logger = get_logger(__name__)
 class ObjectStore:
     def __init__(self) -> None:
         '''Initialize S3 client'''
+        # Randomize base path if not provided to avoid accidental overwrite of existing objects
+        random_base_path = str(uuid4())
         self.config = {
             'endpoint-url': os.getenv("S3_ENDPOINT_URL", ""),
             'region-name': os.getenv("S3_REGION_NAME", ""),
             'aws_access_key_id': os.getenv("AWS_S3_ACCESS_KEY_ID"),
             'aws_secret_access_key': os.getenv("AWS_S3_SECRET_ACCESS_KEY"),
             'bucket': os.getenv("S3_BUCKET", "blast-astro-data"),
-            'base_path': os.getenv("S3_BASE_PATH", "/apps/blast/astro"),
+            'base_path': os.getenv("S3_BASE_PATH", f'''/{random_base_path}'''),
         }
         self.bucket = self.config['bucket']
         self.base_path = self.config['base_path']
@@ -60,6 +64,7 @@ class ObjectStore:
                 )
 
     def put_object(self, path="", data="", file_path="", json_output=True):
+        path = path.strip('/')
         if data:
             logger.debug(f'''Uploading data object to object store: "{path}"''')
             if json_output:
@@ -96,6 +101,7 @@ class ObjectStore:
         return response.stream(32 * 1024)
 
     def download_object(self, path="", file_path=""):
+        path = path.strip('/')
         self.client.fget_object(
             bucket_name=self.bucket,
             object_name=path,
@@ -125,14 +131,17 @@ class ObjectStore:
         return [obj.object_name for obj in objects]
 
     def object_info(self, path):
+        path = path.strip('/')
         try:
             response = self.client.stat_object(
                 bucket_name=self.bucket,
                 object_name=path)
             return response
-        except Exception as e:
-            logger.error(f'''Error fetching object info: "{path}"''')
+        except S3Error:
             return None
+        except Exception as err:
+            logger.error(f'''Error fetching object info for key "{path}": {err}''')
+            raise
 
     def object_exists(self, path):
         if self.object_info(path):

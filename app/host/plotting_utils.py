@@ -25,6 +25,8 @@ from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
 from host.prospector import build_obs
 from bokeh.models import CustomJS
+from host.object_store import ObjectStore
+from django.conf import settings
 
 # import extinction
 # from bokeh.models import Circle
@@ -135,10 +137,17 @@ def plot_cutout_image(
     title = cutout.filter if cutout is not None else "No cutout selected"
 
     if cutout is not None:
-        # TODO: S3: Download FITS file from bucket prior to opening
-        with fits.open(cutout.fits.name) as fits_file:
+        # Download FITS file local file cache
+        s3 = ObjectStore()
+        local_fits_path = cutout.fits.name
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+    if cutout is not None and s3.object_exists(object_key):
+        s3.download_object(path=object_key, file_path=local_fits_path)
+        with fits.open(local_fits_path) as fits_file:
             image_data = fits_file[0].data
             wcs = WCS(fits_file[0].header)
+        # Delete FITS file from local file cache
+        os.remove(local_fits_path)
 
         fig = figure(
             title=f"{title}",

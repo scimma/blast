@@ -14,7 +14,7 @@ COMPOSE_LOG_LIST="app celery-worker"
 COMPOSE_FILE=""
 
 case "$PROFILE" in
-  "full_dev" | "full_dev_s3")
+  "full_dev")
     COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
     COMPOSE_PROJECT_NAME="blast-dev"

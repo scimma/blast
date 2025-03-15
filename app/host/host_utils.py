@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import os
 import math
 import time
 import warnings
@@ -44,6 +45,7 @@ from .photometric_calibration import fluxerr_to_mJy_fluxerr
 from .models import Cutout
 from .models import Aperture
 from .models import ExternalRequest
+from .object_store import ObjectStore
 
 
 def survey_list(survey_metadata_path):
@@ -336,18 +338,21 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
     aperture = global_aperture_phot.aperture
     # check both the image used to generate aperture
     # and the image used to measure photometry
-    for cutout_name in [
+    for local_fits_path in [
         global_aperture_phot.aperture.cutout.fits.name,
         aperture_primary.cutout.fits.name,
     ]:
         # UV photons are too sparse, segmentation map
         # builder cannot easily handle these
-        if "/GALEX/" in cutout_name:
+        if "/GALEX/" in local_fits_path:
             continue
 
         # copy the steps to build segmentation map
-        # TODO: S3: Download FITS file from bucket prior to opening
-        image = fits.open(cutout_name)
+        # Download FITS file local file cache
+        s3 = ObjectStore()
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        s3.download_object(path=object_key, file_path=local_fits_path)
+        image = fits.open(local_fits_path)
         wcs = WCS(image[0].header)
         background = estimate_background(image)
         catalog = build_source_catalog(
@@ -374,7 +379,8 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
         if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
             is_contam = True
 
-        # TODO: S3: Delete temporary local FITS file
+        # Delete FITS file from local file cache
+        os.remove(local_fits_path)
 
     return is_contam
 

@@ -42,7 +42,6 @@ services:
       - "full_prod"
       - "slim_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "slim_dev"
       - "ci"
       - "batch"
@@ -61,7 +60,6 @@ services:
       - "full_prod"
       - "slim_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "slim_dev"
       - "ci"
       - "batch"
@@ -88,7 +86,6 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "batch"
 
   celery-beat:
@@ -103,7 +100,6 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "batch"
 
   rabbitmq:
@@ -120,7 +116,6 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "batch"
 
   flower:
@@ -133,7 +128,6 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-      - "full_dev_s3"
       - "batch"
 
   batch:
@@ -165,4 +159,9 @@ services:
     volumes:
       - object-data:/data
     profiles:
-      - "full_dev_s3"
+      - "full_prod"
+      - "slim_prod"
+      - "full_dev"
+      - "slim_dev"
+      - "ci"
+      - "batch"

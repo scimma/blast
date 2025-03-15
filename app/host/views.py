@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import re_path
@@ -28,12 +29,14 @@ from host.plotting_utils import plot_sed
 from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
+from host.object_store import ObjectStore
 from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from celery import shared_task
+
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -434,40 +437,36 @@ def results(request, slug):
     return render(request, "results.html", context)
 
 
+def stream_sed_output_file(file_path):
+    # Stream the data file from the S3 bucket
+    s3 = ObjectStore()
+    object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+    filename = os.path.basename(file_path)
+    obj_stream = s3.stream_object(object_key)
+    response = StreamingHttpResponse(streaming_content=obj_stream)
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
 def download_chains(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.chains_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.chains_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.chains_file.name)
 
 
 def download_modelfit(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.model_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.model_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.model_file.name)
 
 
 def download_percentiles(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.percentiles_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.percentiles_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.percentiles_file.name)
 
 
 def acknowledgements(request):
