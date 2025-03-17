@@ -198,6 +198,15 @@ def tns_staging_blast_transient(tns_transient):
         blast_transient (Transient): Transient object with the
             tns_transient data.
     """
+    if tns_transient["redshift"] == tns_transient["redshift"]:
+        redshift = tns_transient["redshift"]
+    else:
+        redshift = None
+    if tns_transient["type"] == tns_transient["type"]:
+        spec_class = tns_transient["type"]
+    else:
+        spec_class = None
+
     blast_transient = Transient(
         name=tns_transient["name"],
         tns_id=tns_transient["objid"],
@@ -205,7 +214,8 @@ def tns_staging_blast_transient(tns_transient):
         dec_deg=tns_transient["declination"],
         tns_prefix=tns_transient["name_prefix"],
         public_timestamp=tns_transient["discoverydate"],
-        spectroscopic_class=tns_transient["type"]
+        spectroscopic_class=spec_class,
+        redshift=redshift
     )
     return blast_transient
 
