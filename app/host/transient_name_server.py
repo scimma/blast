@@ -14,7 +14,6 @@ import requests
 
 from .models import Transient
 
-
 def get_tns_credentials():
     """
     Retrieves TNS credentials from environment variables
@@ -152,7 +151,7 @@ def get_transients_from_tns_by_name(
 
     transients = []
     for t in transient_list:
-        transients += [{"objname": t, "objid": t}]
+        transients += [{"objname": t}]
 
     blast_transients = []
 
@@ -183,7 +182,7 @@ def tns_to_blast_transient(tns_transient):
         tns_prefix=tns_transient["name_prefix"],
         public_timestamp=tns_transient["discoverydate"],
         spectroscopic_class=tns_transient["object_type"]["name"],
-        redshift=tns_transient["redshift"],
+        redshift=tns_transient["redshift"]
     )
     return blast_transient
 
@@ -206,7 +205,7 @@ def tns_staging_blast_transient(tns_transient):
         dec_deg=tns_transient["declination"],
         tns_prefix=tns_transient["name_prefix"],
         public_timestamp=tns_transient["discoverydate"],
-        spectroscopic_class=tns_transient["type"],
+        spectroscopic_class=tns_transient["type"]
     )
     return blast_transient
 
@@ -303,7 +302,6 @@ def build_tns_get_query_data(tns_bot_api_key, transient):
     """
     get_obj = [
         ("objname", transient["objname"]),
-        ("objid", transient["objid"]),
         ("photometry", "0"),
         ("spectra", "0"),
     ]

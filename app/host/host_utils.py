@@ -289,7 +289,6 @@ def do_aperture_photometry(image, sky_aperture, filter):
         magnitude, magnitude_error = None, None
     if flux != flux or flux_error != flux_error:
         flux, flux_error = None, None
-
     # wave_eff = filter.transmission_curve().wave_effective
     return {
         "flux": flux,
