@@ -228,8 +228,8 @@ add an instance of your :code:`Taskrunner` to the :code:`periodic_tasks`
 list in :code:`app/host/task.py`.
 
 To check that your task has been registered and is being run in Blast go to
-`<http://0.0.0.0:8000/admin/>`_ login and then go to `<http://0.0.0.0:8000/admin/django_celery_beat/periodictask/>`_
+`<http://localhost:8000/admin/>`_ login and then go to `<http://localhost:8000/admin/django_celery_beat/periodictask/>`_
 and you should see your task and its schedule.
 
 You can check if your task is running without error by going to the Flower
-dashboard at `<http://0.0.0.0:8888>`_.
+dashboard at `<http://localhost:8888>`_.
