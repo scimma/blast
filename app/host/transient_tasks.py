@@ -279,7 +279,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             choice += 1
         if aperture is None:
             return "failed"
-        import pdb; pdb.set_trace()
+
         query = {"name": f"{aperture_cutout[0].name}_global"}
         data = {
             "name": f"{aperture_cutout[0].name}_global",
