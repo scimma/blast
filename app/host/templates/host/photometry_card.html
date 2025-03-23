@@ -35,6 +35,7 @@
                             <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
                             <th scope="col">Mag</th>
                             <th scope="col">Mag error</th>
+                            <th scope="col">Mag sys</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,6 +46,11 @@
                             <td>{{item.flux_error_rounded}}</td>
                             <td>{{item.magnitude|floatformat:3}}</td>
                             <td>{{item.magnitude_error|floatformat:3}}</td>
+			    {% if item.filter.ab_offset == 0 %}
+			    <td>AB</td>
+			    {% else %}
+			    <td>Vega</td>
+			    {% endif %}			    
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -72,6 +78,7 @@
                             <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
 			    <th scope="col">Mag</th>
 			    <th scope="col">Mag error</th>
+			    <th scope="col">Mag sys</th>			    
 			</tr>
 		    </thead>
 		    <tbody>
@@ -82,6 +89,12 @@
 			    <td>{{item.flux_error_rounded}}</td>
 			    <td>{{item.magnitude|floatformat:3}}</td>
 			    <td>{{item.magnitude_error|floatformat:3}}</td>
+			    {% if item.filter.ab_offset == 0 %}
+			    <td>AB</td>
+			    {% else %}
+			    <td>Vega</td>
+			    {% endif %}
+
 			</tr>
 			{% endfor %}
 		    </tbody>

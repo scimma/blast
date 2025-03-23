@@ -14,7 +14,6 @@ import requests
 
 from .models import Transient
 
-
 def get_tns_credentials():
     """
     Retrieves TNS credentials from environment variables
@@ -36,14 +35,20 @@ def query_tns(data, headers, search_url):
     """
 
     response = requests.post(search_url, headers=headers, data=data)
-    response = json.loads(response.text)
+    response_json = json.loads(response.text)
 
-    response_message = response.get("id_message")
-    response_id_code = response.get("id_code")
+    response_message = response_json.get("id_message")
+    response_id_code = response_json.get("id_code")
 
     response_status_good = response_id_code == 200
-    data = response.get("data", {}).get("reply") if response_status_good else []
-    response_reset_time = response.get("data", {}).get("total", {}).get("reset")
+    data = response_json.get("data", {}) if response_status_good else []
+    response_reset_time = response.headers['x-rate-limit-reset']
+    try:
+        response_reset_time = int(response_reset_time)
+    except ValueError:
+        # If the reset time is for some reason not an integer value, set to the default value.
+        # See https://www.wis-tns.org/comment/26286#comment-26286 for details.
+        response_reset_time = 60
 
     response_return = {
         "response_message": response_message,
@@ -146,7 +151,7 @@ def get_transients_from_tns_by_name(
 
     transients = []
     for t in transient_list:
-        transients += [{"objname": t, "objid": t}]
+        transients += [{"objname": t}]
 
     blast_transients = []
 
@@ -177,7 +182,7 @@ def tns_to_blast_transient(tns_transient):
         tns_prefix=tns_transient["name_prefix"],
         public_timestamp=tns_transient["discoverydate"],
         spectroscopic_class=tns_transient["object_type"]["name"],
-        redshift=tns_transient["redshift"],
+        redshift=tns_transient["redshift"]
     )
     return blast_transient
 
@@ -193,6 +198,15 @@ def tns_staging_blast_transient(tns_transient):
         blast_transient (Transient): Transient object with the
             tns_transient data.
     """
+    if tns_transient["redshift"] == tns_transient["redshift"]:
+        redshift = tns_transient["redshift"]
+    else:
+        redshift = None
+    if tns_transient["type"] == tns_transient["type"]:
+        spec_class = tns_transient["type"]
+    else:
+        spec_class = None
+
     blast_transient = Transient(
         name=tns_transient["name"],
         tns_id=tns_transient["objid"],
@@ -200,7 +214,8 @@ def tns_staging_blast_transient(tns_transient):
         dec_deg=tns_transient["declination"],
         tns_prefix=tns_transient["name_prefix"],
         public_timestamp=tns_transient["discoverydate"],
-        spectroscopic_class=tns_transient["type"],
+        spectroscopic_class=spec_class,
+        redshift=redshift
     )
     return blast_transient
 
@@ -297,7 +312,6 @@ def build_tns_get_query_data(tns_bot_api_key, transient):
     """
     get_obj = [
         ("objname", transient["objname"]),
-        ("objid", transient["objid"]),
         ("photometry", "0"),
         ("spectra", "0"),
     ]

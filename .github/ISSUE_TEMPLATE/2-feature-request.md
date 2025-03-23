@@ -1,9 +1,9 @@
 ---
-name: "🚀🆕 Feature Request"
-about: "Suggest an idea or possible new feature for this project."
-title: ""
-labels: "feature request"
-assignees:
+name: "\U0001F680\U0001F195 Feature Request"
+about: Suggest an idea or possible new feature for this project.
+title: ''
+labels: feature request
+assignees: djones1040
 
 ---
 

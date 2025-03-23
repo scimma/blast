@@ -163,7 +163,7 @@ which can either be "16", "50" ot "84"
 
 * :code:`chains_file` - MCMC chains for each parameter; files can be downloaded with the URL path :code:`<base_blast_url>/download_chains/<transient_name>/<aperture_type>`
 * :code:`percentiles_file` - 16,50,84th percentiles for all parameters in the prospector-alpha model; files can be downloaded with the URL path :code:`<base_blast_url>/download_percentiles/<transient_name>/<aperture_type>`
-* :code:`model_file` - best-fit spectrum, photometry, and uncertainties; files can be downloaded with the URL path :code:`<base_blast_url>/download_modelfit/<transient_name>/<aperture_type>`
+* :code:`model_file` - best-fit spectrum, photometry, and uncertainties (downloaded in units of maggies); files can be downloaded with the URL path :code:`<base_blast_url>/download_modelfit/<transient_name>/<aperture_type>`
 
 
 SED filtering options

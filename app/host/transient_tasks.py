@@ -66,7 +66,7 @@ class Ghost(TransientTaskRunner):
         Run the GHOST matching algorithm.
         """
         host = run_ghost(transient)
-
+        
         if host is not None:
             host.save()
             transient.host = host
@@ -416,18 +416,24 @@ class GlobalAperturePhotometry(TransientTaskRunner):
             # make new aperture
             # adjust semi-major/minor axes for size
             if f"{cutout.name}_global" != aperture.name:
+                
                 if not len(
                     Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
                 ):
+                    # quadrature differences in resolution
                     semi_major_axis = (
-                        aperture.semi_major_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        np.sqrt(
+                            aperture.semi_major_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                        )
                     )
                     semi_minor_axis = (
-                        aperture.semi_minor_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        np.sqrt(
+                            aperture.semi_minor_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                        )
                     )
 
                     query = {"name": f"{cutout.name}_global"}
@@ -587,7 +593,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         global_aperture_photometry = AperturePhotometry.objects.filter(
             transient=transient, aperture__type="global"
         )
-
+        
         if not len(global_aperture_photometry):
             return "global photometry validation failed"
 
@@ -811,6 +817,7 @@ class HostSEDFitting(TransientTaskRunner):
                 )
                 sfh_r['transient'] = transient
                 sfh_r['aperture'] = aperture[0]
+
                 if len(ps):
                     ps.update(**sfh_r)
                 else:

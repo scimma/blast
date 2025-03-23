@@ -118,7 +118,8 @@ def download_and_save_cutouts(
             (not file_exists or not cutout_exists)
             and cutout_object.message != "No image found"
         ) or not overwrite == "False":
-            if not file_exists and cutout_object.message != "No image found":
+            status = 0
+            if cutout_object.message != "No image found":
                 fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
 
                 if fits:
@@ -254,12 +255,18 @@ def galex_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    obs = Observations.query_region(position)
-    obs = obs[
-        (obs["obs_collection"] == "GALEX")
-        & (obs["filters"] == filter)
-        & (obs["distance"] == 0)
-    ]
+    obs = Observations.query_criteria(
+        coordinates=position,
+        radius="0.2 deg",
+        obs_collection="GALEX",
+        filters=filter,
+        distance=0
+    )
+    #obs = obs[
+    #    (obs["obs_collection"] == "GALEX")
+    #    & (obs["filters"] == filter)
+    #    & (obs["distance"] == 0)
+    #]
 
     # avoid masked regions
     center = SkyCoord(obs["s_ra"], obs["s_dec"], unit=u.deg)

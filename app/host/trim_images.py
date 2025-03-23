@@ -2,6 +2,8 @@ from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.wcs import WCS
 from astropy.nddata import Cutout2D
+from astropy.nddata.utils import NoOverlapError
+
 import astropy.units as u
 import numpy as np
 import os
@@ -10,6 +12,7 @@ from host.models import Cutout
 from host.models import Aperture
 from host.models import Transient
 from host.host_utils import get_local_aperture_size
+from host.cutouts import download_and_save_cutouts
 
 
 def trim_images(transient):
@@ -71,12 +74,32 @@ def trim_image(cutout):
     if size < 100:
         size = 100
 
-    cutout_new = Cutout2D(
-        hdu[0].data,
-        (center_x, center_y),
-        (size, size),
-        wcs=wcs
-    )
-    hdu[0].data = cutout_new.data
-    hdu[0].header.update(cutout_new.wcs.to_header())
-    hdu.writeto(cutout.fits.name, overwrite=True)
+    try:
+        cutout_new = Cutout2D(
+            hdu[0].data,
+            (center_x, center_y),
+            (size, size),
+            wcs=wcs
+        )
+        hdu[0].data = cutout_new.data
+        hdu[0].header.update(cutout_new.wcs.to_header())
+        hdu.writeto(cutout.fits.name, overwrite=True)
+
+    except NoOverlapError:
+        pass
+    except TypeError:
+        os.system(f'rm {cutout.fits.name}')
+        download_and_save_cutouts(transient)
+
+        try:
+            cutout_new = Cutout2D(
+                hdu[0].data,
+                (center_x, center_y),
+                (size, size),
+                wcs=wcs
+            )
+            hdu[0].data = cutout_new.data
+            hdu[0].header.update(cutout_new.wcs.to_header())
+            hdu.writeto(cutout.fits.name, overwrite=True)
+        except NoOverlapError:
+            pass
