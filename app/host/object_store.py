@@ -20,7 +20,7 @@ class ObjectStore:
             'region-name': os.getenv("S3_REGION_NAME", ""),
             'aws_access_key_id': os.getenv("AWS_S3_ACCESS_KEY_ID"),
             'aws_secret_access_key': os.getenv("AWS_S3_SECRET_ACCESS_KEY"),
-            'bucket': os.getenv("S3_BUCKET", "blast-astro-data"),
+            'bucket': os.getenv("S3_BUCKET"),
             'base_path': os.getenv("S3_BASE_PATH", f'''/{random_base_path}'''),
         }
         self.bucket = self.config['bucket']

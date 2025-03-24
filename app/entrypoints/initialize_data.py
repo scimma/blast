@@ -17,11 +17,11 @@ class ObjectStore:
     def __init__(self) -> None:
         '''Initialize S3 client'''
         self.config = {
-            'endpoint-url': os.getenv("S3_ENDPOINT_URL_INIT", ''),
+            'endpoint-url': os.getenv("S3_ENDPOINT_URL_INIT", 'https://js2.jetstream-cloud.org:8001'),
             'region-name': os.getenv("S3_REGION_NAME_INIT", ''),
             'aws_access_key_id': os.getenv("S3_ACCESS_KEY_ID_INIT", ''),
             'aws_secret_access_key': os.getenv("S3_SECRET_ACCESS_KEY_INIT", ''),
-            'bucket': os.getenv("S3_BUCKET_INIT", "blast-astro-data"),
+            'bucket': os.getenv("S3_BUCKET_INIT", 'blast-astro-data'),
         }
         self.bucket = self.config['bucket']
         self.client = None
