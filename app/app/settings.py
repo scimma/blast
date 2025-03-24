@@ -155,29 +155,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = "/cutouts/"
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 
-DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")  # noqa
-CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")  # noqa
-SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")  # noqa
-SBI_TRAINING_ROOT = os.environ.get(
-    "SBI_TRAINING_ROOT", "/data/sbi_training_sets"
-)  # noqa
-# TODO: S3: GHOST_OUTPUT_ROOT is where the astro_ghost library function outputs
-#           data, but it can be ignored because the relevant information is stored
-#           in the SQL database within a Host object.
-GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/data/ghost_output")  # noqa
-GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")  # noqa
-GHOST_DUST_PATH = os.environ.get(
-    "GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model")
-)  # noqa
-GHOST_PHOTOZ_PATH = os.environ.get(
-    "GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5")
-)  # noqa
-TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")  # noqa
-SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")  # noqa
-SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")  # noqa
-TRANSMISSION_CURVES_ROOT = os.environ.get(
-    "TRANSMISSION_CURVES_ROOT", "/data/transmission"
-)  # noqa
+DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
+CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
+SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")
+SBI_TRAINING_ROOT = os.environ.get("SBI_TRAINING_ROOT", "/data/sbi_training_sets")
+GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/tmp/ghost_output")
+GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")
+GHOST_DUST_PATH = os.environ.get("GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model"))
+GHOST_PHOTOZ_PATH = os.environ.get("GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5"))  # noqa
+TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
+SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
+SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
+TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/transmission")
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 
