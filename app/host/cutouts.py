@@ -28,6 +28,12 @@ from host.object_store import ObjectStore
 from .models import Cutout
 from .models import Filter
 
+# Configure logging
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+
 DOWNLOAD_SLEEP_TIME = int(os.environ.get("DOWNLOAD_SLEEP_TIME", "0"))
 DOWNLOAD_MAX_TRIES = int(os.environ.get("DOWNLOAD_MAX_TRIES", "1"))
 
@@ -102,6 +108,7 @@ def download_and_save_cutouts(
         save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
         local_fits_path = save_dir + f"{filter.name}.fits"
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        logger.debug(f'''FITS file object_key: {object_key}''')
         s3 = ObjectStore()
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
