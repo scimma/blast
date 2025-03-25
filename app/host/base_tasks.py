@@ -411,7 +411,6 @@ class SystemTaskRunner(TaskRunner):
         return "host.system_tasks." + self.task_name.replace(" ", "_").lower()
 
 
-
 def update_status(task_status, updated_status):
     """
     Update the processing status of a task.
