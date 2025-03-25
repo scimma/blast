@@ -36,6 +36,7 @@ def run_ghost(transient, output_dir_root=settings.GHOST_OUTPUT_ROOT):
         transient_name = transient.name
 
     output_dir = os.path.join(output_dir_root, transient_name)
+    os.makedirs(output_dir, exist_ok=True)
     # Due to a bug in astro_ghost version 2.2.2.dev19, we must ensure that
     # the output path has a trailing slash.
     output_dir = os.path.join(output_dir, '')
