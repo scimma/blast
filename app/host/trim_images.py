@@ -36,6 +36,7 @@ def trim_image(cutout):
     local_fits_path = cutout.fits.name
     object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
     s3.download_object(path=object_key, file_path=local_fits_path)
+    assert os.path.isfile(local_fits_path)
     hdu = fits.open(local_fits_path)
     wcs = WCS(hdu[0].header)
     center_x, center_y = wcs.wcs_world2pix(transient.ra_deg, transient.dec_deg, 0)

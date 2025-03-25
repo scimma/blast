@@ -272,6 +272,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             s3 = ObjectStore()
             object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
             s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
             image = fits.open(local_fits_path)
             aperture = construct_aperture(image, transient.host.sky_coord)
             # Delete FITS file from local file cache
@@ -353,6 +354,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
             local_fits_path = cutout.fits.name
             object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
             s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
             image = fits.open(local_fits_path)
 
             try:
@@ -433,6 +435,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
             local_fits_path = cutout.fits.name
             object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
             s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
             image = fits.open(local_fits_path)
 
             # make new aperture

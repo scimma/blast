@@ -143,6 +143,7 @@ def plot_cutout_image(
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
     if cutout is not None and s3.object_exists(object_key):
         s3.download_object(path=object_key, file_path=local_fits_path)
+        assert os.path.isfile(local_fits_path)
         with fits.open(local_fits_path) as fits_file:
             image_data = fits_file[0].data
             wcs = WCS(fits_file[0].header)

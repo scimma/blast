@@ -352,6 +352,7 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
         s3 = ObjectStore()
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         s3.download_object(path=object_key, file_path=local_fits_path)
+        assert os.path.isfile(local_fits_path)
         image = fits.open(local_fits_path)
         wcs = WCS(image[0].header)
         background = estimate_background(image)
