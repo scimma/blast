@@ -357,7 +357,6 @@ def results(request, slug):
             logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
 
     def download_file_from_s3(file_path):
-        # TODO: S3: Need to delete the cached files.
         try:
             # Download SED results files to local file cache
             object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
