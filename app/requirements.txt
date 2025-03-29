@@ -27,3 +27,5 @@ fsps==0.4.6
 coverage==7.4.4
 watchdog==4.0.0
 minio==7.2.8
+fsspec==2025.2.0
+s3fs==2025.2.0

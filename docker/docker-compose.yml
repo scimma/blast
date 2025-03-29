@@ -9,6 +9,7 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+  object-data: {}
 
 services:
   nginx:
@@ -141,4 +142,26 @@ services:
       - ${BATCH_CSV}:/input.csv:ro
       - ${OUTPUT_DIR}:/results
     profiles:
+      - "batch"
+
+  object-store:
+    image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
+    ports:
+      - 127.0.0.1:${S3_CONSOLE_PORT:-9001}:${S3_CONSOLE_PORT:-9001}
+      - 127.0.0.1:${S3_SERVER_PORT:-9000}:${S3_SERVER_PORT:-9000}
+    networks:
+      - internal
+    command:
+    - server
+    - /data
+    - --console-address
+    - ":${S3_CONSOLE_PORT:-9001}"
+    volumes:
+      - object-data:/data
+    profiles:
+      - "full_prod"
+      - "slim_prod"
+      - "full_dev"
+      - "slim_dev"
+      - "ci"
       - "batch"

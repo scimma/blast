@@ -23,9 +23,16 @@ from dl import authClient as ac
 from dl import queryClient as qc
 from dl import storeClient as sc
 from pyvo.dal import sia
+from host.object_store import ObjectStore
 
 from .models import Cutout
 from .models import Filter
+
+# Configure logging
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
 
 DOWNLOAD_SLEEP_TIME = int(os.environ.get("DOWNLOAD_SLEEP_TIME", "0"))
 DOWNLOAD_MAX_TRIES = int(os.environ.get("DOWNLOAD_MAX_TRIES", "1"))
@@ -73,7 +80,7 @@ def getRADecBox(ra, dec, size):
 def download_and_save_cutouts(
     transient,
     fov=Quantity(0.1, unit="deg"),
-    media_root=settings.CUTOUT_ROOT,
+    cutout_base_path=settings.CUTOUT_ROOT,
     overwrite=settings.CUTOUT_OVERWRITE,
 ):
     """
@@ -95,54 +102,57 @@ def download_and_save_cutouts(
         Dictionary of images with the survey names as keys and fits images
         as values.
     """
-
+    processed_value = "processed"
     for filter in Filter.objects.all():
-        save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
-        path_to_fits = save_dir + f"{filter.name}.fits"
-        file_exists = os.path.exists(path_to_fits)
-
+        # Does cutout file exist on the local disk?
+        save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
+        local_fits_path = save_dir + f"{filter.name}.fits"
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        logger.debug(f'''FITS file object_key: {object_key}''')
+        s3 = ObjectStore()
+        # Does cutout file exist in the S3 bucket?
+        cutout_file_exists = s3.object_exists(object_key)
         cutout_name = f"{transient.name}_{filter.name}"
+        # Fetch or create the associated cutout object in the database.
         cutout_object = Cutout.objects.filter(
             name=cutout_name, filter=filter, transient=transient
         )
+        cutout_object_exists = cutout_object.exists()
+        cutout_object = (cutout_object[0]
+                         if cutout_object_exists
+                         else Cutout(name=cutout_name, filter=filter, transient=transient))
 
-        if not cutout_object.exists():
-            cutout_object = Cutout(name=cutout_name, filter=filter, transient=transient)
-            cutout_exists = False
-        else:
-            cutout_object = cutout_object[0]
-            cutout_exists = True
+        # If we know there is no image to download, exit.
+        if cutout_object.message == "No image found":
+            return processed_value
 
         fits = None
-        if (
-            (not file_exists or not cutout_exists)
-            and cutout_object.message != "No image found"
-        ) or not overwrite == "False":
-            status = 0
-            if cutout_object.message != "No image found":
-                fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
-
-                if fits:
-                    save_dir = f"{media_root}/{transient.name}/{filter.survey.name}/"
-                    os.makedirs(save_dir, exist_ok=True)
-                    path_to_fits = save_dir + f"{filter.name}.fits"
-                    fits.writeto(path_to_fits, overwrite=True)
-
-            # if there is data, save path to the file
-            # otherwise record that we searched and couldn't find anything
-            if file_exists or fits:
-                cutout_object.fits.name = path_to_fits
-                cutout_object.save()
-
-            elif status == 1:
+        # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
+        # file or the Cutout object are missing, redownload the data
+        if not overwrite == "False" or not cutout_file_exists or not cutout_object_exists:
+            fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
+            # If a download error occurred, report it and exit.
+            if status == 1:
                 cutout_object.message = "Download error"
                 cutout_object.save()
+                return processed_value
+        if fits:
+            # Write FITS file to local cache
+            os.makedirs(save_dir, exist_ok=True)
+            fits.writeto(local_fits_path, overwrite=True)
+            # Upload file to bucket and delete local copy
+            s3.put_object(path=object_key, file_path=local_fits_path)
+            assert s3.object_exists(object_key)
+            os.remove(local_fits_path)
+        # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
+        # update the database object. Otherwise record that no image was found.
+        if s3.object_exists(object_key):
+            cutout_object.fits.name = local_fits_path
+        else:
+            cutout_object.message = "No image found"
+        cutout_object.save()
 
-            else:
-                cutout_object.message = "No image found"
-                cutout_object.save()
-
-    return "processed"
+    return processed_value
 
 
 def panstarrs_image_filename(position, image_size=None, filter=None):

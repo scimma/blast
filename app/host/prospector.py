@@ -33,7 +33,7 @@ from scipy.special import gammainc
 from .host_utils import get_dust_maps
 from .models import AperturePhotometry
 from .models import Filter
-from .models import hdf5_file_path
+from .object_store import ObjectStore
 from .photometric_calibration import mJy_to_maggies  ##jansky_to_maggies
 
 try:
@@ -775,19 +775,20 @@ def prospector_result_to_blast(
     sbipp=False,
 ):
     # write the results
-    hdf5_file_name = (
-        f"{sed_output_root}/{transient.name}/{transient.name}_{aperture.type}.h5"
-    )
-    hdf5_file = hdf5_file_name
-
-    if not os.path.exists(f"{sed_output_root}/{transient.name}"):
-        os.makedirs(f"{sed_output_root}/{transient.name}/")
-    if os.path.exists(hdf5_file):
+    parent_dir = os.path.join(sed_output_root, transient.name)
+    base_file_path = os.path.join(parent_dir, f'''{transient.name}_{aperture.type}''')
+    hdf5_file_path = f'''{base_file_path}.h5'''
+    chain_file_path = f'''{base_file_path}_chain.npz'''
+    perc_file_path = f'''{base_file_path}_perc.npz'''
+    modeldata_file_path = f'''{base_file_path}_modeldata.npz'''
+    if not os.path.isdir(parent_dir):
+        os.makedirs(parent_dir)
+    if os.path.exists(hdf5_file_path):
         # prospector won't overwrite, which causes problems
-        os.remove(hdf5_file)
+        os.remove(hdf5_file_path)
 
     if sbipp:
-        hf = h5py.File(hdf5_file_name, "w")
+        hf = h5py.File(hdf5_file_path, "w")
 
         sdat = hf.create_group("sampling")
         sdat.create_dataset("chain", data=prospector_output["sampling"][0]["samples"])
@@ -804,7 +805,7 @@ def prospector_result_to_blast(
         hf.flush()
     else:
         writer.write_hdf5(
-            hdf5_file,
+            hdf5_file_path,
             {},
             model_components["model"],
             observations,
@@ -816,7 +817,7 @@ def prospector_result_to_blast(
         )
 
     # load up the hdf5 file to get the results
-    resultpars, obs, _ = reader.results_from(hdf5_file, dangerous=False)
+    resultpars, obs, _ = reader.results_from(hdf5_file_path, dangerous=False)
 
 
     model_init = copy.deepcopy(model_components["model"])
@@ -857,9 +858,9 @@ def prospector_result_to_blast(
         use_weights = not sbipp
 
         pp.run_all(
-            hdf5_file_name,
-            hdf5_file_name.replace(".h5", "_chain.npz"),
-            hdf5_file_name.replace(".h5", "_perc.npz"),
+            hdf5_file_path,
+            chain_file_path,
+            perc_file_path,
             model_components["model"]._zred[0],
             prior="p-alpha",
             mod_fsps=model_components["model"],
@@ -871,7 +872,7 @@ def prospector_result_to_blast(
         )
 
         percentiles = np.load(
-            hdf5_file_name.replace(".h5", "_perc.npz"), allow_pickle=True
+            perc_file_path, allow_pickle=True
         )
         perc = np.atleast_1d(percentiles["percentiles"])[0]
 
@@ -880,16 +881,16 @@ def prospector_result_to_blast(
     # 2nd index is 100-Myr averaged sfr/ssfr
     logsfr16, logsfr50, logsfr84 = np.log10(perc["sfr"][2])
     logssfr16, logssfr50, logssfr84 = np.log10(perc["ssfr"][2])
-    logzsol16,logzsol50,logzsol84 = perc['logzsol']
-    dust2_16,dust2_50,dust2_84 = perc['dust2']
-    dust_index_16,dust_index_50,dust_index_84 = perc['dust_index']
-    dust1_fraction_16,dust1_fraction_50,dust1_fraction_84 = perc['dust1_fraction']
-    log_fagn_16,log_fagn_50,log_fagn_84 = perc['log_fagn']
-    log_agn_tau_16,log_agn_tau_50,log_agn_tau_84 = perc['log_agn_tau']
-    gas_logz_16,gas_logz_50,gas_logz_84 = perc['gas_logz']
-    duste_qpah_16,duste_qpah_50,duste_qpah_84 = perc['duste_qpah']
-    duste_umin_16,duste_umin_50,duste_umin_84 = perc['duste_umin']
-    log_duste_gamma_16,log_duste_gamma_50,log_duste_gamma_84 = perc['log_duste_gamma']
+    logzsol16, logzsol50, logzsol84 = perc['logzsol']
+    dust2_16, dust2_50, dust2_84 = perc['dust2']
+    dust_index_16, dust_index_50, dust_index_84 = perc['dust_index']
+    dust1_fraction_16, dust1_fraction_50, dust1_fraction_84 = perc['dust1_fraction']
+    log_fagn_16, log_fagn_50, log_fagn_84 = perc['log_fagn']
+    log_agn_tau_16, log_agn_tau_50, log_agn_tau_84 = perc['log_agn_tau']
+    gas_logz_16, gas_logz_50, gas_logz_84 = perc['gas_logz']
+    duste_qpah_16, duste_qpah_50, duste_qpah_84 = perc['duste_qpah']
+    duste_umin_16, duste_umin_50, duste_umin_84 = perc['duste_umin']
+    log_duste_gamma_16, log_duste_gamma_50, log_duste_gamma_84 = perc['log_duste_gamma']
 
     # just use allsfhs from postprocess_prosp
     # and z_to_agebins
@@ -899,16 +900,16 @@ def prospector_result_to_blast(
     agebins_ago = 10**agebins / 1e9
     
     sfh_results = []
-    unique_sfh = np.unique(perc['sfh'][:,1])
-    for a,s in zip(agebins_ago,perc['sfh_binned']):
+    unique_sfh = np.unique(perc['sfh'][:, 1])
+    for a, s in zip(agebins_ago, perc['sfh_binned']):
         sfh_results += [
             {
-                'transient':transient,
-                'logsfr_16':np.log10(s[0]),
-                'logsfr_50':np.log10(s[1]),
-                'logsfr_84':np.log10(s[2]),
-                'logsfr_tmin':a[0],
-                'logsfr_tmax':a[1]
+                'transient': transient,
+                'logsfr_16': np.log10(s[0]),
+                'logsfr_50': np.log10(s[1]),
+                'logsfr_84': np.log10(s[2]),
+                'logsfr_tmin': a[0],
+                'logsfr_tmax': a[1]
             }
         ]
 
@@ -921,10 +922,10 @@ def prospector_result_to_blast(
     prosp_results = {
         "transient": transient,
         "aperture": aperture,
-        "posterior": hdf5_file,
-        "chains_file": hdf5_file_name.replace(".h5", "_chain.npz"),
-        "percentiles_file": hdf5_file_name.replace(".h5", "_perc.npz"),
-        "model_file": hdf5_file_name.replace(".h5", "_modeldata.npz"),
+        "posterior": hdf5_file_path,
+        "chains_file": chain_file_path,
+        "percentiles_file": perc_file_path,
+        "model_file": modeldata_file_path,
         "log_mass_16": logmass16,
         "log_mass_50": logmass50,
         "log_mass_84": logmass84,
@@ -937,45 +938,45 @@ def prospector_result_to_blast(
         "log_age_16": age16,
         "log_age_50": age50,
         "log_age_84": age84,
-        "logzsol_16":logzsol16,
-        "logzsol_50":logzsol50,
-        "logzsol_84":logzsol84,
-        "dust2_16":dust2_16,
-        "dust2_50":dust2_50,
-        "dust2_84":dust2_84,
-        "dust_index_16":dust_index_16,
-        "dust_index_50":dust_index_50,
-        "dust_index_84":dust_index_84,
-        "dust1_fraction_16":dust1_fraction_16,
-        "dust1_fraction_50":dust1_fraction_50,
-        "dust1_fraction_84":dust1_fraction_84,
-        "log_fagn_16":log_fagn_16,
-        "log_fagn_50":log_fagn_50,
-        "log_fagn_84":log_fagn_84,
-        "log_agn_tau_16":log_agn_tau_16,
-        "log_agn_tau_50":log_agn_tau_50,
-        "log_agn_tau_84":log_agn_tau_84,
-        "gas_logz_16":gas_logz_16,
-        "gas_logz_50":gas_logz_50,
-        "gas_logz_84":gas_logz_84,
-        "duste_qpah_16":duste_qpah_16,
-        "duste_qpah_50":duste_qpah_50,
-        "duste_qpah_84":duste_qpah_84,
-        "duste_umin_16":duste_umin_16,
-        "duste_umin_50":duste_umin_50,
-        "duste_umin_84":duste_umin_84,
-        "log_duste_gamma_16":log_duste_gamma_16,
-        "log_duste_gamma_50":log_duste_gamma_50,
-        "log_duste_gamma_84":log_duste_gamma_84,
+        "logzsol_16": logzsol16,
+        "logzsol_50": logzsol50,
+        "logzsol_84": logzsol84,
+        "dust2_16": dust2_16,
+        "dust2_50": dust2_50,
+        "dust2_84": dust2_84,
+        "dust_index_16": dust_index_16,
+        "dust_index_50": dust_index_50,
+        "dust_index_84": dust_index_84,
+        "dust1_fraction_16": dust1_fraction_16,
+        "dust1_fraction_50": dust1_fraction_50,
+        "dust1_fraction_84": dust1_fraction_84,
+        "log_fagn_16": log_fagn_16,
+        "log_fagn_50": log_fagn_50,
+        "log_fagn_84": log_fagn_84,
+        "log_agn_tau_16": log_agn_tau_16,
+        "log_agn_tau_50": log_agn_tau_50,
+        "log_agn_tau_84": log_agn_tau_84,
+        "gas_logz_16": gas_logz_16,
+        "gas_logz_50": gas_logz_50,
+        "gas_logz_84": gas_logz_84,
+        "duste_qpah_16": duste_qpah_16,
+        "duste_qpah_50": duste_qpah_50,
+        "duste_qpah_84": duste_qpah_84,
+        "duste_umin_16": duste_umin_16,
+        "duste_umin_50": duste_umin_50,
+        "duste_umin_84": duste_umin_84,
+        "log_duste_gamma_16": log_duste_gamma_16,
+        "log_duste_gamma_50": log_duste_gamma_50,
+        "log_duste_gamma_84": log_duste_gamma_84,
         "mass_surviving_ratio": mfrac,
     }
     if parametric_sfh:
         prosp_results["log_tau_16"] = (tau16,)
         prosp_results["log_tau_50"] = (tau50,)
         prosp_results["log_tau_84"] = (tau84,)
-        
+
     np.savez(
-        hdf5_file_name.replace(".h5", "_modeldata.npz"),
+        modeldata_file_path,
         rest_wavelength=model_components["sps"].wavelengths,
         spec=best_spec,
         phot=best_phot,
@@ -984,5 +985,11 @@ def prospector_result_to_blast(
         phot_16=phot_16,
         phot_84=phot_84,
     )
-
-    return prosp_results,sfh_results
+    # Upload data files to S3 bucket (HDF5, chain, perc, modeldata) and delete local copies.
+    s3 = ObjectStore()
+    for file_path in [hdf5_file_path, chain_file_path, perc_file_path, modeldata_file_path]:
+        object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+        s3.put_object(path=object_key, file_path=file_path)
+        assert s3.object_exists(object_key)
+        os.remove(file_path)
+    return prosp_results, sfh_results

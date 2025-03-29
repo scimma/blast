@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import re_path
@@ -28,12 +29,20 @@ from host.plotting_utils import plot_sed
 from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
+from host.object_store import ObjectStore
 from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from celery import shared_task
+
+# Configure logging
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -338,14 +347,46 @@ def results(request, slug):
                 ),
             )
 
+    def delete_cached_file(file_path):
+        if not isinstance(file_path, str):
+            return
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as err:
+            logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
+
+    def download_file_from_s3(file_path):
+        try:
+            # Download SED results files to local file cache
+            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+            s3.download_object(path=object_key, file_path=file_path)
+            assert os.path.isfile(file_path)
+        except Exception as err:
+            logger.error(f'''Error downloading SED file "{file_path}": {err}''')
+
+    if local_sed_obj.exists() or global_sed_obj.exists():
+        s3 = ObjectStore()
     if local_sed_obj.exists():
         local_sed_file = local_sed_obj[0].posterior.name
+        local_sed_hdf5_filepath = local_sed_file
+        local_sed_modeldata_filepath = local_sed_file.replace(".h5", "_modeldata.npz")
+        download_file_from_s3(local_sed_hdf5_filepath)
+        download_file_from_s3(local_sed_modeldata_filepath)
     else:
         local_sed_file = None
+        local_sed_hdf5_filepath = None
+        local_sed_modeldata_filepath = None
     if global_sed_obj.exists():
         global_sed_file = global_sed_obj[0].posterior.name
+        global_sed_hdf5_filepath = global_sed_file
+        global_sed_modeldata_filepath = global_sed_file.replace(".h5", "_modeldata.npz")
+        download_file_from_s3(global_sed_hdf5_filepath)
+        download_file_from_s3(global_sed_modeldata_filepath)
     else:
         global_sed_file = None
+        global_sed_hdf5_filepath = None
+        global_sed_modeldata_filepath = None
 
     all_cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(~Q(fits=""))
     filters = [cutout.filter.name for cutout in all_cutouts]
@@ -431,43 +472,45 @@ def results(request, slug):
         **bokeh_sed_local_context,
         **bokeh_sed_global_context,
     }
+    # Purge temporary cached files
+    delete_cached_file(local_sed_hdf5_filepath)
+    delete_cached_file(local_sed_modeldata_filepath)
+    delete_cached_file(global_sed_hdf5_filepath)
+    delete_cached_file(global_sed_modeldata_filepath)
+    # Return rendered HTML content
     return render(request, "results.html", context)
+
+
+def stream_sed_output_file(file_path):
+    # Stream the data file from the S3 bucket
+    s3 = ObjectStore()
+    object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+    filename = os.path.basename(file_path)
+    obj_stream = s3.stream_object(object_key)
+    response = StreamingHttpResponse(streaming_content=obj_stream)
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
 
 
 def download_chains(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.chains_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.chains_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.chains_file.name)
 
 
 def download_modelfit(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.model_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.model_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.model_file.name)
 
 
 def download_percentiles(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-
-    filename = sed_result.percentiles_file.name.split("/")[-1]
-    response = HttpResponse(sed_result.percentiles_file, content_type="text/plain")
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-
-    return response
+    return stream_sed_output_file(sed_result.percentiles_file.name)
 
 
 def acknowledgements(request):

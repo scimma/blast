@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.0.6'
+APP_VERSION = '1.1.0'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -155,28 +155,25 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 MEDIA_URL = "/cutouts/"
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 
-DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")  # noqa
-CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")  # noqa
-SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")  # noqa
-SBI_TRAINING_ROOT = os.environ.get(
-    "SBI_TRAINING_ROOT", "/data/sbi_training_sets"
-)  # noqa
-GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/data/ghost_output")  # noqa
-GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")  # noqa
-GHOST_DUST_PATH = os.environ.get(
-    "GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model")
-)  # noqa
-GHOST_PHOTOZ_PATH = os.environ.get(
-    "GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5")
-)  # noqa
-TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")  # noqa
-SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")  # noqa
-SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")  # noqa
-TRANSMISSION_CURVES_ROOT = os.environ.get(
-    "TRANSMISSION_CURVES_ROOT", "/data/transmission"
-)  # noqa
+DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
+CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
+SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")
+SBI_TRAINING_ROOT = os.environ.get("SBI_TRAINING_ROOT", "/data/sbi_training_sets")
+GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/tmp/ghost_output")
+GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")
+GHOST_DUST_PATH = os.environ.get("GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model"))
+GHOST_PHOTOZ_PATH = os.environ.get("GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5"))  # noqa
+TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
+SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
+SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
+TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/transmission")
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
+
+# S3_ENDPOINT_URL example: "https://js2.jetstream-cloud.org:8001"
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+S3_BUCKET = os.getenv("S3_BUCKET", "")
+S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "UTC"
@@ -196,7 +193,7 @@ CELERY_BROKER_URL = (
     f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
 )
 
-# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend
+# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend  # noqa
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
 

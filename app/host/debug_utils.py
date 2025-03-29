@@ -82,7 +82,6 @@ def set_tasks_unprocessed(transient_name):
         t.save()
 
 def populate_sed_quantities():
-
     from host import postprocess_prosp as pp
     from host.prospector import build_model
     from host.prospector import build_obs
@@ -96,6 +95,7 @@ def populate_sed_quantities():
 
         percentiles = np.load(s.percentiles_file,allow_pickle=True)
         perc = np.atleast_1d(percentiles["percentiles"])[0]
+        # TODO: S3: This will fail without first downloading the posterior file from S3 bucket
         res, _, _ = reader.results_from(s.posterior.name, dangerous=False)
         
         

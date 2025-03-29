@@ -113,3 +113,11 @@ services:
     env_file:
       - ../env/.env.default
       - ../env/.env.dev
+
+  object-store:
+    extends:
+      file: docker-compose.yml
+      service: object-store
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev

@@ -1,4 +1,5 @@
 import math
+import os
 
 import numpy as np
 from astropy.io import fits
@@ -29,6 +30,8 @@ from .prospector import build_model
 from .prospector import build_obs
 from .prospector import fit_model
 from .prospector import prospector_result_to_blast
+from .object_store import ObjectStore
+from django.conf import settings
 
 """This module contains all of the TransientTaskRunners in blast."""
 
@@ -264,8 +267,16 @@ class GlobalApertureConstruction(TransientTaskRunner):
         aperture = None
         while aperture is None and choice <= 8:
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
-            image = fits.open(aperture_cutout[0].fits.name)
+            # Download FITS file local file cache
+            local_fits_path = aperture_cutout[0].fits.name
+            s3 = ObjectStore()
+            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+            s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
+            image = fits.open(local_fits_path)
             aperture = construct_aperture(image, transient.host.sky_coord)
+            # Delete FITS file from local file cache
+            os.remove(local_fits_path)
             choice += 1
         if aperture is None:
             return "failed"
@@ -338,7 +349,13 @@ class LocalAperturePhotometry(TransientTaskRunner):
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
         for cutout in cutouts:
-            image = fits.open(cutout.fits.name)
+            # Download FITS file local file cache
+            s3 = ObjectStore()
+            local_fits_path = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+            s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
+            image = fits.open(local_fits_path)
 
             try:
                 photometry = do_aperture_photometry(
@@ -364,6 +381,8 @@ class LocalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
+                # Delete FITS file from local file cache
+                os.remove(local_fits_path)
             except Exception:
                 raise
         return "processed"
@@ -411,12 +430,18 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
         for cutout in cutouts:
-            image = fits.open(cutout.fits.name)
+            # Download FITS file local file cache
+            s3 = ObjectStore()
+            local_fits_path = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+            s3.download_object(path=object_key, file_path=local_fits_path)
+            assert os.path.isfile(local_fits_path)
+            image = fits.open(local_fits_path)
 
             # make new aperture
             # adjust semi-major/minor axes for size
             if f"{cutout.name}_global" != aperture.name:
-                
+
                 if not len(
                     Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
                 ):
@@ -454,6 +479,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                         transient=transient, name=f"{cutout.name}_global"
                     )
 
+            err_to_raise = None
             try:
                 photometry = do_aperture_photometry(
                     image, aperture.sky_aperture, cutout.filter
@@ -479,8 +505,17 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-            except Exception:
-                raise
+            except Exception as err:
+                err_to_raise = err
+                pass
+            finally:
+                # Delete FITS file from local file cache
+                try:
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
+                if err_to_raise:
+                    raise err_to_raise
 
         return "processed"
 

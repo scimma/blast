@@ -13,6 +13,8 @@ from host.models import Aperture
 from host.models import Transient
 from host.host_utils import get_local_aperture_size
 from host.cutouts import download_and_save_cutouts
+from host.object_store import ObjectStore
+from django.conf import settings
 
 
 def trim_images(transient):
@@ -29,7 +31,13 @@ def trim_images(transient):
 
 def trim_image(cutout):
     transient = cutout.transient
-    hdu = fits.open(cutout.fits.name)
+    # Download FITS file local file cache
+    s3 = ObjectStore()
+    local_fits_path = cutout.fits.name
+    object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+    s3.download_object(path=object_key, file_path=local_fits_path)
+    assert os.path.isfile(local_fits_path)
+    hdu = fits.open(local_fits_path)
     wcs = WCS(hdu[0].header)
     center_x, center_y = wcs.wcs_world2pix(transient.ra_deg, transient.dec_deg, 0)
     offset_ra, offset_dec = wcs.wcs_pix2world(center_x + 10, center_y, 0)
@@ -83,13 +91,18 @@ def trim_image(cutout):
         )
         hdu[0].data = cutout_new.data
         hdu[0].header.update(cutout_new.wcs.to_header())
-        hdu.writeto(cutout.fits.name, overwrite=True)
+        hdu.writeto(local_fits_path, overwrite=True)
+        # Upload file to bucket and delete local copy
+        s3.put_object(path=object_key, file_path=local_fits_path)
+        assert s3.object_exists(object_key)
+        # Delete FITS file from local file cache
+        os.remove(local_fits_path)
 
     except NoOverlapError:
         pass
     except TypeError:
-        os.system(f'rm {cutout.fits.name}')
-        download_and_save_cutouts(transient)
+        # Download the cutout again, overwriting the existing file.
+        download_and_save_cutouts(transient, overwrite=True)
 
         try:
             cutout_new = Cutout2D(
@@ -100,6 +113,12 @@ def trim_image(cutout):
             )
             hdu[0].data = cutout_new.data
             hdu[0].header.update(cutout_new.wcs.to_header())
-            hdu.writeto(cutout.fits.name, overwrite=True)
+            hdu.writeto(local_fits_path, overwrite=True)
+            # Upload file to bucket and delete local copy
+            s3.put_object(path=object_key, file_path=local_fits_path)
+            assert s3.object_exists(object_key)
+            # Delete FITS file from local file cache
+            os.remove(local_fits_path)
         except NoOverlapError:
             pass
+
