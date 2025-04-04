@@ -82,6 +82,7 @@ def download_and_save_cutouts(
     fov=Quantity(0.1, unit="deg"),
     cutout_base_path=settings.CUTOUT_ROOT,
     overwrite=settings.CUTOUT_OVERWRITE,
+    filter_set=None
 ):
     """
     Download all available imaging from a list of surveys
@@ -103,7 +104,9 @@ def download_and_save_cutouts(
         as values.
     """
     processed_value = "processed"
-    for filter in Filter.objects.all():
+    if filter_set is None:
+        filter_set = Filter.objects.all()
+    for filter in filter_set:
         # Does cutout file exist on the local disk?
         save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
         local_fits_path = save_dir + f"{filter.name}.fits"
