@@ -300,15 +300,15 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
         wavelength,
         flux,
         yerr=flux_error,
-        point_kwargs={"size": 10, "legend_label": "data"},
+        point_kwargs={"size": 10, "legend_label": "data; MW E(B-V)-corrected"},
         error_kwargs={"width": 2},
         source=source,
     )
 
     # mouse-over for data
     TOOLTIPS = [
-        ("flux (mJy)", "$y"),
-        ("flux error (mJy)", "@flux_error"),
+        ("flux (uJy)", "$y"),
+        ("flux error (uJy)", "@flux_error"),
         ("wavelength", "$x"),
         ("band", "@filters"),
         ("mag (AB)", "@mag"),
