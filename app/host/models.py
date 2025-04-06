@@ -70,6 +70,7 @@ class SkyObject(models.Model):
         self.software_version = settings.APP_VERSION
         super(SkyObject, self).save(*args, **kwargs)
 
+
 class Host(SkyObject):
     """
     Model to represent a host galaxy.
@@ -89,7 +90,7 @@ class Host(SkyObject):
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     objects = HostManager()
     software_version = models.CharField(max_length=50, blank=True, null=True)
-    
+
 
 class Transient(SkyObject):
     """
@@ -600,7 +601,7 @@ class SEDFittingResult(models.Model):
         self.software_version = settings.APP_VERSION
         super(SEDFittingResult, self).save(*args, **kwargs)
 
-    
+
 class TaskRegisterSnapshot(models.Model):
     """
     Model to keep track of how many unprocessed transients exist
@@ -613,7 +614,7 @@ class TaskRegisterSnapshot(models.Model):
 
 class Acknowledgement(models.Model):
     """
-    Model to keep track of other work blast uses and relies on.
+    Model to keep track of other work Blast uses and relies on.
     """
 
     name = models.CharField(max_length=100)

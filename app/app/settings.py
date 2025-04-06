@@ -164,6 +164,7 @@ GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")
 GHOST_DUST_PATH = os.environ.get("GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model"))
 GHOST_PHOTOZ_PATH = os.environ.get("GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5"))  # noqa
 TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
+TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
 SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
 TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/transmission")

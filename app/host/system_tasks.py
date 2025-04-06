@@ -1,4 +1,3 @@
-import datetime
 import glob
 import shutil
 
@@ -6,7 +5,7 @@ from celery import shared_task
 from dateutil import parser
 from django.conf import settings
 from django.db.models import Q
-from django.utils import timezone
+from datetime import datetime, timedelta, timezone
 from host.base_tasks import initialise_all_tasks_status
 from host.base_tasks import SystemTaskRunner
 from host.base_tasks import task_soft_time_limit
@@ -14,6 +13,8 @@ from host.base_tasks import task_time_limit
 from host.workflow import reprocess_transient
 from host.workflow import transient_workflow
 from host.trim_images import trim_images
+from app.celery import app
+from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 
 from .models import Status
 from .models import TaskRegister
@@ -25,13 +26,28 @@ from .transient_name_server import get_transients_from_tns
 from .transient_name_server import tns_staging_blast_transient
 from .transient_name_server import tns_staging_file_date_name
 from .transient_name_server import update_blast_transient
+# Configure logging
+import os
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
 
 
 class TNSDataIngestion(SystemTaskRunner):
     def run_process(self, interval_minutes=200):
         print("TNS STARTED")
-        now = timezone.now()
-        time_delta = datetime.timedelta(minutes=interval_minutes)
+        # # When testing periodic task management and behavior, use this short-circuit to avoid contacting TNS.
+        # # START TESTING SHORT CIRCUIT
+        # import random
+        # sleep_time = random.choice([8, 12, 43, 43])
+        # print(f'Sleeping {sleep_time} seconds...')
+        # sleep(sleep_time)
+        # print("TNS COMPLETED")
+        # return
+        # # END TESTING SHORT CIRCUIT
+        now = datetime.now(timezone.utc)
+        time_delta = timedelta(minutes=interval_minutes)
         tns_credentials = get_tns_credentials()
         transients_from_tns = get_transients_from_tns(
             now - time_delta, tns_credentials=tns_credentials
@@ -62,7 +78,7 @@ class TNSDataIngestion(SystemTaskRunner):
             # Determine if the timestamps are different.
             saved_timestamp = saved_transient.public_timestamp.replace(tzinfo=None)
             tns_timestamp = parser.parse(transient_from_tns.public_timestamp)
-            identical_timestamps = saved_timestamp - tns_timestamp == datetime.timedelta(0)
+            identical_timestamps = saved_timestamp - tns_timestamp == timedelta(0)
             # If the timestamps are identical and there was no redshift update, skip to the next TNS transient.
             if identical_timestamps and not redshift_updated:
                 continue
@@ -124,7 +140,7 @@ class IngestMissedTNSTransients(SystemTaskRunner):
         """
         Gets missed transients from tns and update them using the daily staging csv
         """
-        yesterday = timezone.now() - datetime.timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         date_string = tns_staging_file_date_name(yesterday)
         data = get_daily_tns_staging_csv(
             date_string,
@@ -197,7 +213,7 @@ class SnapshotTaskRegister(SystemTaskRunner):
             if transient.progress < 100 and transient.progress > 0:
                 not_completed += 1
 
-        now = timezone.now()
+        now = datetime.now(timezone.utc)
 
         for aggregate, label in zip(
             [not_completed, total, completed, waiting],
@@ -289,7 +305,7 @@ class TrimTransientImages(SystemTaskRunner):
     def task_initially_enabled(self):
         return True
 
-            
+
 # Periodic tasks
 @shared_task(
     time_limit=task_time_limit,
@@ -302,8 +318,44 @@ def trim_transient_images():
 @shared_task(
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
+    bind=True,
+    base=AbortableTask,
 )
-def tns_data_ingestion():
+def tns_data_ingestion(self):
+    def get_all_active_tasks():
+        inspect = app.control.inspect()
+        active_task_info = inspect.active(safe=True)
+        all_active_tasks = []
+        for worker, worker_active_tasks in active_task_info.items():
+            logger.debug(f'''{worker}: {worker_active_tasks}''')
+            all_active_tasks.extend(worker_active_tasks)
+        logger.debug(f'''active tasks: {len(all_active_tasks)}''')
+        return all_active_tasks
+    # Ensure that there are no concurrent executions of the TNS ingestion to avoid exceeding the TNS API rate limits.
+    # Use the Celery app control system to list all active tns_data_ingestion tasks, and only contact TNS if there are
+    # no running instances. Running or stalled instances that are older than the TNS_INGEST_TIMEOUT value should be 
+    # aborted and terminated so they do not permanently block the ingest; however, the methods available to terminate
+    # these processes in Celery are unreliable, so additional monitoring may be necessary.
+    task_name = 'host.system_tasks.tns_data_ingestion'
+    task_id = self.request.id
+    all_active_tasks = get_all_active_tasks()
+    active_tasks = [task for task in all_active_tasks if task['name'] == task_name and task['id'] != task_id]
+    time_threshold = datetime.now(timezone.utc) - timedelta(seconds=settings.TNS_INGEST_TIMEOUT)
+    # Attempt to abort expired tasks
+    for task in active_tasks:
+        time_start = datetime.fromtimestamp(task['time_start'], tz=timezone.utc)
+        if time_start < time_threshold:
+            logger.debug(f'''Active task {task['id']} has expired: {time_start.strftime('%Y/%m/%d %H:%M:%S')}''')
+            logger.info(f'''Aborting expired task {task['id']}...''')
+            abortable_task = AbortableAsyncResult(task['id'])
+            abortable_task.abort()
+            logger.info(f'''Revoking expired task {task['id']}...''')
+            app.control.terminate(task['id'], signal='SIGKILL')
+    # If there is still an active task other than this current task, abort.
+    if [task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]:
+        logger.info(f'''There is already an active "{task_name}" task. Aborting.''')
+        return
+    # Run the TNS ingestion
     TNSDataIngestion().run_process()
 
 
