@@ -47,6 +47,14 @@ else
   echo "\"${INIT_STARTED_DB}\" not found. Running initialization script..."
   touch "${INIT_STARTED_DB}"
 
+  # Migrations should be created manually by developers and committed with the source code repo.
+  # Set the MAKE_MIGRATIONS env var to a non-empty string to create migration scripts
+  # after changes are made to the Django ORM models.
+  if [ -n "$MAKE_MIGRATIONS" ]; then
+    echo "Generating database migration scripts..."
+    python manage.py makemigrations --no-input
+    exit 0
+  fi
   python init.py
 
   rm -f "${INIT_STARTED_DB}"
