@@ -131,14 +131,13 @@ class Transient(SkyObject):
     added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     progress = models.IntegerField(default=0)
     software_version = models.CharField(max_length=50, blank=True, null=True)
-    
+
     @property
     def best_redshift(self):
         """get the best redshift for a transient"""
         if self.host is not None and self.host.redshift is not None:
             if (
-                self.redshift is not None
-                and abs(self.host.redshift - self.redshift) < 0.02
+                self.redshift is not None and abs(self.host.redshift - self.redshift) < 0.02
             ):
                 z = self.host.redshift
             elif self.redshift is None:
@@ -157,8 +156,7 @@ class Transient(SkyObject):
         """get the best redshift for a transient"""
         if self.host is not None and self.host.redshift is not None:
             if (
-                self.redshift is not None
-                and abs(self.host.redshift - self.redshift) < 0.02
+                self.redshift is not None and abs(self.host.redshift - self.redshift) < 0.02
             ):
                 z = self.host.redshift
             elif self.redshift is None:
@@ -307,7 +305,7 @@ class Filter(models.Model):
         curve_name = f"{settings.TRANSMISSION_CURVES_ROOT}/{self.name}.txt"
 
         try:
-            transmission_curve = pd.read_csv(curve_name, sep="\s+", header=None)
+            transmission_curve = pd.read_csv(curve_name, sep="\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter transmission curve from {curve_name}: {err}"
@@ -330,7 +328,7 @@ class Filter(models.Model):
             return None, None
 
         try:
-            corr_model = pd.read_csv(corr_model_name, sep="\s+", header=None)
+            corr_model = pd.read_csv(corr_model_name, sep="\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter correlation model from {corr_model_name}: {err}"
@@ -412,7 +410,7 @@ class Cutout(models.Model):
     fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
     message = models.CharField(max_length=50, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)
-    
+
     # used if some downloads fail
     # warning = models.BooleanField(default=False)
     objects = CutoutManager()
@@ -437,7 +435,7 @@ class Aperture(SkyObject):
     semi_minor_axis_arcsec = models.FloatField()
     type = models.CharField(max_length=20)
     software_version = models.CharField(max_length=50, blank=True, null=True)
-    
+
     objects = ApertureManager()
 
     def __str__(self):
@@ -482,7 +480,7 @@ class AperturePhotometry(models.Model):
     magnitude_error = models.FloatField(blank=True, null=True)
     is_validated = models.CharField(blank=True, null=True, max_length=40)
     software_version = models.CharField(max_length=50, blank=True, null=True)
-    
+
     @property
     def flux_rounded(self):
         return round(self.flux, 2)
@@ -517,7 +515,7 @@ class StarFormationHistoryResult(models.Model):
         self.software_version = settings.APP_VERSION
         super(StarFormationHistoryResult, self).save(*args, **kwargs)
 
-    
+
 class SEDFittingResult(models.Model):
     """Model to store prospector results"""
 
@@ -552,7 +550,7 @@ class SEDFittingResult(models.Model):
     log_tau_50 = models.FloatField(null=True, blank=True)
     log_tau_84 = models.FloatField(null=True, blank=True)
 
-    ## prospector params
+    # prospector params
     logzsol_16 = models.FloatField(null=True, blank=True)
     logzsol_50 = models.FloatField(null=True, blank=True)
     logzsol_84 = models.FloatField(null=True, blank=True)

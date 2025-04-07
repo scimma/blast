@@ -7,7 +7,6 @@ import os
 import time
 import zipfile
 from collections import OrderedDict
-from io import StringIO
 
 import pandas as pd
 import requests
