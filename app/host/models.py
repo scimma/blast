@@ -23,6 +23,7 @@ from .managers import StatusManager
 from .managers import SurveyManager
 from .managers import TaskManager
 from .managers import TransientManager
+from .managers import TaskLockManager
 
 # from django_celery_beat.models import PeriodicTask
 
@@ -585,7 +586,6 @@ class SEDFittingResult(models.Model):
     # non-parametric SFH
     logsfh = models.ManyToManyField(StarFormationHistoryResult, blank=True)
 
-    
     chains_file = models.FileField(
         upload_to=npz_chains_file_path, null=True, blank=True
     )
@@ -622,3 +622,17 @@ class Acknowledgement(models.Model):
     paper_url = models.CharField(max_length=100, null=True, blank=True)
     doi = models.CharField(max_length=1000, null=True, blank=True)
     acknowledgement_text = models.CharField(max_length=1000, null=True, blank=True)
+
+
+class TaskLock(models.Model):
+    """
+    Model to provide a global locking mechanism (mutex) to prevent concurrent execution of serial operations.
+    """
+
+    name = models.CharField(max_length=255, primary_key=True, unique=True, null=False, blank=False)
+    time_created = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+    time_expires = models.DateTimeField(auto_now_add=False, null=False, blank=False)
+    objects = TaskLockManager()
+
+    def __str__(self):
+        return f'''{self.name}: created {self.time_created}, expires {self.time_expires}'''

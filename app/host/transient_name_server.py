@@ -7,11 +7,19 @@ import os
 import time
 import zipfile
 from collections import OrderedDict
+from django.conf import settings
 
 import pandas as pd
 import requests
 
 from .models import Transient
+from .models import TaskLock
+
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+
 
 def get_tns_credentials():
     """
@@ -62,6 +70,26 @@ def rate_limit_query_tns(data, headers, search_url):
     """
     Query TNS but wait if we have reached too many api requests.
     """
+    timeout = settings.TNS_QUERY_TIMEOUT
+    time_start = time.time()
+    logger.debug('''Aquiring TNS query lock...''')
+    while timeout > time.time() - time_start:
+        # Wait until a TNS query lock is acquired
+        if TaskLock.objects.request_lock('tns_query'):
+            break
+        logger.debug('''Waiting to aquire TNS query lock...''')
+        time.sleep(1)
+    # Enable the TNS_SIMULATE flag for development purposes to avoid pinging the actual TNS server
+    if settings.TNS_SIMULATE:
+        from random import choice
+        sleep_time = choice([13, 55, 70])
+        logger.debug(f'Simulating a TNS query ({sleep_time} seconds)...')
+        time.sleep(sleep_time)
+        # Release the TNS query lock
+        logger.debug('''Releasing TNS query lock...''')
+        TaskLock.objects.release_lock('tns_query')
+        return []
+    # Query the TNS server. Resend request after the indicated delay if a rate limiting HTTP code 429 is received.
     response = query_tns(data, headers, search_url)
     too_many_requests = response["response_id_code"] == 429
     while too_many_requests:
@@ -69,6 +97,9 @@ def rate_limit_query_tns(data, headers, search_url):
         time.sleep(time_util_rest + 1)
         response = query_tns(data, headers, search_url)
         too_many_requests = response["response_id_code"] == 429
+    # Release the TNS query lock
+    logger.debug('''Releasing TNS query lock...''')
+    TaskLock.objects.release_lock('tns_query')
     return response["data"]
 
 

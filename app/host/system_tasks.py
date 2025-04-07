@@ -353,6 +353,8 @@ def tns_data_ingestion(self):
             app.control.terminate(task['id'], signal='SIGKILL')
     # If there is still an active task other than this current task, abort.
     if [task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]:
+    # # When testing TNS query mutex locking mechanism, use the following line instead to allow some concurrency:
+    # if len([task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]) > 2:
         logger.info(f'''There is already an active "{task_name}" task. Aborting.''')
         return
     # Run the TNS ingestion
