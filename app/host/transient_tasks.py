@@ -60,7 +60,7 @@ class Ghost(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is no GHOST match status.
+        Emit status message for failure consistent with the available Status objects
         """
         return "no GHOST match"
 
@@ -205,7 +205,7 @@ class ImageDownload(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is no GHOST match status.
+        Emit status message for failure consistent with the available Status objects
         """
         return "failed"
 
@@ -545,7 +545,7 @@ class ValidateLocalPhotometry(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is local photometry validation failed.
+        Emit status message for failure consistent with the available Status objects
         """
         return "phot valid failed"
 
@@ -610,7 +610,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is local photometry validation failed.
+        Emit status message for failure consistent with the available Status objects
         """
         return "phot valid failed"
 
