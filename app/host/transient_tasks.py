@@ -258,10 +258,10 @@ class GlobalApertureConstruction(TransientTaskRunner):
 
         if not transient.host:
             print(f"""No host associated with "{transient.name}".""")
-            return "failed"
+            return self. _failed_status_message()
         if not transient.host.sky_coord:
             print(f"""No sky_coord associated with "{transient.name}" host.""")
-            return "failed"
+            return self. _failed_status_message()
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         choice = 0
         aperture = None
@@ -279,7 +279,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             os.remove(local_fits_path)
             choice += 1
         if aperture is None:
-            return "failed"
+            return self. _failed_status_message()
 
         query = {"name": f"{aperture_cutout[0].name}_global"}
         data = {
@@ -566,7 +566,7 @@ class ValidateLocalPhotometry(TransientTaskRunner):
                 local_aperture_phot.save()
 
         if not len(local_aperture_photometry):
-            return "phot valid failed"
+            return self._failed_status_message()
 
         for local_aperture_phot in local_aperture_photometry:
             is_validated = check_local_radius(
