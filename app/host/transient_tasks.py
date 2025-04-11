@@ -69,7 +69,7 @@ class Ghost(TransientTaskRunner):
         Run the GHOST matching algorithm.
         """
         host = run_ghost(transient)
-        
+
         if host is not None:
             host.save()
             transient.host = host
@@ -449,15 +449,15 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                     semi_major_axis = (
                         np.sqrt(
                             aperture.semi_major_axis_arcsec**2.
-                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
-                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
                         )
                     )
                     semi_minor_axis = (
                         np.sqrt(
                             aperture.semi_minor_axis_arcsec**2.
-                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354
-                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
                         )
                     )
 
@@ -730,9 +730,9 @@ class HostInformation(TransientTaskRunner):
         status_message = "processed"
 
         if (
-            galaxy_sdss_data is not None
-            and galaxy_sdss_data["redshift"] is not None
-            and not math.isnan(galaxy_sdss_data["redshift"])
+            galaxy_sdss_data is not None and   # noqa: W504
+            galaxy_sdss_data["redshift"] is not None and   # noqa: W504
+            not math.isnan(galaxy_sdss_data["redshift"])
         ):
             host.redshift = galaxy_sdss_data["redshift"]
         elif galaxy_ned_data["redshift"] is not None and not math.isnan(
@@ -820,7 +820,7 @@ class HostSEDFitting(TransientTaskRunner):
             return "not enough filters"
 
         if mode == "test":
-            prosp_results,sfh_results = prospector_result_to_blast(
+            prosp_results, sfh_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -829,7 +829,7 @@ class HostSEDFitting(TransientTaskRunner):
                 sed_output_root="/tmp",
             )
         else:
-            prosp_results,sfh_results = prospector_result_to_blast(
+            prosp_results, sfh_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -1055,6 +1055,7 @@ def validate_global_photometry(transient_name):
 )
 def validate_local_photometry(transient_name):
     ValidateLocalPhotometry(transient_name).run_process()
+
 
 @shared_task(
     name="Get Final Progress",
