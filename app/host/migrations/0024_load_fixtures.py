@@ -11,7 +11,8 @@ def load_acknowledgement(apps, schema_editor):
             website_url='https://www.astropy.org',
             paper_url='https://ui.adsabs.harvard.edu/abs/2018AJ....156..123A/abstract',
             doi='10.3847/1538-3881/aabc4f',
-            acknowledgement_text='This research made use of Astropy, (http://www.astropy.org) a community-developed core Python package for Astronomy.',
+            acknowledgement_text=('This research made use of Astropy, (http://www.astropy.org) a community-'
+                                  'developed core Python package for Astronomy.'),
         ),
         Acknowledgement(
             name='NumPy',
@@ -36,7 +37,8 @@ def load_acknowledgement(apps, schema_editor):
             website_url='https://photutils.readthedocs.io/en/stable/',
             paper_url='https://ui.adsabs.harvard.edu/abs/2022zndo....596036B/abstract',
             doi='10.5281/zenodo.6385735',
-            acknowledgement_text='This research made use of Photutils, an Astropy package for detection and photometry of astronomical sources (Bradley et al. 2020).',
+            acknowledgement_text=('This research made use of Photutils, an Astropy package for detection and '
+                                  'photometry of astronomical sources (Bradley et al. 2020).'),
         ),
         Acknowledgement(
             name='Astroquery',
@@ -53,7 +55,10 @@ def load_acknowledgement(apps, schema_editor):
             website_url='https://hips.readthedocs.io',
             paper_url='https://ui.adsabs.harvard.edu/abs/2015A%26A...578A.114F/abstract',
             doi='10.1051/0004-6361/201526075',
-            acknowledgement_text='The HiOS package is being developed as part of Google Summer of Code 2017 program by Adeel Ahmad, with Thomas Boch (CDS, Strasbourg) and Christoph Deil (MPIK, Heidelberg) as mentors. We would like to thank Google, CDS, MPIK for their support!',
+            acknowledgement_text=('The HiOS package is being developed as part of Google Summer of Code 2017 '
+                                  'program by Adeel Ahmad, with Thomas Boch (CDS, Strasbourg) and Christoph '
+                                  'Deil (MPIK, Heidelberg) as mentors. We would like to thank Google, CDS, '
+                                  'MPIK for their support!'),
         ),
         Acknowledgement(
             name='dynesty',
