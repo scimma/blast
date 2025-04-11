@@ -11,6 +11,11 @@ from .models import Status
 from .models import Task
 from .models import TaskRegister
 from .models import Transient
+# Configure logging
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
 
 task_time_limit = int(os.environ.get("TASK_TIME_LIMIT", "3800"))
 task_soft_time_limit = int(os.environ.get("TASK_SOFT_TIME_LIMIT", "3600"))
@@ -310,7 +315,7 @@ class TransientTaskRunner(TaskRunner):
         processing_status = Status.objects.get(message__exact="processing")
 
         if task_register_item is not None:
-            print(f'''task_register_item: {task_register_item}''')
+            logger.debug(f'''task_register_item: {task_register_item}''')
             self._update_status(task_register_item, processing_status)
             transient = task_register_item.transient
 
@@ -325,6 +330,7 @@ class TransientTaskRunner(TaskRunner):
                 raise
             finally:
                 end_time = process_time()
+                logger.debug(f'''TransientTaskRunner status message: "{status_message}"''')
                 status = Status.objects.get(message__exact=status_message)
                 self._update_status(task_register_item, status)
                 processing_time = round(end_time - start_time, 2)
