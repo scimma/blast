@@ -593,8 +593,8 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
 
     def _prerequisites(self):
         """
-        Prerequisites are that the validate local photometry task
-        is not processed and the local photometry task is processed.
+        Prerequisites are that the validate global photometry task
+        is not processed and the global photometry task is processed.
         """
         return {
             "Global aperture photometry": "processed",
@@ -604,7 +604,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
     @property
     def task_name(self):
         """
-        Task status to be altered is validate local photometry.
+        Task status to be altered is validate global photometry.
         """
         return "Validate global photometry"
 
