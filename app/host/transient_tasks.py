@@ -628,9 +628,9 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         global_aperture_photometry = AperturePhotometry.objects.filter(
             transient=transient, aperture__type="global"
         )
-        
+
         if not len(global_aperture_photometry):
-            return "global photometry validation failed"
+            return self._failed_status_message()
 
         is_contam_list = []
         # issue_warning = True
