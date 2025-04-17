@@ -101,8 +101,11 @@ def run_prost(transient):
         dec_deg=hosts["host_dec"][0],
         name=hosts["host_name"][0],
     )
-    if hosts['best_cat'][0] != 'panstarrs' :
+    if hosts['host_redshift_info'][0] == 'SPEC':
         host.redshift = host_data["host_redshift_mean"][0]
+    elif hosts['host_redshift_info'][0] == 'PHOT' and \
+         hosts['best_cat'][0] != 'panstarrs':
+        host.photometric_redshift = host_data["host_redshift_mean"][0]
         
     #if host_data["NED_redshift"][0] == host_data["NED_redshift"][0]:
 
