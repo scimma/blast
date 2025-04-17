@@ -265,6 +265,7 @@ def associate_transient(
     calc_host_props=False,
     verbose=0,
     coord_err_cols=('ra_err', 'dec_err'),
+    save_path='./',
 ):
     """Associates a transient with its most likely host galaxy.
 
@@ -450,7 +451,8 @@ def associate_transient(
                             transient.redshift,
                             0,
                             f"{transient.name}_{cat_name}_{cat_release}",
-                            logger
+                            logger,
+                            save_path=save_path,
                         )
                     except HTTPError:
                         logger.warning("Couldn't get an image. Waiting 60s before moving on.")
@@ -634,7 +636,8 @@ def associate_sample(
             log_fn,
             calc_host_props,
             verbose,
-            coord_err_cols
+            coord_err_cols,
+            save_path,
         )
         for idx, row in transient_catalog.iterrows()
     ]
