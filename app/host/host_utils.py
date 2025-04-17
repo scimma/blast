@@ -47,6 +47,11 @@ from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
 
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+
 
 def survey_list(survey_metadata_path):
     """
@@ -113,7 +118,7 @@ def build_source_catalog(image, background, threshhold_sigma=3.0, npixels=10):
     # deblended_segmentation = deblend_sources(
     #     background_subtracted_data, segmentation, npixels=npixels
     # )
-    print(segmentation)
+    logger.debug(segmentation)
     return SourceCatalog(background_subtracted_data, segmentation)
 
 
@@ -617,7 +622,7 @@ def construct_all_apertures(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     return apertures
 
@@ -645,7 +650,7 @@ def pick_largest_aperture(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     aperture_areas = {}
     for image_name in image_dict:
