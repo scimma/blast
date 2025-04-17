@@ -46,6 +46,7 @@ from .models import Cutout
 from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
+from .models import TaskLock
 
 import logging
 logging.basicConfig(format='%(levelname)-8s %(message)s')
@@ -548,36 +549,25 @@ def construct_aperture(image, position):
 def query_ned(position):
     """Get a Galaxy's redshift from NED if it is available."""
 
-    qs = ExternalRequest.objects.filter(name="NED")
-    if not len(qs):
-        ExternalRequest.objects.create(
-            name="NED", last_query=datetime.now(timezone.utc)
-        )
-        try:
-            result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
-        except ExpatError:
-            raise RuntimeError("too many requests to NED")
-    else:
-        count = 0
-        NED_TIME_SLEEP = 2
-        current_time = datetime.now(timezone.utc)
-        last_query = qs[0].last_query
-        while (
-            current_time - last_query < timedelta(seconds=NED_TIME_SLEEP)
-            and count < NED_TIME_SLEEP * 100
-        ):
-            print(f"NED rate limit avoidance ({last_query}: sleeping iteration #{count})")
-            time.sleep(NED_TIME_SLEEP)
-            current_time = datetime.now(timezone.utc)
-            count += 1
-        else:
-            try:
-                result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
-            except ExpatError:
-                raise RuntimeError("too many requests to NED")
-            er = ExternalRequest.objects.get(name="NED")
-            er.last_query = datetime.now(timezone.utc)
-            er.save()
+    logger.debug('''Aquiring NED query lock...''')
+    while True:
+        # Wait indefinitely until a NED query lock is acquired; rely on task timeout to terminate a stalled process.
+        if TaskLock.objects.request_lock('ned_query'):
+            break
+        logger.debug('''Waiting to aquire NED query lock...''')
+        time.sleep(settings.NED_RATE_LIMIT)
+
+    try:
+        err_to_raise = None
+        result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
+    except ExpatError:
+        err_to_raise = RuntimeError("too many requests to NED")
+    finally:
+        # Release the NED query lock
+        logger.debug('''Releasing NED query lock...''')
+        TaskLock.objects.release_lock('ned_query')
+        if err_to_raise:
+            raise err_to_raise
 
     result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
 
