@@ -95,7 +95,7 @@ def run_prost(transient):
         progress_bar=progress_bar,
         cat_cols=cat_cols,
     )
-    import pdb; pdb.set_trace()
+
     host = Host(
         ra_deg=hosts["host_ra"][0],
         dec_deg=hosts["host_dec"][0],
