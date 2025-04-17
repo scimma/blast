@@ -10,6 +10,8 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import make_lupton_rgb
 from astropy.wcs import WCS
+from host.astro_prost.helpers import setup_logger
+logger = setup_logger(verbose=2)
 
 def get_images(ra, dec, size=240, filters="grizy", type="stack"):
     """Query Pan-STARRS PS1 to get a list of images.
@@ -130,9 +132,11 @@ def get_ps1_pic(path, objid, ra, dec, size, band, safe=False, save=False):
 
         with fits.open(fitsurl) as fn:
             if save:
-                filename = f"/PS1_{objid}_{int(size*0.25)}arcsec_{band}.fits" if safe else \
-                           f"/PS1_ra={ra}_dec={dec}_{int(size*0.25)}arcsec_{band}.fits"
-                fn.writeto(path + filename, overwrite=True)
+                filename = f"PS1_{objid}_{int(size*0.25)}arcsec_{band}.fits" if safe else \
+                           f"PS1_ra={ra}_dec={dec}_{int(size*0.25)}arcsec_{band}.fits"
+                file_path = os.path.join(path, filename)
+                logger.debug(f'''Writing FITS file to "{file_path}"...''')
+                fn.writeto(file_path, overwrite=True)
             else:
                 return fn
     elif not save:
