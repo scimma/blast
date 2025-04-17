@@ -10,7 +10,7 @@ from host.base_tasks import task_time_limit
 
 from .base_tasks import TransientTaskRunner
 from .cutouts import download_and_save_cutouts
-from .ghost import run_ghost
+from .prost import run_prost
 from .host_utils import check_global_contamination
 from .host_utils import check_local_radius
 from .host_utils import construct_aperture
@@ -62,13 +62,13 @@ class Ghost(TransientTaskRunner):
         """
         Emit status message for failure consistent with the available Status objects
         """
-        return "no GHOST match"
+        return "no host match"
 
     def _run_process(self, transient):
         """
         Run the GHOST matching algorithm.
         """
-        host = run_ghost(transient)
+        host = run_prost(transient)
 
         if host is not None:
             host.save()
@@ -89,7 +89,7 @@ class Ghost(TransientTaskRunner):
 
             status_message = "processed"
         else:
-            status_message = "no ghost match"
+            status_message = "no host match"
 
         return status_message
 

@@ -8,8 +8,19 @@ from django.conf import settings
 
 from .models import Host
 
+# prost dependencies
+import pandas as pd
+from scipy.stats import gamma, halfnorm, uniform
+from astropy.cosmology import LambdaCDM
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
+from astropy.coordinates import SkyCoord
+from astropy import units as u
+from astro_prost.helpers import SnRateAbsmag
+from astro_prost.associate import associate_sample
 
-def run_ghost(transient, output_dir_root=settings.GHOST_OUTPUT_ROOT):
+def run_prost(transient):
     """
     Finds the information about the host galaxy given the position of the supernova.
     Parameters
@@ -23,77 +34,81 @@ def run_ghost(transient, output_dir_root=settings.GHOST_OUTPUT_ROOT):
     :host_information : ~astropy.coordinates.SkyCoord`
         Host position
     """
-    getGHOST(real=False, verbose=1)
     transient_position = SkyCoord(
         ra=transient.ra_deg, dec=transient.dec_deg, unit="deg"
     )
 
-    # dumb hack for ghost
-    try:
-        float(transient.name)
-        transient_name = "sn" + str(transient.name)
-    except Exception:
-        transient_name = transient.name
 
-    output_dir = os.path.join(output_dir_root, transient_name)
-    os.makedirs(output_dir, exist_ok=True)
-    # Due to a bug in astro_ghost version 2.2.2.dev19, we must ensure that
-    # the output path has a trailing slash.
-    output_dir = os.path.join(output_dir, '')
+    verbose = 1
 
-    try:
-        # some issues with Pan-STARRS downloads
-        host_data = getTransientHosts(
-            transientCoord=[transient_position],
-            transientName=[transient_name],
-            verbose=1,
-            savepath=output_dir,
-            starcut="gentle",
-            ascentMatch=False,
-        )
+    # define priors for properties
+    priorfunc_z = halfnorm(loc=0.0001, scale=0.5)
+    priorfunc_offset = uniform(loc=0, scale=5)
+    priorfunc_absmag = uniform(loc=-30, scale=20)
 
-        # photo-z only implemented for dec > -30
-        if transient_position.dec.deg > -30:
-            # still getting random photo-z bugs
-            # but this shouldn't be a show-stopper
-            try:
-                host_data = calc_photoz(
-                    host_data,
-                    dust_path=settings.GHOST_DUST_PATH,
-                    model_path=settings.GHOST_PHOTOZ_PATH,
-                )
-            except Exception as err:
-                print(f"warning : photo-z step failed: {err}")
+    cosmo = LambdaCDM(H0=70, Om0=0.3, Ode0=0.7)
 
-        # clean up after GHOST...
-        # dir_list = glob.glob('transients_*/*/*')
-        # for dir in dir_list: os.remove(dir)
+    transient_names = ['2024aeyj']
 
-        # for level in ['*/*/', '*/']:
-        #    dir_list = glob.glob('transients_' + level)
-        #    for dir in dir_list: os.rmdir(dir)
-        if len(host_data) == 0:
-            host = None
-        else:
-            host = Host(
-                ra_deg=host_data["raMean"][0],
-                dec_deg=host_data["decMean"][0],
-                name=host_data["TransientName"][0],
-            )
+    likefunc_offset = gamma(a=0.75)
+    likefunc_absmag = SnRateAbsmag(a=-25, b=20)
 
-            if host_data["NED_redshift"][0] == host_data["NED_redshift"][0]:
-                host.redshift = host_data["NED_redshift"][0]
+    priors = {
+        "offset": priorfunc_offset,
+        "absmag": priorfunc_absmag
+    }
+    likes = {
+        "offset": likefunc_offset,
+        "absmag": likefunc_absmag
+    }
 
-            if "photo_z" in host_data.keys() and host_data["photo_z"][0] == host_data["photo_z"][0]:
-                host.photometric_redshift = host_data["photo_z"][0]
-    except Exception as err:
-        error = err
-    else:
-        error = None
-    finally:
-        # Cleanup GHOST cache
-        rmtree(output_dir, ignore_errors=True)
-        if error:
-            raise error
 
+    transient_catalog = pd.DataFrame(
+        {'IAUID':[transient.name],
+         'RA':[transient_position.ra.deg],
+         'Dec':[transient_position.dec.deg]
+         }
+    )
+    # add the redshift info from the transient
+    # if it exists
+    if transient.redshift is not None:
+        priors['redshift'] = priorfunc_z
+        transient_catalog['redshift'] = transient.redshift
+    
+    catalogs = ["glade", "decals", "panstarrs"]
+    transient_coord_cols = ("RA", "Dec")
+    transient_name_col = "IAUID"
+    verbose = 0
+    parallel = False
+    save = True
+    progress_bar = False
+    cat_cols = False
+
+    hosts = associate_sample(
+        transient_catalog,
+        coord_cols=transient_coord_cols,
+        priors=priors,
+        likes=likes,
+        catalogs=catalogs,
+        parallel=parallel,
+        save=save,
+        progress_bar=progress_bar,
+        cat_cols=cat_cols,
+    )
+    import pdb; pdb.set_trace()
+    host = Host(
+        ra_deg=hosts["host_ra"][0],
+        dec_deg=hosts["host_dec"][0],
+        name=hosts["host_name"][0],
+    )
+    if hosts['best_cat'][0] != 'panstarrs' :
+        host.redshift = host_data["host_redshift_mean"][0]
+        
+    #if host_data["NED_redshift"][0] == host_data["NED_redshift"][0]:
+
+
+    #if "photo_z" in host_data.keys() and host_data["photo_z"][0] == host_data["photo_z"][0]:
+    #    host.photometric_redshift = host_data["photo_z"][0]
+
+    
     return host
