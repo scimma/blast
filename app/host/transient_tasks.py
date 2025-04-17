@@ -381,8 +381,11 @@ class LocalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-                # Delete FITS file from local file cache
-                os.remove(local_fits_path)
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
             except Exception:
                 raise
         return "processed"
