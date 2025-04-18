@@ -26,16 +26,6 @@ if [[ ! -L "${SED_OUTPUT_ROOT}" ]]; then
   mkdir -p "$(dirname "${SED_OUTPUT_ROOT}")"
   ln -s "${DATA_ROOT_DIR}/sed_output" "${SED_OUTPUT_ROOT}"
 fi
-if [[ ! -L "${GHOST_DATA_ROOT}" ]]; then
-  mkdir -p "${DATA_ROOT_DIR}"/ghost_data
-  mkdir -p "$(dirname "${GHOST_DATA_ROOT}")"
-  ln -s "${DATA_ROOT_DIR}/ghost_data" "${GHOST_DATA_ROOT}"
-fi
-# if [[ ! -L "${PROST_OUTPUT_ROOT}" ]]; then
-#   mkdir -p "${DATA_ROOT_DIR}"/prost_output
-#   mkdir -p "$(dirname "${PROST_OUTPUT_ROOT}")"
-#   ln -s "${DATA_ROOT_DIR}/prost_output" "${PROST_OUTPUT_ROOT}"
-# fi
 if [[ ! -L "${TNS_STAGING_ROOT}" ]]; then
   mkdir -p "${DATA_ROOT_DIR}"/tns_staging
   mkdir -p "$(dirname "${TNS_STAGING_ROOT}")"
