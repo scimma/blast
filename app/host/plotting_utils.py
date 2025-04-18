@@ -95,7 +95,7 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
         "y": y,
         "width": aperture.a * 2,
         "height": aperture.b * 2,
-        "angle": theta_rad,
+        "angle": theta_rad.value,
         "fill_color": "#cab2d6",
         "fill_alpha": 0.1,
         "line_width": 4,
