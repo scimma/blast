@@ -1311,8 +1311,8 @@ class Transient:
             prior_offset = self.calc_prior_offset(fractional_offset_samples, reduce=None) # Shape (N,)
             like_offset = self.calc_like_offset(fractional_offset_samples, reduce=None)  # Shape (N,)
 
-            logging.info("prior_offset:", prior_offset)
-            logging.info("like_offset", like_offset)
+            # self.logger.info("prior_offset:", prior_offset)
+            # self.logger.info("like_offset", like_offset)
 
             post_offset = prior_offset * like_offset
             post_set.append(post_offset)
