@@ -325,7 +325,7 @@ def fetch_panstarrs_sources(search_pos, search_rad, cat_cols, calc_host_props, l
         rad_dec = MAX_RAD_DEG
 
     # load table metadata to avoid a query
-    pkg_data_file = pkg_resources.files('astro_prost') / 'data' / 'panstarrs_metadata.pkl'
+    pkg_data_file = pkg_resources.files('host.astro_prost') / 'data' / 'panstarrs_metadata.pkl'
 
     with pkg_resources.as_file(pkg_data_file) as metadata_path:
         with open(metadata_path, 'rb') as f:
@@ -924,7 +924,7 @@ class Transient:
 
     """
 
-    def __init__(self, name, position,  logger, redshift=np.nan, redshift_std=np.nan, spec_class="", position_err=(0.1*u.arcsec, 0.1*u.arcsec), phot_class="", n_samples=1000):
+    def __init__(self, name, position, logger, redshift=np.nan, redshift_std=np.nan, spec_class="", position_err=(0.1*u.arcsec, 0.1*u.arcsec), phot_class="", n_samples=1000):
         self.name = name
         self.position = position
         self.position_err = position_err
@@ -2193,6 +2193,7 @@ def build_glade_candidates(
 
         galaxies['offset_mean'] = np.nanmean(offset_samples, axis=1)
         galaxies['offset_std'] = np.nanstd(offset_samples, axis=1)
+        galaxies['offset_info'] = ['ARCSEC']*len(temp_sizes)
 
     if ('redshift' in calc_host_props) or ('absmag' in calc_host_props):
         redshift_mean = candidate_hosts["redshift"].values
@@ -2205,13 +2206,13 @@ def build_glade_candidates(
             ),
         )
 
-        galaxies["redshift_mean"] = candidate_hosts["redshift"].values
-        galaxies["redshift_std"] = candidate_hosts["redshift_std"].values
-        galaxies['redshift_info'] = ['photo-z']
-
-        # TODO find spec-z info for GLADE -- for now, just assume all with <10% error are spec-zs.
-        good_specz = galaxies["redshift_std"]/(1+galaxies["redshift_mean"]) < 0.1
-        galaxies['redshift_info'][good_specz] = ['spec-z']*np.nansum(good_specz)
+        galaxies["redshift_mean"] = pd.to_numeric(candidate_hosts["redshift"].values, errors='coerce')
+        galaxies["redshift_std"] = pd.to_numeric(candidate_hosts["redshift_std"].values, errors='coerce')
+        galaxies['redshift_info'] = ['PHOT']
+        
+        # if the galaxy has a measured luminosity distance or spec-z, add to info
+        has_specz = candidate_hosts['f_dL'] > 1
+        galaxies['redshift_info'][has_specz] = 'SPEC'
 
         # set redshift floor
         redshift_samples[redshift_samples < REDSHIFT_FLOOR] = REDSHIFT_FLOOR
@@ -2332,6 +2333,7 @@ def build_decals_candidates(transient,
 
         galaxies['offset_mean'] = np.nanmean(offset_samples, axis=1)
         galaxies['offset_std'] = np.nanstd(offset_samples, axis=1)
+        galaxies['offset_info'] = ['ARCSEC']*len(temp_sizes)
 
     if ('redshift' in calc_host_props) or ('absmag' in calc_host_props):
         galaxy_photoz_mean = candidate_hosts["z_phot_mean"].values
@@ -2340,13 +2342,13 @@ def build_decals_candidates(transient,
 
         galaxies["redshift_mean"] = galaxy_photoz_mean
         galaxies["redshift_std"] = np.abs(galaxy_photoz_std)
-        galaxies["redshift_info"] = ['photo-z']*n_galaxies
+        galaxies["redshift_info"] = ['PHOT']*n_galaxies
 
         #if we have spec-zs, replace those as the best redshift
         good_specz = galaxy_specz > REDSHIFT_FLOOR
         galaxies["redshift_mean"][good_specz] = galaxy_specz[good_specz]
         galaxies["redshift_std"][good_specz] = SIGMA_REDSHIFT_FLOOR * galaxy_specz[good_specz]  # floor of 5% for spec-zs
-        galaxies["redshift_info"][good_specz] = 'spec-z'
+        galaxies["redshift_info"][good_specz] = 'SPEC'
         galaxies["redshift_std"][galaxy_photoz_std > (SIGMA_REDSHIFT_CEIL * galaxy_photoz_mean)] = (
             SIGMA_REDSHIFT_CEIL * galaxy_photoz_mean[galaxy_photoz_std > (SIGMA_REDSHIFT_CEIL * galaxy_photoz_mean)]
         )  # ceiling of 50%
@@ -2531,7 +2533,7 @@ def build_panstarrs_candidates(
 
     if ('redshift' in calc_host_props) or ('absmag' in calc_host_props):
         # get photozs from Andrew Engel's code!
-        pkg = pkg_resources.files("astro_prost")
+        pkg = pkg_resources.files("host.astro_prost")
         pkg_data_file = pkg / "data" / "MLP_lupton.hdf5"
 
         with pkg_resources.as_file(pkg_data_file) as model_path:
@@ -2621,6 +2623,7 @@ def build_panstarrs_candidates(
 
         galaxies['offset_mean'] = np.nanmean(offset_samples, axis=1)
         galaxies['offset_std'] = np.nanstd(offset_samples, axis=1)
+        galaxies['offset_info'] = ['ARCSEC']*len(temp_sizes)
 
     return galaxies, cat_col_fields
 

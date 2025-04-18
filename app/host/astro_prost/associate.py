@@ -265,7 +265,6 @@ def associate_transient(
     calc_host_props=False,
     verbose=0,
     coord_err_cols=('ra_err', 'dec_err'),
-    save_path='./',
     run_plot_match=False,
 ):
     """Associates a transient with its most likely host galaxy.
@@ -301,8 +300,6 @@ def associate_transient(
         The verbosity level of the output.
     coord_err_cols : tuple of strings
         The column names associated with positional uncertainties on the transient positions.
-    save_path : str, optional
-        Path to the root directory in which generated files will be saved.
     run_plot_match : boolean, optional
         If true, attempts to generate a plot image.
 
@@ -380,6 +377,7 @@ def associate_transient(
     for prop in calc_host_props:
         fields.append(f"{prop}_mean")
         fields.append(f"{prop}_std")
+        fields.append(f"{prop}_info")
         if prop in condition_host_props:
             fields.append(f"{prop}_posterior")
 
@@ -443,6 +441,9 @@ def associate_transient(
                         f"and RA, DEC = {result['host_ra']:.6f}, {result['host_dec']:.6f}"
                     )
 
+                # For some reason the value of "verbose" is ignored here, and the effective
+                # level returned by logger.getEffectiveLevel() is 10 (DEBUG)
+                logger.info(f'''Effective logger level: {logger.getEffectiveLevel()}''')
                 if run_plot_match and logger.getEffectiveLevel() == logging.DEBUG:
                     try:
                         plot_match(
@@ -456,8 +457,7 @@ def associate_transient(
                             transient.redshift,
                             0,
                             f"{transient.name}_{cat_name}_{cat_release}",
-                            logger,
-                            save_path=save_path,
+                            logger
                         )
                     except HTTPError:
                         logger.warning("Couldn't get an image. Waiting 60s before moving on.")
@@ -610,7 +610,7 @@ def associate_sample(
             raise ValueError(f"ERROR: Please set a likelihood function for {key}.")
 
     # always load GLADE -- we now use it for spec-zs.
-    pkg = pkg_resources.files("astro_prost")
+    pkg = pkg_resources.files("host.astro_prost")
     pkg_data_file = pkg / "data" / "GLADE+_HyperLedaSizes_mod_withz.csv.gz"
     try:
         with pkg_resources.as_file(pkg_data_file) as csvfile:
@@ -641,8 +641,7 @@ def associate_sample(
             log_fn,
             calc_host_props,
             verbose,
-            coord_err_cols,
-            save_path,
+            coord_err_cols
         )
         for idx, row in transient_catalog.iterrows()
     ]

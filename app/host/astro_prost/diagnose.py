@@ -10,8 +10,6 @@ from astropy.io import fits
 from astropy.table import Table
 from astropy.visualization import make_lupton_rgb
 from astropy.wcs import WCS
-from host.astro_prost.helpers import setup_logger
-logger = setup_logger(verbose=2)
 
 def get_images(ra, dec, size=240, filters="grizy", type="stack"):
     """Query Pan-STARRS PS1 to get a list of images.
@@ -181,7 +179,6 @@ def plot_match(
     logger,
     true_host_ra=None,
     true_host_dec=None,
-    save_path='./',
 ):
     """Plots a host-galaxy match with panstarrs postage stamp.
 
@@ -255,8 +252,8 @@ def plot_match(
     logger.info(f"Getting {rad*4}'' x {rad*4}'' Pan-STARRS image of the field...")
     pic_data = []
     for band in bands:
-        get_ps1_pic(save_path, None, transient_ra, transient_dec, int(rad * 4), band, save=True)
-        a = find_all(f"PS1_ra={transient_ra}_dec={transient_dec}_{int(rad)}arcsec_{band}.fits", save_path)
+        get_ps1_pic("./", None, transient_ra, transient_dec, int(rad * 4), band, save=True)
+        a = find_all(f"PS1_ra={transient_ra}_dec={transient_dec}_{int(rad)}arcsec_{band}.fits", ".")
         if not a:
             raise FileNotFoundError(f"FITS file not found for RA={transient_ra}, DEC={transient_dec}, radius={int(rad)}, band={band}")
         else:

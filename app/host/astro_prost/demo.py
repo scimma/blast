@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import gamma, halfnorm, uniform
 
-from astro_prost.associate import associate_sample, prepare_catalog
-from astro_prost.helpers import SnRateAbsmag
+from host.astro_prost.associate import associate_sample, prepare_catalog
+from host.astro_prost.helpers import SnRateAbsmag
 
 source = "ZTF BTS"
 
