@@ -56,7 +56,6 @@ def rerun_failed_task(task_register):
         TNSDataIngestion(),
         InitializeTransientTasks(),
         IngestMissedTNSTransients(),
-        DeleteGHOSTFiles(),
         SnapshotTaskRegister()
     ]
 

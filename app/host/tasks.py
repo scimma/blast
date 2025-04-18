@@ -6,7 +6,6 @@ from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.workflow import transient_workflow
 from .models import Transient, Status, TaskRegister
-from host.system_tasks import DeleteGHOSTFiles
 from host.system_tasks import IngestMissedTNSTransients
 from host.system_tasks import InitializeTransientTasks
 from host.system_tasks import LogTransientProgress
@@ -20,7 +19,6 @@ periodic_tasks = [
     InitializeTransientTasks(),
     SnapshotTaskRegister(),
     LogTransientProgress(),
-    DeleteGHOSTFiles(),
     IngestMissedTNSTransients(),
     TrimTransientImages()
 ]
