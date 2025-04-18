@@ -433,45 +433,6 @@ def select_aperture(transient):
     return global_aperture
 
 
-# def find_host_data(position, name='No name'):
-#    """
-#    Finds the information about the host galaxy given the position of the supernova.
-#    Parameters
-#    ----------
-#    :position : :class:`~astropy.coordinates.SkyCoord`
-#        On Sky position of the source to be matched.
-#    :name : str, default='No name'
-#        Name of the the object.
-#    Returns
-#    -------
-#    :host_information : ~astropy.coordinates.SkyCoord`
-#        Host position
-#    """
-#    #getGHOST(real=False, verbose=0)
-#    host_data = getTransientHosts(snCoord=[position],
-#                                         snName=[name],
-#                                         verbose=1, starcut='gentle', ascentMatch=True)
-
-# clean up after GHOST...
-#    dir_list = glob.glob('transients_*/*/*')
-#    for dir in dir_list: os.remove(dir)
-
-#    for level in ['*/*/', '*/']:
-#        dir_list = glob.glob('transients_' + level)
-#        for dir in dir_list: os.rmdir(dir)
-
-
-#    if len(host_data) == 0:
-#        host_position = None
-#    else:
-#        host_position = SkyCoord(ra=host_data['raMean'][0],
-#                             dec=host_data['decMean'][0],
-#                             unit='deg')
-
-
-#    return host_position
-
-
 def estimate_background(image, filter_name=None):
     """
     Estimates the background of an image
