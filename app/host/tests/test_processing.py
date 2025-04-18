@@ -10,7 +10,7 @@ from ..models import Task
 from ..models import TaskRegister
 from ..models import Transient
 from ..tasks import periodic_tasks
-from ..transient_tasks import Ghost
+from ..transient_tasks import HostMatch
 from ..transient_tasks import ImageDownload
 
 
@@ -272,7 +272,7 @@ class TaskRunnerTest(TestCase):
 class GHOSTRunnerTest(TestCase):
 
     def setUp(self):
-        self.ghost_runner = Ghost(transient_name="dummy")
+        self.ghost_runner = HostMatch(transient_name="dummy")
 
     def test_prereqs(self):
         self.assertTrue(

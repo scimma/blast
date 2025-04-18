@@ -36,7 +36,7 @@ from django.conf import settings
 """This module contains all of the TransientTaskRunners in blast."""
 
 
-class Ghost(TransientTaskRunner):
+class HostMatch(TransientTaskRunner):
     """
     TaskRunner to run the GHOST matching algorithm.
     """
@@ -960,7 +960,7 @@ def transient_information(transient_name):
     name="Host Match", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
 )
 def host_match(transient_name):
-    Ghost(transient_name).run_process()
+    HostMatch(transient_name).run_process()
 
 
 @shared_task(
