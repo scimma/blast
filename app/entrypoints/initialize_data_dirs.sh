@@ -31,10 +31,10 @@ if [[ ! -L "${GHOST_DATA_ROOT}" ]]; then
   mkdir -p "$(dirname "${GHOST_DATA_ROOT}")"
   ln -s "${DATA_ROOT_DIR}/ghost_data" "${GHOST_DATA_ROOT}"
 fi
-# if [[ ! -L "${GHOST_OUTPUT_ROOT}" ]]; then
-#   mkdir -p "${DATA_ROOT_DIR}"/ghost_output
-#   mkdir -p "$(dirname "${GHOST_OUTPUT_ROOT}")"
-#   ln -s "${DATA_ROOT_DIR}/ghost_output" "${GHOST_OUTPUT_ROOT}"
+# if [[ ! -L "${PROST_OUTPUT_ROOT}" ]]; then
+#   mkdir -p "${DATA_ROOT_DIR}"/prost_output
+#   mkdir -p "$(dirname "${PROST_OUTPUT_ROOT}")"
+#   ln -s "${DATA_ROOT_DIR}/prost_output" "${PROST_OUTPUT_ROOT}"
 # fi
 if [[ ! -L "${TNS_STAGING_ROOT}" ]]; then
   mkdir -p "${DATA_ROOT_DIR}"/tns_staging

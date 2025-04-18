@@ -11,7 +11,7 @@ from host.astro_prost.helpers import SnRateAbsmag
 from host.astro_prost.associate import associate_sample
 
 
-def run_prost(transient, output_dir_root=settings.GHOST_OUTPUT_ROOT):
+def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
     """
     Finds the information about the host galaxy given the position of the supernova.
     Parameters
