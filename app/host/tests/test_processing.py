@@ -269,14 +269,14 @@ class TaskRunnerTest(TestCase):
         self.assertTrue(cutout_changed.filter.name == "WISE_W1")
 
 
-class GHOSTRunnerTest(TestCase):
+class HostMatchRunnerTest(TestCase):
 
     def setUp(self):
-        self.ghost_runner = HostMatch(transient_name="dummy")
+        self.host_match_runner = HostMatch(transient_name="dummy")
 
     def test_prereqs(self):
         self.assertTrue(
-            self.ghost_runner._prerequisites()
+            self.host_match_runner._prerequisites()
             == {
                 "Host match": "not processed",
                 "Cutout download": "processed",
@@ -285,7 +285,7 @@ class GHOSTRunnerTest(TestCase):
         )
 
     def test_failed_status(self):
-        self.assertTrue(self.ghost_runner._failed_status_message() == "no host match")
+        self.assertTrue(self.host_match_runner._failed_status_message() == "no host match")
 
 
 class InitializeTaskRegisterTest(TestCase):
