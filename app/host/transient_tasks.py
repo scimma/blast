@@ -38,7 +38,7 @@ from django.conf import settings
 
 class HostMatch(TransientTaskRunner):
     """
-    TaskRunner to run the GHOST matching algorithm.
+    TaskRunner to run the host matching algorithm.
     """
 
     def _prerequisites(self):
@@ -66,7 +66,7 @@ class HostMatch(TransientTaskRunner):
 
     def _run_process(self, transient):
         """
-        Run the GHOST matching algorithm.
+        Run the host matching algorithm.
         """
         host = run_prost(transient)
 
