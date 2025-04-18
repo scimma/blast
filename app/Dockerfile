@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:20250417 AS deps
+FROM registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:20250418 AS deps
 
 FROM python:3.11.10
 ENV PYTHONUNBUFFERED=1
