@@ -94,10 +94,12 @@ def run_prost(transient, output_dir_root=settings.GHOST_OUTPUT_ROOT):
         )
         if hosts['host_redshift_info'][0] == 'SPEC':
             host.redshift = host_data["host_redshift_mean"][0]
+            host.redshift_err = host_data["host_redshift_std"][0]
         elif hosts['host_redshift_info'][0] == 'PHOT' and \
              hosts['best_cat'][0] != 'panstarrs':
             host.photometric_redshift = host_data["host_redshift_mean"][0]
-
+            host.photometric_redshift_err = host_data["host_redshift_std"][0]
+            
     except Exception as err:
         error = err
     else:
