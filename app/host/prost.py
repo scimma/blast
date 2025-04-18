@@ -58,8 +58,7 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
          'Dec': [transient_position.dec.deg]
          }
     )
-    # add the redshift info from the transient
-    # if it exists
+    # add the redshift info from the transient if it exists
     if transient.redshift is not None:
         priors['redshift'] = priorfunc_z
         transient_catalog['redshift'] = transient.redshift
@@ -84,7 +83,7 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
             save_path=output_dir,
             progress_bar=progress_bar,
             cat_cols=cat_cols,
-            verbose=2,
+            verbose=0,
         )
 
         host = Host(
@@ -95,11 +94,10 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
         if hosts['host_redshift_info'][0] == 'SPEC':
             host.redshift = hosts["host_redshift_mean"][0]
             host.redshift_err = hosts["host_redshift_std"][0]
-        elif hosts['host_redshift_info'][0] == 'PHOT' and \
-             hosts['best_cat'][0] != 'panstarrs':
+        elif hosts['host_redshift_info'][0] == 'PHOT' and hosts['best_cat'][0] != 'panstarrs':
             host.photometric_redshift = hosts["host_redshift_mean"][0]
             host.photometric_redshift_err = hosts["host_redshift_std"][0]
-            
+
     except Exception as err:
         error = err
     else:
