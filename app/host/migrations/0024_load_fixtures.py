@@ -855,7 +855,7 @@ def load_status(apps, schema_editor):
             type='warning',
         ),
         Status(
-            message='no host match',
+            message='no GHOST match',
             type='error',
         ),
         Status(

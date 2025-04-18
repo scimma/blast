@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:20240912 AS deps
+FROM registry.gitlab.com/ncsa-blast/kubernetes/blast/deps:20250417 AS deps
 
 FROM python:3.11.10
 ENV PYTHONUNBUFFERED=1
@@ -20,10 +20,6 @@ COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
 
 COPY --from=deps /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --from=deps /usr/local/bin/ /usr/local/bin/
-
-# [2024/09/12] This should be removed when Django fixes the bug as discussed in 
-#              https://stackoverflow.com/a/78979171
-RUN pip install importlib_metadata==8.4.0
 
 RUN mkdir /app
 COPY . /app
