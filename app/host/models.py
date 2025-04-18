@@ -87,7 +87,9 @@ class Host(SkyObject):
 
     name = models.CharField(max_length=100, blank=True, null=True)
     redshift = models.FloatField(null=True, blank=True)
+    redshift_err = models.FloatField(null=True, blank=True)
     photometric_redshift = models.FloatField(null=True, blank=True)
+    photometric_redshift_err = models.FloatField(null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     objects = HostManager()
     software_version = models.CharField(max_length=50, blank=True, null=True)

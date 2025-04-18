@@ -10,7 +10,7 @@ from host.base_tasks import task_time_limit
 
 from .base_tasks import TransientTaskRunner
 from .cutouts import download_and_save_cutouts
-from .ghost import run_ghost
+from .prost import run_prost
 from .host_utils import check_global_contamination
 from .host_utils import check_local_radius
 from .host_utils import construct_aperture
@@ -36,9 +36,9 @@ from django.conf import settings
 """This module contains all of the TransientTaskRunners in blast."""
 
 
-class Ghost(TransientTaskRunner):
+class HostMatch(TransientTaskRunner):
     """
-    TaskRunner to run the GHOST matching algorithm.
+    TaskRunner to run the host matching algorithm.
     """
 
     def _prerequisites(self):
@@ -62,13 +62,13 @@ class Ghost(TransientTaskRunner):
         """
         Emit status message for failure consistent with the available Status objects
         """
-        return "no GHOST match"
+        return "no host match"
 
     def _run_process(self, transient):
         """
-        Run the GHOST matching algorithm.
+        Run the host matching algorithm.
         """
-        host = run_ghost(transient)
+        host = run_prost(transient)
 
         if host is not None:
             host.save()
@@ -89,7 +89,7 @@ class Ghost(TransientTaskRunner):
 
             status_message = "processed"
         else:
-            status_message = "no ghost match"
+            status_message = "no host match"
 
         return status_message
 
@@ -381,8 +381,11 @@ class LocalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-                # Delete FITS file from local file cache
-                os.remove(local_fits_path)
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
             except Exception:
                 raise
         return "processed"
@@ -957,7 +960,7 @@ def transient_information(transient_name):
     name="Host Match", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
 )
 def host_match(transient_name):
-    Ghost(transient_name).run_process()
+    HostMatch(transient_name).run_process()
 
 
 @shared_task(

@@ -170,32 +170,6 @@ class IngestMissedTNSTransients(SystemTaskRunner):
         return False
 
 
-class DeleteGHOSTFiles(SystemTaskRunner):
-    def run_process(self):
-        """
-        Removes GHOST files
-        """
-        dir_list = glob.glob("transients_*/")
-
-        for dir in dir_list:
-            try:
-                shutil.rmtree(dir)
-            except OSError as e:
-                print("Error: %s : %s" % (dir, e.strerror))
-
-        dir_list = glob.glob("quiverMaps/")
-
-        for dir in dir_list:
-            try:
-                shutil.rmtree(dir)
-            except OSError as e:
-                print("Error: %s : %s" % (dir, e.strerror))
-
-    @property
-    def task_name(self):
-        return "Delete GHOST files"
-
-
 class SnapshotTaskRegister(SystemTaskRunner):
     def run_process(self, interval_minutes=100):
         """
@@ -383,14 +357,6 @@ def snapshot_task_register():
 )
 def log_transient_processing_status():
     LogTransientProgress().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def delete_ghost_files():
-    DeleteGHOSTFiles().run_process()
 
 
 @shared_task(

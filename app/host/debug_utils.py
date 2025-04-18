@@ -41,7 +41,7 @@ def rerun_failed_task(task_register):
 
     periodic_tasks = [
         MWEBV_Transient(task_register.transient.name),
-        Ghost(task_register.transient.name),
+        HostMatch(task_register.transient.name),
         MWEBV_Host(task_register.transient.name),
         ImageDownload(task_register.transient.name),
         GlobalApertureConstruction(task_register.transient.name),
@@ -56,7 +56,6 @@ def rerun_failed_task(task_register):
         TNSDataIngestion(),
         InitializeTransientTasks(),
         IngestMissedTNSTransients(),
-        DeleteGHOSTFiles(),
         SnapshotTaskRegister()
     ]
 

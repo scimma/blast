@@ -42,7 +42,7 @@ tasks_in_order = [
 ]
 tasks_classes_in_order = [
     host.transient_tasks.MWEBV_Transient(),
-    host.transient_tasks.Ghost(),
+    host.transient_tasks.HostMatch(),
     host.transient_tasks.MWEBV_Host(),
     host.transient_tasks.ImageDownload(),
     host.transient_tasks.HostInformation(),

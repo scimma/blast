@@ -47,6 +47,11 @@ from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
 
+import logging
+logging.basicConfig(format='%(levelname)-8s %(message)s')
+logger = logging.getLogger(__name__)
+logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+
 
 def survey_list(survey_metadata_path):
     """
@@ -113,7 +118,7 @@ def build_source_catalog(image, background, threshhold_sigma=3.0, npixels=10):
     # deblended_segmentation = deblend_sources(
     #     background_subtracted_data, segmentation, npixels=npixels
     # )
-    print(segmentation)
+    logger.debug(segmentation)
     return SourceCatalog(background_subtracted_data, segmentation)
 
 
@@ -428,45 +433,6 @@ def select_aperture(transient):
     return global_aperture
 
 
-# def find_host_data(position, name='No name'):
-#    """
-#    Finds the information about the host galaxy given the position of the supernova.
-#    Parameters
-#    ----------
-#    :position : :class:`~astropy.coordinates.SkyCoord`
-#        On Sky position of the source to be matched.
-#    :name : str, default='No name'
-#        Name of the the object.
-#    Returns
-#    -------
-#    :host_information : ~astropy.coordinates.SkyCoord`
-#        Host position
-#    """
-#    #getGHOST(real=False, verbose=0)
-#    host_data = getTransientHosts(snCoord=[position],
-#                                         snName=[name],
-#                                         verbose=1, starcut='gentle', ascentMatch=True)
-
-# clean up after GHOST...
-#    dir_list = glob.glob('transients_*/*/*')
-#    for dir in dir_list: os.remove(dir)
-
-#    for level in ['*/*/', '*/']:
-#        dir_list = glob.glob('transients_' + level)
-#        for dir in dir_list: os.rmdir(dir)
-
-
-#    if len(host_data) == 0:
-#        host_position = None
-#    else:
-#        host_position = SkyCoord(ra=host_data['raMean'][0],
-#                             dec=host_data['decMean'][0],
-#                             unit='deg')
-
-
-#    return host_position
-
-
 def estimate_background(image, filter_name=None):
     """
     Estimates the background of an image
@@ -617,7 +583,7 @@ def construct_all_apertures(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     return apertures
 
@@ -645,7 +611,7 @@ def pick_largest_aperture(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     aperture_areas = {}
     for image_name in image_dict:
