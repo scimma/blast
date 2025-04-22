@@ -2,130 +2,32 @@ import os
 import sys
 from pathlib import Path
 import json
-import logging
-import hashlib
-from minio import Minio
-import re
+# TODO: Redundant definitions of global config variables should be avoided, but we
+#       cannot currently run in a Django shell *before* initializing the data files.
+# from django.conf import settings
+CUTOUT_ROOT = os.getenv("CUTOUT_ROOT", "/data/cutout_cdn")
+SED_OUTPUT_ROOT = os.getenv("SED_OUTPUT_ROOT", "/data/sed_output")
+S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 
-# Configure logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+sys.path.append(os.path.join(str(Path(__file__).resolve().parent.parent)))
+from host.object_store import ObjectStore
+from host.log import get_logger
+logger = get_logger(__name__)
 
-
-class ObjectStore:
-    def __init__(self) -> None:
-        '''Initialize S3 client'''
-        self.config = {
-            'endpoint-url': os.getenv("S3_ENDPOINT_URL_INIT", 'https://js2.jetstream-cloud.org:8001'),
-            'region-name': os.getenv("S3_REGION_NAME_INIT", ''),
-            'aws_access_key_id': os.getenv("S3_ACCESS_KEY_ID_INIT", ''),
-            'aws_secret_access_key': os.getenv("S3_SECRET_ACCESS_KEY_INIT", ''),
-            'bucket': os.getenv("S3_BUCKET_INIT", 'blast-astro-data'),
-        }
-        self.bucket = self.config['bucket']
-        self.client = None
-        # If endpoint URL is empty, do not attempt to initialize a client
-        if not self.config['endpoint-url']:
-            return
-        if self.config['endpoint-url'].find('https://'):
-            secure = False
-            endpoint = self.config['endpoint-url'].replace('http://', '')
-        elif self.config['endpoint-url'].find('http://'):
-            secure = True
-            endpoint = self.config['endpoint-url'].replace('https://', '')
-
-        self.client = Minio(
-            endpoint=endpoint,
-            access_key=self.config['aws_access_key_id'],
-            secret_key=self.config['aws_secret_access_key'],
-            region=self.config['region-name'],
-            secure=secure,
-        )
-
-    def get_directory(self, root_path):
-        objects = self.client.list_objects(
-            bucket_name=self.bucket,
-            prefix=root_path,
-            include_version=True,
-            recursive=True,
-        )
-        return [obj for obj in objects]
-
-    def object_info(self, path):
-        response = self.client.stat_object(
-            bucket_name=self.bucket,
-            object_name=path)
-        return response
-
-    def download_object(self, path="", file_path="", version_id=""):
-        if version_id:
-            self.client.fget_object(
-                bucket_name=self.bucket,
-                object_name=path,
-                file_path=file_path,
-                version_id=version_id,
-            )
-        else:
-            self.client.fget_object(
-                bucket_name=self.bucket,
-                object_name=path,
-                file_path=file_path,
-            )
-
-    def md5_checksum(self, file_path):
-        '''https://stackoverflow.com/a/58239738'''
-        m = hashlib.md5()
-        with open(file_path, 'rb') as fh:
-            for data in iter(lambda: fh.read(1024 * 1024), b''):
-                m.update(data)
-        hexdigest = m.hexdigest()
-        logger.debug(f'calculated md5 checksum: {hexdigest}')
-        return hexdigest
-
-    def etag_checksum(self, file_path, etag_parts=1, file_size=0):
-        '''https://stackoverflow.com/a/58239738'''
-        md5s = []
-        min_chunk_size = 16 * 1024**2
-        chunk_size = int(file_size / etag_parts)
-        if etag_parts == 1:
-            chunk_size = file_size
-        elif chunk_size < min_chunk_size:
-            chunk_size = min_chunk_size
-        chunk_size_mib = int(chunk_size / 1024**2)
-        file_size_mib = int(file_size / 1024**2)
-        logger.debug(f"chunk_size is {chunk_size_mib} MiB for file size {file_size_mib} bytes"
-                     "(etag parts: {etag_parts})")
-        with open(file_path, 'rb') as fh:
-            for data in iter(lambda: fh.read(chunk_size), b''):
-                md5s.append(hashlib.md5(data).digest())
-        digests_md5 = hashlib.md5(b''.join(md5s))
-        etag_checksum = f'{digests_md5.hexdigest()}-{etag_parts}'
-        logger.debug(f'calculated etag: {etag_checksum}')
-        return etag_checksum
-
-    def etag_compare(self, file_path, etag_source, file_size):
-        '''https://stackoverflow.com/a/58239738'''
-        etag_source = etag_source.strip('"')
-        etag_local = ''
-        if '-' in etag_source:
-            etag_parts = int(re.search(r'^.+-([0-9]+$)', etag_source).group(1))
-            etag_local = self.etag_checksum(file_path, etag_parts=etag_parts, file_size=file_size)
-        elif '-' not in etag_source:
-            etag_local = self.md5_checksum(file_path)
-        if etag_source == etag_local:
-            return True
-        else:
-            logger.warning(f'    source etag checksum: {etag_source}')
-            logger.warning(f'     local etag checksum: {etag_local}')
-        return False
+DATA_INIT_S3_CONF = {
+    'endpoint-url': os.getenv("S3_ENDPOINT_URL_INIT", 'https://js2.jetstream-cloud.org:8001'),
+    'region-name': os.getenv("S3_REGION_NAME_INIT", ''),
+    'aws_access_key_id': os.getenv("S3_ACCESS_KEY_ID_INIT", ''),
+    'aws_secret_access_key': os.getenv("S3_SECRET_ACCESS_KEY_INIT", ''),
+    'bucket': os.getenv("S3_BUCKET_INIT", 'blast-astro-data'),
+}
 
 
 def generate_file_manifest():
     '''Collect metadata for the latest versions of the objects in a JSON file'''
-    s3 = ObjectStore()
+    s3init = ObjectStore(conf=DATA_INIT_S3_CONF)
     root_path = 'init/data/'
-    objs = s3.get_directory(root_path)
+    objs = s3init.get_directory_objects(root_path)
     file_info = []
     for obj in objs:
         info = {
@@ -144,7 +46,8 @@ def generate_file_manifest():
 
 def verify_data_integrity(download=False):
     '''Verify integrity of initial data file set'''
-    s3 = ObjectStore()
+    s3_init = ObjectStore(conf=DATA_INIT_S3_CONF)
+    s3_data = ObjectStore()
     data_root_dir = os.getenv('DATA_ROOT_DIR', '/mnt/data')
     with open(os.path.join(Path(__file__).resolve().parent, 'blast-data.json'), 'r') as fh:
         data_objects = json.load(fh)
@@ -156,14 +59,14 @@ def verify_data_integrity(download=False):
             if not download:
                 sys.exit(1)
             logger.info(f'''Downloading file "{bucket_path}"...''')
-            s3.download_object(
+            s3_init.download_object(
                 path=os.path.join('init/data', bucket_path),
                 file_path=file_path,
                 version_id=data_object['version_id'])
         etag = data_object['etag']
         size = data_object['size']
         # logger.debug(f'source etag: {etag}')
-        checksum_match = s3.etag_compare(file_path, etag, size)
+        checksum_match = s3_init.etag_compare(file_path, etag, size)
         log_msg = f'''Comparing "{file_path}"... {checksum_match}'''
         if checksum_match:
             logger.debug(log_msg)
@@ -172,24 +75,42 @@ def verify_data_integrity(download=False):
             if not download:
                 sys.exit(1)
             logger.info(f'''Downloading file "{bucket_path}"...''')
-            s3.download_object(
+            s3_init.download_object(
                 path=os.path.join('init/data', bucket_path),
                 file_path=file_path,
                 version_id=data_object['version_id'])
-            checksum_match = s3.etag_compare(file_path, etag, size)
+            checksum_match = s3_init.etag_compare(file_path, etag, size)
             log_msg = f'''Comparing "{file_path}"... {checksum_match}'''
             if not checksum_match:
                 logger.error(f'''Downloaded file "{bucket_path}" fails integrity check.''')
                 sys.exit(1)
             else:
                 logger.info(f'''Downloaded file "{bucket_path}" passes integrity check.''')
+        logger.debug(f'''Checking if "{bucket_path}" needs to be uploaded to bucket...''')
+        for data_dir_name, data_root_path in [
+            ('cutout_cdn', CUTOUT_ROOT),
+            ('sed_output', SED_OUTPUT_ROOT)
+        ]:
+            if bucket_path.startswith(f'{data_dir_name}/'):
+                # Upload file to bucket and delete local copy
+                object_key = os.path.join(
+                    S3_BASE_PATH.strip('/'),
+                    data_root_path.strip('/'),
+                    bucket_path.replace(f'{data_dir_name}/', ''))
+                if not s3_data.object_exists(object_key):
+                    logger.info(f'''Uploading file "{bucket_path}" to "{object_key}"...''')
+                    s3_data.put_object(path=object_key, file_path=file_path)
+                else:
+                    logger.debug(f'''Object already in bucket: "{object_key}"''')
+                assert s3_data.object_exists(object_key)
 
 
 if __name__ == '__main__':
 
-    cmd = ''
+    cmd = 'download'
     if len(sys.argv) > 1:
         cmd = sys.argv[1]
+    logger.debug(f'initialize_data.py command: {cmd}')
     if cmd == 'verify':
         # Verify uploads against local files
         verify_data_integrity(download=False)
@@ -198,4 +119,3 @@ if __name__ == '__main__':
         verify_data_integrity(download=True)
     elif cmd == 'manifest':
         generate_file_manifest()
-    sys.exit()

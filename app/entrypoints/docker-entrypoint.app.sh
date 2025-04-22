@@ -37,10 +37,13 @@ else
   echo "\"${INIT_STARTED_DATA}\" not found. Running initialization script..."
   touch "${INIT_STARTED_DATA}"
 
-  # Download and install data in parallel
-  bash entrypoints/initialize_all_data.sh
+  # Create data folders on persistent volume and symlink to expected paths
+  bash entrypoints/initialize_data_dirs.sh
+  # Verify and download missing and invalid files
+  python entrypoints/initialize_data.py
 
   rm -f "${INIT_STARTED_DATA}"
+  echo "Data initialization complete."
 fi
 
 ## Initialize Django database and static files
