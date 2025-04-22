@@ -46,6 +46,9 @@ from django.conf import settings
 
 # from .models import Aperture
 
+from host.log import get_logger
+logger = get_logger(__name__)
+
 
 def scale_image(image_data):
     transform = AsinhStretch() + PercentileInterval(99.5)
@@ -131,89 +134,20 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(
-    cutout=None, transient=None, global_aperture=None, local_aperture=None
-):
-    title = cutout.filter if cutout is not None else "No cutout selected"
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None):
+    def generate_plot(fig, image_data):
+        hide_loading_indicator = CustomJS(args=dict(), code="""
+            document.getElementById('loading-indicator').style.display = "none";
+        """)
+        fig.x_range.js_on_change('end', hide_loading_indicator)
+        plot_image(image_data, fig)
 
-    if cutout is not None:
-        # Download FITS file local file cache
-        s3 = ObjectStore()
-        local_fits_path = cutout.fits.name
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-    if cutout is not None and s3.object_exists(object_key):
-        s3.download_object(path=object_key, file_path=local_fits_path)
-        assert os.path.isfile(local_fits_path)
-        with fits.open(local_fits_path) as fits_file:
-            image_data = fits_file[0].data
-            wcs = WCS(fits_file[0].header)
-        # Delete FITS file from local file cache
-        os.remove(local_fits_path)
+        script, div = components(fig)
+        return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
-        fig = figure(
-            title=f"{title}",
-            x_axis_label="",
-            y_axis_label="",
-            # plot_width=500,
-            # plot_height=int(np.shape(image_data)[0] / np.shape(image_data)[1] * 700),
-            sizing_mode="scale_both",
-        )
-        fig.axis.visible = False
-        fig.xgrid.visible = False
-        fig.ygrid.visible = False
-
-        transient_kwargs = {
-            "legend_label": f"{transient.name}",
-            "size": 30,
-            "line_width": 2,
-            "marker": "cross",
-        }
-        plot_position(
-            transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter
-        )
-
-        if transient.host is not None:
-            host_kwargs = {
-                "legend_label": f"Host: {transient.host.name}",
-                "size": 25,
-                "line_width": 2,
-                "line_color": "red",
-                "marker": "x",
-            }
-            plot_position(
-                transient.host,
-                wcs,
-                plotting_kwargs=host_kwargs,
-                plotting_func=fig.scatter,
-            )
-
-        if global_aperture.exists():
-            plot_aperture(
-                fig,
-                global_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "green",
-                    "legend_label": f"Global Aperture ({title})",
-                },
-            )
-
-        if local_aperture.exists():
-            plot_aperture(
-                fig,
-                local_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "blue",
-                    "legend_label": "Local Aperture",
-                },
-            )
-
-    else:
-        image_data = np.zeros((500, 500))
-
+    # If there is no cutout data, generate an empty plot
+    if cutout is None:
+        title = "No cutout selected"
         fig = figure(
             title=f"{title}",
             x_axis_label="",
@@ -225,15 +159,88 @@ def plot_cutout_image(
         fig.axis.visible = False
         fig.xgrid.visible = False
         fig.ygrid.visible = False
+        image_data = np.zeros((500, 500))
+        return generate_plot(fig, image_data)
 
-    hide_loading_indicator = CustomJS(args=dict(), code="""
-        document.getElementById('loading-indicator').style.display = "none";
-    """)
-    fig.x_range.js_on_change('end', hide_loading_indicator)
-    plot_image(image_data, fig)
+    # Load image data from FITS file
+    local_fits_path = cutout.fits.name
+    if not os.path.isfile(local_fits_path):
+        s3 = ObjectStore()
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        if s3.object_exists(object_key):
+            # Download FITS file local file cache
+            s3.download_object(path=object_key, file_path=local_fits_path)
+        else:
+            logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+    assert os.path.isfile(local_fits_path)
+    with fits.open(local_fits_path) as fits_file:
+        image_data = fits_file[0].data
+        wcs = WCS(fits_file[0].header)
+    # Delete FITS file from local file cache
+    os.remove(local_fits_path)
 
-    script, div = components(fig)
-    return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
+    title = cutout.filter
+    fig = figure(
+        title=f"{title}",
+        x_axis_label="",
+        y_axis_label="",
+        # plot_width=500,
+        # plot_height=int(np.shape(image_data)[0] / np.shape(image_data)[1] * 700),
+        sizing_mode="scale_both",
+    )
+    fig.axis.visible = False
+    fig.xgrid.visible = False
+    fig.ygrid.visible = False
+
+    transient_kwargs = {
+        "legend_label": f"{transient.name}",
+        "size": 30,
+        "line_width": 2,
+        "marker": "cross",
+    }
+    plot_position(
+        transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter
+    )
+
+    if transient.host is not None:
+        host_kwargs = {
+            "legend_label": f"Host: {transient.host.name}",
+            "size": 25,
+            "line_width": 2,
+            "line_color": "red",
+            "marker": "x",
+        }
+        plot_position(
+            transient.host,
+            wcs,
+            plotting_kwargs=host_kwargs,
+            plotting_func=fig.scatter,
+        )
+
+    if global_aperture.exists():
+        plot_aperture(
+            fig,
+            global_aperture[0].sky_aperture,
+            wcs,
+            plotting_kwargs={
+                "fill_alpha": 0.1,
+                "line_color": "green",
+                "legend_label": f"Global Aperture ({title})",
+            },
+        )
+
+    if local_aperture.exists():
+        plot_aperture(
+            fig,
+            local_aperture[0].sky_aperture,
+            wcs,
+            plotting_kwargs={
+                "fill_alpha": 0.1,
+                "line_color": "blue",
+                "legend_label": "Local Aperture",
+            },
+        )
+    return generate_plot(fig, image_data=image_data)
 
 
 def plot_sed(transient=None, sed_results_file=None, type=""):
