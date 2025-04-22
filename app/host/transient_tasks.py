@@ -269,9 +269,10 @@ class GlobalApertureConstruction(TransientTaskRunner):
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
             # Download FITS file local file cache
             local_fits_path = aperture_cutout[0].fits.name
-            s3 = ObjectStore()
-            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-            s3.download_object(path=object_key, file_path=local_fits_path)
+            if not os.path.isfile(local_fits_path):
+                s3 = ObjectStore()
+                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                s3.download_object(path=object_key, file_path=local_fits_path)
             assert os.path.isfile(local_fits_path)
             image = fits.open(local_fits_path)
             aperture = construct_aperture(image, transient.host.sky_coord)
