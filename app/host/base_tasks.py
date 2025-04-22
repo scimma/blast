@@ -11,11 +11,8 @@ from .models import Status
 from .models import Task
 from .models import TaskRegister
 from .models import Transient
-# Configure logging
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 task_time_limit = int(os.environ.get("TASK_TIME_LIMIT", "3800"))
 task_soft_time_limit = int(os.environ.get("TASK_SOFT_TIME_LIMIT", "3600"))

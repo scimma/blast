@@ -28,11 +28,8 @@ from host.object_store import ObjectStore
 from .models import Cutout
 from .models import Filter
 
-# Configure logging
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 DOWNLOAD_SLEEP_TIME = int(os.environ.get("DOWNLOAD_SLEEP_TIME", "0"))
 DOWNLOAD_MAX_TRIES = int(os.environ.get("DOWNLOAD_MAX_TRIES", "1"))

@@ -15,10 +15,8 @@ import requests
 from .models import Transient
 from .models import TaskLock
 
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 def get_tns_credentials():

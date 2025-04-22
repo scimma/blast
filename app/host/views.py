@@ -36,13 +36,8 @@ from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from celery import shared_task
-
-# Configure logging
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
-
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 def filter_transient_categories(qs, value, task_register=None):

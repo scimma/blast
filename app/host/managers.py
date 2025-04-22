@@ -5,10 +5,8 @@ from django.db import models
 from datetime import datetime, timedelta, timezone
 from django.conf import settings
 import os
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 class ExternalRequestManager(models.Manager):

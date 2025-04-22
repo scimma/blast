@@ -26,12 +26,8 @@ from .transient_name_server import get_transients_from_tns
 from .transient_name_server import tns_staging_blast_transient
 from .transient_name_server import tns_staging_file_date_name
 from .transient_name_server import update_blast_transient
-# Configure logging
-import os
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 class TNSDataIngestion(SystemTaskRunner):
