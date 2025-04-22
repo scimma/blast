@@ -24,7 +24,7 @@ from dustmaps.sfd import SFDQuery
 
 # Use correct dustmap data directory
 from dustmaps.config import config
-
+# TODO: Where is this config variable used? Is this obsolete code?
 config.reset()
 config["data_dir"] = settings.DUSTMAPS_DATA_ROOT
 from photutils.aperture import aperture_photometry
