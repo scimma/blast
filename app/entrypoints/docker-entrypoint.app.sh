@@ -56,7 +56,7 @@ else
   echo "\"${INIT_STARTED_DB}\" not found. Running initialization script..."
   touch "${INIT_STARTED_DB}"
 
-  python init.py
+  python init_app.py
 
   rm -f "${INIT_STARTED_DB}"
   echo "Django database initialization complete."
