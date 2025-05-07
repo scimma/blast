@@ -13,6 +13,7 @@ from host.system_tasks import LogTransientProgress
 from host.system_tasks import SnapshotTaskRegister
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import TrimTransientImages
+from host.system_tasks import RetriggerIncompleteWorkflows
 
 
 periodic_tasks = [
@@ -22,7 +23,8 @@ periodic_tasks = [
     LogTransientProgress(),
     DeleteGHOSTFiles(),
     IngestMissedTNSTransients(),
-    TrimTransientImages()
+    TrimTransientImages(),
+    RetriggerIncompleteWorkflows(),
 ]
 
 
