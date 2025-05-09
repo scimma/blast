@@ -446,12 +446,12 @@ def initialise_all_tasks_status(transient):
     tasks = Task.objects.all()
     not_processed = Status.objects.get(message__exact="not processed")
 
+    # Reset all tasks to status "not processed"
     for task in tasks:
-        task_status = TaskRegister.objects.filter(task=task, transient=transient)
-        if not len(task_status):
-            task_status = TaskRegister(task=task, transient=transient)
-            # if the task already exists, let's not change it
-            # because bad things seem to happen....
-            update_status(task_status, not_processed)
-        else:
-            task_status = task_status[0]
+        # If tasks have been added to the transient workflow since the transient was last
+        # processed, ensure they are created.
+        task_status, created = TaskRegister.objects.get_or_create(task=task, transient=transient,
+                                                                  defaults={"status": not_processed})
+        if created:
+            logger.info(f'Created task "{task.name}" for transient "{transient.name}".')
+        update_status(task_status, not_processed)

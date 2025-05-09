@@ -20,28 +20,29 @@ from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
-from host.models import TaskRegister
-from host.models import Status
 
 from .base_tasks import initialise_all_tasks_status
 from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
 
+from host.log import get_logger
+logger = get_logger(__name__)
+
 
 def reprocess_transient(request=None, slug=''):
     transient_name = slug
     assert transient_name
-    tasks = TaskRegister.objects.filter(transient__name=transient_name)
-    if tasks:
-        for task in tasks:
-            # TODO: This could be smarter. We don't *always* need to re-process every stage.
-            task.status = Status.objects.get(message="not processed")
-            task.save()
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+        # TODO: This could be smarter. We don't *always* need to re-process every stage.
+        initialise_all_tasks_status(transient)
         result = transient_workflow.delay(transient_name)
-        if request:
-            return HttpResponseRedirect(reverse_lazy("results", kwargs={"slug": transient_name}))
-        else:
-            return result
+    except Transient.DoesNotExist:
+        result = None
+    if request:
+        return HttpResponseRedirect(reverse_lazy("results", kwargs={"slug": transient_name}))
+    else:
+        return result
 
 
 @shared_task(
