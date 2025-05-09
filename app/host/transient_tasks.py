@@ -4,36 +4,317 @@ import os
 import numpy as np
 from astropy.io import fits
 from celery import shared_task
+from abc import abstractmethod
 from django.db.models import Q
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
+from time import process_time
+from billiard.exceptions import SoftTimeLimitExceeded
+from django.utils import timezone
 
-from .base_tasks import TransientTaskRunner
-from .cutouts import download_and_save_cutouts
-from .prost import run_prost
-from .host_utils import check_global_contamination
-from .host_utils import check_local_radius
-from .host_utils import construct_aperture
-from .host_utils import do_aperture_photometry
-from .host_utils import get_dust_maps
-from .host_utils import get_local_aperture_size
-from .host_utils import query_ned
-from .host_utils import query_sdss
-from .host_utils import select_cutout_aperture
-from .models import Aperture
-from .models import AperturePhotometry
-from .models import Cutout
-from .models import SEDFittingResult
-from .models import StarFormationHistoryResult
-from .models import Transient
-from .prospector import build_model
-from .prospector import build_obs
-from .prospector import fit_model
-from .prospector import prospector_result_to_blast
-from .object_store import ObjectStore
+from host.cutouts import download_and_save_cutouts
+from host.prost import run_prost
+from host.host_utils import check_global_contamination
+from host.host_utils import check_local_radius
+from host.host_utils import construct_aperture
+from host.host_utils import do_aperture_photometry
+from host.host_utils import get_dust_maps
+from host.host_utils import get_local_aperture_size
+from host.host_utils import query_ned
+from host.host_utils import query_sdss
+from host.host_utils import select_cutout_aperture
+from host.models import Aperture
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import SEDFittingResult
+from host.models import StarFormationHistoryResult
+from host.models import Transient
+from host.prospector import build_model
+from host.prospector import build_obs
+from host.prospector import fit_model
+from host.prospector import prospector_result_to_blast
+from host.object_store import ObjectStore
+from host.base_tasks import TaskRunner
+from host.base_tasks import get_image_trim_status
 from django.conf import settings
 
 """This module contains all of the TransientTaskRunners in blast."""
+
+from host.models import TaskRegister
+from host.models import Status
+from host.models import Task
+
+from host.log import get_logger
+logger = get_logger(__name__)
+
+
+def get_all_task_prerequisites(transient_name):
+    return {
+        ImageDownload(transient_name).task_name: ImageDownload(transient_name)._prerequisites(),
+        TransientInformation(transient_name).task_name: TransientInformation(transient_name)._prerequisites(),
+        MWEBV_Transient(transient_name).task_name: MWEBV_Transient(transient_name)._prerequisites(),
+        HostMatch(transient_name).task_name: HostMatch(transient_name)._prerequisites(),
+        HostInformation(transient_name).task_name: HostInformation(transient_name)._prerequisites(),
+        LocalAperturePhotometry(transient_name).task_name: LocalAperturePhotometry(transient_name)._prerequisites(),
+        ValidateLocalPhotometry(transient_name).task_name: ValidateLocalPhotometry(transient_name)._prerequisites(),
+        LocalHostSEDFitting(transient_name).task_name: LocalHostSEDFitting(transient_name)._prerequisites(),
+        MWEBV_Host(transient_name).task_name: MWEBV_Host(transient_name)._prerequisites(),
+        GlobalApertureConstruction(transient_name).task_name: GlobalApertureConstruction(transient_name)._prerequisites(),  # noqa
+        GlobalAperturePhotometry(transient_name).task_name: GlobalAperturePhotometry(transient_name)._prerequisites(),
+        ValidateGlobalPhotometry(transient_name).task_name: ValidateGlobalPhotometry(transient_name)._prerequisites(),
+        GlobalHostSEDFitting(transient_name).task_name: GlobalHostSEDFitting(transient_name)._prerequisites(),
+    }
+
+
+def get_processing_status_and_progress(transient):
+    # Collect all workflow tasks.
+    # For historical reasons we must exclude the obsolete "Log transient processing status" task.
+    tasks = TaskRegister.objects.filter(
+        Q(transient__name__exact=transient.name)
+        & ~Q(task__name="Log transient processing status")
+    )
+    num_total_tasks = len(tasks)
+    # If there are no tasks associated with the transient, the progress is zero.
+    if num_total_tasks == 0:
+        return 0, "processing"
+
+    # Collect incomplete tasks, which include those currently processing and those not yet processed.
+    incomplete_tasks = tasks.filter(status__message__in=['not processed', 'processing'])
+    logger.debug(f'''"{transient.name}" incomplete tasks: {[task.task.name for task in incomplete_tasks]}''')
+
+    # For each unprocessed task in the workflow, determine whether it could possibly run based on its prerequisites.
+    unprocessed_tasks = incomplete_tasks.filter(status__message__exact='not processed')
+    prerequisites = get_all_task_prerequisites(transient.name)
+    blocked_tasks = []
+    for unprocessed_task in unprocessed_tasks:
+        prereq_tasks = prerequisites[unprocessed_task.task.name]
+        prereqs_errored = []
+        # Iterate over the task's prerequisites and check for any that have failed
+        for task_name, status_message in prereq_tasks.items():
+            prereq_task = Task.objects.get(name__exact=task_name)
+            prereqs_errored.extend(tasks.filter(
+                task__exact=prereq_task,
+                status__type__exact='error',
+            ))
+            # If any of the unprocessed task's prerequisites failed, then it will never execute; it is "blocked".
+            if prereqs_errored:
+                logger.debug(f'''"{transient.name}" prereqs_errored: {[task.task.name for task in prereqs_errored]}''')
+                blocked_tasks.append(unprocessed_task)
+                break
+    unblocked_tasks = [task for task in unprocessed_tasks if task not in blocked_tasks]
+    logger.debug(f'''"{transient.name}" unblocked tasks: {[task.task.name for task in unblocked_tasks]}''')
+
+    # The number of remaining tasks is the sum of the unblocked tasks and those currently processing
+    processing_tasks = incomplete_tasks.filter(status__message__exact='processing')
+    num_remaining_tasks = len(unblocked_tasks) + len(processing_tasks)
+    progress_raw = 100 * (1 - num_remaining_tasks / num_total_tasks)
+    progress = int(round(progress_raw, 0))
+    logger.debug(f'''"{transient.name}" progress (raw): {progress_raw}''')
+
+    # If the progress is not 100%, then the workflow is still processing
+    if progress < 100:
+        processing_status = 'processing'
+    # If the progress is 100%, then the workflow is finished.
+    elif progress == 100:
+        # It is blocked if there are errors; otherwise it is complete.
+        if tasks.filter(status__type='error'):
+            processing_status = 'blocked'
+        else:
+            processing_status = 'completed'
+
+    return progress, processing_status
+
+
+class TransientTaskRunner(TaskRunner):
+    """
+    Abstract base class for a TransientTaskRunner.
+
+    Attributes:
+        task_frequency_seconds (int): Positive integer defining the frequency
+            the task in run at. Defaults to 60 seconds.
+        task_initially_enabled (bool): True means the task is initially enabled,
+            False means the task is initially disabled. Default is enabled
+            (True).
+        task_name (str): Name of the task the TaskRunner works on.
+        task_type (str): Type of task the TaskRunner works on.
+        task_function_name(str): Name of the function used to register the task
+            in celery.
+        processing_status (models.Status): Status of the task while runner is
+            running a task.
+        failed_status (model.Status): Status of the task is if the runner fails.
+        prerequisites (dict): Prerequisite tasks and statuses required for the
+            runner to process.
+    """
+
+    def __init__(self, transient_name=None):
+        """
+        Initialized method which sets up the task runner.
+        """
+
+        self.prerequisites = self._prerequisites()
+        assert transient_name
+        self.transient_name = transient_name
+
+    def find_register_items_meeting_prerequisites(self):
+        """
+        Finds the register items meeting the prerequisites.
+
+        Returns:
+            (QuerySet): Task register items meeting prerequisites.
+        """
+        task = Task.objects.get(name__exact=self.task_name)
+        task_register = TaskRegister.objects.all()
+        if self.transient_name:
+            current_transients = Transient.objects.filter(
+                name__exact=self.transient_name
+            )
+        else:
+            current_transients = Transient.objects.all()
+
+        for task_name, status_message in self.prerequisites.items():
+            task_prereq = Task.objects.get(name__exact=task_name)
+            status = Status.objects.get(message__exact=status_message)
+
+            current_transients = current_transients & Transient.objects.filter(
+                taskregister__task=task_prereq, taskregister__status=status
+            )
+
+        return task_register.filter(transient__in=list(current_transients), task=task)
+
+    def _select_highest_priority(self, register):
+        """
+        Select highest priority task by finding the one with the oldest
+        transient timestamp.
+
+        Args:
+            register (QuerySet): register of tasks to select from.
+        Returns:
+            register item (model.TaskRegister): highest priority register item.
+        """
+        return register.order_by("transient__public_timestamp")[0]
+
+    def _update_status(self, task_status, updated_status):
+        """
+        Update the processing status of a task.
+
+        Parameters:
+            task_status (models.TaskProcessingStatus): task processing status to be
+                updated.
+            updated_status (models.Status): new status to update the task with.
+        Returns:
+            None: Saves the new updates to the backend.
+        """
+        task_status.status = updated_status
+        task_status.last_modified = timezone.now()
+        task_status.save()
+
+    def select_register_item(self):
+        """
+        Selects register item to be processed by task runner.
+
+        Returns:
+            register item (models.TaskRegister): returns item if one exists,
+                returns None otherwise.
+        """
+        register = self.find_register_items_meeting_prerequisites()
+        return self._select_highest_priority(register) if register.exists() else None
+
+    def run_process(self, task_register_item=None):
+        """
+        Runs task runner process.
+
+        This logic of this function is a bit confusing due to the change in Blast's workflow execution method (see
+        commit 23d34a1ca8e1d6086672b4b0a60fe9f74fb3bdfa 2024/05/06).
+        Originally, this function was executed periodically by calling it from the subclasses corresponding
+        to the various stages of the transient workflow. This execution method was independent of individual
+        transients: The algorithm of the "select_register_item()" function was designed to identify all the
+        transients whose workflows had reached the task associated with the calling subclass
+        (e.g. "ValidateLocalPhotometry.run_process()") by analyzing the "prerequisites" for each registered task to
+        determine if they had been met, and then select which transient's workflow task to run using
+        a priority system based on the transient discovery time.
+        The current workflow execution method is quite different: Now the DAG of tasks defining a workflow are
+        executed by the Celery Canvas system. The workflow definition in this Canvas system is therefore redundant
+        with the original Blast mechanism of "prerequisites". Because the "task_register_item" in this function is
+        still selected using the same logic, however, these prerequisites must remain consistent with the Canvas
+        workflow definition.
+        """
+        if task_register_item is None:
+            task_register_item = self.select_register_item()
+
+        if task_register_item is not None:
+            logger.debug(f'''task_register_item: {task_register_item}''')
+            self._update_status(task_register_item, Status.objects.get(message__exact="processing"))
+            transient = task_register_item.transient
+
+            start_time = process_time()
+            try:
+                status_message = self._run_process(transient)
+            except SoftTimeLimitExceeded:
+                status_message = "time limit exceeded"
+                raise
+            except Exception:
+                status_message = self._failed_status_message()
+                logger.error(f'''"{self.task_name}" error message: "{status_message}"''')
+                raise
+            finally:
+                end_time = process_time()
+                logger.debug(f'''"{self.task_name}" status message: "{status_message}"''')
+                status = Status.objects.get(message__exact=status_message)
+                self._update_status(task_register_item, status)
+                processing_time = round(end_time - start_time, 2)
+                task_register_item.last_processing_time_seconds = processing_time
+                task_register_item.save()
+                # The processing status should be calculated
+                transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+                transient.image_trim_status = get_image_trim_status(transient)
+                transient.save()
+            return transient.name
+
+    @abstractmethod
+    def _run_process(self, transient):
+        """
+        Run process function to be implemented by child classes.
+
+        Args:
+            transient (models.Transient): transient for the task runner to
+                process
+        Returns:
+            runner status (models.Status): status of the task after the task
+                runner has completed.
+        """
+        pass
+
+    @abstractmethod
+    def _prerequisites(self):
+        """
+        Task prerequisites to be implemented by child classes.
+
+        Returns:
+            prerequisites (dict): key is the name of the task, value is the task
+                status.
+        """
+        pass
+
+    @abstractmethod
+    def _failed_status_message(self):
+        """
+        Message of the failed status.
+
+        Returns:
+            failed message (str): Name of the message of the failed status.
+        """
+        pass
+
+    @property
+    def task_type(self):
+        return "transient"
+
+    @property
+    def task_function_name(self) -> str:
+        """
+        TaskRunner function name to be registered by celery.
+        """
+        return "host.transient_tasks." + self.task_name.replace(" ", "_").lower()
 
 
 class HostMatch(TransientTaskRunner):
@@ -46,9 +327,10 @@ class HostMatch(TransientTaskRunner):
         Only prerequisite is that the host match task is not processed.
         """
         return {
-            "Host match": "not processed",
             "Cutout download": "processed",
+            "Transient information": "processed",
             "Transient MWEBV": "processed",
+            "Host match": "not processed",
         }
 
     @property
@@ -104,8 +386,9 @@ class MWEBV_Transient(TransientTaskRunner):
         Only prerequisite is that the transient MWEBV task is not processed.
         """
         return {
-            "Transient MWEBV": "not processed",
+            "Cutout download": "processed",
             "Transient information": "processed",
+            "Transient MWEBV": "not processed",
         }
 
     @property
@@ -150,7 +433,14 @@ class MWEBV_Host(TransientTaskRunner):
         """
         Only prerequisite is that the host MWEBV task is not processed.
         """
-        return {"Host match": "processed", "Host MWEBV": "not processed"}
+        return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Host MWEBV": "not processed"
+        }
 
     @property
     def task_name(self):
@@ -194,7 +484,9 @@ class ImageDownload(TransientTaskRunner):
         """
         No prerequisites
         """
-        return {"Cutout download": "not processed"}
+        return {
+            "Cutout download": "not processed"
+        }
 
     @property
     def task_name(self):
@@ -236,7 +528,10 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
             "Host match": "processed",
+            "Host information": "processed",
             "Global aperture construction": "not processed",
         }
 
@@ -308,6 +603,10 @@ class LocalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
             "Local aperture photometry": "not processed",
         }
 
@@ -401,6 +700,10 @@ class GlobalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
             "Global aperture construction": "processed",
             "Global aperture photometry": "not processed",
         }
@@ -536,6 +839,11 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         not processed and the local photometry task is processed.
         """
         return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
             "Local aperture photometry": "processed",
             "Validate local photometry": "not processed",
         }
@@ -601,6 +909,12 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         is not processed and the global photometry task is processed.
         """
         return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
             "Global aperture photometry": "processed",
             "Validate global photometry": "not processed",
         }
@@ -677,8 +991,8 @@ class TransientInformation(TransientTaskRunner):
 
     def _prerequisites(self):
         return {
-            "Transient information": "not processed",
             "Cutout download": "processed",
+            "Transient information": "not processed",
         }
 
     @property
@@ -705,7 +1019,13 @@ class HostInformation(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {"Host match": "processed", "Host information": "not processed"}
+        return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "not processed"
+        }
 
     @property
     def task_name(self):
@@ -876,12 +1196,14 @@ class LocalHostSEDFitting(HostSEDFitting):
         Need both the Cutout and Host match to be processed
         """
         return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
             "Local aperture photometry": "processed",
             "Validate local photometry": "processed",
             "Local host SED inference": "not processed",
-            "Transient MWEBV": "processed",
         }
 
     @property
@@ -915,12 +1237,16 @@ class GlobalHostSEDFitting(HostSEDFitting):
         Need both the Cutout and Host match to be processed
         """
         return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
+            "Global aperture construction": "processed",
             "Global aperture photometry": "processed",
             "Validate global photometry": "processed",
-            "Global host SED inference": "not processed",
             "Host MWEBV": "processed",
+            "Global host SED inference": "not processed",
         }
 
     @property
@@ -1068,5 +1394,6 @@ def validate_local_photometry(transient_name):
 )
 def final_progress(transient_name):
     transient = Transient.objects.get(name=transient_name)
-    transient.progress = 100
+    transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+    logger.debug(f'''Final progress: {(transient.progress, transient.processing_status)}''')
     transient.save()

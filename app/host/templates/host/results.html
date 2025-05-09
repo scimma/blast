@@ -16,7 +16,8 @@
     {% endif %}
         <a href="/api/transient/get/{{transient.name}}" role="button" class="btn btn-success">Download data <i class="bi bi-box-arrow-in-down"></i></button></a>
     {% if is_auth %}
-    <a href="{% url 'reprocess_transient' transient.name %}" role="button" class="btn btn-warning" class='reprocess'>Reprocess</button></a>
+    <a href="{% url 'reprocess_transient' transient.name %}" role="button" class="btn btn-warning reprocess">Reprocess</button></a>
+    <a href="{% url 'retrigger_transient' transient.name %}" role="button" class="btn btn-info">Retrigger</button></a>
     {% endif %}
         <div class="">
             <div class="row">

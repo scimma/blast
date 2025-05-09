@@ -16,12 +16,12 @@
         </tr>
     </thead>
     <tbody>
-        {% for item in transient.taskregister_set.all %}
+        {% for item in transient_taskregister_set %}
         <tr>
 	  {% if item.user_warning %}
             <td><b style="color:red">{{item.task.name}}</b></td>
 	  {% else %}
-            <td>{{item.task.name}}</td>
+            <td>{{ item.task.name }}</td>
 	  {% endif %}
             <td> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
             <td>
@@ -44,6 +44,16 @@
 	    </td>
         </tr>
        {% endfor %}
+       <tr>
+        <td>Processing status</td>
+        <td>
+          <span class="badge {{ processing_status_badge_class }}">
+            {{ transient.processing_status }}
+          </span>
+        </td>
+        <td>N/A</td>
+        <td>N/A</td>
+       </tr>
     </tbody>
 </table>
 
