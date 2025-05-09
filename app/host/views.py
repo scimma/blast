@@ -36,13 +36,13 @@ from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from celery import shared_task
+from copy import deepcopy
 
 # Configure logging
 import logging
 logging.basicConfig(format='%(levelname)-8s %(message)s')
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
-
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -451,9 +451,28 @@ def results(request, slug):
     is_warning = False
     for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
         is_warning |= u
+
+    # Omit the obsolete 'Log transient processing status' task from the results page if it exists.
+    transient_taskregister_set = []
+    for item in transient.taskregister_set.all():
+        taskregister_item = deepcopy(item)
+        if not taskregister_item.task.name == 'Log transient processing status':
+            transient_taskregister_set.append(taskregister_item)
+    # Determine CSS class for workflow processing status
+    if transient.processing_status == "blocked":
+        processing_status_badge_class = "badge bg-danger"
+    elif transient.processing_status == "processing":
+        processing_status_badge_class = "badge bg-warning"
+    elif transient.processing_status == "completed":
+        processing_status_badge_class = "badge bg-success"
+    else:
+        processing_status_badge_class = "badge bg-secondary"
+
     context = {
         **{
             "transient": transient,
+            "transient_taskregister_set": transient_taskregister_set,
+            "processing_status_badge_class": processing_status_badge_class,
             "form": form,
             "local_aperture_photometry": local_aperture_photometry.prefetch_related(),
             "global_aperture_photometry": global_aperture_photometry.prefetch_related(),

@@ -229,38 +229,49 @@ class SnapshotTaskRegister(SystemTaskRunner):
 
 
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
-    def run_process(self):
-        """
-        Retrigger failed workflows.
-        """
+    def reset_workflow_if_not_processing(self, transient, worker_tasks):
+        # If there is an active or queued task with the transient's name as the argument,
+        # the transient workflow is still processing.
+        if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
+            logger.debug(f'''Workflow for transient "{transient.name}" is queued or running.''')
+            return False
+        logger.debug(f'''Detected stalled workflow for transient "{transient.name}". '''
+                     '''Resetting "processing" statuses to "not processed"...''')
+        # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
+        processing_status = Status.objects.get(message__exact="processing")
+        not_processed_status = Status.objects.get(message__exact="not processed")
+        processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                            if task.status == processing_status]
+        for task in processing_tasks:
+            task.status = not_processed_status
+            task.save()
+        return True
 
+    def inspect_worker_tasks(self):
         inspect = app.control.inspect()
-        all_tasks = []
+        all_worker_tasks = []
         # Query the task workers to collect the name and arguments for all the queued and active tasks.
         for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
             items = inspect_func(safe=True).items()
             tasks = [task for worker, worker_tasks in items for task in worker_tasks]
-            all_tasks.extend([{'name': task['name'], 'args': task['args']} for task in tasks])
+            all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
+        return all_worker_tasks
+
+    def run_process(self):
+        """
+        Retrigger incomplete workflows.
+        """
+
+        all_worker_tasks = self.inspect_worker_tasks()
         # Iterate over incomplete transient workflows and retrigger stalled
-        for transient in Transient.objects.filter(processing_status="processing"):
-            logger.debug(f'''Analyzing incomplete transient workflow "{transient.name}"...''')
-            # If there is an active or queued task with the transient's name as the argument,
-            # the transient workflow is still processing. Otherwise, the incomplete workflow should
-            # be retriggered.
-            if not [task['name'] for task in all_tasks if task['args'].find(transient.name) >= 0]:
-                logger.info(f'''Retriggering stalled workflow for transient "{transient.name}"...''')
-                # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
-                processing_status = Status.objects.get(message__exact="processing")
-                not_processed_status = Status.objects.get(message__exact="not processed")
-                for task in [task for task in TaskRegister.objects.filter(transient=transient)
-                             if task.status == processing_status]:
-                    task.status = not_processed_status
-                    task.save()
-                transient_workflow.delay(transient.name)
+        for incomplete_transient in Transient.objects.filter(Q(progress__lt=100) | Q(processing_status='processing')):
+            logger.debug(f'''Analyzing incomplete transient workflow "{incomplete_transient.name}"...''')
+            if self.reset_workflow_if_not_processing(incomplete_transient, all_worker_tasks):
+                transient_workflow.delay(incomplete_transient.name)
 
     @property
     def task_name(self):
-        return "Retrigger failed workflows"
+        return "Retrigger incomplete workflows"
 
     @property
     def task_frequency_seconds(self):
@@ -275,7 +286,7 @@ class RetriggerIncompleteWorkflows(SystemTaskRunner):
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
-def retrigger_failed_workflows():
+def retrigger_incomplete_workflows():
     RetriggerIncompleteWorkflows().run_process()
 
 
