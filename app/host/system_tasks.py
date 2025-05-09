@@ -340,7 +340,7 @@ def tns_data_ingestion(self):
         return all_active_tasks
     # Ensure that there are no concurrent executions of the TNS ingestion to avoid exceeding the TNS API rate limits.
     # Use the Celery app control system to list all active tns_data_ingestion tasks, and only contact TNS if there are
-    # no running instances. Running or stalled instances that are older than the TNS_INGEST_TIMEOUT value should be 
+    # no running instances. Running or stalled instances that are older than the TNS_INGEST_TIMEOUT value should be
     # aborted and terminated so they do not permanently block the ingest; however, the methods available to terminate
     # these processes in Celery are unreliable, so additional monitoring may be necessary.
     task_name = 'host.system_tasks.tns_data_ingestion'
@@ -360,8 +360,8 @@ def tns_data_ingestion(self):
             app.control.terminate(task['id'], signal='SIGKILL')
     # If there is still an active task other than this current task, abort.
     if [task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]:
-    # # When testing TNS query mutex locking mechanism, use the following line instead to allow some concurrency:
-    # if len([task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]) > 2:
+        # # When testing TNS query mutex locking mechanism, use the following line instead to allow some concurrency:
+        # if len([task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]) > 2:
         logger.info(f'''There is already an active "{task_name}" task. Aborting.''')
         return
     # Run the TNS ingestion
