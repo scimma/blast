@@ -275,7 +275,7 @@ class RetriggerIncompleteWorkflows(SystemTaskRunner):
 
     @property
     def task_frequency_seconds(self):
-        return 3600
+        return 1200
 
     @property
     def task_initially_enabled(self):
