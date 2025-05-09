@@ -228,61 +228,6 @@ class SnapshotTaskRegister(SystemTaskRunner):
         return "Snapshot task register"
 
 
-class LogTransientProgress(SystemTaskRunner):
-    def run_process(self):
-        """
-        Updates the processing status for all transients.
-        """
-        transients = Transient.objects.all()
-
-        for transient in transients:
-            tasks = TaskRegister.objects.filter(
-                Q(transient__name__exact=transient.name) & ~Q(
-                    task__name=self.task_name)
-            )
-            processing_task_qs = TaskRegister.objects.filter(
-                transient__name__exact=transient.name, task__name=self.task_name
-            )
-
-            total_tasks = len(tasks)
-            completed_tasks = len(
-                [task for task in tasks if task.status.message == "processed"]
-            )
-            blocked = len(
-                [task for task in tasks if task.status.type == "error"])
-
-            progress = "processing"
-
-            if total_tasks == 0:
-                progress = "processing"
-            elif total_tasks == completed_tasks:
-                progress = "completed"
-            elif total_tasks < completed_tasks:
-                progress = "processing"
-            elif blocked > 0:
-                progress = "blocked"
-
-            # save task
-            if len(processing_task_qs) == 1:
-                processing_task = processing_task_qs[0]
-                processing_task.status = Status.objects.get(
-                    message=progress if progress != "completed" else "processed"
-                )
-                processing_task.save()
-
-            # save transient progress
-            transient.processing_status = progress
-            transient.save()
-
-    @property
-    def task_name(self):
-        return "Log transient processing status"
-
-    @property
-    def task_initially_enabled(self):
-        return False
-
-
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
     def run_process(self):
         """
@@ -426,14 +371,6 @@ def initialize_transient_task():
 )
 def snapshot_task_register():
     SnapshotTaskRegister().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def log_transient_processing_status():
-    LogTransientProgress().run_process()
 
 
 @shared_task(

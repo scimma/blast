@@ -9,7 +9,6 @@ from .models import Transient, Status, TaskRegister
 from host.system_tasks import DeleteGHOSTFiles
 from host.system_tasks import IngestMissedTNSTransients
 from host.system_tasks import InitializeTransientTasks
-from host.system_tasks import LogTransientProgress
 from host.system_tasks import SnapshotTaskRegister
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import TrimTransientImages
@@ -20,7 +19,6 @@ periodic_tasks = [
     TNSDataIngestion(),
     InitializeTransientTasks(),
     SnapshotTaskRegister(),
-    LogTransientProgress(),
     DeleteGHOSTFiles(),
     IngestMissedTNSTransients(),
     TrimTransientImages(),
