@@ -34,6 +34,7 @@ periodic_tasks = [
 def retrigger_transient(request=None, slug=''):
     transient_name = slug
     assert transient_name
+    result = None
     try:
         transient = Transient.objects.get(name__exact=transient_name)
         logger.debug(f'Retrigger requested for transient "{transient.name}"')
@@ -47,7 +48,7 @@ def retrigger_transient(request=None, slug=''):
                          if task['name'] != 'Import transients from TNS']
             if riw.reset_workflow_if_not_processing(transient, all_tasks):
                 logger.info(f'Retriggering workflow for transient "{transient.name}"')
-                transient_workflow.delay(transient_name)
+                result = transient_workflow.delay(transient_name)
             else:
                 logger.warning(f'Workflow for transient "{transient.name}" was not retriggered because '
                                'it is queued or actively running.')
