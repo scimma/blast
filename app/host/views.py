@@ -452,7 +452,31 @@ def results(request, slug):
     for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
         is_warning |= u
 
+    class workflow_diagram():
+        def __init__(self, name='', message='', badge='', fill_color=''):
+            self.name = name
+            self.message = message
+            self.badge = badge
+            self.fill_color = fill_color
+            self.fill_colors = {
+                'success': '#d5e8d4',
+                'error': '#f8cecc',
+                'warning': '#fff2cc',
+                'blank': '#aeb6bd',
+            }
+
     transient_taskregister_set = transient.taskregister_set.all()
+    workflow_diagrams = []
+    for item in transient_taskregister_set:
+        # Configure workflow diagram
+        diagram_settings = workflow_diagram(
+            name=item.task.name,
+            message=item.status.message,
+            badge=item.status.badge,
+            fill_color=workflow_diagram().fill_colors[item.status.type],
+        )
+        workflow_diagrams.append(diagram_settings)
+
     # Determine CSS class for workflow processing status
     if transient.processing_status == "blocked":
         processing_status_badge_class = "badge bg-danger"
@@ -467,6 +491,7 @@ def results(request, slug):
         **{
             "transient": transient,
             "transient_taskregister_set": transient_taskregister_set,
+            "workflow_diagrams": workflow_diagrams,
             "processing_status_badge_class": processing_status_badge_class,
             "form": form,
             "local_aperture_photometry": local_aperture_photometry.prefetch_related(),
