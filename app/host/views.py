@@ -452,12 +452,7 @@ def results(request, slug):
     for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
         is_warning |= u
 
-    # Omit the obsolete 'Log transient processing status' task from the results page if it exists.
-    transient_taskregister_set = []
-    for item in transient.taskregister_set.all():
-        taskregister_item = deepcopy(item)
-        if not taskregister_item.task.name == 'Log transient processing status':
-            transient_taskregister_set.append(taskregister_item)
+    transient_taskregister_set = transient.taskregister_set.all()
     # Determine CSS class for workflow processing status
     if transient.processing_status == "blocked":
         processing_status_badge_class = "badge bg-danger"
