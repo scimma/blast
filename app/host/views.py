@@ -595,12 +595,11 @@ def update_home_page_statistics():
             )
         )
 
-    processed = len(
-        Transient.objects.filter(
-            Q(processing_status="blocked") | Q(processing_status="completed")
-        )
-    )
-    in_progress = len(Transient.objects.filter(processing_status="processing"))
+    processed = len(Transient.objects.filter(
+        Q(processing_status="blocked") | Q(processing_status="completed")))
+
+    in_progress = len(Transient.objects.filter(
+        Q(progress__lt=100) | Q(processing_status='processing')))
 
     # bokeh_processing_context = plot_pie_chart(analytics_results)
     bokeh_processing_context = plot_bar_chart(analytics_results)
