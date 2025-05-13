@@ -448,12 +448,31 @@ def results(request, slug):
     for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
         is_warning |= u
 
-    # Omit the obsolete 'Log transient processing status' task from the results page if it exists.
-    transient_taskregister_set = []
-    for item in transient.taskregister_set.all():
-        taskregister_item = deepcopy(item)
-        if not taskregister_item.task.name == 'Log transient processing status':
-            transient_taskregister_set.append(taskregister_item)
+    class workflow_diagram():
+        def __init__(self, name='', message='', badge='', fill_color=''):
+            self.name = name
+            self.message = message
+            self.badge = badge
+            self.fill_color = fill_color
+            self.fill_colors = {
+                'success': '#d5e8d4',
+                'error': '#f8cecc',
+                'warning': '#fff2cc',
+                'blank': '#aeb6bd',
+            }
+
+    transient_taskregister_set = transient.taskregister_set.all()
+    workflow_diagrams = []
+    for item in transient_taskregister_set:
+        # Configure workflow diagram
+        diagram_settings = workflow_diagram(
+            name=item.task.name,
+            message=item.status.message,
+            badge=item.status.badge,
+            fill_color=workflow_diagram().fill_colors[item.status.type],
+        )
+        workflow_diagrams.append(diagram_settings)
+
     # Determine CSS class for workflow processing status
     if transient.processing_status == "blocked":
         processing_status_badge_class = "badge bg-danger"
@@ -468,6 +487,7 @@ def results(request, slug):
         **{
             "transient": transient,
             "transient_taskregister_set": transient_taskregister_set,
+            "workflow_diagrams": workflow_diagrams,
             "processing_status_badge_class": processing_status_badge_class,
             "form": form,
             "local_aperture_photometry": local_aperture_photometry.prefetch_related(),
@@ -571,12 +591,11 @@ def update_home_page_statistics():
             )
         )
 
-    processed = len(
-        Transient.objects.filter(
-            Q(processing_status="blocked") | Q(processing_status="completed")
-        )
-    )
-    in_progress = len(Transient.objects.filter(processing_status="processing"))
+    processed = len(Transient.objects.filter(
+        Q(processing_status="blocked") | Q(processing_status="completed")))
+
+    in_progress = len(Transient.objects.filter(
+        Q(progress__lt=100) | Q(processing_status='processing')))
 
     # bokeh_processing_context = plot_pie_chart(analytics_results)
     bokeh_processing_context = plot_bar_chart(analytics_results)

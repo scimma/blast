@@ -68,11 +68,7 @@ def get_all_task_prerequisites(transient_name):
 
 def get_processing_status_and_progress(transient):
     # Collect all workflow tasks.
-    # For historical reasons we must exclude the obsolete "Log transient processing status" task.
-    tasks = TaskRegister.objects.filter(
-        Q(transient__name__exact=transient.name)
-        & ~Q(task__name="Log transient processing status")
-    )
+    tasks = TaskRegister.objects.filter(transient__name__exact=transient.name)
     num_total_tasks = len(tasks)
     # If there are no tasks associated with the transient, the progress is zero.
     if num_total_tasks == 0:

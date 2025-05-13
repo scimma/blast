@@ -180,15 +180,28 @@ def initialise_all_tasks_status(transient):
     Returns:
         None: Saves the new updates to the backend.
     """
-    tasks = Task.objects.all()
-    not_processed = Status.objects.get(message__exact="not processed")
 
     # Reset all tasks to status "not processed"
-    for task in tasks:
-        # If tasks have been added to the transient workflow since the transient was last
-        # processed, ensure they are created.
-        task_status, created = TaskRegister.objects.get_or_create(task=task, transient=transient,
-                                                                  defaults={"status": not_processed})
-        if created:
-            logger.info(f'Created task "{task.name}" for transient "{transient.name}".')
-        update_status(task_status, not_processed)
+    for workflow_task in Task.objects.all():
+        registered_tasks = TaskRegister.objects.filter(task__name=workflow_task.name, transient=transient)
+        if registered_tasks:
+            # If there are duplicate task register objects for a transient, delete them.
+            if len(registered_tasks) > 1:
+                for registered_task in registered_tasks[1:]:
+                    logger.warning('''Deleting duplicate task register object for '''
+                                   f'''transient "{transient.name}" "{registered_task.task.name}"...''')
+                    registered_task.delete()
+            # Set the status of the task to "not processed"
+            registered_task = registered_tasks[0]
+            logger.debug(f'''Resetting transient "{transient.name}" status to '''
+                         f'''"not processed" for task "{registered_task.task.name}"...''')
+            update_status(registered_task, Status.objects.get(message__exact="not processed"))
+        else:
+            # If tasks have been added to the transient workflow since the transient was last
+            # processed, ensure they are created.
+            TaskRegister.objects.create(
+                transient=transient,
+                task=workflow_task,
+                status=Status.objects.get(message__exact="not processed"),
+            )
+            logger.info(f'Created task "{workflow_task.name}" for transient "{transient.name}".')
