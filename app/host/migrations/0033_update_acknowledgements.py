@@ -18,7 +18,7 @@ def update_acknowledgements(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0031_host_photometric_redshift_err_host_redshift_err'),
+        ('host', '0032_host_photometric_redshift_err_host_redshift_err'),
     ]
 
     operations = [

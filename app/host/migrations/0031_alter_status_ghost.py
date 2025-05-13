@@ -11,7 +11,7 @@ def update_status(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0029_tasklock'),
+        ('host', '0030_remove_log_transient_process'),
     ]
 
     operations = [

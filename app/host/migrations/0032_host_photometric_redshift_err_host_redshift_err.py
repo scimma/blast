@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0030_alter_status_ghost'),
+        ('host', '0031_alter_status_ghost'),
     ]
 
     operations = [
