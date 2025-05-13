@@ -47,7 +47,7 @@ services:
       - "batch"
 
   database:
-    image: mariadb:10
+    image: mariadb:11.1
     platform: linux/x86_64
     restart: always
     volumes:
