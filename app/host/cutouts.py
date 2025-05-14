@@ -24,6 +24,7 @@ from dl import queryClient as qc
 from dl import storeClient as sc
 from pyvo.dal import sia
 from host.object_store import ObjectStore
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .models import Cutout
 from .models import Filter
@@ -100,16 +101,15 @@ def download_and_save_cutouts(
         Dictionary of images with the survey names as keys and fits images
         as values.
     """
-    processed_value = "processed"
-    if filter_set is None:
-        filter_set = Filter.objects.all()
-    for filter in filter_set:
+
+    s3 = ObjectStore()
+
+    def download_filter_data(filter):
         # Does cutout file exist on the local disk?
         save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
         local_fits_path = save_dir + f"{filter.name}.fits"
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
-        s3 = ObjectStore()
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
         cutout_name = f"{transient.name}_{filter.name}"
@@ -151,6 +151,18 @@ def download_and_save_cutouts(
         else:
             cutout_object.message = "No image found"
         cutout_object.save()
+
+    processed_value = "processed"
+    if filter_set is None:
+        filter_set = Filter.objects.all()
+    with ThreadPoolExecutor(max_workers=len(filter_set)) as executor:
+        future_to_filter = {executor.submit(download_filter_data, filter): filter for filter in filter_set}
+        for future in as_completed(future_to_filter):
+            filter = future_to_filter[future]
+            try:
+                future.result()
+            except Exception as exc:
+                print('%r generated an exception: %s' % (filter, exc))
 
     return processed_value
 
