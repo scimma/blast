@@ -9,6 +9,7 @@ from uuid import uuid4
 import hashlib
 import re
 from host.log import get_logger
+from time import sleep
 logger = get_logger(__name__)
 
 
@@ -105,21 +106,26 @@ class ObjectStore:
             object_name=key)
         return response.stream(32 * 1024)
 
-    def download_object(self, path="", file_path="", version_id=""):
+    def download_object(self, path="", file_path="", version_id="", max_retries=5):
         path = path.strip('/')
+        kwargs = {
+            'bucket_name': self.bucket,
+            'object_name': path,
+            'file_path': file_path,
+        }
         if version_id:
-            self.client.fget_object(
-                bucket_name=self.bucket,
-                object_name=path,
-                file_path=file_path,
-                version_id=version_id,
-            )
-        else:
-            self.client.fget_object(
-                bucket_name=self.bucket,
-                object_name=path,
-                file_path=file_path,
-            )
+            kwargs['version_id'] = version_id
+        num_retries = 0
+        while num_retries < max_retries:
+            try:
+                self.client.fget_object(**kwargs)
+            except FileNotFoundError as err:
+                logger.warning(f'Retrying download after error: {err}')
+                num_retries += 1
+                sleep(1)
+            else:
+                return
+        raise FileNotFoundError
 
     def delete_directory(self, root_path):
         delete_object_list = map(
