@@ -46,6 +46,7 @@ from .models import Cutout
 from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
+from pathlib import Path
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -350,42 +351,60 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
         if "/GALEX/" in local_fits_path:
             continue
 
-        # copy the steps to build segmentation map
         # Download FITS file local file cache
         if not os.path.isfile(local_fits_path):
             s3 = ObjectStore()
             object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
             s3.download_object(path=object_key, file_path=local_fits_path)
         assert os.path.isfile(local_fits_path)
-        image = fits.open(local_fits_path)
-        wcs = WCS(image[0].header)
-        background = estimate_background(image)
-        catalog = build_source_catalog(
-            image, background, threshhold_sigma=5, npixels=15
-        )
+        # Create a lock file to prevent concurrent processes from deleting the data file prematurely
+        lock_path = f'''{local_fits_path}.check_global_contamination.lock'''
+        Path(lock_path).touch(exist_ok=True)
+        assert os.path.isfile(lock_path)
 
-        # catalog is None is no sources are detected in the image
-        # so we don't have to worry about contamination in that case
-        if catalog is None:
-            continue
+        err_to_raise = None
+        try:
+            # copy the steps to build segmentation map
+            image = fits.open(local_fits_path)
+            wcs = WCS(image[0].header)
+            background = estimate_background(image)
+            catalog = build_source_catalog(
+                image, background, threshhold_sigma=5, npixels=15
+            )
 
-        source_data = match_source(aperture.sky_coord, catalog, wcs)
+            # catalog is None is no sources are detected in the image
+            # so we don't have to worry about contamination in that case
+            if catalog is None:
+                continue
 
-        mask_image = (
-            aperture.sky_aperture.to_pixel(wcs)
-            .to_mask()
-            .to_image(np.shape(image[0].data))
-        )
-        obj_ids = catalog._segment_img.data[np.where(mask_image == True)]  # noqa: E712
-        source_obj = source_data._labels
+            source_data = match_source(aperture.sky_coord, catalog, wcs)
 
-        # let's look for contaminants
-        unq_obj_ids = np.unique(obj_ids)
-        if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
-            is_contam = True
+            mask_image = (
+                aperture.sky_aperture.to_pixel(wcs)
+                .to_mask()
+                .to_image(np.shape(image[0].data))
+            )
+            obj_ids = catalog._segment_img.data[np.where(mask_image == True)]  # noqa: E712
+            source_obj = source_data._labels
 
-        # Delete FITS file from local file cache
-        os.remove(local_fits_path)
+            # let's look for contaminants
+            unq_obj_ids = np.unique(obj_ids)
+            if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
+                is_contam = True
+        except Exception as err:
+            err_to_raise = err
+            pass
+        finally:
+            os.remove(lock_path)
+            if not [Path(local_fits_path).parent.glob('*.lock')]:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
+            if err_to_raise:
+                raise err_to_raise
+
 
     return is_contam
 
