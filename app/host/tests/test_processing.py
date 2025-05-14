@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from ..base_tasks import initialise_all_tasks_status
-from ..base_tasks import TransientTaskRunner
+from ..transient_tasks import TransientTaskRunner
 from ..base_tasks import update_status
 from ..models import Cutout
 from ..models import Filter
@@ -278,9 +278,10 @@ class HostMatchRunnerTest(TestCase):
         self.assertTrue(
             self.host_match_runner._prerequisites()
             == {
-                "Host match": "not processed",
                 "Cutout download": "processed",
+                "Transient information": "processed",
                 "Transient MWEBV": "processed",
+                "Host match": "not processed",
             }
         )
 
