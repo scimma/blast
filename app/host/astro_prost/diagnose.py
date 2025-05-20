@@ -133,7 +133,6 @@ def get_ps1_pic(path, objid, ra, dec, size, band, safe=False, save=False):
                 filename = f"PS1_{objid}_{int(size*0.25)}arcsec_{band}.fits" if safe else \
                            f"PS1_ra={ra}_dec={dec}_{int(size*0.25)}arcsec_{band}.fits"
                 file_path = os.path.join(path, filename)
-                logger.debug(f'''Writing FITS file to "{file_path}"...''')
                 fn.writeto(file_path, overwrite=True)
             else:
                 return fn

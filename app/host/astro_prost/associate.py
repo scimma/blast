@@ -26,6 +26,7 @@ import warnings
 from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import gc
+from colorama import Fore, Style, init
 
 # Parallel processing settings
 NPROCESS_MAX = np.maximum(os.cpu_count() - 4, 1)
@@ -40,8 +41,11 @@ def chunks(lst, n):
 DEFAULT_RELEASES = {
     "glade": "latest",
     "decals": "dr9",
-    "panstarrs": "dr2"
+    "panstarrs": "dr2",
+    "skymapper": "dr4"
 }
+
+ONLY_OFFSET_CATS = {"panstarrs", "skymapper"}
 
 # Filter unnecessary warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, message="divide by zero encountered in divide")
@@ -114,10 +118,12 @@ def consolidate_results(results, transient_catalog):
     for col in id_cols:
         transient_catalog[col] = pd.to_numeric(transient_catalog[col], errors="coerce").astype("str")
 
-    # drop unassociated events
-    transient_catalog.dropna(subset=['host_total_posterior', 'host_objID'], inplace=True)
+    # drop unassociated events in batch mode -- return a DF without host info if failed with only 1 transient
+    if 'host_objID' in transient_catalog.columns.values:
+        transient_catalog.dropna(subset=['host_total_posterior', 'host_objID'], inplace=True)
+
     transient_catalog.reset_index(drop=True, inplace=True)
-    
+
     return transient_catalog
 
 def save_results(transient_catalog, run_name=None, save_path='./', drop_unassociated=True):
@@ -147,7 +153,7 @@ def save_results(transient_catalog, run_name=None, save_path='./', drop_unassoci
         save_suffix = f"{run_name}_{save_suffix}"
 
     save_name = pathlib.Path(save_path, f"associated_transient_catalog_{save_suffix}.csv")
-    if drop_unassociated:
+    if drop_unassociated and ('host_objID' in transient_catalog.columns.values):
         transient_catalog.dropna(subset=['host_objID', 'host_total_posterior'], inplace=True)
     transient_catalog.to_csv(save_name, index=False)
 
@@ -179,7 +185,7 @@ def log_host_properties(logger, transient_name, cat, host_idx, title, print_prop
         Logs the formatted host properties.
     """
 
-    prop_lines = [f"\n    {title} for {transient_name}:"]
+    prop_lines = [f"\n    {title} for {transient_name}:" + Style.RESET_ALL]
 
     # Define all possible properties with labels and formats
     prop_format = {
@@ -196,10 +202,14 @@ def log_host_properties(logger, transient_name, cat, host_idx, title, print_prop
     # Iterate through selected properties
     for prop in print_props:
         values = cat.galaxies[prop]
+        if prop == 'name':
+            raw_name = cat.galaxies["name"][host_idx]
+            if not raw_name.strip():
+                continue
         if (prop in cat.galaxies.dtype.names) and (0 <= host_idx < len(values)):  # Only include if property exists
             label, fmt = prop_format.get(prop.split("_")[-1], (prop, "{:.4f}"))  # Default fmt if missing
             value = fmt.format(values[host_idx])
-            print_str = f"    {label}: {value}"
+            print_str =  Fore.BLUE + f"    {label}:" + Style.RESET_ALL + f" {value}"
             prop_lines.append(print_str)
 
     # get mean, std, and posterior for specific properties
@@ -214,7 +224,7 @@ def log_host_properties(logger, transient_name, cat, host_idx, title, print_prop
 
             info = cat.galaxies[f"{prop}_info"][host_idx]
 
-            print_str = f"    {label}: {mean_value} ± {std_value}"
+            print_str = Fore.BLUE + f"    {label}:" + Style.RESET_ALL + f" {mean_value} ± {std_value}"
             if prop == 'offset':
                 print_str += " arcsec"
             if len(info) > 0:
@@ -222,7 +232,7 @@ def log_host_properties(logger, transient_name, cat, host_idx, title, print_prop
             prop_lines.append(print_str)
 
             if prop in condition_props:
-                prop_lines.append(f"    {label} Posterior: {posterior}")
+                prop_lines.append(Fore.BLUE + f"    {label} Posterior:" + Style.RESET_ALL + f" {posterior}")
 
     logger.info("\n".join(prop_lines))
 
@@ -265,7 +275,9 @@ def associate_transient(
     calc_host_props=False,
     verbose=0,
     coord_err_cols=('ra_err', 'dec_err'),
-    run_plot_match=False,
+    strict_checking=False,
+    warn_on_fallback=True,
+    plot_match=False,
 ):
     """Associates a transient with its most likely host galaxy.
 
@@ -300,7 +312,11 @@ def associate_transient(
         The verbosity level of the output.
     coord_err_cols : tuple of strings
         The column names associated with positional uncertainties on the transient positions.
-    run_plot_match : boolean, optional
+    strict_checking : boolean, optional
+        If true, raises error if catalog doesn't support conditioning on a property requested.
+    warn_on_fallback : boolean, optional
+        If true, raises warning if catalog doesn't support conditioning on a property requested. 
+    plot_match : boolean, optional
         If true, attempts to generate a plot image.
 
     Returns
@@ -313,11 +329,33 @@ def associate_transient(
 
     logger = setup_logger(log_fn, verbose=verbose, is_main=False)
 
+    # set up color-coding
+    init(autoreset=True)
+
     condition_host_props = list(priors.keys())
+    unsupported_props = {"redshift", "absmag"}.intersection(priors)
+    unsupported_catalogs  = ONLY_OFFSET_CATS.intersection(catalogs)
+
+    if unsupported_props and unsupported_catalogs:
+        msg = (
+            f"{', '.join(sorted(unsupported_catalogs))} "
+            f"{'does not support conditioning on' if len(unsupported_catalogs)==1 else 'do not support conditioning on'} "
+            f"{', '.join(sorted(unsupported_props))}; falling back to 'offset' only for this subset."
+        )
+
+        if strict_checking:
+            raise ValueError(
+                msg + "\n\nInterested in contributing a photo-z estimator? "
+                      "Open an issue at https://github.com/alexandergagliano/Prost/issues."
+            )
+
+        if warn_on_fallback:
+            logger.warning(msg)
+
 
     # TODO change overloaded variable here
     if calc_host_props:
-        calc_host_props = list({'redshift', 'absmag', 'offset'})
+        calc_host_props = ['redshift', 'absmag', 'offset']
     else:
         calc_host_props = list(priors.keys())
 
@@ -391,17 +429,23 @@ def associate_transient(
     catalog_dict = OrderedDict(get_catalogs(catalogs))
 
     for cat_name, cat_release in catalog_dict.items():
-        cat_release = catalog_dict[cat_name]
+        if cat_name in ONLY_OFFSET_CATS:
+            calc_host_props_cat = ['offset']
+            condition_host_props_cat = ['offset']
+        else:
+            calc_host_props_cat = calc_host_props
+            condition_host_props_cat = condition_host_props
+
         cat = GalaxyCatalog(name=cat_name, n_samples=n_samples, data=glade_catalog, release=cat_release)
 
         try:
-            cat.get_candidates(transient, time_query=True, logger=logger, cosmo=cosmo, calc_host_props=calc_host_props, cat_cols=cat_cols)
+            cat.get_candidates(transient, time_query=True, logger=logger, cosmo=cosmo, calc_host_props=calc_host_props_cat, cat_cols=cat_cols)
         except requests.exceptions.HTTPError:
             logger.warning(f"Candidate retrieval failed for {transient.name} in catalog {cat_name} due to an HTTPError.")
             continue
 
         if cat.ngals > 0:
-            cat = transient.associate(cat, cosmo, condition_host_props=condition_host_props)
+            cat = transient.associate(cat, cosmo, condition_host_props=condition_host_props_cat)
 
             if transient.best_host != -1:
                 best_idx = transient.best_host
@@ -410,8 +454,8 @@ def associate_transient(
                 print_props = ['objID', 'name', 'ra', 'dec', 'total_posterior']
                 condition_props = list(priors.keys())
 
-                log_host_properties(logger, transient.name, cat, best_idx, f"\nProperties of best host (in {cat_name} {cat_release})", print_props, calc_host_props, condition_props)
-                log_host_properties(logger, transient.name, cat, second_best_idx, f"\nProperties of 2nd best host (in {cat_name} {cat_release})", print_props, calc_host_props, condition_props)
+                log_host_properties(logger, transient.name, cat, best_idx, Fore.BLUE+f"\nProperties of best host (in {cat_name} {cat_release})", print_props, calc_host_props, condition_props)
+                log_host_properties(logger, transient.name, cat, second_best_idx, Fore.BLUE+f"\nProperties of 2nd best host (in {cat_name} {cat_release})", print_props, calc_host_props, condition_props)
 
                 # Populate results using a loop instead of manual assignments
                 for key, idx in {"host": best_idx, "host_2": second_best_idx}.items():
@@ -442,9 +486,7 @@ def associate_transient(
                     )
 
                 # For some reason the value of "verbose" is ignored here, and the effective
-                # level returned by logger.getEffectiveLevel() is 10 (DEBUG)
-                logger.info(f'''Effective logger level: {logger.getEffectiveLevel()}''')
-                if run_plot_match and logger.getEffectiveLevel() == logging.DEBUG:
+                if plot_match and logger.getEffectiveLevel() == logging.DEBUG:
                     try:
                         plot_match(
                             [result["host_ra"]],
@@ -610,7 +652,7 @@ def associate_sample(
             raise ValueError(f"ERROR: Please set a likelihood function for {key}.")
 
     # always load GLADE -- we now use it for spec-zs.
-    pkg = pkg_resources.files("host.astro_prost")
+    pkg = pkg_resources.files("astro_prost")
     pkg_data_file = pkg / "data" / "GLADE+_HyperLedaSizes_mod_withz.csv.gz"
     try:
         with pkg_resources.as_file(pkg_data_file) as csvfile:
@@ -666,7 +708,7 @@ def associate_sample(
 
             with ProcessPoolExecutor(max_workers=n_processes) as executor:
                 futures = {executor.submit(safe_associate_transient, *event): event[0] for event in batch}
-                for future in tqdm(as_completed(futures), total=len(futures), desc=f"Batch {batch_num}"):
+                for future in tqdm(as_completed(futures), total=len(futures), desc=f"Batch {batch_num}", disable=not progress_bar):
                     try:
                         results_per_batch[futures[future]] = future.result()
                     except Exception as e:
@@ -694,7 +736,7 @@ def associate_sample(
 
                 with ProcessPoolExecutor(max_workers=n_processes) as executor:
                     new_futures = {executor.submit(safe_associate_transient, *event): event[0] for event in failed_events}
-                    for future in tqdm(as_completed(new_futures), total=len(new_futures), desc="Retrying events"):
+                    for future in tqdm(as_completed(new_futures), total=len(new_futures), desc="Retrying events", disable=not progress_bar):
                         try:
                             results_per_batch[new_futures[future]] = future.result()
                         except Exception as e:
@@ -708,7 +750,15 @@ def associate_sample(
                     logger.warning("Some associations still failed after maximum retries.")
 
     else:  # Serial execution mode
-        results = {i: associate_transient(*event) for i, event in enumerate(events)}
+        iterable = tqdm(
+            events,
+            total=len(events),
+            desc="Associating (serial)",
+            disable=not progress_bar)
+
+        results = {}
+        for i, event in enumerate(iterable):
+            results[i] = associate_transient(*event)
 
     if (not parallel) or (os.environ.get(envkey) == str(os.getpid())):
         transient_catalog = consolidate_results(results, transient_catalog)
