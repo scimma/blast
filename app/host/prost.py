@@ -85,7 +85,6 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
             cat_cols=cat_cols,
             verbose=0,
         )
-
         host = Host(
             ra_deg=hosts["host_ra"][0],
             dec_deg=hosts["host_dec"][0],
