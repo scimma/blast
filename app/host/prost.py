@@ -7,8 +7,8 @@ from astropy.coordinates import SkyCoord
 import pandas as pd
 from scipy.stats import gamma, halfnorm, uniform
 # from astropy.cosmology import LambdaCDM
-from host.astro_prost.helpers import SnRateAbsmag
-from host.astro_prost.associate import associate_sample
+from astro_prost.helpers import SnRateAbsmag
+from astro_prost.associate import associate_sample
 
 
 def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
@@ -63,7 +63,7 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
         priors['redshift'] = priorfunc_z
         transient_catalog['redshift'] = transient.redshift
 
-    catalogs = ["glade", "decals", "panstarrs"]
+    catalogs = ["glade", "decals", "panstarrs", "skymapper"]
     transient_coord_cols = ("RA", "Dec")
     # transient_name_col = "IAUID"
     parallel = False
