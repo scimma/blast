@@ -7,8 +7,8 @@ from astropy.coordinates import SkyCoord
 import pandas as pd
 from scipy.stats import gamma, halfnorm, uniform
 # from astropy.cosmology import LambdaCDM
-from astro_prost.helpers import SnRateAbsmag
-from astro_prost.associate import associate_sample
+from host.astro_prost.helpers import SnRateAbsmag
+from host.astro_prost.associate import associate_sample
 
 
 def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):

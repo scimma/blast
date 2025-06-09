@@ -218,7 +218,7 @@ def build_skymapper_url(ra, dec, search_radius, release, catalog):
     )
     return url
 
-def fetch_skymapper_sources(search_pos, search_rad, cat_cols, calc_host_props, logger=None, release='dr2'):
+def fetch_skymapper_sources(search_pos, search_rad, cat_cols, calc_host_props, logger=None, release='dr4'):
     """Queries the skymapper catalogs (https://skymapper.anu.edu.au/about-skymapper/).
 
     Parameters
@@ -250,7 +250,7 @@ def fetch_skymapper_sources(search_pos, search_rad, cat_cols, calc_host_props, l
     if search_rad is None:
         search_rad = Angle(60 * u.arcsec)
 
-    rad_deg = search_rad.deg
+    rad_deg = search_rad.to(u.deg).value
     if rad_deg > MAX_RAD_DEG:
         logger.warning("Search radius at this distance >500''! Reducing to ensure a fast skymapper query.")
         rad_deg = MAX_RAD_DEG
@@ -279,9 +279,12 @@ def fetch_skymapper_sources(search_pos, search_rad, cat_cols, calc_host_props, l
     candidate_hosts = phot_df_pivot.merge(master_df, on='object_id', how='outer')
     candidate_hosts.rename(columns={'object_id':'objID', 'raj2000':'ra', 'dej2000':'dec'}, inplace=True)
 
-    # very basic cut to get rid of bad candidates
-    for band in 'ugriz':
-        candidate_hosts = candidate_hosts[candidate_hosts[f'{band}_ngood'] >= 1]
+    # very basic cut to get rid of bad candidates - require ngood >= 1 in g OR r band
+    # Note: SkyMapper doesn't have ngood columns, so skip this filtering for SkyMapper
+    if 'g_ngood' in candidate_hosts.columns and 'r_ngood' in candidate_hosts.columns:
+        g_good = (candidate_hosts['g_ngood'].notna()) & (candidate_hosts['g_ngood'] >= 1)
+        r_good = (candidate_hosts['r_ngood'].notna()) & (candidate_hosts['r_ngood'] >= 1)
+        candidate_hosts = candidate_hosts[g_good | r_good]
 
     candidate_hosts.replace(DUMMY_FILL_VAL, np.nan, inplace=True)
     candidate_hosts.reset_index(inplace=True, drop=True)
@@ -323,10 +326,10 @@ def fetch_panstarrs_sources(search_pos, search_rad, cat_cols, calc_host_props, l
     if search_rad is None:
         search_rad = Angle(60 * u.arcsec)
 
-    rad_deg = search_rad.deg
+    rad_deg = search_rad.to(u.deg).value
     if rad_deg > MAX_RAD_DEG:
         logger.warning("Search radius at this distance >500''! Reducing to ensure a fast pan-starrs query.")
-        rad_dec = MAX_RAD_DEG
+        rad_deg = MAX_RAD_DEG
 
     # load table metadata to avoid a query
     pkg_data_file = pkg_resources.files('astro_prost') / 'data' / 'panstarrs_metadata.pkl'
@@ -440,7 +443,7 @@ def fetch_decals_sources(search_pos, search_rad, cat_cols, calc_host_props, rele
     if search_rad is None:
         search_rad = Angle(60 * u.arcsec)
 
-    rad_deg = search_rad.deg
+    rad_deg = search_rad.to(u.deg).value
 
     result = qC.query(
         sql=f"""SELECT
@@ -564,19 +567,30 @@ def calc_shape_props_skymapper(candidate_hosts):
     PA = candidate_hosts["r_pa"].values
     e_PA = candidate_hosts["r_e_pa"].values
 
+    # Handle nan values in shape parameters - set to valid defaults
+    a = np.where(np.isnan(a), SIZE_FLOOR, np.maximum(a, SIZE_FLOOR))
+    b = np.where(np.isnan(b), SIZE_FLOOR, np.maximum(b, SIZE_FLOOR))
+    
+    # Handle nan values in error measurements - set to uncertainty floor
+    e_a = np.where(np.isnan(e_a), SIGMA_SIZE_FLOOR * a, np.maximum(e_a, SHAPE_FLOOR))
+    e_b = np.where(np.isnan(e_b), SIGMA_SIZE_FLOOR * b, np.maximum(e_b, SHAPE_FLOOR))
+    
+    # Handle nan values in position angle measurements
+    PA = np.where(np.isnan(PA), 0.0, PA)
+    e_PA = np.where(np.isnan(e_PA), SIGMA_SIZE_FLOOR * np.abs(PA), np.maximum(e_PA, SHAPE_FLOOR))
+
     a_over_b = a / b
     a_over_b = np.clip(a_over_b, 0.1, 10)
 
-    # combine errors in quadrature
-    a_over_b_std = np.maximum(
-        SHAPE_FLOOR,
-        np.sqrt((e_a / b)**2 + (a * e_b / b**2)**2)
-    )
+    # combine errors in quadrature - ensure no nan values
+    a_over_b_std = np.sqrt((e_a / b)**2 + (a * e_b / b**2)**2)
+    a_over_b_std = np.where(np.isnan(a_over_b_std), SIGMA_SIZE_FLOOR * a_over_b, a_over_b_std)
+    a_over_b_std = np.maximum(a_over_b_std, SHAPE_FLOOR)
 
     # degrees to radius
     phi = np.radians(PA)
     phi_std = np.radians(e_PA)
-    phi_std = np.maximum(SHAPE_FLOOR, phi_std)
+    phi_std = np.maximum(phi_std, SHAPE_FLOOR)
 
     #return result
     return a, e_a, a_over_b, a_over_b_std, phi, phi_std
@@ -817,6 +831,8 @@ def fetch_catalog_data(self, transient, search_rad, cosmo, logger, cat_cols, cal
     """
     if self.name not in self.catalog_functions:
         raise ValueError(f"Unknown catalog: {self.name}. Open a pull request to add functionality for other catalogs!")
+
+    init(autoreset=True)
 
     catalog_func = self.catalog_functions[self.name]
     self.limiting_mag = DEFAULT_LIMITING_MAG.get(self.name, None)
@@ -1441,17 +1457,17 @@ class Transient:
 
         if best_idx < n_gals:
             # This is a real galaxy
-            self.logger.info(Fore.GREEN	+ "Association successful!")
+            self.logger.info(Fore.GREEN	+ "Association successful!"+Style.RESET_ALL)
             self.best_host = best_idx
         else:
             # no galaxy found
             self.best_host = -1
             if best_idx == n_gals:
-                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely outside the search cone.")
+                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely outside the search cone."+Style.RESET_ALL)
             elif best_idx == (n_gals + 1):
-                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely missing from the catalog.")
+                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely missing from the catalog."+Style.RESET_ALL)
             elif best_idx == (n_gals + 2):
-                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely hostless.")
+                self.logger.warning(Fore.YELLOW+"Association failed. Host is likely hostless."+Style.RESET_ALL)
 
         # Now figure out second best index
         if len(top_idxs) > 1:
@@ -2434,11 +2450,11 @@ def build_skymapper_candidates(transient,
             temp_sizes = temp_sizes[left_idxs]
             temp_sizes_std = temp_sizes_std[left_idxs]
 
-            logger.info(f"Removed {len(shred_idxs)} flagged panstarrs sources.")
+            logger.info(f"Removed {len(shred_idxs)} flagged skymapper sources.")
         else:
-            logger.info("No panstarrs shreds found.")
+            logger.info("No skymapper shreds found.")
 
-    galaxies, cat_col_fields = build_galaxy_array(candidate_hosts, cat_cols, transient_name, "panstarrs", release, logger)
+    galaxies, cat_col_fields = build_galaxy_array(candidate_hosts, cat_cols, transient_name, "skymapper", release, logger)
     if galaxies is None:
         return None, []
     n_galaxies = len(galaxies)
