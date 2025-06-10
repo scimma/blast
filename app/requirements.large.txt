@@ -1,4 +1,4 @@
 astro-prospector==1.3.0
 torch==2.2.2
 sbi==0.22.0
-astro-prost==1.2.10
+astro-prost==1.2.11
