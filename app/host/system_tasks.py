@@ -1,6 +1,3 @@
-import glob
-import shutil
-
 from celery import shared_task
 from dateutil import parser
 from django.conf import settings
@@ -26,12 +23,8 @@ from .transient_name_server import get_transients_from_tns
 from .transient_name_server import tns_staging_blast_transient
 from .transient_name_server import tns_staging_file_date_name
 from .transient_name_server import update_blast_transient
-# Configure logging
-import os
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 class TNSDataIngestion(SystemTaskRunner):
@@ -170,32 +163,6 @@ class IngestMissedTNSTransients(SystemTaskRunner):
         return False
 
 
-class DeleteGHOSTFiles(SystemTaskRunner):
-    def run_process(self):
-        """
-        Removes GHOST files
-        """
-        dir_list = glob.glob("transients_*/")
-
-        for dir in dir_list:
-            try:
-                shutil.rmtree(dir)
-            except OSError as e:
-                print("Error: %s : %s" % (dir, e.strerror))
-
-        dir_list = glob.glob("quiverMaps/")
-
-        for dir in dir_list:
-            try:
-                shutil.rmtree(dir)
-            except OSError as e:
-                print("Error: %s : %s" % (dir, e.strerror))
-
-    @property
-    def task_name(self):
-        return "Delete GHOST files"
-
-
 class SnapshotTaskRegister(SystemTaskRunner):
     def run_process(self, interval_minutes=100):
         """
@@ -228,59 +195,66 @@ class SnapshotTaskRegister(SystemTaskRunner):
         return "Snapshot task register"
 
 
-class LogTransientProgress(SystemTaskRunner):
+class RetriggerIncompleteWorkflows(SystemTaskRunner):
+    def reset_workflow_if_not_processing(self, transient, worker_tasks):
+        # If there is an active or queued task with the transient's name as the argument,
+        # the transient workflow is still processing.
+        if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
+            logger.debug(f'''Workflow for transient "{transient.name}" is queued or running.''')
+            return False
+        logger.debug(f'''Detected stalled workflow for transient "{transient.name}". '''
+                     '''Resetting "processing" statuses to "not processed"...''')
+        # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
+        processing_status = Status.objects.get(message__exact="processing")
+        not_processed_status = Status.objects.get(message__exact="not processed")
+        processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                            if task.status == processing_status]
+        for task in processing_tasks:
+            task.status = not_processed_status
+            task.save()
+        return True
+
+    def inspect_worker_tasks(self):
+        inspect = app.control.inspect()
+        all_worker_tasks = []
+        # Query the task workers to collect the name and arguments for all the queued and active tasks.
+        for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
+            items = inspect_func(safe=True).items()
+            tasks = [task for worker, worker_tasks in items for task in worker_tasks]
+            all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
+        return all_worker_tasks
+
     def run_process(self):
         """
-        Updates the processing status for all transients.
+        Retrigger incomplete workflows.
         """
-        transients = Transient.objects.all()
 
-        for transient in transients:
-            tasks = TaskRegister.objects.filter(
-                Q(transient__name__exact=transient.name) & ~Q(
-                    task__name=self.task_name)
-            )
-            processing_task_qs = TaskRegister.objects.filter(
-                transient__name__exact=transient.name, task__name=self.task_name
-            )
-
-            total_tasks = len(tasks)
-            completed_tasks = len(
-                [task for task in tasks if task.status.message == "processed"]
-            )
-            blocked = len(
-                [task for task in tasks if task.status.type == "error"])
-
-            progress = "processing"
-
-            if total_tasks == 0:
-                progress = "processing"
-            elif total_tasks == completed_tasks:
-                progress = "completed"
-            elif total_tasks < completed_tasks:
-                progress = "processing"
-            elif blocked > 0:
-                progress = "blocked"
-
-            # save task
-            if len(processing_task_qs) == 1:
-                processing_task = processing_task_qs[0]
-                processing_task.status = Status.objects.get(
-                    message=progress if progress != "completed" else "processed"
-                )
-                processing_task.save()
-
-            # save transient progress
-            transient.processing_status = progress
-            transient.save()
+        all_worker_tasks = self.inspect_worker_tasks()
+        # Iterate over incomplete transient workflows and retrigger stalled
+        for incomplete_transient in Transient.objects.filter(Q(progress__lt=100) | Q(processing_status='processing')):
+            logger.debug(f'''Analyzing incomplete transient workflow "{incomplete_transient.name}"...''')
+            if self.reset_workflow_if_not_processing(incomplete_transient, all_worker_tasks):
+                transient_workflow.delay(incomplete_transient.name)
 
     @property
     def task_name(self):
-        return "Log transient processing status"
+        return "Retrigger incomplete workflows"
+
+    @property
+    def task_frequency_seconds(self):
+        return 1200
 
     @property
     def task_initially_enabled(self):
-        return False
+        return True
+
+
+@shared_task(
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def retrigger_incomplete_workflows():
+    RetriggerIncompleteWorkflows().run_process()
 
 
 class TrimTransientImages(SystemTaskRunner):
@@ -333,7 +307,7 @@ def tns_data_ingestion(self):
         return all_active_tasks
     # Ensure that there are no concurrent executions of the TNS ingestion to avoid exceeding the TNS API rate limits.
     # Use the Celery app control system to list all active tns_data_ingestion tasks, and only contact TNS if there are
-    # no running instances. Running or stalled instances that are older than the TNS_INGEST_TIMEOUT value should be 
+    # no running instances. Running or stalled instances that are older than the TNS_INGEST_TIMEOUT value should be
     # aborted and terminated so they do not permanently block the ingest; however, the methods available to terminate
     # these processes in Celery are unreliable, so additional monitoring may be necessary.
     task_name = 'host.system_tasks.tns_data_ingestion'
@@ -353,8 +327,8 @@ def tns_data_ingestion(self):
             app.control.terminate(task['id'], signal='SIGKILL')
     # If there is still an active task other than this current task, abort.
     if [task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]:
-    # # When testing TNS query mutex locking mechanism, use the following line instead to allow some concurrency:
-    # if len([task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]) > 2:
+        # # When testing TNS query mutex locking mechanism, use the following line instead to allow some concurrency:
+        # if len([task for task in get_all_active_tasks() if task['name'] == task_name and task['id'] != task_id]) > 2:
         logger.info(f'''There is already an active "{task_name}" task. Aborting.''')
         return
     # Run the TNS ingestion
@@ -375,22 +349,6 @@ def initialize_transient_task():
 )
 def snapshot_task_register():
     SnapshotTaskRegister().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def log_transient_processing_status():
-    LogTransientProgress().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def delete_ghost_files():
-    DeleteGHOSTFiles().run_process()
 
 
 @shared_task(

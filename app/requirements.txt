@@ -30,3 +30,5 @@ minio==7.2.8
 fsspec==2025.2.0
 s3fs==2025.2.0
 mozilla-django-oidc==4.0.1
+photutils==2.2.0
+astroquery==0.4.10

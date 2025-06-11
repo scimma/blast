@@ -1,325 +1,397 @@
 [
   {
     "path": "cutout_cdn/2010H/2MASS/2MASS_H.fits",
-    "version_id": "5LFWSFPPKPZcfmOu1YFcpMUvS5CfXof",
+    "version_id": "L4btbJ-m3aum0AqwClYotWM-XkqgGcc",
     "etag": "0c56e643f054853e2b100cb095779b36",
     "size": 262080
   },
   {
     "path": "cutout_cdn/2010H/2MASS/2MASS_J.fits",
-    "version_id": "vzMXEek0631QlafKtdk6kTSMPyf36CE",
+    "version_id": "AfFS5n-h5TlpsbSEeDPlVZUEbrsyJuJ",
     "etag": "32b34d720c65de0e2362de04f8b669ee",
     "size": 262080
   },
   {
     "path": "cutout_cdn/2010H/2MASS/2MASS_K.fits",
-    "version_id": "tx4CUO97A8-5Rt72LjJTYe3RbiKm..r",
+    "version_id": "rIpbZq8byXi39znb3qiRToruJyTtosS",
     "etag": "ff6b28e951156bb6aab58633585580a1",
     "size": 262080
   },
   {
+    "path": "cutout_cdn/2010H/DES/DES_g.fits",
+    "version_id": "amY06KknEep1aQ99hr.sIw9cs6J1aNQ",
+    "etag": "a7d1feff7606096d1b41542f43ef4fe2",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010H/DES/DES_r.fits",
+    "version_id": "6W8Xnkuvsks2Od4B14nJjp4KWsG0AKu",
+    "etag": "79caec3b1310f0eec662af1966cd5b0a",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010H/DES/DES_z.fits",
+    "version_id": "KNvJI6Kok.oiK0CDwXLA4ZHi-KX.F9.",
+    "etag": "a369f2cdb11dcc4512779b69999ada62",
+    "size": 7467840
+  },
+  {
     "path": "cutout_cdn/2010H/GALEX/GALEX_FUV.fits",
-    "version_id": "mGO.uSmi9pZ.CgRYq9XrYuAN.oGE4Ri",
+    "version_id": "cUGHSkh.4W.vmKwK0jWU.6h5wvPE44A",
     "etag": "86fd64d8bcc21e71cc530dc97a9e1de6",
     "size": 241920
   },
   {
     "path": "cutout_cdn/2010H/GALEX/GALEX_NUV.fits",
-    "version_id": "b2nGyDjNHdmjgheqNl-NMXt1bNgPrO1",
+    "version_id": "K8qp2451YfBOAl9-IWixxNRyUu4mSqb",
     "etag": "5f67b7390915cae526171933ca84430c",
     "size": 241920
   },
   {
     "path": "cutout_cdn/2010H/PanSTARRS/PanSTARRS_g.fits",
-    "version_id": "VOO7JvsUO1ofwLu-g2APzS5xhuyhW-2",
-    "etag": "6fbbdb567d9cba2fee388e4c600a8657",
-    "size": 7680960
+    "version_id": "entDwh8iURHf3DyG3TaP.MOkRvmTuhS",
+    "etag": "db396569ebc8bc3d136931076eef337e",
+    "size": 8311680
   },
   {
     "path": "cutout_cdn/2010H/PanSTARRS/PanSTARRS_i.fits",
-    "version_id": "c-cCuuwZI958.8blXJ0s9yNCwUoZAUr",
-    "etag": "27d5e9ff5c691d918887d235ad587d0f",
-    "size": 7686720
+    "version_id": "31ZXDEcWbawgBfjy8DvdPongORqQVY8",
+    "etag": "f59abfe88b28dcd0c58d184d5fe6dad3",
+    "size": 8317440
   },
   {
     "path": "cutout_cdn/2010H/PanSTARRS/PanSTARRS_r.fits",
-    "version_id": "RJxiTBIBSWaGlzGD6MvIbKW30a13LkW",
-    "etag": "533e40aa0f262918f9f7ea90c2c255d8",
-    "size": 7683840
+    "version_id": "t8njOdcKWeKtPFTtUuW9ulRjnfbQwae",
+    "etag": "7008aaeb77430689742d0969e0c133c3",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010H/PanSTARRS/PanSTARRS_y.fits",
-    "version_id": "vAZB2gIpxufqcyi1tMe5RwBV3SRA0aE",
-    "etag": "838982d3fa02828150739f6b6f411208",
-    "size": 7683840
+    "version_id": "z6-JlzMjAdHtf2eGCC3GNdweVrm69l7",
+    "etag": "ad138543077f7002fe85e740505f8db3",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010H/PanSTARRS/PanSTARRS_z.fits",
-    "version_id": "OpnzlZW1LpvQ8O3sWKwSM1.Zt9V8b0Q",
-    "etag": "a29689dfba83525d34b7d02cc0a2d701",
-    "size": 7683840
+    "version_id": "8xjb51ORvb7KM-cinzN-69SOHkEzyQm",
+    "etag": "d31c80d7aaba38255072e91e8476abc9",
+    "size": 8314560
+  },
+  {
+    "path": "cutout_cdn/2010H/SDSS/SDSS_g.fits",
+    "version_id": "XtuXLdEURvADPjvS75PsyuXhSha9lhN",
+    "etag": "648fa477c47d6451e9944fbec7dea711",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010H/SDSS/SDSS_i.fits",
-    "version_id": "D3mPNAhmZRlLgcsMIwFlgCFjxJ-ia9I",
+    "version_id": "ICwIUcJVGMyG5.009z-Ca2-7bs-5451",
     "etag": "3cda88d156d494b00889b4e8e9f303d1",
     "size": 3487680
   },
   {
     "path": "cutout_cdn/2010H/SDSS/SDSS_r.fits",
-    "version_id": ".IU91uZEWn7UWQfgNh1bMSdRjDVLp4m",
+    "version_id": "SRBbA2ENuIgwTSHxGehH3ocAxl3hFx0",
     "etag": "7b85086abd8886d33cf43d6d83c67f89",
     "size": 3487680
   },
   {
     "path": "cutout_cdn/2010H/SDSS/SDSS_u.fits",
-    "version_id": "V.DInKT1OOmPJN7rGtXr3f7G6.5FglG",
+    "version_id": "4Jr1Atmk5U-ZChsUHtIDM.2w7frxcXO",
     "etag": "8dedc972b7e7a869caed168102941262",
     "size": 3487680
   },
   {
     "path": "cutout_cdn/2010H/SDSS/SDSS_z.fits",
-    "version_id": "3ybMAPewjOjbR6bSbGlXGV7EbK5.66D",
+    "version_id": "wlcsMgmk92mQlIBhdFr8FHZ0.k5kE-t",
     "etag": "43ad196cacba520a14618f6295235887",
     "size": 3487680
   },
   {
     "path": "cutout_cdn/2010H/WISE/WISE_W1.fits",
-    "version_id": "4KXRJytxh1E0cCwY4SeY6fsEf4BSWJw",
-    "etag": "3114b65b447d70c1bdfd67b67862cc90",
+    "version_id": "RmMdimaihVUj25mO44T7dio7HhjZlNc",
+    "etag": "99cf21aa8ff58c64d61caa8063b6e1fd",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010H/WISE/WISE_W2.fits",
-    "version_id": "2iHoin4siUfLdTeTA9Eq7D1SlMPiCov",
+    "version_id": "ApnGSi-sWHddauAcQU8DDuiWPGEbpjV",
     "etag": "5888cd624362227be6e5003044299b6b",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010H/WISE/WISE_W3.fits",
-    "version_id": "C.1LNK-JfTID761wYcxxHEqsihmtj0I",
+    "version_id": "REh4hRTY5NLqjmMFX66hzbdFBvaQWOg",
     "etag": "a6699d16bb41806c510e3acde92d2484",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010H/WISE/WISE_W4.fits",
-    "version_id": "S7KIXOiGLPeFsUPAfVdVHkBkY78-q6f",
+    "version_id": "PVESLt6l-f-Z4NfhHD2ULMVZpIz9z7P",
     "etag": "7a9b42b247dc4c81b217962bbe8949f0",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010ag/2MASS/2MASS_H.fits",
-    "version_id": "GAo1Lco5PX4fppJe47KDk64pt0MnTXN",
-    "etag": "92b785e5f56c5dcc92fc5acd38a9987f",
-    "size": 521280
+    "version_id": "1l1TAUZNCf-Rv8smg5tswXoepO2WtZ.",
+    "etag": "68e8056662e177ddcbe81cb10f8f82f0",
+    "size": 452160
   },
   {
     "path": "cutout_cdn/2010ag/2MASS/2MASS_J.fits",
-    "version_id": "6YdgjOck5-Z8uNl.4s2.bxprMuaFJJ7",
-    "etag": "140eaef1400719f7f8e4a016e43bce97",
-    "size": 521280
+    "version_id": "0PiCqzsUwrH7Wmrcw2zITK13tgFB1fM",
+    "etag": "b05ccbe014d2852d2aa7347492a9d9e5",
+    "size": 452160
   },
   {
     "path": "cutout_cdn/2010ag/2MASS/2MASS_K.fits",
-    "version_id": "dYCi31aFBcpkg3fBxYrhC2CX6o2OtQp",
-    "etag": "fa29dfe9ed2c55db1d7ffeca6cf5092d",
-    "size": 521280
+    "version_id": "t0QCB6wuk1Fy.SzHBX7-4uBAE9pol6q",
+    "etag": "f872f0bec07650cb02722a25eb0d5fba",
+    "size": 452160
+  },
+  {
+    "path": "cutout_cdn/2010ag/DES/DES_g.fits",
+    "version_id": "HLPl9jsJ7WIYBoYgZzunJ0dB1BCZM1n",
+    "etag": "0f91c3ed7573df1053334b52962f862e",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010ag/DES/DES_r.fits",
+    "version_id": "MVvHzsucsrLmwLycDrBrG.T0fl66sNd",
+    "etag": "d5584d7cde95e9429453dfac05f2df1c",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010ag/DES/DES_z.fits",
+    "version_id": "RB85sPkjmVnNHdeuaFDHK0whCklllYf",
+    "etag": "38e9a4ea7450e07258ae6d88a94f1ae7",
+    "size": 7467840
   },
   {
     "path": "cutout_cdn/2010ag/GALEX/GALEX_FUV.fits",
-    "version_id": "uzKh8cMRayFn1knESsWT8fPAkT2zHNH",
+    "version_id": "USVMe1aMy-nl8Z3-Nshh-8wTP3NHrQI",
     "etag": "7ac134a95792682761fd5cd654494448",
     "size": 241920
   },
   {
     "path": "cutout_cdn/2010ag/GALEX/GALEX_NUV.fits",
-    "version_id": "WY-LqjPTgMfBcKbCoIOllKY8asBSYsK",
+    "version_id": "LzjR9qchFCEb6hpWO6uKgf6d8RoKzre",
     "etag": "b79411e2dd0e29dcb9ba6e2ff34df378",
     "size": 241920
   },
   {
     "path": "cutout_cdn/2010ag/PanSTARRS/PanSTARRS_g.fits",
-    "version_id": "n018Bhsb6yD0xzemvfDLigYf0dUa.i4",
-    "etag": "47457ac680dbca56ab5c2e64f80af940",
-    "size": 7683840
+    "version_id": "LvthT98Tg5MjcCcRppHSxaSjMg4Gx3p",
+    "etag": "83c4eb741912ba78e3d9612ef303d92d",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010ag/PanSTARRS/PanSTARRS_i.fits",
-    "version_id": "JMbdEPGkK39j4AUYi6Tk1qldHgn60AU",
-    "etag": "e261bc7d3065b141379928c7af8da841",
-    "size": 7689600
+    "version_id": "omdXPUjSG3lvhX8YfzVpVnu5iejj.xb",
+    "etag": "26530bc14a71440436996487d13f4412",
+    "size": 8320320
   },
   {
     "path": "cutout_cdn/2010ag/PanSTARRS/PanSTARRS_r.fits",
-    "version_id": "mwhmYAMCLnKXWoOXxeu2L4rrmxDNBZw",
-    "etag": "303a878614a0c58cb977c662179c9e56",
-    "size": 7683840
+    "version_id": "9nJ5EGYegfS0ZIxZIJURmaBM-LH0a-Y",
+    "etag": "d7d291eb38ea141490cbaabd151c26d8",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010ag/PanSTARRS/PanSTARRS_y.fits",
-    "version_id": "dFpzYDpfA2zvhXWrwYBiFiyOQAu6qe1",
-    "etag": "1ff610969f688b5f60d5f77628acdf30",
-    "size": 7683840
+    "version_id": "rlJfgL5Xi3dfF2vvfHdx5PS4U1glb6l",
+    "etag": "106cbbf5b879e442057795ccacf8d929",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010ag/PanSTARRS/PanSTARRS_z.fits",
-    "version_id": "eNyncmhoiCCW6XB60E4FJWDbwIEjWxR",
-    "etag": "1b51cc2c4ce0a4b3ba7c16494594b28c",
-    "size": 7683840
+    "version_id": "x3BEVNmViR5BMuRuKUCbDcumsQsZFY1",
+    "etag": "6d49cd3c47267cb67b7af0958579b615",
+    "size": 8314560
+  },
+  {
+    "path": "cutout_cdn/2010ag/SDSS/SDSS_g.fits",
+    "version_id": "HrvKwzBQJP4yNGyo3VwHS3Ig9Fm8ew-",
+    "etag": "c54555acf6604272cdf897c3ada607ca",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010ag/SDSS/SDSS_i.fits",
-    "version_id": "WKrtEyNgtHko2AQELdRBSvzrbc3Pjjw",
-    "etag": "adcf684149ffb3a05c2f12975fd07da9",
-    "size": 6036480
+    "version_id": ".TtZ9gNfBfEvz.5kaEjgtGHlfBYmfr8",
+    "etag": "43dcc19e4f57bec67f32ca29b5091764",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010ag/SDSS/SDSS_r.fits",
-    "version_id": "lmHdUG0Ex6trm-gZOSx6nmDp8wpV7bL",
-    "etag": "0ec6aa23a859e893ca47d3f6294ac078",
-    "size": 6036480
+    "version_id": "u7cIBZy00hGRBdGYKfDlJGi737bRlwZ",
+    "etag": "335072b7254def7cba8d6bc4a25f92c8",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010ag/SDSS/SDSS_u.fits",
-    "version_id": "whgx9OfFD0Fze0-6WDMCISBx8C5Ervu",
-    "etag": "698da634eedd6447b80e3ca12eaca1ff",
-    "size": 6036480
+    "version_id": "MHVb..GQB.3Zq5ggdbNu9nrYcZMJZV1",
+    "etag": "c9410b594a96c36ad5ed2a5c34592a00",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010ag/SDSS/SDSS_z.fits",
-    "version_id": "6sYuQPhumiNpr.hJtDALyF.9yAa43EG",
-    "etag": "0053f57d0f8c7d184bf243c394442bea",
-    "size": 6036480
+    "version_id": "U2ADjJs0L9nkWYKN6ZsjSNQnmIlTxhd",
+    "etag": "6fc1486f25bab062ec8e09c991f91192",
+    "size": 3487680
   },
   {
     "path": "cutout_cdn/2010ag/WISE/WISE_W1.fits",
-    "version_id": ".iIM3SBosgHG6PypO76ycPlwpklfqhN",
+    "version_id": "lG53IlLBGMRElN6ckMSgTujWcx4kHoc",
     "etag": "e01a4426b6f7c2b8bc275dd0f9395f39",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010ag/WISE/WISE_W2.fits",
-    "version_id": "yMUi9FtosI31JkrFW8Q-vmoucnQiqcQ",
+    "version_id": "seksQAcsfIzuPx5zOPJiGBhSY4UV1.9",
     "etag": "c8bfdd4bc504307c7f5e2f75fd460eb9",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010ag/WISE/WISE_W3.fits",
-    "version_id": "sMAzToNNICu7-hgyUvN10YrcbSGxluN",
-    "etag": "a38684d2e2dda6bb0e57367251821cef",
+    "version_id": "Icw.R9KaxvvSGhDcLUtUVT3brP3gnc1",
+    "etag": "4a4389f29890018e857b899ae37ef867",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010ag/WISE/WISE_W4.fits",
-    "version_id": "GNvk03wvvVBAktzkKNqkiP9eVmp.VgU",
+    "version_id": "nCsVy.Oji.hBXDOAP5H5XCX.Z9uTDYA",
     "etag": "93431c73a550876fbbe8cd701d07ce13",
     "size": 282240
   },
   {
     "path": "cutout_cdn/2010ai/2MASS/2MASS_H.fits",
-    "version_id": "m9plT1ZwYxRQsWbZkQEiJMkOUxqTgIf",
-    "etag": "b8a19d688e3e760697b0b134e9a2ec3c",
-    "size": 521280
+    "version_id": "ueYA4YHzoYrC9Vel196S28oauOuZqDq",
+    "etag": "5e976330a245f94a966d090232eba80a",
+    "size": 524160
   },
   {
     "path": "cutout_cdn/2010ai/2MASS/2MASS_J.fits",
-    "version_id": ".wzVlXQvX47kjjrSfhDQ7j7b6DGEWIq",
-    "etag": "a5c1e785586ddc9fe2a19ab7aa0bd6b9",
-    "size": 521280
+    "version_id": "eGH-DXDEn9T76D3iK7JswwNDdoHfr7I",
+    "etag": "b9fc8004d232697382f8511b3de8c27e",
+    "size": 524160
   },
   {
     "path": "cutout_cdn/2010ai/2MASS/2MASS_K.fits",
-    "version_id": "YBbErlSMjB5BmayhK8qtASGzPuMlb2h",
-    "etag": "40d7b63966c8b19b311c630d8e9a1137",
-    "size": 521280
+    "version_id": "RB7llRQe7wgud1KGlk3L1CRjqqBzS2M",
+    "etag": "3f9f24c840f5c19d1318b3ec351f3734",
+    "size": 524160
+  },
+  {
+    "path": "cutout_cdn/2010ai/DES/DES_g.fits",
+    "version_id": "gI6IH-PiyAT1BDhCYBmzI-65Ja2c4wn",
+    "etag": "f71090147a0efec8d7d264ad0e774243",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010ai/DES/DES_r.fits",
+    "version_id": "FCojGQPNEsxzhVoN3uvFSuYSHlnqvFL",
+    "etag": "3c75ab086893ebc9a95f553b471ac148",
+    "size": 7467840
+  },
+  {
+    "path": "cutout_cdn/2010ai/DES/DES_z.fits",
+    "version_id": "qKcKXYAzuVwpPJBcQNjMb1KgPC1L.EP",
+    "etag": "da83e4e0510573b880341c1748f97458",
+    "size": 7467840
   },
   {
     "path": "cutout_cdn/2010ai/GALEX/GALEX_FUV.fits",
-    "version_id": "F1oxZt-6tbLFkKnV5WebN9WSWVDbIbz",
+    "version_id": "-e1t85MX3S5rXzPZ3CJvD19yPGUpTrj",
     "etag": "c43b4f34dbdea2ebba595b37ce6d8ea2",
     "size": 311040
   },
   {
     "path": "cutout_cdn/2010ai/GALEX/GALEX_NUV.fits",
-    "version_id": "RLH8wxOmnuP8yVsPtkHCHJHIsKxjiOZ",
+    "version_id": ".sd1u2S5rGgFmjYqiZeWkyjEYUpnwlV",
     "etag": "e3d38b9194d459a9c7406ff621dd4bf1",
     "size": 334080
   },
   {
     "path": "cutout_cdn/2010ai/PanSTARRS/PanSTARRS_g.fits",
-    "version_id": "11zja7ANyxeOdJ.pdFeSKqhbJAM27VR",
-    "etag": "100f86bd4a4c6762e1c9a5e2fd684e56",
-    "size": 7678080
+    "version_id": "6Q9lItgPt0cK6UVQf3jtloQrT80U6MP",
+    "etag": "a7a1556702c07c0f37715cd818a9a7d1",
+    "size": 8308800
   },
   {
     "path": "cutout_cdn/2010ai/PanSTARRS/PanSTARRS_i.fits",
-    "version_id": "6T7p3bv8iiYb7bGQPMvYa-nzLqXp.Hs",
-    "etag": "bc49db26b5015bf59c0abb7243505c3a",
-    "size": 7680960
+    "version_id": "1j1fct60GOs6dhWqdfDHDRNtrn5kr.x",
+    "etag": "d83963fa02eabc02663673bf6c013bf3",
+    "size": 8311680
   },
   {
     "path": "cutout_cdn/2010ai/PanSTARRS/PanSTARRS_r.fits",
-    "version_id": "fJUod0m5PA.qjz1PO2kHE8G7Bfj5pOg",
-    "etag": "468df84324106fe1364b3b8162682c23",
-    "size": 7680960
+    "version_id": "6UrBcWA7fx8MOgYqOwua60KxUzM39Oa",
+    "etag": "2f9ed63c42b6b8fff0189f85a2d68963",
+    "size": 8311680
   },
   {
     "path": "cutout_cdn/2010ai/PanSTARRS/PanSTARRS_y.fits",
-    "version_id": "n8lytMdFonF24gTnc3RWO.myfN9gt7p",
-    "etag": "5f62b510aafdef78a615a03c5a49a5f7",
-    "size": 7683840
+    "version_id": "yyVQ6lTAkhJ3j6TmZ1DKekXUmPFvkZe",
+    "etag": "499cac6fcd33460b007d3150d1b94efd",
+    "size": 8314560
   },
   {
     "path": "cutout_cdn/2010ai/PanSTARRS/PanSTARRS_z.fits",
-    "version_id": "XvAjsSQNkzoi7q.QJEs4cUYw13xV1vI",
-    "etag": "a66c497500eaf3459043ff655d07d754",
-    "size": 7680960
+    "version_id": "3I.A8dy9ZNWhP91iQXeO1aF3SOPY0ov",
+    "etag": "2c58a8c0e4bebc8e2107653d6d27a211",
+    "size": 8311680
+  },
+  {
+    "path": "cutout_cdn/2010ai/SDSS/SDSS_g.fits",
+    "version_id": "b.UG9wVRfq5ARsLDC1xGskj5kZvwtJF",
+    "etag": "f3a4b3a9400e8971449ff307c94c69c0",
+    "size": 1969920
   },
   {
     "path": "cutout_cdn/2010ai/SDSS/SDSS_i.fits",
-    "version_id": "hFaTonruPIdcTvE58JRlwMUHLEWPfxg",
-    "etag": "b0cd2d4f63c5c9ea400566283368a361",
-    "size": 6036480
+    "version_id": "yvClRQILDiJU32grbn6DtraichjNdoL",
+    "etag": "e8869435a750b767a02efb7fce328de3",
+    "size": 1949760
   },
   {
     "path": "cutout_cdn/2010ai/SDSS/SDSS_r.fits",
-    "version_id": "tPcM-PlT8xNAqe0u5P3pxmZsq5yp4My",
-    "etag": "e004a99dd230c59b1ad539c762db55ca",
-    "size": 6036480
+    "version_id": "l3ALr2k8RBeO7CiOnkGkzR3XV7ZwjaD",
+    "etag": "467e686d5b1fa5711da0002057e78aa3",
+    "size": 1932480
   },
   {
     "path": "cutout_cdn/2010ai/SDSS/SDSS_u.fits",
-    "version_id": "uH8ugau9Yczn-5OCN74Hmcp86a9-6Rt",
-    "etag": "9fe8106c9c4b751a591641e24559bef5",
-    "size": 6036480
+    "version_id": "n9kBCndeONYtnbROhih9uFckvBAjBnu",
+    "etag": "272ed7d582e84a37d523f176ce785847",
+    "size": 1955520
   },
   {
     "path": "cutout_cdn/2010ai/SDSS/SDSS_z.fits",
-    "version_id": "SvYXDzdd7rp3ACC-6WuvlJ7-mMZ65D2",
-    "etag": "966c63a3960fb14fe637b89d4c6062e5",
-    "size": 6036480
+    "version_id": "CL2wL495wdXfYZEO6j1CmRWhNDWLAw4",
+    "etag": "0d2d46b74e187a493940471c57cf7a1b",
+    "size": 1961280
   },
   {
     "path": "cutout_cdn/2010ai/WISE/WISE_W1.fits",
-    "version_id": "a.gX0dzQywhwBjerpE2HqL5TNG4NM-3",
-    "etag": "5d258e0f878810896ce2dc616588c653",
+    "version_id": "BOgkMsyCvP.g1vA384X9w7fsudTcp-U",
+    "etag": "3f323ff5d4a25181cecb1df20570254c",
     "size": 161280
   },
   {
     "path": "cutout_cdn/2010ai/WISE/WISE_W2.fits",
-    "version_id": "mMNCAv8sZcOm.mRjBmx5mjCRMLhwh4Y",
+    "version_id": "rfU3YdLryn0NJE4wIfsPdHUMdshD9Cy",
     "etag": "ef7f42d539454d50ea07dfa24eb50ace",
     "size": 161280
   },
   {
     "path": "cutout_cdn/2010ai/WISE/WISE_W3.fits",
-    "version_id": "oG5Dr6WRktrSGOKzwL4ukvnuKOWoEmx",
+    "version_id": "K3VQU0ZzWhA1buMa1nXQmP4HLvUkbbq",
     "etag": "7907069c2ac7e91094f315d906997485",
     "size": 161280
   },
   {
     "path": "cutout_cdn/2010ai/WISE/WISE_W4.fits",
-    "version_id": "srDHB3twm1AeMGp96HFFjBQ3AxKu22c",
+    "version_id": "quvbS9IqpimOmqX3FOA0zi8BxbpfZA9",
     "etag": "3c8194890c55566f1876e02ef95b2dbe",
     "size": 161280
   },

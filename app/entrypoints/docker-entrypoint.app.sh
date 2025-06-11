@@ -16,6 +16,15 @@ if [[ "${FORCE_INITIALIZATION}" == "true" ]]; then
   rm -f "${INIT_STARTED_DB}"
 fi
 
+# Migrations should be created manually by developers and committed with the source code repo.
+# Set the MAKE_MIGRATIONS env var to a non-empty string to create migration scripts
+# after changes are made to the Django ORM models.
+if [ -n "$MAKE_MIGRATIONS" ]; then
+  echo "Generating database migration scripts..."
+  python manage.py makemigrations --no-input
+  exit 0
+fi
+
 ## Initialize astro data
 ##
 
@@ -28,10 +37,13 @@ else
   echo "\"${INIT_STARTED_DATA}\" not found. Running initialization script..."
   touch "${INIT_STARTED_DATA}"
 
-  # Download and install data in parallel
-  bash entrypoints/initialize_all_data.sh
+  # Create data folders on persistent volume and symlink to expected paths
+  bash entrypoints/initialize_data_dirs.sh
+  # Verify and download missing and invalid files
+  python entrypoints/initialize_data.py
 
   rm -f "${INIT_STARTED_DATA}"
+  echo "Data initialization complete."
 fi
 
 ## Initialize Django database and static files
@@ -47,15 +59,7 @@ else
   echo "\"${INIT_STARTED_DB}\" not found. Running initialization script..."
   touch "${INIT_STARTED_DB}"
 
-  # Migrations should be created manually by developers and committed with the source code repo.
-  # Set the MAKE_MIGRATIONS env var to a non-empty string to create migration scripts
-  # after changes are made to the Django ORM models.
-  if [ -n "$MAKE_MIGRATIONS" ]; then
-    echo "Generating database migration scripts..."
-    python manage.py makemigrations --no-input
-    exit 0
-  fi
-  python init.py
+  python init_app.py
 
   rm -f "${INIT_STARTED_DB}"
   echo "Django database initialization complete."

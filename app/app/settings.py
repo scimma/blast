@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.2.1'
+APP_VERSION = '1.3.0'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -160,10 +160,7 @@ DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
 SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")
 SBI_TRAINING_ROOT = os.environ.get("SBI_TRAINING_ROOT", "/data/sbi_training_sets")
-GHOST_OUTPUT_ROOT = os.environ.get("GHOST_OUTPUT_ROOT", "/tmp/ghost_output")
-GHOST_DATA_ROOT = os.environ.get("GHOST_DATA_ROOT", "/data/ghost_data")
-GHOST_DUST_PATH = os.environ.get("GHOST_DUST_PATH", os.path.join(GHOST_DATA_ROOT, "dust_model"))
-GHOST_PHOTOZ_PATH = os.environ.get("GHOST_PHOTOZ_PATH", os.path.join(GHOST_DATA_ROOT, "photoz_model/MLP_lupton.hdf5"))  # noqa
+PROST_OUTPUT_ROOT = os.environ.get("PROST_OUTPUT_ROOT", "/tmp/prost_output")
 TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 TNS_QUERY_TIMEOUT = int(os.environ.get("TNS_QUERY_TIMEOUT", "60"))

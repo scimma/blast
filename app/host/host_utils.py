@@ -24,7 +24,7 @@ from dustmaps.sfd import SFDQuery
 
 # Use correct dustmap data directory
 from dustmaps.config import config
-
+# TODO: Where is this config variable used? Is this obsolete code?
 config.reset()
 config["data_dir"] = settings.DUSTMAPS_DATA_ROOT
 from photutils.aperture import aperture_photometry
@@ -46,6 +46,10 @@ from .models import Cutout
 from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
+from pathlib import Path
+
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 def survey_list(survey_metadata_path):
@@ -113,7 +117,7 @@ def build_source_catalog(image, background, threshhold_sigma=3.0, npixels=10):
     # deblended_segmentation = deblend_sources(
     #     background_subtracted_data, segmentation, npixels=npixels
     # )
-    print(segmentation)
+    logger.debug(segmentation)
     return SourceCatalog(background_subtracted_data, segmentation)
 
 
@@ -347,41 +351,60 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
         if "/GALEX/" in local_fits_path:
             continue
 
-        # copy the steps to build segmentation map
         # Download FITS file local file cache
-        s3 = ObjectStore()
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-        s3.download_object(path=object_key, file_path=local_fits_path)
+        if not os.path.isfile(local_fits_path):
+            s3 = ObjectStore()
+            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+            s3.download_object(path=object_key, file_path=local_fits_path)
         assert os.path.isfile(local_fits_path)
-        image = fits.open(local_fits_path)
-        wcs = WCS(image[0].header)
-        background = estimate_background(image)
-        catalog = build_source_catalog(
-            image, background, threshhold_sigma=5, npixels=15
-        )
+        # Create a lock file to prevent concurrent processes from deleting the data file prematurely
+        lock_path = f'''{local_fits_path}.check_global_contamination.lock'''
+        Path(lock_path).touch(exist_ok=True)
+        assert os.path.isfile(lock_path)
 
-        # catalog is None is no sources are detected in the image
-        # so we don't have to worry about contamination in that case
-        if catalog is None:
-            continue
+        err_to_raise = None
+        try:
+            # copy the steps to build segmentation map
+            image = fits.open(local_fits_path)
+            wcs = WCS(image[0].header)
+            background = estimate_background(image)
+            catalog = build_source_catalog(
+                image, background, threshhold_sigma=5, npixels=15
+            )
 
-        source_data = match_source(aperture.sky_coord, catalog, wcs)
+            # catalog is None is no sources are detected in the image
+            # so we don't have to worry about contamination in that case
+            if catalog is None:
+                continue
 
-        mask_image = (
-            aperture.sky_aperture.to_pixel(wcs)
-            .to_mask()
-            .to_image(np.shape(image[0].data))
-        )
-        obj_ids = catalog._segment_img.data[np.where(mask_image == True)]  # noqa: E712
-        source_obj = source_data._labels
+            source_data = match_source(aperture.sky_coord, catalog, wcs)
 
-        # let's look for contaminants
-        unq_obj_ids = np.unique(obj_ids)
-        if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
-            is_contam = True
+            mask_image = (
+                aperture.sky_aperture.to_pixel(wcs)
+                .to_mask()
+                .to_image(np.shape(image[0].data))
+            )
+            obj_ids = catalog._segment_img.data[np.where(mask_image == True)]  # noqa: E712
+            source_obj = source_data._labels
 
-        # Delete FITS file from local file cache
-        os.remove(local_fits_path)
+            # let's look for contaminants
+            unq_obj_ids = np.unique(obj_ids)
+            if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
+                is_contam = True
+        except Exception as err:
+            err_to_raise = err
+            pass
+        finally:
+            os.remove(lock_path)
+            if not [Path(local_fits_path).parent.glob('*.lock')]:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
+            if err_to_raise:
+                raise err_to_raise
+
 
     return is_contam
 
@@ -426,45 +449,6 @@ def select_aperture(transient):
         global_aperture = Aperture.objects.none()
 
     return global_aperture
-
-
-# def find_host_data(position, name='No name'):
-#    """
-#    Finds the information about the host galaxy given the position of the supernova.
-#    Parameters
-#    ----------
-#    :position : :class:`~astropy.coordinates.SkyCoord`
-#        On Sky position of the source to be matched.
-#    :name : str, default='No name'
-#        Name of the the object.
-#    Returns
-#    -------
-#    :host_information : ~astropy.coordinates.SkyCoord`
-#        Host position
-#    """
-#    #getGHOST(real=False, verbose=0)
-#    host_data = getTransientHosts(snCoord=[position],
-#                                         snName=[name],
-#                                         verbose=1, starcut='gentle', ascentMatch=True)
-
-# clean up after GHOST...
-#    dir_list = glob.glob('transients_*/*/*')
-#    for dir in dir_list: os.remove(dir)
-
-#    for level in ['*/*/', '*/']:
-#        dir_list = glob.glob('transients_' + level)
-#        for dir in dir_list: os.rmdir(dir)
-
-
-#    if len(host_data) == 0:
-#        host_position = None
-#    else:
-#        host_position = SkyCoord(ra=host_data['raMean'][0],
-#                             dec=host_data['decMean'][0],
-#                             unit='deg')
-
-
-#    return host_position
 
 
 def estimate_background(image, filter_name=None):
@@ -617,7 +601,7 @@ def construct_all_apertures(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     return apertures
 
@@ -645,7 +629,7 @@ def pick_largest_aperture(position, image_dict):
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
         except Exception:
-            print(f"Could not fit aperture to {name} imaging data")
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     aperture_areas = {}
     for image_name in image_dict:

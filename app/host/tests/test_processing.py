@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from ..base_tasks import initialise_all_tasks_status
-from ..base_tasks import TransientTaskRunner
+from ..transient_tasks import TransientTaskRunner
 from ..base_tasks import update_status
 from ..models import Cutout
 from ..models import Filter
@@ -10,7 +10,7 @@ from ..models import Task
 from ..models import TaskRegister
 from ..models import Transient
 from ..tasks import periodic_tasks
-from ..transient_tasks import Ghost
+from ..transient_tasks import HostMatch
 from ..transient_tasks import ImageDownload
 
 
@@ -269,23 +269,24 @@ class TaskRunnerTest(TestCase):
         self.assertTrue(cutout_changed.filter.name == "WISE_W1")
 
 
-class GHOSTRunnerTest(TestCase):
+class HostMatchRunnerTest(TestCase):
 
     def setUp(self):
-        self.ghost_runner = Ghost(transient_name="dummy")
+        self.host_match_runner = HostMatch(transient_name="dummy")
 
     def test_prereqs(self):
         self.assertTrue(
-            self.ghost_runner._prerequisites()
+            self.host_match_runner._prerequisites()
             == {
-                "Host match": "not processed",
                 "Cutout download": "processed",
+                "Transient information": "processed",
                 "Transient MWEBV": "processed",
+                "Host match": "not processed",
             }
         )
 
     def test_failed_status(self):
-        self.assertTrue(self.ghost_runner._failed_status_message() == "no GHOST match")
+        self.assertTrue(self.host_match_runner._failed_status_message() == "no host match")
 
 
 class InitializeTaskRegisterTest(TestCase):
