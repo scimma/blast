@@ -24,9 +24,15 @@ from django.http import HttpResponseRedirect
 from .base_tasks import initialise_all_tasks_status
 from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
+from django.contrib.auth.decorators import login_required
 
 from host.log import get_logger
 logger = get_logger(__name__)
+
+
+@login_required
+def reprocess_transient_view(request=None, slug=''):
+    return reprocess_transient(request, slug)
 
 
 def reprocess_transient(request=None, slug=''):
