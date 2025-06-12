@@ -5,11 +5,22 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.0] - 2025-04-21
+## [1.4.0] - 2025-06-12
 
 ### Changed
 
 - The Python package "GHOST" that was used for associating transients with a host galaxy was replaced with its successor "Prost", a library by the same author with improved accuracy.
+- When workflows are manually retriggered via the `retrigger_transient/[transient]` API endpoint, failed tasks are retried. The automated retriggering periodic task does not retry failed tasks.
+
+### Fixed
+
+- Secured two API endpoints that should require authentication to run:  `reprocess_transient/[transient]`, `retrigger_transient/[transient]`.
+
+## [1.3.0] - 2025-05-09
+
+### Added
+
+- Implemented an automated retriggering mechanism executed periodically by Celery Beat to resume aborted workflows.
 
 ### Fixed
 
