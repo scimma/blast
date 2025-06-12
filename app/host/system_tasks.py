@@ -196,7 +196,7 @@ class SnapshotTaskRegister(SystemTaskRunner):
 
 
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
-    def reset_workflow_if_not_processing(self, transient, worker_tasks):
+    def reset_workflow_if_not_processing(self, transient, worker_tasks, reset_failed=False):
         # If there is an active or queued task with the transient's name as the argument,
         # the transient workflow is still processing.
         if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
@@ -209,7 +209,11 @@ class RetriggerIncompleteWorkflows(SystemTaskRunner):
         not_processed_status = Status.objects.get(message__exact="not processed")
         processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
                             if task.status == processing_status]
-        for task in processing_tasks:
+        failed_tasks = []
+        if reset_failed:
+            failed_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                            if task.status.type == 'error']
+        for task in processing_tasks + failed_tasks:
             task.status = not_processed_status
             task.save()
         return True

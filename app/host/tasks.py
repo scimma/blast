@@ -37,14 +37,16 @@ def retrigger_transient(request=None, slug=''):
         transient = Transient.objects.get(name__exact=transient_name)
         logger.debug(f'Retrigger requested for transient "{transient.name}"')
         progress, processing_status = get_processing_status_and_progress(transient)
-        if progress < 100:
+        # When manually retriggering a workflow, attempt to rerun failed tasks,
+        # because these may have failed for operational instead of intrinsic reasons.
+        if processing_status in ['processing', 'blocked']:
             logger.debug(f'''"{transient.name}": "{processing_status}"''')
             # If the transient workflow is already in progress, do nothing; otherwise, retrigger the workflow.
             riw = RetriggerIncompleteWorkflows()
             # Filter out the current task executing this function, or the transient will never be retriggered!
             all_tasks = [task for task in riw.inspect_worker_tasks()
                          if task['name'] != 'Import transients from TNS']
-            if riw.reset_workflow_if_not_processing(transient, all_tasks):
+            if riw.reset_workflow_if_not_processing(transient, all_tasks, reset_failed=True):
                 logger.info(f'Retriggering workflow for transient "{transient.name}"')
                 result = transient_workflow.delay(transient_name)
             else:
