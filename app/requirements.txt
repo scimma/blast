@@ -1,6 +1,6 @@
 astro-datalab==2.24.0
 astro-prospector==1.4.0
-# TODO: Replace this with published astro-prost package version 
+# TODO: Replace this with published astro-prost package version (see also Dockerfile)
 #astro-prost
 astro-sedpy==0.4.0
 astroquery==0.4.7
