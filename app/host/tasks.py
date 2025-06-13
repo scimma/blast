@@ -15,6 +15,7 @@ from host.system_tasks import RetriggerIncompleteWorkflows
 from host.transient_tasks import get_processing_status_and_progress
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -29,6 +30,11 @@ periodic_tasks = [
 ]
 
 
+@login_required
+def retrigger_transient_view(request=None, slug=''):
+    return retrigger_transient(request, slug)
+
+
 def retrigger_transient(request=None, slug=''):
     transient_name = slug
     assert transient_name
@@ -37,14 +43,16 @@ def retrigger_transient(request=None, slug=''):
         transient = Transient.objects.get(name__exact=transient_name)
         logger.debug(f'Retrigger requested for transient "{transient.name}"')
         progress, processing_status = get_processing_status_and_progress(transient)
-        if progress < 100:
+        # When manually retriggering a workflow, attempt to rerun failed tasks,
+        # because these may have failed for operational instead of intrinsic reasons.
+        if processing_status in ['processing', 'blocked']:
             logger.debug(f'''"{transient.name}": "{processing_status}"''')
             # If the transient workflow is already in progress, do nothing; otherwise, retrigger the workflow.
             riw = RetriggerIncompleteWorkflows()
             # Filter out the current task executing this function, or the transient will never be retriggered!
             all_tasks = [task for task in riw.inspect_worker_tasks()
                          if task['name'] != 'Import transients from TNS']
-            if riw.reset_workflow_if_not_processing(transient, all_tasks):
+            if riw.reset_workflow_if_not_processing(transient, all_tasks, reset_failed=True):
                 logger.info(f'Retriggering workflow for transient "{transient.name}"')
                 result = transient_workflow.delay(transient_name)
             else:

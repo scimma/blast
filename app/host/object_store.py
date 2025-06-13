@@ -216,7 +216,7 @@ class ObjectStore:
         chunk_size_mib = int(chunk_size / 1024**2)
         file_size_mib = int(file_size / 1024**2)
         logger.debug(f"chunk_size is {chunk_size_mib} MiB for file size {file_size_mib} bytes"
-                     "(etag parts: {etag_parts})")
+                     f"(etag parts: {etag_parts})")
         with open(file_path, 'rb') as fh:
             for data in iter(lambda: fh.read(chunk_size), b''):
                 md5s.append(hashlib.md5(data).digest())
