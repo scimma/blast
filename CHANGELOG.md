@@ -5,6 +5,12 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-06-13
+
+### Fixed
+
+- Fixed a minor bug in the Blast documentation `developer_guide/dev_system_pages.md` preventing images from being rendered.
+
 ## [1.4.0] - 2025-06-13
 
 ### Added
