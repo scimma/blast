@@ -96,15 +96,12 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
         elif hosts['host_redshift_info'][0] == 'PHOT' and hosts['best_cat'][0] != 'panstarrs':
             host.photometric_redshift = hosts["host_redshift_mean"][0]
             host.photometric_redshift_err = hosts["host_redshift_std"][0]
-
-    except Exception as err:
-        error = err
-    else:
-        error = None
     finally:
         # Cleanup Prost file cache
+        # TODO: Over time we may accumulate Prost temp files that are not deleted
+        #       due to processes aborted before this block is executed. More robust
+        #       garbage collection may be necessary, such as a periodic task triggered
+        #       by Celery Beat.
         rmtree(output_dir, ignore_errors=True)
-        if error:
-            raise error
 
     return host
