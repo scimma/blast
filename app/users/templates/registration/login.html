@@ -58,6 +58,8 @@ span.psw {
     {% csrf_token %}
     {{ form }}
     <button type="submit" class="btn btn-lg btn-block btn-primary">Login</button>
+    <br>
+    <p>Click <a href="/oidc/authenticate">here</a> to login with CILogon.</p>
 </form>
 </body>
 {% endblock %}

@@ -24,7 +24,7 @@ case "$PROFILE" in
     COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
     COMPOSE_PROJECT_NAME="blast-dev"
-    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP}"
     ;;
   "slim_prod" | "full_prod")
     COMPOSE_FILE="docker-compose.prod.yaml"

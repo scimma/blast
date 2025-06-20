@@ -126,6 +126,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'app.auth_backend.KeycloakOIDCAuthenticationBackend',
+)
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
@@ -213,6 +218,46 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
+# Configure the OIDC client
+OIDC_RP_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", "")
+OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", "")
+OIDC_RP_SCOPES = "openid profile email"
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get('OIDC_OP_AUTHORIZATION_ENDPOINT', '')
+OIDC_OP_TOKEN_ENDPOINT = os.environ.get('OIDC_OP_TOKEN_ENDPOINT', '')
+OIDC_OP_USER_ENDPOINT = os.environ.get('OIDC_OP_USER_ENDPOINT', '')
 
+# Required for keycloak
+OIDC_RP_SIGN_ALGO = os.environ.get('OIDC_RP_SIGN_ALGO', 'RS256')
+OIDC_OP_JWKS_ENDPOINT = os.environ.get('OIDC_OP_JWKS_ENDPOINT', '')
+
+
+OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
+OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
+
+LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
 LOGOUT_REDIRECT_URL = "/"
+# Our django backend is deployed behind nginx/guncorn. By default Django ignores
+# the X-FORWARDED request headers generated. mozilla-django-oidc calls
+# Django's request.build_absolute_uri method in such a way that the https
+# request produces an http redirect_uri. So, we need to tell Django not to ignore
+# the X-FORWARDED header and the protocol to use:
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# logging for mozilla oidc
+LOGGING = {
+    'version': 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    'loggers': {
+        'mozilla_django_oidc': {
+            'handlers': ['console'],
+            'level': 'INFO'
+        },
+    }
+}
