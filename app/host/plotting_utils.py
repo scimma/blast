@@ -27,6 +27,7 @@ from host.prospector import build_obs
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
+from bokeh.io import curdoc
 
 # import extinction
 # from bokeh.models import Circle
@@ -290,6 +291,8 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
     if len(flux):
         fig.y_range = Range1d(-0.05 * np.max(flux), 1.5 * np.max(flux))
         fig.x_range = Range1d(np.min(wavelength) * 0.5, np.max(wavelength) * 1.5)
+    else:
+        fig.title = "Data Not Available"
 
     source = ColumnDataSource(
         data=dict(
@@ -323,6 +326,13 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
     ]
     hover = HoverTool(renderers=[p], tooltips=TOOLTIPS, visible=False)
     fig.add_tools(hover)
+
+    # remove the loading spinner
+    hide_loading_indicator = CustomJS(args=dict(), code=f"""
+            document.getElementById('loading-indicator-sed-{type}').style.display = "none";
+            document.getElementById('loading-indicator-sed-inf-{type}').style.display = "none";
+        """)
+    curdoc().js_on_event("document_ready", hide_loading_indicator)
 
     # second check on SED file
     # long-term shouldn't be necessary, just a result of debugging

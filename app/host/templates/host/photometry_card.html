@@ -99,6 +99,9 @@
 			{% endfor %}
 		    </tbody>
 		</table>
+        {% if not global_aperture_photometry %}
+        <p>Data not available</p>
+        {% endif %}
             </div>
         </div>
     </div>
