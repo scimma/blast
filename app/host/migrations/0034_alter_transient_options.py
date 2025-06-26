@@ -5,8 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    replaces = [('host', '0034_alter_transient_options'), ('host', '0035_alter_transient_options')]
-
     dependencies = [
         ('host', '0033_update_acknowledgements'),
     ]
@@ -14,6 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='transient',
-            options={'permissions': [('upload_transients', 'Can upload transients'), ('retirgger_transients', 'Can retrigger a stopped workflow for processing a transient'), ('reprocess_transients', 'Can reprocess a transient'), ('delete_transients', 'Can delete an existing transient')]},
+            options={'permissions': [('upload_transients', 'Can upload transients'), ('retrigger_transients', 'Can retrigger a stopped workflow for processing a transient'), ('reprocess_transients', 'Can reprocess a transient'), ('delete_transients', 'Can delete an existing transient')]},
         ),
     ]
