@@ -1974,6 +1974,42 @@
     "size": 4368
   },
   {
+    "path": "ghost_data/dust_model/sfddata-master/README.md",
+    "version_id": "z5uZmq3hl1s05oiagYSb1TVVeFcRial",
+    "etag": "fa02d1ff37c0fbd18944c5e1badb679c",
+    "size": 127
+  },
+  {
+    "path": "ghost_data/dust_model/sfddata-master/SFD_dust_4096_ngp.fits",
+    "version_id": "vdqf65baW-AZNxbUANcH.kg1qM.6HYR",
+    "etag": "62848d07f7f07a020c12d4ac6a917e8f-1",
+    "size": 67115520
+  },
+  {
+    "path": "ghost_data/dust_model/sfddata-master/SFD_dust_4096_sgp.fits",
+    "version_id": "B-RQGmFu6U153MM3CbDAYm2jL68asVK",
+    "etag": "016674834e457f9e32ecec2fe9534bb4-1",
+    "size": 67115520
+  },
+  {
+    "path": "ghost_data/dust_model/sfddata-master/SFD_mask_4096_ngp.fits",
+    "version_id": "mZpK-6DNeXbRNOzMaMTm0y--VfUzyaN",
+    "etag": "9c02936454644f4a4556ca3d9f1967f8-2",
+    "size": 16784640
+  },
+  {
+    "path": "ghost_data/dust_model/sfddata-master/SFD_mask_4096_sgp.fits",
+    "version_id": "vJZXUa3SWnbK3RpCPTKlRw73rdcB1Ks",
+    "etag": "88253757d99b1e8856f1d81237c49d81-2",
+    "size": 16784640
+  },
+  {
+    "path": "ghost_data/photoz_model/MLP_lupton.hdf5",
+    "version_id": "oaN0mfMw1crDAvzNqsIp9lvhE6ypRQY",
+    "etag": "963f07eff3651e72b860fde64d42f1fa-2",
+    "size": 32930808
+  },
+  {
     "path": "sbi_training_sets/hatp_x_y_global.pkl",
     "version_id": "t7be7U7pCQp1bUmi9dwsErXyMSLGThk",
     "etag": "8abae565ffc324af5810113e6f37c9cd-4",

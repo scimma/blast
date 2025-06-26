@@ -236,7 +236,12 @@ OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 
 LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
-LOGOUT_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
+
+# ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
+# which allows the front end to use location.href to /auth/logout to logout.
+ALLOW_LOGOUT_GET_METHOD = True
+
 # Our django backend is deployed behind nginx/guncorn. By default Django ignores
 # the X-FORWARDED request headers generated. mozilla-django-oidc calls
 # Django's request.build_absolute_uri method in such a way that the https

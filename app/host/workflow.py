@@ -24,13 +24,14 @@ from django.http import HttpResponseRedirect
 from .base_tasks import initialise_all_tasks_status
 from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from host.log import get_logger
 logger = get_logger(__name__)
 
 
 @login_required
+@permission_required("host.transient.reprocess_transients", raise_exception=True)
 def reprocess_transient_view(request=None, slug=''):
     return reprocess_transient(request, slug)
 

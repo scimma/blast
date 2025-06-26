@@ -1,5 +1,5 @@
 import django_filters
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponse
@@ -137,6 +137,7 @@ def transient_list(request):
 
 
 @login_required
+@permission_required("host.upload_transients", raise_exception=True)
 def transient_uploads(request):
     errors = []
     uploaded_transient_names = []
