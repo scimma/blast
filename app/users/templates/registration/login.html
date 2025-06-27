@@ -1,5 +1,7 @@
 {% extends 'host/base.html' %}
 
+{% block title %} Login {% endblock %}
+
 {% block body %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -54,12 +56,26 @@ span.psw {
 
 
 <body>
-<form method="post">
-    {% csrf_token %}
-    {{ form }}
-    <button type="submit" class="btn btn-lg btn-block btn-primary">Login</button>
-    <br>
-    <p>Click <a href="/oidc/authenticate">here</a> to login with CILogon.</p>
-</form>
+  <div class="d-flex align-items-center justify-content-center mt-3">
+      <p>Click on the button below to login with your identity provider: <br>
+      <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">Login</a>
+      <br>
+      Click <a href="#local-login-form" onclick="hideLogin()">here</a> to login locally.</p>
+  </div>
+  <form id="local-login-form" method="post" style="display: none;">
+      {% csrf_token %}
+      {{ form }}
+      <button type="submit" class="btn btn-lg btn-block btn-secondary">Login</button>
+  </form>
+  <script>
+      function hideLogin() {
+          var login_form = document.getElementById("local-login-form");
+          if (login_form.style.display === "none") {
+              login_form.style.display = "block";
+          } else {
+              login_form.style.display = "none";
+          }
+      }
+  </script>
 </body>
 {% endblock %}

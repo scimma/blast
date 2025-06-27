@@ -654,3 +654,8 @@ class FlowerProxyView(UserPassesTestMixin, ProxyView):
     @classmethod
     def as_url(cls):
         return re_path(r"^(?P<path>{}.*)$".format(cls.url_prefix), cls.as_view())
+
+
+# Handler for 403 errors
+def error_view(request, exception, template_name="403.html"):
+    return render(request, template_name)
