@@ -44,6 +44,14 @@ button:hover {
 span.psw {
   float: right;
 }
+.instructions {
+  font-size: x-large;
+}
+.btn-lg {
+  width: 300px;
+  font-variant: small-caps;
+  font-size: 1.5rem;
+}
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
@@ -54,21 +62,25 @@ span.psw {
 }
 </style>
 
-
 <body>
-  <div class="d-flex align-items-center justify-content-center mt-3">
-      <p>Click on the button below to login with your identity provider: <br>
-      <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">Login</a>
-      <br>
-      Click <a href="#local-login-form" onclick="hideLogin()">here</a> to login locally.</p>
+  <div class="d-flex flex-column align-items-center justify-content-center mt-3">
+    <div class="p-2">
+        <p class="instructions">Click the button below to login with your preferred identity provider.</p>
+    </div>
+    <div class="p-2">
+        <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">user login</a>
+    </div>
+    <div class="p-2">
+        <p class="my-3">or <a href="#local-login-form" onclick="toggleLoginForm()">click here if you are a Blast administrator</a>.</p>
+    </div>
   </div>
   <form id="local-login-form" method="post" style="display: none;">
-      {% csrf_token %}
-      {{ form }}
-      <button type="submit" class="btn btn-lg btn-block btn-secondary">Login</button>
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit" class="btn btn-lg btn-block btn-secondary">Login</button>
   </form>
   <script>
-      function hideLogin() {
+      function toggleLoginForm() {
           var login_form = document.getElementById("local-login-form");
           if (login_form.style.display === "none") {
               login_form.style.display = "block";

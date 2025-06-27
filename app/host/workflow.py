@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 
 
 @login_required
-@permission_required("host.reprocess_transients", raise_exception=True)
+@permission_required("host.reprocess_transient", raise_exception=True)
 def reprocess_transient_view(request=None, slug=''):
     return reprocess_transient(request, slug)
 

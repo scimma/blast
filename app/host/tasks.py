@@ -31,7 +31,7 @@ periodic_tasks = [
 
 
 @login_required
-@permission_required("host.retrigger_transients", raise_exception=True)
+@permission_required("host.retrigger_transient", raise_exception=True)
 def retrigger_transient_view(request=None, slug=''):
     return retrigger_transient(request, slug)
 

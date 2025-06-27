@@ -171,13 +171,13 @@ class Transient(SkyObject):
         else:
             z = None
         return z
+
     class Meta:
         permissions = [
-            ("upload_transients", "Can upload transients"), 
-            ("retrigger_transients", "Can retrigger a stopped workflow for processing a transient"),
-            ("reprocess_transients", "Can reprocess a transient"),
-            ("delete_transients", "Can delete an existing transient"), # DANGEROUS PERMISSION, may be used later
-            ]
+            ("upload_transient", "Can launch a new transient workflow"),
+            ("retrigger_transient", "Can retrigger a transient workflow"),
+            ("reprocess_transient", "Can reprocess a transient workflow"),
+        ]
 
 
 class ExternalRequest(models.Model):

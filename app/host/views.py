@@ -137,7 +137,7 @@ def transient_list(request):
 
 
 @login_required
-@permission_required("host.upload_transients", raise_exception=True)
+@permission_required("host.upload_transient", raise_exception=True)
 def transient_uploads(request):
     errors = []
     uploaded_transient_names = []
@@ -607,7 +607,7 @@ def update_home_page_statistics():
             "processed": processed,
             "in_progress": in_progress,
             **bokeh_processing_context,
-            "hide_login": True,
+            "hide_login": False,
         },
     )
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
