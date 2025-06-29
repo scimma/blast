@@ -128,7 +128,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
-    'app.auth_backend.KeycloakOIDCAuthenticationBackend',
+    'app.auth_backend.CustomOIDCAuthenticationBackend',
 )
 
 
@@ -232,7 +232,7 @@ OIDC_OP_JWKS_ENDPOINT = os.environ.get('OIDC_OP_JWKS_ENDPOINT', '')
 
 
 OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
-OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
+# OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 
 LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
