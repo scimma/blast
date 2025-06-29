@@ -129,6 +129,11 @@
             </a>
           </li>
           {% if user.is_authenticated %}
+          {% if user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link" href="/admin"> Admin </a>
+          </li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="/transient_uploads"> Uploads </a>
           </li>

@@ -10,7 +10,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-form {
+#local-login-form {
     background-color: rgb(248,249,250);
     padding-top: 2rem;
     padding-bottom: 10rem;
@@ -52,6 +52,9 @@ span.psw {
   font-variant: small-caps;
   font-size: 1.5rem;
 }
+.form-frame {
+  background-color: #ebebeb;
+}
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
@@ -63,15 +66,15 @@ span.psw {
 </style>
 
 <body>
-  <div class="d-flex flex-column align-items-center justify-content-center mt-3">
+  <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
     <div class="p-2">
         <p class="instructions">Click the button below to login with your preferred identity provider.</p>
     </div>
     <div class="p-2">
-        <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">user login</a>
-    </div>
-    <div class="p-2">
         <p class="my-3">or <a href="#local-login-form" onclick="toggleLoginForm()">click here if you are a Blast administrator</a>.</p>
+    </div>
+    <div class="p-2" id="oidc-button">
+        <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">user login</a>
     </div>
   </div>
   <form id="local-login-form" method="post" style="display: none;">
@@ -82,10 +85,13 @@ span.psw {
   <script>
       function toggleLoginForm() {
           var login_form = document.getElementById("local-login-form");
+          var oidc_button = document.getElementById("oidc-button");
           if (login_form.style.display === "none") {
               login_form.style.display = "block";
-          } else {
+              oidc_button.style.display = "none";
+            } else {
               login_form.style.display = "none";
+              oidc_button.style.display = "block";
           }
       }
   </script>

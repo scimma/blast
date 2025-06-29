@@ -9,6 +9,8 @@ from django.core.exceptions import ObjectDoesNotExist
 import unicodedata
 import re
 
+from host.log import get_logger
+logger = get_logger(__name__)
 
 class KeycloakOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def __init__(self):
@@ -33,6 +35,7 @@ class KeycloakOIDCAuthenticationBackend(OIDCAuthenticationBackend):
                 'jti': 'https://cilogon.org/oauth2/idToken//ac2...389/17...62',
             }
         '''
+        logger.debug(f'''OIDC claims: {claims}''')
         email = self.get_email(claims)
         user_info = {
             'username': self.get_username(claims),
@@ -66,6 +69,7 @@ class KeycloakOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         return users
 
     def update_user(self, user, claims):
+        logger.debug(f'''OIDC claims: {claims}''')
         email = claims.get("email")
         user.first_name = claims.get('given_name', '')
         user.last_name = claims.get('family_name', '')
