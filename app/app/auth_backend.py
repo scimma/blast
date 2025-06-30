@@ -25,12 +25,6 @@ def generate_username(identifier):
         return valid_username.match(username) and len(username) <= 150
 
     username = identifier
-    # # Replace contiguous space characters with periods, and
-    # # convert to lowercase with no surrounding space.
-    # username = re.compile(r"\s+").sub('.', username.strip().lower())
-    # # Reduce instance of multiple periods with single periods. For example,
-    # # the name "J. Edgar Hoover" would otherwise convert to "j..edgar.hoover"
-    # username = re.compile(r"\.+").sub('.', username)
     if not is_valid(username):
         # Note: stripping the base64 padding "=" will render the string invalid for base64 decoding
         username = base64.urlsafe_b64encode(username.encode('utf-8')).decode('utf-8').strip('=')
@@ -70,13 +64,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         sub = claims.get('sub', '')
         if not sub:
             return self.UserModel.objects.none()
-        # # Try associating existing user by email first.
-        # email = claims.get('email', '')
-        # if email:
-        #     users = self.UserModel.objects.filter(email__iexact=email)
-        # # If email association fails, use username.
         if len(users) < 1:
-            # users = self.UserModel.objects.filter(username__iexact=generate_username(sub))
             users = self.UserModel.objects.filter(username__iexact=self.get_username_from_claims(claims))
         return users
 
@@ -102,33 +90,25 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
     def update_user(self, user, claims):
         logger.debug(f'''OIDC claims: {claims}''')
+        # Only supply profile info from OIDC claims when values are
+        # missing.
         if "given_name" in claims:
-            user.first_name = claims.get('given_name')
+            first_name = claims.get('given_name')
+            if first_name and not user.first_name:
+                user.first_name = claims.get('given_name')
         if "family_name" in claims:
-            user.last_name = claims.get('family_name')
-        user.email = self.get_email_from_claims(claims)
+            last_name = claims.get('family_name')
+            if last_name and not user.last_name:
+                user.last_name = last_name
+        email = self.get_email_from_claims(claims)
+        # Avoid replacing a manually updated email address with an empty value
+        if email and not user.email:
+            user.email = email
         user.save()
         return user
 
     def get_username_from_claims(self, claims):
         """Generate username from claims"""
-        # if "username" in claims:
-        #     return generate_username(claims.get("username"))
-        # if "preferred_username" in claims:
-        #     return generate_username(claims.get("preferred_username"))
-        # if "name" in claims:
-        #     return generate_username(claims.get("name"))
-        # if "family_name" in claims or "given_name" in claims:
-        #     name = f'''{claims.get("given_name", '')} {claims.get("family_name", '')}'''
-        #     return generate_username(name)
-        # if "email" in claims:
-        #     return generate_username(claims.get("email"))
-        # if "email_list" in claims:
-        #     email = claims.get("email_list")
-        #     if isinstance(email, list):
-        #         email = email[0]
-        #     return generate_username(email)
-        # Use the "sub" claim as a last resort
         return generate_username(claims.get("sub"))
 
     def get_email_from_claims(self, claims):
