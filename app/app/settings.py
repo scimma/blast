@@ -83,7 +83,10 @@ ROOT_URLCONF = "app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "host", "templates", "host")],
+        "DIRS": [
+            os.path.join(BASE_DIR, "host", "templates", "host"),
+            os.path.join(BASE_DIR, "users", "templates", "registration"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -91,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "users.context_processors.user_profile",
             ]
         },
     }
@@ -235,7 +239,7 @@ OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
 # OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 
 LOGIN_URL = '/oidc/authenticate'
-LOGIN_REDIRECT_URL = "/transient_uploads"
+LOGIN_REDIRECT_URL = "/accounts/login"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
 
 # ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET

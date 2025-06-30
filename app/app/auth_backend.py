@@ -1,5 +1,5 @@
 """
-Adding OIDC authentication to the project. 
+Adding OIDC authentication to the project.
 References: https://gitlab.com/nsf-muses/calculation-engine/-/blob/main/app/app_base/auth_backends.py
 """
 
@@ -24,12 +24,13 @@ def generate_username(identifier):
         valid_username = re.compile(r"^[\w.@+-]+\Z")
         return valid_username.match(username) and len(username) <= 150
 
-    # Replace contiguous space characters with periods, and
-    # convert to lowercase with no surrounding space.
-    username = re.compile(r"\s+").sub('.', identifier.strip().lower())
-    # Reduce instance of multiple periods with single periods. For example,
-    # the name "J. Edgar Hoover" would otherwise convert to "j..edgar.hoover"
-    username = re.compile(r"\.+").sub('.', username)
+    username = identifier
+    # # Replace contiguous space characters with periods, and
+    # # convert to lowercase with no surrounding space.
+    # username = re.compile(r"\s+").sub('.', username.strip().lower())
+    # # Reduce instance of multiple periods with single periods. For example,
+    # # the name "J. Edgar Hoover" would otherwise convert to "j..edgar.hoover"
+    # username = re.compile(r"\.+").sub('.', username)
     if not is_valid(username):
         # Note: stripping the base64 padding "=" will render the string invalid for base64 decoding
         username = base64.urlsafe_b64encode(username.encode('utf-8')).decode('utf-8').strip('=')
@@ -59,6 +60,26 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         # Require only that the "sub" claim is provided.
         return claims.get('sub', '')
 
+    def filter_users_by_claims(self, claims):
+        """ Return all users matching the specified email.
+            If nothing found matching the email, then try the
+            unique identifier provided by the OIDC provider.
+        """
+        users = []
+        # Require the "sub" claim. Fail authentication if absent.
+        sub = claims.get('sub', '')
+        if not sub:
+            return self.UserModel.objects.none()
+        # # Try associating existing user by email first.
+        # email = claims.get('email', '')
+        # if email:
+        #     users = self.UserModel.objects.filter(email__iexact=email)
+        # # If email association fails, use username.
+        if len(users) < 1:
+            # users = self.UserModel.objects.filter(username__iexact=generate_username(sub))
+            users = self.UserModel.objects.filter(username__iexact=self.get_username_from_claims(claims))
+        return users
+
     def create_user(self, claims):
         """ Overrides the default authentication backend so that Django users are
             created even when the profile and email information is not provided.
@@ -79,25 +100,6 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         )
         return new_user
 
-    def filter_users_by_claims(self, claims):
-        """ Return all users matching the specified email.
-            If nothing found matching the email, then try the
-            unique identifier provided by the OIDC provider.
-        """
-        users = []
-        # Require the "sub" claim. Fail authentication if absent.
-        sub = claims.get('sub', '')
-        if not sub:
-            return self.UserModel.objects.none()
-        # # Try associating existing user by email first.
-        # email = claims.get('email', '')
-        # if email:
-        #     users = self.UserModel.objects.filter(email__iexact=email)
-        # # If email association fails, use username.
-        if len(users) < 1:
-            users = self.UserModel.objects.filter(username__iexact=generate_username(sub))
-        return users
-
     def update_user(self, user, claims):
         logger.debug(f'''OIDC claims: {claims}''')
         if "given_name" in claims:
@@ -110,22 +112,22 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
     def get_username_from_claims(self, claims):
         """Generate username from claims"""
-        if "username" in claims:
-            return generate_username(claims.get("username"))
-        if "preferred_username" in claims:
-            return generate_username(claims.get("preferred_username"))
-        if "name" in claims:
-            return generate_username(claims.get("name"))
-        if "family_name" in claims or "given_name" in claims:
-            name = f'''{claims.get("given_name", '')} {claims.get("family_name", '')}'''
-            return generate_username(name)
-        if "email" in claims:
-            return generate_username(claims.get("email"))
-        if "email_list" in claims:
-            email = claims.get("email_list")
-            if isinstance(email, list):
-                email = email[0]
-            return generate_username(email)
+        # if "username" in claims:
+        #     return generate_username(claims.get("username"))
+        # if "preferred_username" in claims:
+        #     return generate_username(claims.get("preferred_username"))
+        # if "name" in claims:
+        #     return generate_username(claims.get("name"))
+        # if "family_name" in claims or "given_name" in claims:
+        #     name = f'''{claims.get("given_name", '')} {claims.get("family_name", '')}'''
+        #     return generate_username(name)
+        # if "email" in claims:
+        #     return generate_username(claims.get("email"))
+        # if "email_list" in claims:
+        #     email = claims.get("email_list")
+        #     if isinstance(email, list):
+        #         email = email[0]
+        #     return generate_username(email)
         # Use the "sub" claim as a last resort
         return generate_username(claims.get("sub"))
 
