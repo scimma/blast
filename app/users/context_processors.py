@@ -1,4 +1,5 @@
 from django.contrib.auth.context_processors import auth
+from django.conf import settings
 import base64
 import binascii
 from host.log import get_logger
@@ -20,4 +21,4 @@ def user_profile(request):
             break
 
     logger.debug(f'''Decoded username: {username_b64decoded}''')
-    return {'username_b64decoded': username_b64decoded}
+    return {'username_b64decoded': username_b64decoded, 'support_email': settings.SUPPORT_EMAIL }

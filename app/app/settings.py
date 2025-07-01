@@ -242,6 +242,9 @@ LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
 
+# Email for support requests
+SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
+
 # ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
 # which allows the front end to use location.href to /auth/logout to logout.
 ALLOW_LOGOUT_GET_METHOD = True

@@ -5,6 +5,17 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-07-01
+
+### Added
+
+- Added support for OIDC-based authentication and role-based access control (RBAC). Anyone can authenticate but only authorized users are allowed to use protected API functions such as transient upload, reprocessing, or retriggering. Django admins can authorize users by granting them the custom permission "Can launch a new transient workflow". The recommended approach is to grant the permission to a group created for the purpose (e.g. "users-default"), and then add users to that group.
+- There is a new registration process for new Blast users. Upon login users are redirected to the uploads page, where they encounter a message informing them that they need to request authorization to access this feature by clicking a link that will prepopulate an email using a template. The template instructs the new user to provide their name, and email address (these are not supplied by all identity providers) as well as an explanation for the request.
+
+### Fixed
+
+- Transient result pages indicate when SED data is loading or if that data is unavailable.
+
 ## [1.4.1] - 2025-06-13
 
 ### Fixed

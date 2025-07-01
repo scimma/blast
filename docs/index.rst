@@ -15,7 +15,7 @@ broker service.
 
 Blast is developed on `GitHub <https://github.com/scimma/blast>`_.
 
-If you have a problem or need help using the Blast service at https://blast.scimma.org and cannot find an answer here or in the `GitHub Discussions <https://github.com/scimma/blast/discussions>`_, please `📧 email our support team <mailto:support@scimma.org?subject=Blast%20support%20request&body=
+If you have a problem or need help using the Blast service at https://blast.scimma.org and cannot find an answer here or in the `GitHub Discussions <https://github.com/scimma/blast/discussions>`_, please `📧 email our support team <mailto:blast-support@lists.ncsa.illinois.edu?subject=Blast%20support%20request&body=
 Please%20provide%20a%20detailed%20description%20of%20your%20problem%20or%20question.%20Make%20sure%20to%20search%20the%20documentation%20%28https%3A%2F%2Fblast.readthedocs.io%29%20and%20our%20GitHub%20Discussions%20%28https%3A%2F%2Fgithub.com%2Fscimma%2Fblast%2Fdiscussions%29%20for%20answers%20first.%20We%20appreciate%20your%20patience%20in%20receiving%20a%20response%3B%20please%20allow%20one%20or%20two%20days%20before%20sending%20a%20follow-up%20email.%0A%0AFull%20name%3A%20%20%0AAffiliation%3A%20%20%0AMessage%3A%20%20%0A>`_.
 
 Usage
