@@ -17,6 +17,9 @@ def user_profile(request):
             username_b64decoded = decoder(padded_string)
         except binascii.Error:
             pass
+        except Exception as err:
+            logger.error(f'''Error decoding username: {err}''')
+            username_b64decoded = ''
         else:
             break
 
