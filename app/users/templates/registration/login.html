@@ -104,8 +104,9 @@ span.psw {
     </div>
     <div class="p-2">
       <p style="font-size: large; text-align: center;">If your profile contains missing or inaccurate information,
-        <br>please contact Blast support to 
-        update your user profile by<br><span style="font-size: larger;">
+        <br>or you would like to provide feedback about the service,
+        <br>please contact Blast support by
+        <br><span style="font-size: larger;">
         <a href="mailto:support@scimma.org?subject=Blast%20account%20profile%20update
                 &body=Request an update to your Blast account profile by correcting missing or inaccurate profile information:
                 %0A%0A
@@ -121,10 +122,10 @@ span.psw {
                 What could be better?
                 %0A%0A
                 &nbsp;&nbsp;&nbsp;&nbsp;[Enter feedback here.]
-                %0A%0A
+                %0A%0A%0A%0A
                 _______________&nbsp;&nbsp;Please do not edit below this line.&nbsp;&nbsp;_______________
                 %0A
-                username: {{ user.username }}%0A">✉️ clicking this link to email us</a>.</span>
+                username: {{ user.username }}%0A">✉️ using this template to email us</a>.</span>
       </p>
     </div>
     <div class="p-2 my-3">
@@ -145,8 +146,8 @@ span.psw {
     </div>
     <div class="p-2" style="max-width: 600px;">
       <p style="text-align: center;">
-        Your account username is a unique identifier automatically assigned by our authentication system.
-        Generally you can ignore it, but please include it when communicating with the Blast support team:
+        Your account username, displayed below, is a unique identifier automatically assigned by our
+        authentication system. It is displayed here for reference if needed by the Blast support team.
       </p>
       <p style="text-align: center; font-family: monospace;">
         {% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}
