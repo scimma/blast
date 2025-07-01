@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "django_filters",
     'django_celery_results',
     'mozilla_django_oidc',
+    'matomo',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
 ]
@@ -270,3 +271,5 @@ LOGGING = {
         },
     }
 }
+
+SILKY_PYTHON_PROFILER = (os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true")
