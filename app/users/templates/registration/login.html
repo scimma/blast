@@ -55,6 +55,20 @@ span.psw {
 .form-frame {
   background-color: #ebebeb;
 }
+.profile-item {
+  font-size: larger;
+}
+.profile-item tr {
+  font-weight: bold;
+}
+.profile-item th {
+  text-align: right;
+}
+.profile-item td {
+  font-family: monospace;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
@@ -86,12 +100,58 @@ span.psw {
   {% else %}
   <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
     <div class="p-2">
-        <h1>User Profile</h1>
+      <h2>User Profile</h2>
+    </div>
+    <div class="p-2">
+      <p style="font-size: large; text-align: center;">If your profile contains missing or inaccurate information,
+        <br>or you would like to provide feedback about the service,
+        <br>please contact Blast support by
+        <br><span style="font-size: larger;">
+        <a href="mailto:support@scimma.org?subject=Blast%20account%20profile%20update
+                &body=Request an update to your Blast account profile by correcting missing or inaccurate profile information:
+                %0A%0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Email: {% if user.email %}{{ user.email }}{% else %}[Please enter your preferred email address here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Given name: {% if user.first_name %}{{ user.first_name }}{% else %}[Please enter your given name here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Family name: {% if user.last_name %}{{ user.last_name }}{% else %}[Please enter your family name here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Affiliation: [Please enter your institutional affiliation (e.g. University of Hawai'i)]
+                %0A%0A
+                (optional) Provide some feedback about your experience with Blast so we can improve the service. What do you like about it?
+                What could be better?
+                %0A%0A
+                &nbsp;&nbsp;&nbsp;&nbsp;[Enter feedback here.]
+                %0A%0A%0A%0A
+                _______________&nbsp;&nbsp;Please do not edit below this line.&nbsp;&nbsp;_______________
+                %0A
+                username: {{ user.username }}%0A">✉️ using this template to email us</a>.</span>
+      </p>
     </div>
     <div class="p-2 my-3">
-      <p style="padding-left: 2rem; text-indent: -2rem; font-size: larger;"><b>Name:</b> <code>{% if user.first_name  or user.last_name %}{{ user.first_name }} {{ user.last_name }}{% else %}None{% endif %}</code></p>
-      <p style="padding-left: 2rem; text-indent: -2rem; font-size: larger;"><b>Email:</b> <code>{% if user.email %}{{ user.email }}{% else %}None{% endif %}</code></p>
-      <p style="padding-left: 2rem; text-indent: -2rem; font-size: larger;"><b>Username:</b> <code>{% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}</code></p>
+      <table>
+        <tr class="profile-item">
+          <th>Given Name:</th>
+          <td>{% if user.first_name %}{{ user.first_name }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+        <tr class="profile-item">
+          <th>Family Name:</th>
+          <td>{% if user.last_name %}{{ user.last_name }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+        <tr class="profile-item">
+          <th>Email:</th>
+          <td>{% if user.email %}{{ user.email }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="p-2" style="max-width: 600px;">
+      <p style="text-align: center;">
+        Your account username, displayed below, is a unique identifier automatically assigned by our
+        authentication system. It is displayed here for reference if needed by the Blast support team.
+      </p>
+      <p style="text-align: center; font-family: monospace;">
+        {% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}
+      </p>
     </div>
   </div>
 
