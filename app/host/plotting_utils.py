@@ -13,7 +13,7 @@ from astropy.visualization import PercentileInterval
 from astropy.wcs import WCS
 from bokeh.embed import components
 from bokeh.layouts import gridplot
-from bokeh.models import ColumnDataSource
+# from bokeh.models import ColumnDataSource
 from bokeh.models import HoverTool
 from bokeh.models import LabelSet
 from bokeh.models import Range1d
@@ -395,7 +395,7 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
                     Filter.objects.get(name=f).transmission_curve().wave_effective
                     for f in obs["filters"]
                 ]
-            except:
+            except Exception:
                 pwave = [f.wave_effective for f in obs["filters"]]
 
             if transient.best_redshift < 0.015:
@@ -546,6 +546,6 @@ def plot_timeseries():
 
     script, div = components(fig)
     return {
-        f"bokeh_processing_trends_script": script,
-        f"bokeh_processing_trends_div": div,
+        "bokeh_processing_trends_script": script,
+        "bokeh_processing_trends_div": div,
     }

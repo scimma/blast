@@ -21,4 +21,8 @@ def user_profile(request):
             break
 
     logger.debug(f'''Decoded username: {username_b64decoded}''')
-    return {'username_b64decoded': username_b64decoded, 'support_email': settings.SUPPORT_EMAIL }
+    context = {
+        'username_b64decoded': username_b64decoded,
+        'support_email': settings.SUPPORT_EMAIL,
+    }
+    return context
