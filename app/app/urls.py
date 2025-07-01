@@ -22,4 +22,7 @@ urlpatterns = [
     path("", include("host.urls")),
     path("api/", include("api.urls")),
     path("", include("users.urls")),
+    path("oidc/", include("mozilla_django_oidc.urls"))
 ]
+
+handler403 = "host.views.error_view"

@@ -25,6 +25,7 @@ flower==2.0.1
 fsps==0.4.7
 gunicorn==23.0.0
 minio==7.2.15
+mozilla-django-oidc==4.0.1
 mysqlclient==2.2.7
 photutils==2.2.0
 sbi==0.22.0

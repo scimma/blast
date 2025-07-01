@@ -129,14 +129,26 @@
             </a>
           </li>
           {% if user.is_authenticated %}
+          {% if user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link" href="/admin"> Admin </a>
+          </li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="/transient_uploads"> Uploads </a>
           </li>
+          {% if not hide_login %}
+          <li class="nav-item">
+            <a class="nav-link" href="/accounts/login">
+              <i class="bi bi-person"></i> Profile
+            </a>
+          </li>
+          {% endif %}
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <li class="nav-item">
               <button type="submit" class="btn-link nav-link">
-                <i class="bi bi-box-arrow-left"></i> Log out ({{ user.username }})
+                <i class="bi bi-box-arrow-left"></i> Log out
               </button>
             </li>
           </form>

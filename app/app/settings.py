@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "django_cron",
     "django_filters",
     'django_celery_results',
+    'mozilla_django_oidc',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
 ]
@@ -82,7 +83,10 @@ ROOT_URLCONF = "app.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, "host", "templates", "host")],
+        "DIRS": [
+            os.path.join(BASE_DIR, "host", "templates", "host"),
+            os.path.join(BASE_DIR, "users", "templates", "registration"),
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -90,6 +94,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "users.context_processors.user_profile",
             ]
         },
     }
@@ -124,6 +129,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'app.auth_backend.CustomOIDCAuthenticationBackend',
+)
 
 
 # Internationalization
@@ -212,6 +222,51 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 
+# Configure the OIDC client
+OIDC_RP_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", "")
+OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", "")
+OIDC_RP_SCOPES = "openid profile email"
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get('OIDC_OP_AUTHORIZATION_ENDPOINT', '')
+OIDC_OP_TOKEN_ENDPOINT = os.environ.get('OIDC_OP_TOKEN_ENDPOINT', '')
+OIDC_OP_USER_ENDPOINT = os.environ.get('OIDC_OP_USER_ENDPOINT', '')
 
+# Required for keycloak
+OIDC_RP_SIGN_ALGO = os.environ.get('OIDC_RP_SIGN_ALGO', 'RS256')
+OIDC_OP_JWKS_ENDPOINT = os.environ.get('OIDC_OP_JWKS_ENDPOINT', '')
+
+
+OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
+# OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
+
+LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
-LOGOUT_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
+
+# ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
+# which allows the front end to use location.href to /auth/logout to logout.
+ALLOW_LOGOUT_GET_METHOD = True
+
+# Our django backend is deployed behind nginx/guncorn. By default Django ignores
+# the X-FORWARDED request headers generated. mozilla-django-oidc calls
+# Django's request.build_absolute_uri method in such a way that the https
+# request produces an http redirect_uri. So, we need to tell Django not to ignore
+# the X-FORWARDED header and the protocol to use:
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# logging for mozilla oidc
+LOGGING = {
+    'version': 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    'loggers': {
+        'mozilla_django_oidc': {
+            'handlers': ['console'],
+            'level': 'INFO'
+        },
+    }
+}

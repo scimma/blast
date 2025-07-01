@@ -1,5 +1,5 @@
 import django_filters
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponse
@@ -137,6 +137,7 @@ def transient_list(request):
 
 
 @login_required
+@permission_required("host.upload_transient", raise_exception=True)
 def transient_uploads(request):
     errors = []
     uploaded_transient_names = []
@@ -606,7 +607,7 @@ def update_home_page_statistics():
             "processed": processed,
             "in_progress": in_progress,
             **bokeh_processing_context,
-            "hide_login": True,
+            "hide_login": False,
         },
     )
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
@@ -653,3 +654,8 @@ class FlowerProxyView(UserPassesTestMixin, ProxyView):
     @classmethod
     def as_url(cls):
         return re_path(r"^(?P<path>{}.*)$".format(cls.url_prefix), cls.as_view())
+
+
+# Handler for 403 errors
+def error_view(request, exception, template_name="403.html"):
+    return render(request, template_name)

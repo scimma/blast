@@ -1,5 +1,7 @@
 {% extends 'host/base.html' %}
 
+{% block title %} Login {% endblock %}
+
 {% block body %}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
@@ -8,7 +10,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-form {
+#local-login-form {
     background-color: rgb(248,249,250);
     padding-top: 2rem;
     padding-bottom: 10rem;
@@ -42,6 +44,31 @@ button:hover {
 span.psw {
   float: right;
 }
+.instructions {
+  font-size: x-large;
+}
+.btn-lg {
+  width: 300px;
+  font-variant: small-caps;
+  font-size: 1.5rem;
+}
+.form-frame {
+  background-color: #ebebeb;
+}
+.profile-item {
+  font-size: larger;
+}
+.profile-item tr {
+  font-weight: bold;
+}
+.profile-item th {
+  text-align: right;
+}
+.profile-item td {
+  font-family: monospace;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
 
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
@@ -52,12 +79,95 @@ span.psw {
 }
 </style>
 
-
 <body>
-<form method="post">
+  {% if not user.is_authenticated %}
+  <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
+    <div class="p-2">
+        <p class="instructions">Click the button below to login with your preferred identity provider.</p>
+    </div>
+    <div class="p-2">
+        <p class="my-3">or <a href="#local-login-form" onclick="toggleLoginForm()">click here if you are a Blast administrator</a>.</p>
+    </div>
+    <div class="p-2" id="oidc-button">
+        <a role="button" class="btn btn-lg btn-block btn-primary" href="/oidc/authenticate">user login</a>
+    </div>
+  </div>
+  <form id="local-login-form" method="post" style="display: none;">
     {% csrf_token %}
     {{ form }}
-    <button type="submit" class="btn btn-lg btn-block btn-primary">Login</button>
-</form>
+    <button type="submit" class="btn btn-lg btn-block btn-secondary">Login</button>
+  </form>
+  {% else %}
+  <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
+    <div class="p-2">
+      <h2>User Profile</h2>
+    </div>
+    <div class="p-2">
+      <p style="font-size: large; text-align: center;">If your profile contains missing or inaccurate information,
+        <br>or you would like to provide feedback about the service,
+        <br>please contact Blast support by
+        <br><span style="font-size: larger;">
+        <a href="mailto:support@scimma.org?subject=Blast%20account%20profile%20update
+                &body=Request an update to your Blast account profile by correcting missing or inaccurate profile information:
+                %0A%0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Email: {% if user.email %}{{ user.email }}{% else %}[Please enter your preferred email address here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Given name: {% if user.first_name %}{{ user.first_name }}{% else %}[Please enter your given name here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Family name: {% if user.last_name %}{{ user.last_name }}{% else %}[Please enter your family name here.]{% endif %}
+                %0A
+                &nbsp;&nbsp;&nbsp;&nbsp;Affiliation: [Please enter your institutional affiliation (e.g. University of Hawai'i)]
+                %0A%0A
+                (optional) Provide some feedback about your experience with Blast so we can improve the service. What do you like about it?
+                What could be better?
+                %0A%0A
+                &nbsp;&nbsp;&nbsp;&nbsp;[Enter feedback here.]
+                %0A%0A%0A%0A
+                _______________&nbsp;&nbsp;Please do not edit below this line.&nbsp;&nbsp;_______________
+                %0A
+                username: {{ user.username }}%0A">✉️ using this template to email us</a>.</span>
+      </p>
+    </div>
+    <div class="p-2 my-3">
+      <table>
+        <tr class="profile-item">
+          <th>Given Name:</th>
+          <td>{% if user.first_name %}{{ user.first_name }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+        <tr class="profile-item">
+          <th>Family Name:</th>
+          <td>{% if user.last_name %}{{ user.last_name }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+        <tr class="profile-item">
+          <th>Email:</th>
+          <td>{% if user.email %}{{ user.email }}{% else %}<code>None</code>{% endif %}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="p-2" style="max-width: 600px;">
+      <p style="text-align: center;">
+        Your account username, displayed below, is a unique identifier automatically assigned by our
+        authentication system. It is displayed here for reference if needed by the Blast support team.
+      </p>
+      <p style="text-align: center; font-family: monospace;">
+        {% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}
+      </p>
+    </div>
+  </div>
+
+  {% endif %}
+  <script>
+      function toggleLoginForm() {
+          var login_form = document.getElementById("local-login-form");
+          var oidc_button = document.getElementById("oidc-button");
+          if (login_form.style.display === "none") {
+              login_form.style.display = "block";
+              oidc_button.style.display = "none";
+            } else {
+              login_form.style.display = "none";
+              oidc_button.style.display = "block";
+          }
+      }
+  </script>
 </body>
 {% endblock %}
