@@ -21,3 +21,4 @@ contributed to Blast's development.
 * Stephen Thorp
 * Ashley Villar
 * Bingjie Wang
+* Rishabh Bezbarua

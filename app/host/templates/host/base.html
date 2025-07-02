@@ -171,14 +171,30 @@
 
   <footer class="py-3">
     <div class="container">
-      <span class="text-muted">Report bugs and issues on Github
-        <a href="https://github.com/scimma/blast/issues"><i class="bi-github" role="img" aria-label="GitHub"></i> here</a>
+      <span class="text-muted">
+        <a href="mailto:{{ support_email }}?subject=Blast%20support%20request&body=
+        Please%20provide%20a%20detailed%20description%20of%20your%20problem%20or%20question.%20Make%20sure%20to%20search%20the%20documentation%20%28https%3A%2F%2Fblast.readthedocs.io%29%20and%20our%20GitHub%20Discussions%20%28https%3A%2F%2Fgithub.com%2Fscimma%2Fblast%2Fdiscussions%29%20for%20answers%20first.%20We%20appreciate%20your%20patience%20in%20receiving%20a%20response%3B%20please%20allow%20one%20or%20two%20days%20before%20sending%20a%20follow-up%20email.
+        %0A%0A
+        &nbsp;&nbsp;&nbsp;&nbsp;Email: {% if user.email %}{{ user.email }}{% endif %}
+        %0A
+        &nbsp;&nbsp;&nbsp;&nbsp;Given name: {% if user.first_name %}{{ user.first_name }}{% endif %}
+        %0A
+        &nbsp;&nbsp;&nbsp;&nbsp;Family name: {% if user.last_name %}{{ user.last_name }}{% endif %}
+        %0A
+        &nbsp;&nbsp;&nbsp;&nbsp;Affiliation: [e.g. University of Hawai'i]
+        %0A%0A
+        Message:%20%20%0A
+        %0A%0A%0A%0A
+        {% if user.is_authenticated %}
+        _______________&nbsp;&nbsp;Please do not edit below this line.&nbsp;&nbsp;_______________
+        %0A
+        username: {{ user.username }}%0A
+        {% endif %}
+        "><i class="bi-life-preserver" role="img" aria-label="Help"></i> Ask for help</a>
+        <span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="https://github.com/scimma/blast/issues"><i class="bi-github" role="img" aria-label="GitHub"></i> Report bugs/issues</a>
         <span style="margin-left:2px">
-          <span class="text-muted">| UCSC Transient team web pages
-            <a href="https://transients.ucsc.edu/">here</a>
-          </span>
-          <span class="text-muted">| {% app_version "v" %}
-          </span>
+          <span class="text-muted"><span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="https://transients.ucsc.edu/">UCSC Transient team</a></span>
+          <span class="text-muted"><span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="https://github.com/scimma/blast/releases/tag/{% app_version "v" %}">{% app_version "v" %}</a></span>
         </span>
       </span>
     </div>

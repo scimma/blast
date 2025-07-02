@@ -107,7 +107,7 @@ span.psw {
         <br>or you would like to provide feedback about the service,
         <br>please contact Blast support by
         <br><span style="font-size: larger;">
-        <a href="mailto:support@scimma.org?subject=Blast%20account%20profile%20update
+        <a href="mailto:{{ support_email }}?subject=Blast%20account%20profile%20update
                 &body=Request an update to your Blast account profile by correcting missing or inaccurate profile information:
                 %0A%0A
                 &nbsp;&nbsp;&nbsp;&nbsp;Email: {% if user.email %}{{ user.email }}{% else %}[Please enter your preferred email address here.]{% endif %}

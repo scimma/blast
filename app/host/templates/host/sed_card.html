@@ -25,6 +25,7 @@
 	  <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'local' %}','_self')">
             <span>Download Best-Fit Model</span>
             </button>
+            <div id="loading-indicator-sed-local" class="loader"></div>
             {{ bokeh_sed_local_div | safe }}
         </div>
     </div>
@@ -37,7 +38,8 @@
 	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'global' %}','_self')">
             <span>Download Best-Fit Model</span>
             </button>
-          <div>&nbsp;</div>
+            <div>&nbsp;</div>
+            <div id="loading-indicator-sed-global" class="loader"></div>
             {{ bokeh_sed_global_div | safe }}
         </div>
     </div>

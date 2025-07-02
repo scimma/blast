@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.4.1'
+APP_VERSION = '1.5.0'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -245,6 +245,9 @@ OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
 LOGIN_URL = '/oidc/authenticate'
 LOGIN_REDIRECT_URL = "/transient_uploads"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
+
+# Email for support requests
+SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
 
 # ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
 # which allows the front end to use location.href to /auth/logout to logout.

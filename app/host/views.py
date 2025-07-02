@@ -38,7 +38,6 @@ from django.conf import settings
 from celery import shared_task
 from host.log import get_logger
 logger = get_logger(__name__)
-from copy import deepcopy
 
 
 def filter_transient_categories(qs, value, task_register=None):
