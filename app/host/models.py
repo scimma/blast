@@ -645,19 +645,3 @@ class TaskLock(models.Model):
 
     def __str__(self):
         return f'''{self.name}: created {self.time_created}, expires {self.time_expires}'''
-
-class UsageMetricsLogs(models.Model):
-    """
-    Model to keep track of usage metrics based on requests.
-    Attributes:
-        request_url (models.CharField): The URL from which the request came 
-        request_time (models.DateTimeField): Time of request.
-        submitted_data (models.TextField): The data submitted in the request
-        request_user (models.CharField): The user that made the request (if authenticated).
-        request_ip (models.CharField): The source IP that made the request.
-    """
-    request_url = models.CharField(max_length=100)
-    request_time = models.DateTimeField(auto_now_add=True)
-    submitted_data = models.TextField(null=True, blank=True)
-    request_user = models.CharField(max_length=100, null=True, blank=True)
-    request_ip = models.CharField(max_length=45)

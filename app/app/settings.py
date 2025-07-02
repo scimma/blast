@@ -162,6 +162,9 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Matomo tracking server and site information
+MATOMO_URL = "https://matomo.example.com/"
+MATOMO_SITE_ID = 51
 
 MEDIA_URL = "/cutouts/"
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
