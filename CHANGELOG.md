@@ -5,6 +5,12 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2025-07-02
+
+### Fixed
+
+- The static landing page was not populating the support email address in the email template defined by the `mailto` link in the footer. Instead of supplying the value via context processor, it was supplied via template tag such that the information is available to the periodic rendering function `update_home_page_statistics()`.
+
 ## [1.5.0] - 2025-07-01
 
 ### Added
