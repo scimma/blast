@@ -351,7 +351,7 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
                 cosmo.distmod(result["obs"]["redshift"]).value
                 - cosmo.distmod(result["obs"]["redshift"] - 0.015).value
             )
-            print(f"mag off: {mag_off}")
+            logger.debug(f"mag off: {mag_off}")
             fig.line(
                 a * model_data["rest_wavelength"],
                 maggies_to_mJy(model_data["spec"]) * 10 ** (0.4 * mag_off),
