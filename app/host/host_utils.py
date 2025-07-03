@@ -410,7 +410,7 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
 
 def select_cutout_aperture(cutouts, choice=0):
     """
-    Select cutout for aperture
+    Select cutout for aperture by searching through the available filters.
     """
     filter_names = [
         "PanSTARRS_g",
@@ -425,13 +425,15 @@ def select_cutout_aperture(cutouts, choice=0):
         "2MASS_H",
     ]
 
-    # choice = 0
-    # edited to allow initial offset
-    filter_choice = filter_names[choice]
-
-    while not cutouts.filter(filter__name=filter_choice).filter(~Q(fits="")).exists():
-        choice += 1
-        filter_choice = filter_names[choice]
+    cutout = None
+    # Start iterating through the subset of filters in the list staring at the index specified by "choice".
+    filter_choice = filter_names[choice:]
+    for filter_name in filter_names[choice:]:
+        cutout = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
+        logger.debug(f'''[select_cutout_aperture] cutout ({len(cutout)}): {cutout[0]}''')
+        if cutout.exists():
+            filter_choice = filter_name
+            break
 
     return cutouts.filter(filter__name=filter_choice)
 

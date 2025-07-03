@@ -5,6 +5,18 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2025-07-03
+
+### Fixed
+
+- Fixed a bug when loading result pages, where the page would fail with a "Server Error (500)" message if there were missing data files expected by the page renderer. These errors are now handled more gracefully by rendering empty plots and a message sayingt o reprocess the transient.
+
+### Changed
+
+- Restructured the navigation bar to separate the user account interface and ancillary information from application tools. Links to documentation, source code repo, and acknowledgements were moved to a dropdown menu.
+- Improved the responsiveness of the web pages and support for browser scaling.
+- Retrigger and reprocess buttons are now displayed on the result pages based on user permissions.
+
 ## [1.5.1] - 2025-07-02
 
 ### Fixed

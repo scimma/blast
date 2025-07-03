@@ -609,7 +609,7 @@ def update_home_page_statistics():
             "processed": processed,
             "in_progress": in_progress,
             **bokeh_processing_context,
-            "hide_login": False,
+            "show_profile": True,
         },
     )
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:

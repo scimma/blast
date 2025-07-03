@@ -146,9 +146,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         script, div = components(fig)
         return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
-    # If there is no cutout data, generate an empty plot
-    if cutout is None:
-        title = "No cutout selected"
+    def generate_empty_plot(title):
         fig = figure(
             title=f"{title}",
             x_axis_label="",
@@ -163,6 +161,10 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         image_data = np.zeros((500, 500))
         return generate_plot(fig, image_data)
 
+    # If there is no cutout data, generate an empty plot
+    if cutout is None:
+        return generate_empty_plot(title="No cutout selected")
+
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
     if not os.path.isfile(local_fits_path):
@@ -173,7 +175,11 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
             s3.download_object(path=object_key, file_path=local_fits_path)
         else:
             logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
-    assert os.path.isfile(local_fits_path)
+    # If the file is missing for some reason, generate an empty plot with an error title
+    if not os.path.isfile(local_fits_path):
+        title = f'''Missing data file: "{os.path.basename(local_fits_path)}". '''
+        title += '''Reprocess transient to regenerate missing data.'''
+        return generate_empty_plot(title=title)
     with fits.open(local_fits_path) as fits_file:
         image_data = fits_file[0].data
         wcs = WCS(fits_file[0].header)

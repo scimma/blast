@@ -429,6 +429,9 @@ class Cutout(models.Model):
         self.software_version = settings.APP_VERSION
         super(Cutout, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f'''transient: {self.transient.name}, filter name: "{self.name}", filter: "{self.filter}"'''
+
 
 class Aperture(SkyObject):
     """
