@@ -94,7 +94,6 @@
 </head>
 
 <body>
-  {% load matomo_tags %}
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
       <a class="navbar-brand" href="/">
@@ -209,6 +208,5 @@
   <script src="https://cdn.jsdelivr.net/npm/@bokeh/bokehjs@3.7.3/build/js/bokeh.min.js" 
     integrity="sha512-VCMNW64GgF6YCx6cLyg8tyEXFCUKbKYg4rcoTVN5A2c1AnF9QRJsYXcomu5ira0lLnirC3K1FZbnzRZDW7eOSw==" crossorigin="anonymous"></script>
   {% block script %}{% endblock %}
-  {% tracking_code %}
 </body>
 </html>

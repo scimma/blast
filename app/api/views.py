@@ -15,6 +15,7 @@ from rest_framework.views import APIView
 from . import datamodel
 from . import serializers
 from .components import data_model_components
+from host.decorators import log_usage_metric
 
 
 ### Filter Sets ###
@@ -202,6 +203,7 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
 
 
 @api_view(["GET"])
+@log_usage_metric()
 def get_transient_science_payload(request, transient_name):
     if not transient_exists(transient_name):
         return Response(

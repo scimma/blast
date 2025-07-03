@@ -16,6 +16,7 @@ from host.transient_tasks import get_processing_status_and_progress
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, permission_required
+from host.decorators import log_usage_metric
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -32,6 +33,7 @@ periodic_tasks = [
 
 @login_required
 @permission_required("host.retrigger_transient", raise_exception=True)
+@log_usage_metric()
 def retrigger_transient_view(request=None, slug=''):
     return retrigger_transient(request, slug)
 

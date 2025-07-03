@@ -63,7 +63,6 @@ INSTALLED_APPS = [
     "django_filters",
     'django_celery_results',
     'mozilla_django_oidc',
-    'matomo',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
 ]
@@ -162,9 +161,6 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Matomo tracking server and site information
-MATOMO_URL = os.environ.get("MATOMO_SITE_URL", "http://localhost:8080")
-MATOMO_SITE_ID = int(os.environ.get("MATOMO_SITE_ID", "1"))
 
 MEDIA_URL = "/cutouts/"
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")

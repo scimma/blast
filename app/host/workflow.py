@@ -25,6 +25,7 @@ from .base_tasks import initialise_all_tasks_status
 from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
 from django.contrib.auth.decorators import login_required, permission_required
+from host.decorators import log_usage_metric
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -32,6 +33,7 @@ logger = get_logger(__name__)
 
 @login_required
 @permission_required("host.reprocess_transient", raise_exception=True)
+@log_usage_metric()
 def reprocess_transient_view(request=None, slug=''):
     return reprocess_transient(request, slug)
 

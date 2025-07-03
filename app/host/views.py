@@ -38,6 +38,7 @@ from django.conf import settings
 from celery import shared_task
 from host.log import get_logger
 logger = get_logger(__name__)
+from host.decorators import log_usage_metric
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -137,7 +138,9 @@ def transient_list(request):
 
 @login_required
 @permission_required("host.upload_transient", raise_exception=True)
+@log_usage_metric()
 def transient_uploads(request):
+    logger.info(f"Requests: {request.META}")
     errors = []
     uploaded_transient_names = []
 
