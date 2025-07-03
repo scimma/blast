@@ -91,6 +91,7 @@
     100% { transform: rotate(360deg); }
   }
   </style>
+  {% load bootstrap4 %}
   {% load static %}
   {% include 'latexify/stylesheets.html' %}
 
@@ -99,55 +100,53 @@
 
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="/">
-        <img src="{% static 'images/blast_logo.png' %}" style="max-height: 2rem;" />
-      </a>
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav align-items-center">
-          <!-- <li class="nav-item">
-            <a class="nav-link" href="/"><i class="bi bi-house-door-fill"></i> Home</a>
-          </li> -->
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-full" aria-controls="navbar-full" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbar-full">
+      <div class="container-fluid d-flex">
+        <ul class="navbar-nav mr-auto d-flex align-items-center">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
+              <img src="{% static 'images/blast_logo.png' %}" style="max-height: 2rem;" />
+            </a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a class="dropdown-item" title="Home" href="/"><i class="bi bi-house"></i> Home</a>
+              <a class="dropdown-item" title="Acknowledgements" href="/acknowledgements"><i class="bi bi-mortarboard-fill"></i> Acknowledgements</a>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" target="_blank" title="Docs" href="https://blast.readthedocs.io/en/latest/"><i class="bi bi-book-half"></i> Docs</a>
+              <a class="dropdown-item" target="_blank" title="Source code" href="https://github.com/scimma/blast"><i class="bi-github" role="img" aria-label="GitHub"></i> Source Code</a>
+            </div>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="/transients"><i class="bi bi-search"></i> Transients</a>
           </li>
-          <!--<li class="nav-item">
-              <a class="nav-link" href="/analytics">Analytics</a>
-            </li>-->
-          <li class="nav-item">
-            <a class="nav-link" href="/acknowledgements"><i class="bi bi-mortarboard-fill"></i>
-              Acknowledgements</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="https://blast.readthedocs.io/en/latest/">
-              <i class="bi bi-book-half"></i> Docs
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="https://github.com/scimma/blast">
-              <i class="bi-github" role="img" aria-label="GitHub"></i> Source Code
-            </a>
-          </li>
           {% if user.is_authenticated %}
-          {% if user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link" href="/transient_uploads"> Uploads </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="container-fluid d-flex flex-row-reverse">
+        <ul class="navbar-nav ml-auto d-flex align-items-center">
+          
+          {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
             <a class="nav-link" href="/admin"> Admin </a>
           </li>
           {% endif %}
           <li class="nav-item">
-            <a class="nav-link" href="/transient_uploads"> Uploads </a>
-          </li>
-          {% if not hide_login %}
-          <li class="nav-item">
             <a class="nav-link" href="/accounts/login">
-              <i class="bi bi-person"></i> Profile
+              <i class="bi bi-person"></i>
+                {% if show_profile or user.is_authenticated %}
+                  Profile
+                {% else %}
+                  Login
+                {% endif %}
             </a>
           </li>
-          {% endif %}
+          {% if user.is_authenticated %}
           <form action="{% url 'logout' %}" method="post">
             {% csrf_token %}
             <li class="nav-item">
@@ -156,19 +155,13 @@
               </button>
             </li>
           </form>
-          {% elif not hide_login %}
-          <li class="nav-item">
-            <a class="nav-link" href="/accounts/login">
-              <i class="bi bi-box-arrow-in-right"></i> Login
-            </a>
-          </li>
           {% endif %}
         </ul>
       </div>
     </div>
   </nav>
 
-  <div class="container-lg bg-light">
+  <div class="container bg-light">
     {% block body %}
     {% endblock %}
   </div>
