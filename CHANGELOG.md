@@ -5,6 +5,12 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.3] - 2025-07-07
+
+### Fixed
+
+- Fixed a bug introduced in v1.5.2 when loading some transient result pages.
+
 ## [1.5.2] - 2025-07-03
 
 ### Fixed
