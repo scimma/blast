@@ -5,6 +5,12 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4]
+
+### Added
+
+- Added a new "garbage collector" periodic task that purges the `cutout_cdn` and `sed_output` scratch space of orphaned data.
+
 ## [1.5.3] - 2025-07-07
 
 ### Fixed
