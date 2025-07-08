@@ -425,13 +425,12 @@ def select_cutout_aperture(cutouts, choice=0):
         "2MASS_H",
     ]
 
-    cutout = None
     # Start iterating through the subset of filters in the list staring at the index specified by "choice".
     filter_choice = filter_names[choice:]
     for filter_name in filter_names[choice:]:
-        cutout = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
-        logger.debug(f'''[select_cutout_aperture] cutout ({len(cutout)}): {cutout[0]}''')
-        if cutout.exists():
+        cutout_qs = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
+        if cutout_qs.exists():
+            logger.debug(f'''Cutouts for filter "{filter_name}": {[str(cutout) for cutout in cutout_qs]}''')
             filter_choice = filter_name
             break
 
