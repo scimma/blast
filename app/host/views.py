@@ -216,7 +216,7 @@ def analytics(request):
         request, "analytics.html", {**analytics_results, **bokeh_processing_context}
     )
 
-
+@log_usage_metric()
 def results(request, slug):
 
     transients = Transient.objects.all()

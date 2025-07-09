@@ -424,8 +424,9 @@ class PruneUsageDatabase(SystemTaskRunner):
         logs_json = serializers.serialize("json", logs)
         content = logs_json.encode()
         timestamp = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d-%H-%M-%S")
-        file_path = f"logs-{timestamp}.json.gz"
-        object_key = object_key = os.path.join(settings.S3_LOGS_PATH, file_path)
+        file_name = f"logs-{timestamp}.json.gz"
+        file_path = os.path.join("/tmp", file_name)
+        object_key = object_key = os.path.join(settings.S3_LOGS_PATH, file_name)
         with gzip.open(file_path, "wb") as f:
             f.write(content)
         s3 = ObjectStore()
@@ -441,7 +442,7 @@ class PruneUsageDatabase(SystemTaskRunner):
         return "Prune Usage Database Table"
     @property
     def task_frequency_seconds(self):
-        return 60                                       # CHANGE TO 3600 IN PROD
+        return 3600
     @property
     def task_initially_enabled(self):
         return True
