@@ -1,6 +1,7 @@
 from celery import shared_task
 from dateutil import parser
 from django.conf import settings
+from django.core import serializers
 from django.db.models import Q
 from datetime import datetime, timedelta, timezone
 from host.base_tasks import initialise_all_tasks_status
@@ -12,11 +13,15 @@ from host.workflow import transient_workflow
 from host.trim_images import trim_images
 from app.celery import app
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
+import gzip
+import os
 
 from .models import Status
 from .models import TaskRegister
 from .models import TaskRegisterSnapshot
 from .models import Transient
+from .models import UsageMetricsLogs
+from .object_store import ObjectStore
 from .transient_name_server import get_daily_tns_staging_csv
 from .transient_name_server import get_tns_credentials
 from .transient_name_server import get_transients_from_tns
@@ -361,3 +366,41 @@ def snapshot_task_register():
 )
 def ingest_missed_tns_transients():
     IngestMissedTNSTransients().run_process()
+
+class PruneUsageDatabase(SystemTaskRunner):
+    def run_process(self):
+        """
+        For pruning the usage database and uploading the compressed data to an object store.
+        """
+        logs = UsageMetricsLogs.objects.all()
+        logs_json = serializers.serialize("json", logs)
+        content = logs_json.encode()
+        timestamp = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d-%H-%M-%S")
+        file_path = f"logs-{timestamp}.json.gz"
+        object_key = object_key = os.path.join(settings.S3_LOGS_PATH, file_path)
+        with gzip.open(file_path, "wb") as f:
+            f.write(content)
+        s3 = ObjectStore()
+        s3.put_object(path=object_key, file_path=file_path)
+        try:
+            os.remove(file_path)
+        except:
+            logger.info(f'''{file_path} does not exist???''')
+        logs.delete()
+
+    @property
+    def task_name(self):
+        return "Prune Usage Database Table"
+    @property
+    def task_frequency_seconds(self):
+        return 60                                       # CHANGE TO 3600 IN PROD
+    @property
+    def task_initially_enabled(self):
+        return True
+
+@shared_task(
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def prune_usage_database_table():
+    PruneUsageDatabase().run_process()

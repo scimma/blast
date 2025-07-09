@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from .models import ExternalResourceCall
 from .models import UsageMetricsLogs
+import json
 
 
 def log_resource_call(resource_name):
@@ -59,7 +60,11 @@ def log_usage_metric():
             value = func(*args, **kwargs)
             request_body = request.method
             if (request.method == "POST"):
-                request_body += str(request.POST)
+                request_body += "\n"
+                post_info = request.POST.copy()
+                post_info = {k:v for k,v in post_info.items() if v}
+                post_info.pop("csrfmiddlewaretoken", None)
+                request_body += json.dumps(post_info)
             call = UsageMetricsLogs(
                 request_url = request.path,
                 request_time=timezone.now(),

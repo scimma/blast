@@ -184,6 +184,7 @@ CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
+S3_LOGS_PATH = os.getenv("S3_LOGS_PATH", "")
 
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "UTC"

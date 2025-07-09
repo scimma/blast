@@ -140,7 +140,6 @@ def transient_list(request):
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
 def transient_uploads(request):
-    logger.info(f"Requests: {request.META}")
     errors = []
     uploaded_transient_names = []
 
