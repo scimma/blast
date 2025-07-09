@@ -1,3 +1,5 @@
+import os
+from shutil import rmtree
 from celery import shared_task
 from dateutil import parser
 from django.conf import settings
@@ -11,6 +13,7 @@ from host.base_tasks import task_time_limit
 from host.workflow import reprocess_transient
 from host.workflow import transient_workflow
 from host.trim_images import trim_images
+from host.host_utils import get_directory_size
 from app.celery import app
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 import gzip
@@ -198,6 +201,51 @@ class SnapshotTaskRegister(SystemTaskRunner):
     @property
     def task_name(self):
         return "Snapshot task register"
+
+
+class GarbageCollector(SystemTaskRunner):
+    def prune_workflow_scratch_dirs(self, root_path, dry_run=False):
+        riw = RetriggerIncompleteWorkflows()
+        # List scratch directories first to ensure that a subsequently launched transient
+        # workflow's scratch files cannot be accidentally deleted.
+        scratch_dirs = os.listdir(root_path)
+        all_tasks = [task for task in riw.inspect_worker_tasks()]
+        total_size = 0
+        for transient_name in scratch_dirs:
+            scratch_path = os.path.join(os.path.realpath(root_path), transient_name)
+            dir_size = get_directory_size(scratch_path)
+            total_size += dir_size
+            # If there is an active or queued task with the transient's name as the argument,
+            # the transient workflow is still processing.
+            if [task for task in all_tasks if task['args'].find(transient_name) >= 0]:
+                logger.debug(f'''["{transient_name}"] is queued or active. Skipping.''')
+                continue
+            # If the workflow is not queued or active, purge the scratch files.
+            log_msg = f'''["{transient_name}"] Purging scratch files ({dir_size} bytes): "{scratch_path}"'''
+            if dry_run:
+                logger.info(f'''{log_msg} [dry-run]''')
+            else:
+                logger.info(log_msg)
+                rmtree(scratch_path, ignore_errors=True)
+
+    def run_process(self):
+        """
+        Run garbage collector.
+        """
+        self.prune_workflow_scratch_dirs(settings.CUTOUT_ROOT)
+        self.prune_workflow_scratch_dirs(settings.SED_OUTPUT_ROOT)
+
+    @property
+    def task_name(self):
+        return "Garbage collector"
+
+    @property
+    def task_frequency_seconds(self):
+        return 3600
+
+    @property
+    def task_initially_enabled(self):
+        return True
 
 
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
@@ -404,3 +452,11 @@ class PruneUsageDatabase(SystemTaskRunner):
 )
 def prune_usage_database_table():
     PruneUsageDatabase().run_process()
+
+
+@shared_task(
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def garbage_collector():
+    GarbageCollector().run_process()
