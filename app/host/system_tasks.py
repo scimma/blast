@@ -236,7 +236,7 @@ class GarbageCollector(SystemTaskRunner):
 
     @property
     def task_frequency_seconds(self):
-        return 60
+        return 3600
 
     @property
     def task_initially_enabled(self):
