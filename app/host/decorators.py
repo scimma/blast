@@ -1,6 +1,8 @@
 import functools
+import re
 
 from django.utils import timezone
+from django.conf import settings
 
 # from .models import ExternalResourceCall
 from .models import UsageMetricsLogs
@@ -47,22 +49,33 @@ def log_usage_metric():
         def wrapper_save(*args, **kwargs):
             request = args[0]
             value = func(*args, **kwargs)
-            request_body = request.method
+            # Do not record ignored requests
+            for ignore_url in settings.USAGE_METRICS_IGNORE_REQUESTS:
+                if request.path == ignore_url['path'] and request.method == ignore_url['method']:
+                    return value
+            # Filter the submitted data object for POST requests
+            submitted_data = {}
             if (request.method == "POST"):
-                request_body += "\n"
-                post_info = request.POST.copy()
-                post_info = {k: v for k, v in post_info.items() if v}
-                post_info.pop("csrfmiddlewaretoken", None)
-                request_body += json.dumps(post_info)
-            call = UsageMetricsLogs(
+                post_data = {k: v for k, v in request.POST.copy().items() if v}
+                post_data.pop("csrfmiddlewaretoken", None)
+                tns_names = []
+                if 'tns_names' in post_data:
+                    tns_names = re.split(r'\r\n|\n|\r', post_data['tns_names'])
+                    post_data['tns_names'] = tns_names
+                full_info = []
+                if 'full_info' in post_data:
+                    full_info = re.split(r'\r\n|\n|\r', post_data['full_info'])
+                    post_data['full_info'] = full_info
+                submitted_data = json.dumps(post_data)
+            # Create and save the data to a new usage metric log object
+            UsageMetricsLogs(
                 request_url=request.path,
+                request_method=request.method,
                 request_time=timezone.now(),
-                submitted_data=request_body,
+                submitted_data=submitted_data,
                 request_user=request.user,
                 request_ip=request.META["REMOTE_ADDR"],
-            )
-            if not (request.path == "/transient_uploads/" and request.method == "GET"):
-                call.save()
+            ).save()
             return value
         return wrapper_save
     return decorator_save
