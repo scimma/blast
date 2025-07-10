@@ -12,7 +12,7 @@ from host.system_tasks import SnapshotTaskRegister
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import TrimTransientImages
 from host.system_tasks import RetriggerIncompleteWorkflows
-from host.system_tasks import PruneUsageDatabase
+from host.system_tasks import UsageLogRoller
 from host.system_tasks import GarbageCollector
 from host.transient_tasks import get_processing_status_and_progress
 from django.urls import reverse_lazy
@@ -31,7 +31,7 @@ periodic_tasks = [
     TrimTransientImages(),
     RetriggerIncompleteWorkflows(),
     GarbageCollector(),
-    PruneUsageDatabase()
+    UsageLogRoller(),
 ]
 
 

@@ -54,7 +54,7 @@ def log_usage_metric():
                 if request.path == ignore_url['path'] and request.method == ignore_url['method']:
                     return value
             # Filter the submitted data object for POST requests
-            submitted_data = {}
+            submitted_data = ''
             if (request.method == "POST"):
                 post_data = {k: v for k, v in request.POST.copy().items() if v}
                 post_data.pop("csrfmiddlewaretoken", None)

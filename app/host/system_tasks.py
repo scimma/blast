@@ -415,44 +415,79 @@ def snapshot_task_register():
 def ingest_missed_tns_transients():
     IngestMissedTNSTransients().run_process()
 
-class PruneUsageDatabase(SystemTaskRunner):
+
+class UsageLogRoller(SystemTaskRunner):
     def run_process(self):
         """
-        For pruning the usage database and uploading the compressed data to an object store.
+        Roll the usage logs by generating archive files and uploading them to the object store.
+        Prune the archived usage logs from the database.
         """
-        logs = UsageMetricsLogs.objects.all()
-        logs_json = serializers.serialize("json", logs)
-        content = logs_json.encode()
-        timestamp = datetime.now(tz=timezone.utc).strftime("%Y-%m-%d-%H-%M-%S")
-        file_name = f"logs-{timestamp}.json.gz"
-        file_path = os.path.join("/tmp", file_name)
-        object_key = object_key = os.path.join(settings.S3_LOGS_PATH, file_name)
-        with gzip.open(file_path, "wb") as f:
-            f.write(content)
+        logs = UsageMetricsLogs.objects.all().order_by('request_time')
+        num_logs = settings.USAGE_METRICS_LOGS_PER_ARCHIVE
+        if len(logs) < num_logs:
+            logger.info(f'''Not enough log entries to archive: {len(logs)} < {num_logs}''')
+            return
         s3 = ObjectStore()
-        s3.put_object(path=object_key, file_path=file_path)
-        try:
-            os.remove(file_path)
-        except:
-            logger.info(f'''{file_path} does not exist???''')
-        logs.delete()
+        remaining_logs = logs
+        while len(remaining_logs) >= num_logs:
+            # Slice off the number of logs for the next archive file
+            archive_logs = remaining_logs[:num_logs]
+            logger.debug([str(log) for log in archive_logs])
+            # Rely on the microsecond precision of the timestamp to ensure unique filename
+            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d%H%M%S.%f")
+            file_name = f"usage_logs.{timestamp}.json.gz"
+            file_path = os.path.join("/tmp", file_name)
+            max_retries = 3
+            while max_retries > 0:
+                max_retries -= 1
+                try:
+                    # Export to a compressed JSON file and upload to the object store
+                    logs_json = serializers.serialize("json", archive_logs)
+                    with gzip.open(file_path, "wb") as archive_file:
+                        archive_file.write(logs_json.encode())
+                    object_key = os.path.join(settings.S3_LOGS_PATH, file_name)
+                    s3.put_object(path=object_key, file_path=file_path)
+                    assert s3.object_exists(object_key)
+                except Exception as err:
+                    logger.error(err)
+                    # If the archive process has errored max_retries times, break the archive file generation loop
+                    if max_retries < 0:
+                        logger.error(f'''Failed to archive logs {max_retries} times. Aborting log roller.''')
+                        remaining_logs = []
+                else:
+                    # Only delete the log entries and continue processing the next set if the archive file was uploaded.
+                    # Otherwise, retry the archiving process up to `max_retries` times.
+                    for log in archive_logs:
+                        logger.debug(f'''({type(log)}) {str(log)}''')
+                        log.delete()
+                    remaining_logs = remaining_logs[num_logs:]
+                    # Break retry loop
+                    max_retries = 0
+                finally:
+                    try:
+                        os.remove(file_path)
+                    except FileNotFoundError:
+                        logger.warning(f'''Unable to delete temporary log archive file: "{file_path}" not found.''')
 
     @property
     def task_name(self):
-        return "Prune Usage Database Table"
+        return "Usage log roller"
+
     @property
     def task_frequency_seconds(self):
         return 3600
+
     @property
     def task_initially_enabled(self):
         return True
+
 
 @shared_task(
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
-def prune_usage_database_table():
-    PruneUsageDatabase().run_process()
+def usage_log_roller():
+    UsageLogRoller().run_process()
 
 
 @shared_task(

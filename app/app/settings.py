@@ -186,6 +186,7 @@ S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 S3_LOGS_PATH = os.getenv("S3_LOGS_PATH", "")
 
+USAGE_METRICS_LOGS_PER_ARCHIVE = int(os.getenv('USAGE_METRICS_LOGS_PER_ARCHIVE', '1000'))
 USAGE_METRICS_IGNORE_REQUESTS = [
     {
         'path': '/transient_uploads/',

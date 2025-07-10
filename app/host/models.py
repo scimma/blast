@@ -661,12 +661,12 @@ class UsageMetricsLogs(models.Model):
         request_user (models.CharField): The user that made the request (if authenticated).
         request_ip (models.CharField): The source IP that made the request.
     """
-    request_url = models.CharField(max_length=100)
-    request_method = models.CharField(max_length=10)
-    request_time = models.DateTimeField(auto_now_add=True)
-    submitted_data = models.TextField(null=True, blank=True)
-    request_user = models.CharField(max_length=100, null=True, blank=True)
-    request_ip = models.CharField(max_length=45)
+    request_url = models.CharField(max_length=100, blank=False)
+    request_method = models.CharField(max_length=10, blank=False)
+    request_time = models.DateTimeField(auto_now_add=True, blank=False)
+    submitted_data = models.TextField(blank=True, default='')
+    request_user = models.CharField(max_length=100, blank=False)
+    request_ip = models.CharField(max_length=45, blank=True, default='')
 
     def __str__(self):
         return f'''({self.request_time}, {self.request_user}) [{self.request_method}] {self.request_url}'''
