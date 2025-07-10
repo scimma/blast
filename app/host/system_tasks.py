@@ -23,7 +23,7 @@ from .models import Status
 from .models import TaskRegister
 from .models import TaskRegisterSnapshot
 from .models import Transient
-from .models import UsageMetricsLogs
+from .models import UsageMetricsLog
 from .object_store import ObjectStore
 from .transient_name_server import get_daily_tns_staging_csv
 from .transient_name_server import get_tns_credentials
@@ -422,7 +422,7 @@ class UsageLogRoller(SystemTaskRunner):
         Roll the usage logs by generating archive files and uploading them to the object store.
         Prune the archived usage logs from the database.
         """
-        logs = UsageMetricsLogs.objects.all().order_by('request_time')
+        logs = UsageMetricsLog.objects.all().order_by('request_time')
         num_logs = settings.USAGE_METRICS_LOGS_PER_ARCHIVE
         if len(logs) < num_logs:
             logger.info(f'''Not enough log entries to archive: {len(logs)} < {num_logs}''')

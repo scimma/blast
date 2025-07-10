@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 
 # from .models import ExternalResourceCall
-from .models import UsageMetricsLogs
+from .models import UsageMetricsLog
 import json
 
 
@@ -68,7 +68,7 @@ def log_usage_metric():
                     post_data['full_info'] = full_info
                 submitted_data = json.dumps(post_data)
             # Create and save the data to a new usage metric log object
-            UsageMetricsLogs(
+            UsageMetricsLog(
                 request_url=request.path,
                 request_method=request.method,
                 request_time=timezone.now(),

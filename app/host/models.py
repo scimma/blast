@@ -650,7 +650,7 @@ class TaskLock(models.Model):
         return f'''{self.name}: created {self.time_created}, expires {self.time_expires}'''
 
 
-class UsageMetricsLogs(models.Model):
+class UsageMetricsLog(models.Model):
     """
     Model to keep track of usage metrics based on requests.
     Attributes:
