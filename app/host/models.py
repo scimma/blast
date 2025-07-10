@@ -255,20 +255,20 @@ class TaskRegister(models.Model):
         return f" {self.transient.name} | {self.task.name} | {self.status.message}"
 
 
-class ExternalResourceCall(models.Model):
-    """
-    A model to represent a call to a call to an external resource.
+# class ExternalResourceCall(models.Model):
+#     """
+#     A model to represent a call to a call to an external resource.
 
-    Attributes:
-        resource_name (models.CharField): Name of the external resource.
-        response_status (models.CharField): Response status returned when the
-            external resource was requested.
-        request_time (models.DateTimeField): Time of request to the resource.
-    """
+#     Attributes:
+#         resource_name (models.CharField): Name of the external resource.
+#         response_status (models.CharField): Response status returned when the
+#             external resource was requested.
+#         request_time (models.DateTimeField): Time of request to the resource.
+#     """
 
-    resource_name = models.CharField(max_length=20)
-    response_status = models.CharField(max_length=20)
-    request_time = models.DateTimeField(null=True, blank=True)
+#     resource_name = models.CharField(max_length=20)
+#     response_status = models.CharField(max_length=20)
+#     request_time = models.DateTimeField(null=True, blank=True)
 
 
 class Survey(models.Model):
