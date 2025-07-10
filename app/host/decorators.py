@@ -1,5 +1,4 @@
 import functools
-import time
 
 from django.utils import timezone
 
@@ -46,6 +45,7 @@ def log_process_time(process_name):
         Decorator function.
     """
 
+
 def log_usage_metric():
     """
     Decorator to log a usage metric based on the request.
@@ -62,15 +62,15 @@ def log_usage_metric():
             if (request.method == "POST"):
                 request_body += "\n"
                 post_info = request.POST.copy()
-                post_info = {k:v for k,v in post_info.items() if v}
+                post_info = {k: v for k, v in post_info.items() if v}
                 post_info.pop("csrfmiddlewaretoken", None)
                 request_body += json.dumps(post_info)
             call = UsageMetricsLogs(
-                request_url = request.path,
+                request_url=request.path,
                 request_time=timezone.now(),
-                submitted_data = request_body,
-                request_user = request.user,
-                request_ip = request.META["REMOTE_ADDR"],
+                submitted_data=request_body,
+                request_user=request.user,
+                request_ip=request.META["REMOTE_ADDR"],
             )
             if not (request.path == "/transient_uploads/" and request.method == "GET"):
                 call.save()
