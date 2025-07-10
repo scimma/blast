@@ -32,18 +32,7 @@ def log_resource_call(resource_name):
 
         return wrapper_save
 
-    return decorator_save
-
-
-def log_process_time(process_name):
-    """
-    Decorator to time how long a process takes.
-
-    Args:
-        process_name (str): Name of the process being timed.
-    Returns:
-        Decorator function.
-    """
+#     return decorator_save
 
 
 def log_usage_metric():
