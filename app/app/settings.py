@@ -186,6 +186,13 @@ S3_BUCKET = os.getenv("S3_BUCKET", "")
 S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 S3_LOGS_PATH = os.getenv("S3_LOGS_PATH", "")
 
+USAGE_METRICS_IGNORE_REQUESTS = [
+    {
+        'path': '/transient_uploads/',
+        'method': 'GET',
+    },
+]
+
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TIMEZONE = "UTC"
 
