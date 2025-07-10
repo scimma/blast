@@ -4,7 +4,6 @@ Defines the natural keys for model objects to be de-serialized with.
 from django.db import models
 from datetime import datetime, timedelta, timezone
 from django.conf import settings
-import os
 from host.log import get_logger
 logger = get_logger(__name__)
 
