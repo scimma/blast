@@ -5,6 +5,13 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.5]
+
+### Added
+
+- Added a decorator function to capture HTTP requests to specific endpoints as `UsageMetricsLog` objects.
+- Added a periodic task `UsageLogRoller` to roll the usage logs by exporting logs to archive files uploaded to the object store and pruning the Django database table.
+
 ## [1.5.4]
 
 ### Added
