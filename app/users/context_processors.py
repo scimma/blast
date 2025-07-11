@@ -14,30 +14,29 @@ def user_profile(request):
             perms = (perm,)
         else:
             perms = perm
-        # First check if the user has the permission (even anon users)
-        if user.has_perms(perms):
-            return True
-        return False
+        return user.has_perms(perms)
 
     user = auth(request)['user']
     username_b64decoded = ''
-    for padded_string in [f'''{user.username}{pad}''' for pad in ['', '=', '==']]:
+    # Attempt to base64-decode the username assuming stripped padding; see
+    # "app/app/auth_backend.py::generate_username()" for encoding function.
+    possible_padding = ['', '=', '==']
+    for padded_string in [f'''{user.username}{pad}''' for pad in possible_padding]:
         try:
             username_b64decoded = decoder(padded_string)
         except binascii.Error:
+            # If incorrectly padded, try the next possible padding.
             pass
         except Exception as err:
-            logger.error(f'''Error decoding username: {err}''')
+            # Do not treat this as an error, because in general Django usernames are not
+            # base64-encoded.
+            logger.debug(f'''Error decoding username "{user.username}": {err}''')
             username_b64decoded = ''
         else:
             break
-
-    logger.debug(f'''Decoded username: {username_b64decoded}''')
-
     context = {
         'username_b64decoded': username_b64decoded,
         'has_perm_retrigger_transient': check_perms(user, "host.retrigger_transient"),
         'has_perm_reprocess_transient': check_perms(user, "host.reprocess_transient"),
     }
-    logger.debug(context)
     return context
