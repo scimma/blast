@@ -475,11 +475,11 @@ class UsageLogRoller(SystemTaskRunner):
 
     @property
     def task_frequency_seconds(self):
-        return 3600
+        return settings.USAGE_METRICS_LOGROLLER_FREQUENCY
 
     @property
     def task_initially_enabled(self):
-        return True
+        return settings.USAGE_METRICS_LOGROLLER_ENABLED
 
 
 @shared_task(
