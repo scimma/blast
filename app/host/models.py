@@ -93,6 +93,7 @@ class Host(SkyObject):
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     objects = HostManager()
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    workflow = models.CharField(max_length=50, blank=True, null=True, db_default="default")
 
 
 class Transient(SkyObject):
@@ -376,35 +377,45 @@ def fits_file_path(instance):
     """
     Constructs a file path for a fits image
     """
-    return f"{instance.host}/{instance.filter.survey}/{instance.filter}.fits"
+    version = instance.host.software_version if instance.host.software_version else "0.0.0"
+    workflow = instance.host.workflow if instance.host.workflow else "default"
+    return f"{instance.host}/v{version}/{workflow}/{instance.filter.survey}/{instance.filter}.fits"
 
 
 def hdf5_file_path(instance):
     """
     Constructs a file path for a HDF5 image
     """
-    return f"{instance.transient.name}/{instance.transient.name}_{instance.aperture.type}.h5"
+    version = instance.aperture.software_version if instance.aperture.software_version else "0.0.0"
+    workflow = instance.aperture.workflow if instance.aperture.workflow else "default"
+    return f"{instance.transient.name}/v{version}/{workflow}/{instance.transient.name}_{instance.aperture.type}.h5"
 
 
 def npz_chains_file_path(instance):
     """
     Constructs a file path for a npz file
     """
-    return f"{instance.transient.name}/{instance.transient.name}_{instance.aperture.type}_chain.npz"
+    version = instance.aperture.software_version if instance.aperture.software_version else "0.0.0"
+    workflow = instance.aperture.workflow if instance.aperture.workflow else "default"
+    return f"{instance.transient.name}/v{version}/{workflow}/{instance.transient.name}_{instance.aperture.type}_chain.npz"
 
 
 def npz_percentiles_file_path(instance):
     """
     Constructs a file path for a npz file
     """
-    return f"{instance.transient.name}/{instance.transient.name}_{instance.aperture.type}_perc.npz"
+    version = instance.aperture.software_version if instance.aperture.software_version else "0.0.0"
+    workflow = instance.aperture.workflow if instance.aperture.workflow else "default"
+    return f"{instance.transient.name}/v{version}/{workflow}/{instance.transient.name}_{instance.aperture.type}_perc.npz"
 
 
 def npz_model_file_path(instance):
     """
     Constructs a file path for a npz file
     """
-    return f"{instance.transient.name}/{instance.transient.name}_{instance.aperture.type}_modeldata.npz"
+    version = instance.aperture.software_version if instance.aperture.software_version else "0.0.0"
+    workflow = instance.aperture.workflow if instance.aperture.workflow else "default"
+    return f"{instance.transient.name}/v{version}/{workflow}/{instance.transient.name}_{instance.aperture.type}_modeldata.npz"
 
 
 class Cutout(models.Model):
@@ -448,6 +459,7 @@ class Aperture(SkyObject):
     semi_minor_axis_arcsec = models.FloatField()
     type = models.CharField(max_length=20)
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    workflow = models.CharField(max_length=50, blank=True, null=True, db_default="default")
 
     objects = ApertureManager()
 
@@ -493,6 +505,7 @@ class AperturePhotometry(models.Model):
     magnitude_error = models.FloatField(blank=True, null=True)
     is_validated = models.CharField(blank=True, null=True, max_length=40)
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    workflow = models.CharField(max_length=50, blank=True, null=True, db_default="default")
 
     @property
     def flux_rounded(self):
@@ -606,6 +619,7 @@ class SEDFittingResult(models.Model):
     )
     model_file = models.FileField(upload_to=npz_model_file_path, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    workflow = models.CharField(max_length=50, blank=True, null=True, db_default="default")
 
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION
