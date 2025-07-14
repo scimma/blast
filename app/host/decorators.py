@@ -75,6 +75,7 @@ def log_usage_metric():
                 submitted_data=submitted_data,
                 request_user=request.user,
                 request_ip=request.META["REMOTE_ADDR"],
+                request_user_agent = request.META["HTTP_USER_AGENT"],
             ).save()
             return value
         return wrapper_save
