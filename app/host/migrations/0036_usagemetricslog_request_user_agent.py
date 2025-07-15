@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='usagemetricslog',
             name='request_user_agent',
-            field=models.CharField(blank=True, max_length=100),
+            field=models.CharField(blank=True, max_length=400),
         ),
     ]

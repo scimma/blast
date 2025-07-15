@@ -665,9 +665,9 @@ class UsageMetricsLog(models.Model):
     request_method = models.CharField(max_length=10, blank=False)
     request_time = models.DateTimeField(auto_now_add=True, blank=False)
     submitted_data = models.TextField(blank=True, default='')
-    request_user = models.CharField(max_length=100, blank=False)
+    request_user = models.CharField(max_length=150, blank=False)
     request_ip = models.CharField(max_length=45, blank=True, default='')
-    request_user_agent = models.CharField(max_length=100, blank=True)
+    request_user_agent = models.CharField(max_length=400, blank=True)
 
     def __str__(self):
         return f'''({self.request_time}, {self.request_user}) [{self.request_method}] {self.request_url}'''
