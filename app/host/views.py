@@ -660,3 +660,8 @@ class FlowerProxyView(UserPassesTestMixin, ProxyView):
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):
     return render(request, template_name)
+
+
+# View for the privacy policy
+def privacy_policy(request):
+    return render(request, "privacy_policy.html")
