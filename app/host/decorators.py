@@ -73,7 +73,7 @@ def log_usage_metric():
                 request_method=shorten(request.method, width=10, placeholder="..."),
                 request_time=timezone.now(),
                 submitted_data=submitted_data,
-                request_user=request.user[:150],
+                request_user=request.user.username[:150],
                 request_ip=request.META["REMOTE_ADDR"],
                 request_user_agent=shorten(request.META["HTTP_USER_AGENT"], width=400, placeholder="..."),
             ).save()
