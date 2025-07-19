@@ -10,6 +10,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AlterField(
+            model_name='usagemetricslog',
+            name='request_user',
+            field=models.CharField(max_length=150),
+        ),
         migrations.AddField(
             model_name='usagemetricslog',
             name='request_user_agent',
