@@ -7,7 +7,7 @@ from django.conf import settings
 # from .models import ExternalResourceCall
 from .models import UsageMetricsLog
 import json
-
+from textwrap import shorten
 
 # def log_resource_call(resource_name):
 #     """
@@ -68,13 +68,22 @@ def log_usage_metric():
                     post_data['full_info'] = full_info
                 submitted_data = json.dumps(post_data)
             # Create and save the data to a new usage metric log object
+            try:
+                request_ip = request.META["REMOTE_ADDR"]
+            except KeyError:
+                request_ip = ''
+            try:
+                request_user_agent = shorten(request.META["HTTP_USER_AGENT"], width=400, placeholder="...")
+            except KeyError:
+                request_user_agent = ''
             UsageMetricsLog(
-                request_url=request.path,
-                request_method=request.method,
+                request_url=shorten(request.path, width=100, placeholder="..."),
+                request_method=shorten(request.method, width=10, placeholder="..."),
                 request_time=timezone.now(),
                 submitted_data=submitted_data,
-                request_user=request.user,
-                request_ip=request.META["REMOTE_ADDR"],
+                request_user=request.user.username[:150],
+                request_ip=request_ip,
+                request_user_agent=request_user_agent,
             ).save()
             return value
         return wrapper_save

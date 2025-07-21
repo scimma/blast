@@ -5,6 +5,17 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.6]
+
+### Added
+
+- Added a privacy policy about the usage data collection.
+- Ensure usage metric object character fields do not exceed the length limits.
+
+### Fixed
+
+- Fixed two API endpoints that should require authentication: "report" and "resolve" on transient result pages.
+
 ## [1.5.5]
 
 ### Added

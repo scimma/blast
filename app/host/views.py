@@ -217,6 +217,7 @@ def analytics(request):
         request, "analytics.html", {**analytics_results, **bokeh_processing_context}
     )
 
+
 @log_usage_metric()
 def results(request, slug):
 
@@ -626,6 +627,8 @@ def flower_view(request):
     return response
 
 
+@login_required
+@log_usage_metric()
 def report_issue(request, item_id):
     item = TaskRegister.objects.get(pk=item_id)
     item.user_warning = True
@@ -635,6 +638,8 @@ def report_issue(request, item_id):
     )
 
 
+@login_required
+@log_usage_metric()
 def resolve_issue(request, item_id):
     item = TaskRegister.objects.get(pk=item_id)
     item.user_warning = False
@@ -661,3 +666,8 @@ class FlowerProxyView(UserPassesTestMixin, ProxyView):
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):
     return render(request, template_name)
+
+
+# View for the privacy policy
+def privacy_policy(request):
+    return render(request, "privacy_policy.html")
