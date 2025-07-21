@@ -45,6 +45,7 @@ from .models import Cutout
 from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
+from .object_key import get_cutout_file_object_key_from_cutout
 from pathlib import Path
 
 from host.log import get_logger
@@ -342,8 +343,8 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
     # check both the image used to generate aperture
     # and the image used to measure photometry
     for local_fits_path in [
-        global_aperture_phot.aperture.cutout.fits.name,
-        aperture_primary.cutout.fits.name,
+        get_cutout_file_object_key_from_cutout(global_aperture_phot.aperture.cutout),
+        get_cutout_file_object_key_from_cutout(aperture_primary.cutout),
     ]:
         # UV photons are too sparse, segmentation map
         # builder cannot easily handle these

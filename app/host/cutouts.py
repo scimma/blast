@@ -78,7 +78,7 @@ def getRADecBox(ra, dec, size):
 def download_and_save_cutouts(
     transient,
     fov=Quantity(0.1, unit="deg"),
-    cutout_base_path=settings.CUTOUT_ROOT,
+    workflow = "workflow_default",
     overwrite=settings.CUTOUT_OVERWRITE,
     filter_set=None
 ):
@@ -106,7 +106,8 @@ def download_and_save_cutouts(
 
     def download_filter_data(filter):
         # Does cutout file exist on the local disk?
-        save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
+        version = transient.software_version if transient.software_version else "0.0.0"
+        save_dir = f"{transient.name}/v{version}/{workflow}/{filter.survey.name}/"
         local_fits_path = save_dir + f"{filter.name}.fits"
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')

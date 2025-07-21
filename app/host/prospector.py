@@ -770,12 +770,13 @@ def prospector_result_to_blast(
     prospector_output,
     model_components,
     observations,
-    sed_output_root=settings.SED_OUTPUT_ROOT,
+    sed_output_root="sed_output",
     parametric_sfh=False,
     sbipp=False,
 ):
     # write the results
-    parent_dir = os.path.join(sed_output_root, transient.name)
+    version = f"v{aperture.software_version}" if aperture.software_version else "v0.0.0"
+    parent_dir = os.path.join(transient.name, version, aperture.workflow, sed_output_root)
     base_file_path = os.path.join(parent_dir, f'''{transient.name}_{aperture.type}''')
     hdf5_file_path = f'''{base_file_path}.h5'''
     chain_file_path = f'''{base_file_path}_chain.npz'''
@@ -922,10 +923,10 @@ def prospector_result_to_blast(
     prosp_results = {
         "transient": transient,
         "aperture": aperture,
-        "posterior": hdf5_file_path,
-        "chains_file": chain_file_path,
-        "percentiles_file": perc_file_path,
-        "model_file": modeldata_file_path,
+        # "posterior": hdf5_file_path,
+        # "chains_file": chain_file_path,
+        # "percentiles_file": perc_file_path,
+        # "model_file": modeldata_file_path,
         "log_mass_16": logmass16,
         "log_mass_50": logmass50,
         "log_mass_84": logmass84,

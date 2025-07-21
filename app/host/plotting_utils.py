@@ -28,6 +28,7 @@ from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
 from bokeh.io import curdoc
+from host.object_key import get_cutout_file_object_key_from_cutout
 
 # import extinction
 # from bokeh.models import Circle
@@ -166,7 +167,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         return generate_empty_plot(title="No cutout selected")
 
     # Load image data from FITS file
-    local_fits_path = cutout.fits.name
+    local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
     if not os.path.isfile(local_fits_path):
         s3 = ObjectStore()
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))

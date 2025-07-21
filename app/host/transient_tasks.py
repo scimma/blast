@@ -44,6 +44,7 @@ from pathlib import Path
 from host.models import TaskRegister
 from host.models import Status
 from host.models import Task
+from host.object_key import get_cutout_file_object_key_from_cutout
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -560,7 +561,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         while aperture is None and choice <= 8:
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
             # Download FITS file local file cache
-            local_fits_path = aperture_cutout[0].fits.name
+            local_fits_path = get_cutout_file_object_key_from_cutout(aperture_cutout[0])
             if not os.path.isfile(local_fits_path):
                 s3 = ObjectStore()
                 object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
@@ -664,7 +665,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
         for cutout in cutouts:
-            local_fits_path = cutout.fits.name
+            local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
             if not os.path.isfile(local_fits_path):
                 # Download FITS file local file cache
                 s3 = ObjectStore()
@@ -764,7 +765,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
         for cutout in cutouts:
-            local_fits_path = cutout.fits.name
+            local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
             if not os.path.isfile(local_fits_path):
                 # Download FITS file local file cache
                 s3 = ObjectStore()

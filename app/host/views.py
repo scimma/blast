@@ -39,6 +39,7 @@ from celery import shared_task
 from host.log import get_logger
 logger = get_logger(__name__)
 from host.decorators import log_usage_metric
+from host.object_key import *
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -366,7 +367,7 @@ def results(request, slug):
     if local_sed_obj.exists() or global_sed_obj.exists():
         s3 = ObjectStore()
     if local_sed_obj.exists():
-        local_sed_file = local_sed_obj[0].posterior.name
+        local_sed_file = get_sed_posterior_file_object_key_from_sed_fit_res(local_sed_obj[0])
         local_sed_hdf5_filepath = local_sed_file
         local_sed_modeldata_filepath = local_sed_file.replace(".h5", "_modeldata.npz")
         download_file_from_s3(local_sed_hdf5_filepath)
@@ -376,7 +377,7 @@ def results(request, slug):
         local_sed_hdf5_filepath = None
         local_sed_modeldata_filepath = None
     if global_sed_obj.exists():
-        global_sed_file = global_sed_obj[0].posterior.name
+        global_sed_file = get_sed_posterior_file_object_key_from_sed_fit_res(global_sed_obj[0])
         global_sed_hdf5_filepath = global_sed_file
         global_sed_modeldata_filepath = global_sed_file.replace(".h5", "_modeldata.npz")
         download_file_from_s3(global_sed_hdf5_filepath)
@@ -533,21 +534,21 @@ def download_chains(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-    return stream_sed_output_file(sed_result.chains_file.name)
+    return stream_sed_output_file(get_sed_chains_file_object_key_from_sed_fit_res(sed_result))
 
 
 def download_modelfit(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-    return stream_sed_output_file(sed_result.model_file.name)
+    return stream_sed_output_file(get_sed_model_file_object_key_from_sed_fit_res(sed_result))
 
 
 def download_percentiles(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
     )
-    return stream_sed_output_file(sed_result.percentiles_file.name)
+    return stream_sed_output_file(get_sed_percentiles_file_object_key_from_sed_fit_res(sed_result))
 
 
 def acknowledgements(request):

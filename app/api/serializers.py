@@ -46,7 +46,7 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SEDFittingResult
         depth = 1
-        exclude = ["log_tau_16", "log_tau_50", "log_tau_84", "posterior"]
+        exclude = ["log_tau_16", "log_tau_50", "log_tau_84"]
 
 
 class CutoutSerializer(serializers.ModelSerializer):

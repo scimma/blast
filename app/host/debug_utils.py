@@ -4,6 +4,7 @@ from host.models import *
 from host.transient_tasks import *
 from host.system_tasks import *
 import numpy as np
+from host.object_key import *
 
 
 def _overwrite_or_create_object(model, unique_object_query, object_data):
@@ -92,10 +93,10 @@ def populate_sed_quantities():
         if s.dust_index_50 is not None:
             continue
 
-        percentiles = np.load(s.percentiles_file,allow_pickle=True)
+        percentiles = np.load(get_sed_percentiles_file_object_key_from_sed_fit_res(s),allow_pickle=True)
         perc = np.atleast_1d(percentiles["percentiles"])[0]
         # TODO: S3: This will fail without first downloading the posterior file from S3 bucket
-        res, _, _ = reader.results_from(s.posterior.name, dangerous=False)
+        res, _, _ = reader.results_from(get_sed_posterior_file_object_key_from_sed_fit_res(s), dangerous=False)
         
         
         logmass16, logmass50, logmass84 = perc["stellar_mass"]

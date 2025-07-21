@@ -13,21 +13,26 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='aperture',
             name='workflow',
-            field=models.CharField(blank=True, db_default='default', max_length=50, null=True),
+            field=models.CharField(blank=True, db_default='workflow_default', max_length=50, null=True),
         ),
         migrations.AddField(
             model_name='aperturephotometry',
             name='workflow',
-            field=models.CharField(blank=True, db_default='default', max_length=50, null=True),
+            field=models.CharField(blank=True, db_default='workflow_default', max_length=50, null=True),
         ),
         migrations.AddField(
             model_name='host',
             name='workflow',
-            field=models.CharField(blank=True, db_default='default', max_length=50, null=True),
+            field=models.CharField(blank=True, db_default='workflow_default', max_length=50, null=True),
         ),
         migrations.AddField(
             model_name='sedfittingresult',
             name='workflow',
-            field=models.CharField(blank=True, db_default='default', max_length=50, null=True),
+            field=models.CharField(blank=True, db_default='workflow_default', max_length=50, null=True),
+        ),
+        migrations.AddField(
+            model_name='cutout',
+            name='workflow',
+            field=models.CharField(blank=True, db_default='workflow_default', max_length=50, null=True),
         ),
     ]
