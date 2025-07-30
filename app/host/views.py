@@ -388,7 +388,7 @@ def results(request, slug):
         global_sed_hdf5_filepath = None
         global_sed_modeldata_filepath = None
 
-    all_cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(~Q(fits=""))
+    all_cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(fits_exists=True)
     filters = [cutout.filter.name for cutout in all_cutouts]
     all_filters = Filter.objects.all()
 
@@ -404,15 +404,20 @@ def results(request, slug):
     else:
         form = ImageGetForm(filter_choices=filters)
 
-        cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(~Q(fits=""))
+        cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(fits_exists=True)
         # choose a cutout, if possible
         cutout = None
         choice = 0
         try:
+            logger.error("In try block, before while loop")
             while cutout is None and choice <= 8:
-                cutout = select_cutout_aperture(cutouts, choice=choice).filter(
-                    ~Q(fits="")
-                )
+                cutout = select_cutout_aperture(cutouts, choice=choice)#.filter(fits_exists=True)
+                logger.error(f"Choice is {choice}, cutout len is {len(cutout)}")
+                logger.error(f"All cutouts len: {len(Cutout.objects.filter(transient__name__exact=slug))}")
+                logger.error(f"All cutouts: {[cutout for cutout in Cutout.objects.filter(transient__name__exact=slug)]}")
+                versions = get_versions_sorted_transient(slug, Cutout)
+                logger.error(f"Versions: {versions}")
+                choice += 1
             if not len(cutout):
                 cutout = None
             else:

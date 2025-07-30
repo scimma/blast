@@ -555,7 +555,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         if not transient.host.sky_coord:
             print(f"""No sky_coord associated with "{transient.name}" host.""")
             return self. _failed_status_message()
-        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+        cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
         choice = 0
         aperture = None
         while aperture is None and choice <= 8:
@@ -662,7 +662,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
         self._overwrite_or_create_object(Aperture, query, data)
         aperture = Aperture.objects.get(**query)
         print(aperture)
-        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+        cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
 
         for cutout in cutouts:
             local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
@@ -752,7 +752,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
     def _run_process(self, transient):
         """Code goes here"""
 
-        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+        cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
         choice = 0
         aperture = None
         for choice in range(9):
@@ -972,7 +972,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         Run the global photometry validation
         """
 
-        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+        cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
         cutout_for_aperture = select_cutout_aperture(cutouts)[0]
         aperture_primary = Aperture.objects.get(
             cutout__name=cutout_for_aperture.name, type="global"

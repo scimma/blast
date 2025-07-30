@@ -101,13 +101,16 @@ def download_and_save_cutouts(
         Dictionary of images with the survey names as keys and fits images
         as values.
     """
+    # For testing
+    import inspect
+    logger.error(f"Stuff: {inspect.currentframe().f_code.co_name}")
 
     s3 = ObjectStore()
 
     def download_filter_data(filter):
         # Does cutout file exist on the local disk?
         version = transient.software_version if transient.software_version else "0.0.0"
-        save_dir = f"{transient.name}/v{version}/{workflow}/{filter.survey.name}/"
+        save_dir = f"{transient.name}/v{version}/{workflow}/cutout_cdn/{filter.survey.name}/"
         local_fits_path = save_dir + f"{filter.name}.fits"
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
@@ -148,7 +151,7 @@ def download_and_save_cutouts(
         # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
         # update the database object. Otherwise record that no image was found.
         if s3.object_exists(object_key):
-            cutout_object.fits.name = local_fits_path
+            cutout_object.fits_exists = True
         else:
             cutout_object.message = "No image found"
         cutout_object.save()

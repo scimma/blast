@@ -53,7 +53,7 @@ class CutoutSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Cutout
         depth = 1
-        exclude = ["fits"]
+        #exclude = ["fits"]
 
 
 class FilterSerializer(serializers.ModelSerializer):

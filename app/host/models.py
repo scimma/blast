@@ -429,6 +429,7 @@ class Cutout(models.Model):
         Transient, on_delete=models.CASCADE, null=True, blank=True
     )
     #fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
+    fits_exists = models.BooleanField(default=False)
     message = models.CharField(max_length=50, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)
     workflow = models.CharField(max_length=50, blank=True, null=True, db_default="workflow_default")
@@ -442,7 +443,7 @@ class Cutout(models.Model):
         super(Cutout, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'''transient: {self.transient.name}, filter name: "{self.name}", filter: "{self.filter}"'''
+        return f'''transient: {self.transient.name}, filter name: "{self.name}", filter: "{self.filter}, fits_exists: {self.fits_exists}"'''
 
 
 class Aperture(SkyObject):

@@ -427,7 +427,7 @@ def select_cutout_aperture(cutouts, choice=0):
     # Start iterating through the subset of filters in the list staring at the index specified by "choice".
     filter_choice = filter_names[choice:]
     for filter_name in filter_names[choice:]:
-        cutout_qs = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
+        cutout_qs = cutouts.filter(filter__name=filter_name).filter(fits_exists=True)
         if cutout_qs.exists():
             logger.debug(f'''Cutouts for filter "{filter_name}": {[str(cutout) for cutout in cutout_qs]}''')
             filter_choice = filter_name
@@ -437,7 +437,7 @@ def select_cutout_aperture(cutouts, choice=0):
 
 
 def select_aperture(transient):
-    cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+    cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
     if len(cutouts):
         cutout_for_aperture = select_cutout_aperture(cutouts)
     if len(cutouts) and len(cutout_for_aperture):

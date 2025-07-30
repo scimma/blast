@@ -48,7 +48,7 @@ def convert_local_path_to_object_key(local_file_path:str, data_dir_name:str):
     Convert paths of the format 'cutout_cdn/2010H/SDSS/SDSS_g.fits' to '2010H/v0.0.0/workflow_default/cutout_cdn/SDSS/SDSS_g.fits'
     """
     raw_path_components = local_file_path.replace(f'{data_dir_name}/', '').split("/")
-    return f"{raw_path_components[0]}/v0.0.0/workflow_default/{data_dir_name}/{"/".join(raw_path_components[1:])}"
+    return f"{raw_path_components[0]}/v0.0.0/workflow_default/{data_dir_name}/{'/'.join(raw_path_components[1:])}"
 
 def verify_data_integrity(download=False):
     '''Verify integrity of initial data file set'''
@@ -101,7 +101,7 @@ def verify_data_integrity(download=False):
                 # Upload file to bucket and delete local copy
                 object_key = os.path.join(
                     S3_BASE_PATH.strip('/'),
-                    convert_local_path_to_object_key(bucket_path))
+                    convert_local_path_to_object_key(bucket_path, data_dir_name))
                 if not s3_data.object_exists(object_key):
                     logger.info(f'''Uploading file "{bucket_path}" to "{object_key}"...''')
                     s3_data.put_object(path=object_key, file_path=file_path)
