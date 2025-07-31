@@ -177,6 +177,7 @@ TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", 
 SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
 SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
 TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/transmission")
+INPUT_ROOT = os.environ.get("INPUT_FILE_ROOT_VERSIONING", "/data/input")
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 

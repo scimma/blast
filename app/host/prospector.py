@@ -776,7 +776,7 @@ def prospector_result_to_blast(
 ):
     # write the results
     version = f"v{aperture.software_version}" if aperture.software_version else "v0.0.0"
-    parent_dir = os.path.join(transient.name, version, aperture.workflow, sed_output_root)
+    parent_dir = os.path.join(settings.INPUT_ROOT, transient.name, version, aperture.workflow, sed_output_root)
     base_file_path = os.path.join(parent_dir, f'''{transient.name}_{aperture.type}''')
     hdf5_file_path = f'''{base_file_path}.h5'''
     chain_file_path = f'''{base_file_path}_chain.npz'''
@@ -989,7 +989,7 @@ def prospector_result_to_blast(
     # Upload data files to S3 bucket (HDF5, chain, perc, modeldata) and delete local copies.
     s3 = ObjectStore()
     for file_path in [hdf5_file_path, chain_file_path, perc_file_path, modeldata_file_path]:
-        object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+        object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip(settings.INPUT_ROOT).strip('/'))
         s3.put_object(path=object_key, file_path=file_path)
         assert s3.object_exists(object_key)
         os.remove(file_path)

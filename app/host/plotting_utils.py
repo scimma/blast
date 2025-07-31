@@ -167,10 +167,11 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         return generate_empty_plot(title="No cutout selected")
 
     # Load image data from FITS file
-    local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
+    s3_fits_path = get_cutout_file_object_key_from_cutout(cutout)
+    local_fits_path = os.path.join(settings.INPUT_ROOT, s3_fits_path)
     if not os.path.isfile(local_fits_path):
         s3 = ObjectStore()
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        object_key = os.path.join(settings.S3_BASE_PATH, s3_fits_path.strip('/'))
         if s3.object_exists(object_key):
             # Download FITS file local file cache
             s3.download_object(path=object_key, file_path=local_fits_path)

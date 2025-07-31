@@ -2,6 +2,67 @@
 
 from django.db import migrations, models
 
+def update_cutouts(apps, schema_editor):
+    Cutout = apps.get_model("host", "Cutout")
+    cutouts_to_change = ['2010ag_PanSTARRS_g',
+                        '2010ag_PanSTARRS_r', 
+                        '2010ag_PanSTARRS_i', 
+                        '2010ag_PanSTARRS_z', 
+                        '2010ag_PanSTARRS_y',
+                        '2010ag_SDSS_u',
+                        '2010ag_SDSS_r',
+                        '2010ag_SDSS_i',
+                        '2010ag_GALEX_NUV',
+                        '2010ag_GALEX_FUV',
+                        '2010ag_2MASS_J',
+                        '2010ag_2MASS_H',
+                        '2010ag_2MASS_K',
+                        '2010ag_WISE_W1',
+                        '2010ag_WISE_W2',
+                        '2010ag_WISE_W3',
+                        '2010ag_WISE_W4',
+                        '2010ai_PanSTARRS_g',
+                        '2010ai_PanSTARRS_r',
+                        '2010ai_PanSTARRS_i',
+                        '2010ai_PanSTARRS_z',
+                        '2010ai_PanSTARRS_y',
+                        '2010ai_SDSS_u',
+                        '2010ai_SDSS_r',
+                        '2010ai_SDSS_i',
+                        '2010ai_SDSS_z',
+                        '2010ai_GALEX_NUV',
+                        '2010ai_GALEX_FUV',
+                        '2010ai_2MASS_J',
+                        '2010ai_2MASS_H',
+                        '2010ai_2MASS_K',
+                        '2010ai_WISE_W1',
+                        '2010ai_WISE_W2',
+                        '2010ai_WISE_W3',
+                        '2010ai_WISE_W4',
+                        '2010H_PanSTARRS_g',
+                        '2010H_PanSTARRS_r',
+                        '2010H_PanSTARRS_i',
+                        '2010H_PanSTARRS_z',
+                        '2010H_PanSTARRS_y',
+                        '2010H_SDSS_u',
+                        '2010H_SDSS_r',
+                        '2010H_SDSS_i',
+                        '2010H_SDSS_z',
+                        '2010H_GALEX_NUV',
+                        '2010H_GALEX_FUV',
+                        '2010H_2MASS_J',
+                        '2010H_2MASS_H',
+                        '2010H_2MASS_K',
+                        '2010H_WISE_W1',
+                        '2010H_WISE_W2',
+                        '2010H_WISE_W3',
+                        '2010H_WISE_W4',
+                         ]
+    cutout_objects = Cutout.objects.filter(name__in=cutouts_to_change)
+    for cutout in cutout_objects:
+        cutout.fits_exists = True
+    Cutout.objects.bulk_update(cutout_objects, ["fits_exists"])
+
 
 class Migration(migrations.Migration):
 
@@ -60,4 +121,5 @@ class Migration(migrations.Migration):
             name='fits_exists',
             field=models.BooleanField(default=False),
         ),
+        migrations.RunPython(update_cutouts),
     ]

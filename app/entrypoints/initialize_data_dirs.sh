@@ -61,3 +61,9 @@ if [[ ! -L "${SBI_TRAINING_ROOT}" ]]; then
   mkdir -p "$(dirname "${SBI_TRAINING_ROOT}")"
   ln -s "${DATA_ROOT_DIR}/sbi_training_sets" "${SBI_TRAINING_ROOT}"
 fi
+
+if [[ ! -L "${INPUT_FILE_ROOT_VERSIONING}" ]]; then
+  mkdir -p "${DATA_ROOT_DIR}/input"
+  mkdir -p "$(dirname "${INPUT_FILE_ROOT_VERSIONING}")"
+  ln -s "${DATA_ROOT_DIR}/input" "${INPUT_FILE_ROOT_VERSIONING}"
+fi

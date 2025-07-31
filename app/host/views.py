@@ -359,7 +359,7 @@ def results(request, slug):
     def download_file_from_s3(file_path):
         try:
             # Download SED results files to local file cache
-            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip(settings.INPUT_ROOT).strip('/'))
             s3.download_object(path=object_key, file_path=file_path)
             assert os.path.isfile(file_path)
         except Exception as err:
@@ -368,7 +368,7 @@ def results(request, slug):
     if local_sed_obj.exists() or global_sed_obj.exists():
         s3 = ObjectStore()
     if local_sed_obj.exists():
-        local_sed_file = get_sed_posterior_file_object_key_from_sed_fit_res(local_sed_obj[0])
+        local_sed_file = os.path.join(settings.INPUT_ROOT, get_sed_posterior_file_object_key_from_sed_fit_res(local_sed_obj[0]))
         local_sed_hdf5_filepath = local_sed_file
         local_sed_modeldata_filepath = local_sed_file.replace(".h5", "_modeldata.npz")
         download_file_from_s3(local_sed_hdf5_filepath)
@@ -378,7 +378,7 @@ def results(request, slug):
         local_sed_hdf5_filepath = None
         local_sed_modeldata_filepath = None
     if global_sed_obj.exists():
-        global_sed_file = get_sed_posterior_file_object_key_from_sed_fit_res(global_sed_obj[0])
+        global_sed_file = os.path.join(settings.INPUT_ROOT, get_sed_posterior_file_object_key_from_sed_fit_res(global_sed_obj[0]))
         global_sed_hdf5_filepath = global_sed_file
         global_sed_modeldata_filepath = global_sed_file.replace(".h5", "_modeldata.npz")
         download_file_from_s3(global_sed_hdf5_filepath)
@@ -411,7 +411,7 @@ def results(request, slug):
         try:
             logger.error("In try block, before while loop")
             while cutout is None and choice <= 8:
-                cutout = select_cutout_aperture(cutouts, choice=choice)#.filter(fits_exists=True)
+                cutout = select_cutout_aperture(cutouts, choice=choice).filter(fits_exists=True)
                 logger.error(f"Choice is {choice}, cutout len is {len(cutout)}")
                 logger.error(f"All cutouts len: {len(Cutout.objects.filter(transient__name__exact=slug))}")
                 logger.error(f"All cutouts: {[cutout for cutout in Cutout.objects.filter(transient__name__exact=slug)]}")
