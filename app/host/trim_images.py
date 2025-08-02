@@ -15,7 +15,7 @@ from host.host_utils import get_local_aperture_size
 from host.cutouts import download_and_save_cutouts
 from host.object_store import ObjectStore
 from django.conf import settings
-from host.object_key import get_cutout_file_object_key_from_cutout
+from host.object_key import get_cutout_file_object_key_from_cutout, get_cutout_file_local_path_from_cutout
 
 
 def trim_images(transient):
@@ -34,8 +34,8 @@ def trim_image(cutout):
     transient = cutout.transient
     # Download FITS file local file cache
     s3 = ObjectStore()
-    local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
-    object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+    local_fits_path = get_cutout_file_local_path_from_cutout(cutout)
+    object_key = os.path.join(settings.S3_BASE_PATH, get_cutout_file_object_key_from_cutout(cutout).strip('/'))
     s3.download_object(path=object_key, file_path=local_fits_path)
     assert os.path.isfile(local_fits_path)
     hdu = fits.open(local_fits_path)

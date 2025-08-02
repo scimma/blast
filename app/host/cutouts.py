@@ -109,7 +109,7 @@ def download_and_save_cutouts(
         version = transient.software_version if transient.software_version else "0.0.0"
         save_dir = f"{transient.name}/v{version}/{workflow}/cutout_cdn/{filter.survey.name}/"
         local_fits_path = os.path.join(settings.INPUT_ROOT, save_dir + f"{filter.name}.fits")
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip(settings.INPUT_ROOT).strip('/'))
+        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.replace(settings.INPUT_ROOT, "", 1).strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)

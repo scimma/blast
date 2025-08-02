@@ -45,6 +45,7 @@ from host.models import TaskRegister
 from host.models import Status
 from host.models import Task
 from host.object_key import get_cutout_file_object_key_from_cutout
+from host.object_key import get_cutout_file_local_path_from_cutout
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -505,7 +506,7 @@ class ImageDownload(TransientTaskRunner):
         """
 
         if transient.image_trim_status == "processed":
-            overwrite = "True"
+            overwrite = "False"         # Since transient never changes, make it false
         else:
             overwrite = "False"
 
@@ -561,10 +562,10 @@ class GlobalApertureConstruction(TransientTaskRunner):
         while aperture is None and choice <= 8:
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
             # Download FITS file local file cache
-            local_fits_path = get_cutout_file_object_key_from_cutout(aperture_cutout[0])
+            local_fits_path = get_cutout_file_local_path_from_cutout(aperture_cutout[0])
             if not os.path.isfile(local_fits_path):
                 s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                object_key = os.path.join(settings.S3_BASE_PATH, get_cutout_file_object_key_from_cutout(aperture_cutout[0]).strip('/'))
                 s3.download_object(path=object_key, file_path=local_fits_path)
             assert os.path.isfile(local_fits_path)
             # Create a lock file to prevent concurrent processes from deleting the data file prematurely
@@ -665,11 +666,11 @@ class LocalAperturePhotometry(TransientTaskRunner):
         cutouts = Cutout.objects.filter(transient=transient).filter(fits_exists=True)
 
         for cutout in cutouts:
-            local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
+            local_fits_path = get_cutout_file_local_path_from_cutout(cutout)
             if not os.path.isfile(local_fits_path):
                 # Download FITS file local file cache
                 s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                object_key = os.path.join(settings.S3_BASE_PATH, get_cutout_file_object_key_from_cutout(cutout).strip('/'))
                 s3.download_object(path=object_key, file_path=local_fits_path)
             assert os.path.isfile(local_fits_path)
             # Create a lock file to prevent concurrent processes from deleting the data file prematurely
@@ -765,11 +766,11 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
         for cutout in cutouts:
-            local_fits_path = get_cutout_file_object_key_from_cutout(cutout)
+            local_fits_path = get_cutout_file_local_path_from_cutout(cutout)
             if not os.path.isfile(local_fits_path):
                 # Download FITS file local file cache
                 s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                object_key = os.path.join(settings.S3_BASE_PATH, get_cutout_file_object_key_from_cutout(cutout).strip('/'))
                 s3.download_object(path=object_key, file_path=local_fits_path)
             assert os.path.isfile(local_fits_path)
             # Create a lock file to prevent concurrent processes from deleting the data file prematurely

@@ -359,7 +359,7 @@ def results(request, slug):
     def download_file_from_s3(file_path):
         try:
             # Download SED results files to local file cache
-            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip(settings.INPUT_ROOT).strip('/'))
+            object_key = os.path.join(settings.S3_BASE_PATH, file_path.replace(settings.INPUT_ROOT, "", 1).strip('/'))
             s3.download_object(path=object_key, file_path=file_path)
             assert os.path.isfile(file_path)
         except Exception as err:
@@ -414,7 +414,7 @@ def results(request, slug):
                 cutout = select_cutout_aperture(cutouts, choice=choice).filter(fits_exists=True)
                 logger.error(f"Choice is {choice}, cutout len is {len(cutout)}")
                 logger.error(f"All cutouts len: {len(Cutout.objects.filter(transient__name__exact=slug))}")
-                logger.error(f"All cutouts: {[cutout for cutout in Cutout.objects.filter(transient__name__exact=slug)]}")
+                logger.error(f"All cutouts: {[(cutout, cutout.software_version) for cutout in Cutout.objects.filter(transient__name__exact=slug)]}")
                 versions = get_versions_sorted_transient(slug, Cutout)
                 logger.error(f"Versions: {versions}")
                 choice += 1

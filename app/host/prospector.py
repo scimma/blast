@@ -989,7 +989,7 @@ def prospector_result_to_blast(
     # Upload data files to S3 bucket (HDF5, chain, perc, modeldata) and delete local copies.
     s3 = ObjectStore()
     for file_path in [hdf5_file_path, chain_file_path, perc_file_path, modeldata_file_path]:
-        object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip(settings.INPUT_ROOT).strip('/'))
+        object_key = os.path.join(settings.S3_BASE_PATH, file_path.replace(settings.INPUT_ROOT, "", 1).strip('/'))
         s3.put_object(path=object_key, file_path=file_path)
         assert s3.object_exists(object_key)
         os.remove(file_path)
