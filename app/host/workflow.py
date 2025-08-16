@@ -107,6 +107,9 @@ def transient_workflow(transient_name=None):
                     ),
                 ),
                 global_host_sed_fitting.si(transient_name),
+                local_aperture_photometry_zphot.si(transient_name),
+                validate_local_photometry_zphot.si(transient_name),
+                local_host_sed_fitting_zphot.si(transient_name),
             ),
         ),
         final_progress.si(transient_name)

@@ -155,6 +155,7 @@ class Transient(SkyObject):
             z = None
         return z
 
+    @property
     def best_spec_redshift(self):
         """get the best redshift for a transient"""
         if self.host is not None and self.host.redshift is not None:

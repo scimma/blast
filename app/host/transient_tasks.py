@@ -1101,8 +1101,6 @@ class HostInformation(TransientTaskRunner):
             pass
         elif transient.redshift is not None:
             pass
-        else:
-            status_message = "no host redshift"
 
         host.save()
 
@@ -1117,7 +1115,8 @@ class HostSEDFitting(TransientTaskRunner):
     """Task Runner to run host galaxy inference with prospector"""
 
     def _run_process(
-        self, transient, aperture_type="global", mode="fast", sbipp=True, save=True
+            self, transient, aperture_type="global",
+            mode="fast", sbipp=True, save=True
     ):
         """Run the SED-fitting task"""
 
@@ -1126,16 +1125,24 @@ class HostSEDFitting(TransientTaskRunner):
             "type__exact": aperture_type,
         }
 
-        if transient.best_redshift is None or transient.best_redshift > 0.2:
-            # training sample doesn't work here
-            return "redshift too high"
-
+        if aperture_type == "global":
+            if transient.best_spec_redshift is not None and transient.best_spec_redshift > 1.5:
+                # training sample doesn't work here
+                return "redshift too high"
+            z = transient.best_spec_redshift
+        else:
+            if transient.best_redshift is not None and transient.best_redshift > 1.5:
+                # training sample doesn't work here
+                return "redshift too high"
+            z = transient.best_redshift
+            
+            
         aperture = Aperture.objects.filter(**query)
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")
 
-        observations = build_obs(transient, aperture_type)
-        model_components = build_model(observations)
+        observations = build_obs(transient, aperture_type, z=z)
+        model_components = build_model(observations,z=z)
 
         if mode == "test" and not sbipp:
             # garbage results but the test runs
@@ -1171,8 +1178,7 @@ class HostSEDFitting(TransientTaskRunner):
             observations,
             model_components,
             fitting_settings,
-            sbipp=sbipp,
-            fit_type=aperture_type,
+            sbipp=sbipp
         )
         if errflag:
             return "not enough filters"
@@ -1187,7 +1193,7 @@ class HostSEDFitting(TransientTaskRunner):
                 sed_output_root="/tmp",
             )
         else:
-            prosp_results, sfh_results = prospector_result_to_blast(
+            prosp_results, sfh_results, z_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -1196,6 +1202,10 @@ class HostSEDFitting(TransientTaskRunner):
                 sbipp=sbipp,
             )
         if save:
+            if z_results[0] is not None:
+                transient.host.photometric_redshift = z_results[0]
+                transient.host.photometric_redshift_err = z_results[1]
+                transient.host.save()
             pr = SEDFittingResult.objects.filter(
                 transient=transient, aperture__type=aperture_type
             )
@@ -1305,6 +1315,67 @@ class GlobalHostSEDFitting(HostSEDFitting):
 
         return status_message
 
+# Photo-z versions of local
+class LocalAperturePhotometryZPhot(LocalAperturePhotometry):
+    """Task Runner to perform local aperture photometry around host"""
+
+    def _prerequisites(self):
+        """
+        Need both the Cutout and Host match to be processed
+        """
+        return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            #"Local aperture photometry": "not processed",
+            "Global host SED inference": "processed",
+        }
+
+class ValidateLocalPhotometryZPhot(ValidateLocalPhotometry):
+    """
+    TaskRunner to validate the local photometry.
+    We need to make sure image seeing is ~smaller than the aperture size
+    """
+
+    def _prerequisites(self):
+        """
+        Prerequisites are that the validate local photometry task is
+        not processed and the local photometry task is processed.
+        """
+        return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "not processed",
+            "Global host SED inference": "processed",
+        }
+
+
+class LocalHostSEDFittingZPhot(LocalHostSEDFitting):
+    """Task Runner to run local host galaxy inference with prospector"""
+
+    def _prerequisites(self):
+        """
+        Need both the Cutout and Host match to be processed
+        """
+        return {
+            "Cutout download": "processed",
+            "Transient information": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Local host SED inference": "not processed",
+            "Global host SED inference": "processed",
+        }
+
+    
 # Transient workflow tasks
 
 
@@ -1420,7 +1491,33 @@ def validate_global_photometry(transient_name):
 def validate_local_photometry(transient_name):
     ValidateLocalPhotometry(transient_name).run_process()
 
+#### photometric redshift local tasks ####
+@shared_task(
+    name="Validate Local Photometry Photo-z",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def validate_local_photometry_zphot(transient_name):
+    ValidateLocalPhotometryZPhot(transient_name).run_process()
 
+@shared_task(
+    name="Local Aperture Photometry Photo-z",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def local_aperture_photometry_zphot(transient_name):
+    LocalAperturePhotometryZPhot(transient_name).run_process()
+
+
+@shared_task(
+    name="Local Host SED Fitting Photo-z",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def local_host_sed_fitting_zphot(transient_name):
+    LocalHostSEDFittingZPhot(transient_name).run_process()
+
+    
 @shared_task(
     name="Get Final Progress",
     time_limit=task_time_limit,

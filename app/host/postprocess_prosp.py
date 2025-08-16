@@ -31,6 +31,8 @@ def theta_index(prior="p-alpha"):
     #         'dust2': slice(9, 10, None), 'dust_index': slice(10, 11, None), 'dust1_fraction': slice(11, 12, None),
     #         'log_fagn': slice(12, 13, None), 'log_agn_tau': slice(13, 14, None), 'gas_logz': slice(14, 15, None),
     #         'duste_qpah': slice(15, 16, None), 'duste_umin': slice(16, 17, None), 'log_duste_gamma': slice(17, 18, None)}
+
+    # hack!  temp model from anya
     index = {
         "zred": slice(0, 1, None),
         "logmass": slice(1, 2, None),
@@ -41,12 +43,30 @@ def theta_index(prior="p-alpha"):
         "dust1_fraction": slice(11, 12, None),
         "log_fagn": slice(12, 13, None),
         "log_agn_tau": slice(13, 14, None),
-        "gas_logz": slice(14, 15, None),
-        "duste_qpah": slice(15, 16, None),
-        "duste_umin": slice(16, 17, None),
-        "log_duste_gamma": slice(17, 18, None),
+        #"gas_logz": slice(14, 15, None),
+        "duste_qpah": slice(14, 15, None),
+        "duste_umin": slice(15, 16, None),
+        "log_duste_gamma": slice(16, 17, None),
     }
 
+    # original
+    #index = {
+    #    "zred": slice(0, 1, None),
+    #    "logmass": slice(1, 2, None),
+    #    "logzsol": slice(2, 3, None),
+    #    "logsfr_ratios": slice(3, 9, None),
+    #    "dust2": slice(9, 10, None),
+    #    "dust_index": slice(10, 11, None),
+    #    "dust1_fraction": slice(11, 12, None),
+    #    "log_fagn": slice(12, 13, None),
+    #    "log_agn_tau": slice(13, 14, None),
+    #    "gas_logz": slice(14, 15, None),
+    #    "duste_qpah": slice(15, 16, None),
+    #    "duste_umin": slice(16, 17, None),
+    #    "log_duste_gamma": slice(17, 18, None),
+    #}
+
+    
     return index
 
 
