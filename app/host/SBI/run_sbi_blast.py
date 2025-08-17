@@ -25,7 +25,7 @@ else:
     device = "cpu"
 
 run_params = {
-    "nmc": 10,  # number of MC samples
+    "nmc": 50,  # number of MC samples
     "nposterior": 50,  # number of posterior samples per MC drawn
     "np_baseline": 500,  # number of posterior samples used in baseline SBI
     "ini_chi2": 5,  # chi^2 cut usedi in the nearest neighbor search
@@ -36,7 +36,7 @@ run_params = {
     "tmax_all": 600000,  # max time spent on all mc samples in mins
     "outdir": "output",  # output directory
     "verbose": True,
-    "tmax_per_iter": 300,
+    "tmax_per_iter": 60,
 }
 
 sbi_params = {
