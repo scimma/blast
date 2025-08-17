@@ -315,7 +315,8 @@ def run_all(
         "dust1_fraction",
         "log_fagn",
         "log_agn_tau",
-        "gas_logz",
+        # hack!
+        #"gas_logz",
         "duste_qpah",
         "duste_umin",
         "log_duste_gamma",
