@@ -1364,7 +1364,7 @@ class ValidateLocalPhotometryZPhot(ValidateLocalPhotometry):
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
-            "Local aperture photometry": "processed",
+            "Local aperture photometry photo-z": "processed",
             "Validate local photometry": "not processed",
             "Global host SED inference": "processed",
         }
@@ -1391,8 +1391,7 @@ class LocalHostSEDFittingZPhot(LocalHostSEDFitting):
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
+            "Validate local photometry photo-z": "processed",
             "Local host SED inference": "not processed",
             "Global host SED inference": "processed",
         }
