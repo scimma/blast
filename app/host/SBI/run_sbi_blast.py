@@ -152,33 +152,6 @@ def run_training_set():
     ) as handle:
         pickle.dump(x_train_zphot, handle)
 
-    print("""Loading training sets from data files...""")
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zspec.pkl"), "rb"
-    ) as handle:
-        hatp_x_y_zspec = pickle.load(handle)
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zspec.pkl"), "rb"
-    ) as handle:
-        y_train_zspec = pickle.load(handle)
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zspec.pkl"), "rb"
-    ) as handle:
-        x_train_zspec = pickle.load(handle)
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zphot.pkl"), "rb"
-    ) as handle:
-        hatp_x_y_zphot = pickle.load(handle)
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zphot.pkl"), "rb"
-    ) as handle:
-        y_train_zphot = pickle.load(handle)
-    with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zphot.pkl"), "rb"
-    ) as handle:
-        x_train_zphot = pickle.load(handle)
-    print("""Training sets loaded.""")
-
         
 try:
     print("""Loading training sets from data files...""")
@@ -210,6 +183,34 @@ try:
 except Exception as err:
     print(f"""Error loading training sets: {err}. Regenerating...""")
     run_training_set()
+    print("""Loading training sets from data files...""")
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zspec.pkl"), "rb"
+    ) as handle:
+        hatp_x_y_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zspec.pkl"), "rb"
+    ) as handle:
+        y_train_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zspec.pkl"), "rb"
+    ) as handle:
+        x_train_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zphot.pkl"), "rb"
+    ) as handle:
+        hatp_x_y_zphot = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zphot.pkl"), "rb"
+    ) as handle:
+        y_train_zphot = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zphot.pkl"), "rb"
+    ) as handle:
+        x_train_zphot = pickle.load(handle)
+    print("""Training sets loaded.""")
+
+
     print("""Training sets generated.""")
 
 
