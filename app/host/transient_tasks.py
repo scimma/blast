@@ -1329,10 +1329,24 @@ class LocalAperturePhotometryZPhot(LocalAperturePhotometry):
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
-            #"Local aperture photometry": "not processed",
+            # Note:
+            # we want local aperture phot to be either
+            # `not processed` or `failed`.  Since `or`
+            # condition not part of prereqs, we can just
+            # rerun aperture phot and stop on the next
+            # step
+            "Validate local photometry": "not processed",
             "Global host SED inference": "processed",
         }
 
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Local Aperture photometry
+        """
+        return "Local aperture photometry photo-z"
+
+    
 class ValidateLocalPhotometryZPhot(ValidateLocalPhotometry):
     """
     TaskRunner to validate the local photometry.
@@ -1355,6 +1369,14 @@ class ValidateLocalPhotometryZPhot(ValidateLocalPhotometry):
             "Global host SED inference": "processed",
         }
 
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Local Aperture photometry
+        """
+        return "Validate local photometry photo-z"
+
+    
 
 class LocalHostSEDFittingZPhot(LocalHostSEDFitting):
     """Task Runner to run local host galaxy inference with prospector"""
@@ -1374,6 +1396,13 @@ class LocalHostSEDFittingZPhot(LocalHostSEDFitting):
             "Local host SED inference": "not processed",
             "Global host SED inference": "processed",
         }
+
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Local Aperture photometry
+        """
+        return "Local host SED inference photo-z"
 
     
 # Transient workflow tasks

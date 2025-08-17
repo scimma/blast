@@ -370,6 +370,9 @@ def load_tasks(apps, schema_editor):
         'Transient MWEBV',
         'Host MWEBV',
         'Log transient processing status',
+        'local_aperture_photometry_zphot',
+        'validate_local_photometry_zphot',
+        'local_host_sed_fitting_zphot'    
     ]:
         Task(name=name).save()
 
