@@ -22,7 +22,7 @@ def trim_images(transient):
 
     cutouts = Cutout.objects.filter(transient=transient)  # ,filter__name='DES_r')
     for c in cutouts:
-        if c.fits_exists and os.path.exists(c):
+        if c.fits_exists and os.path.exists(get_cutout_file_local_path_from_cutout(c)):
             trim_image(c)
 
     transient = Transient.objects.get(pk=transient.pk)

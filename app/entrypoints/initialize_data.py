@@ -60,6 +60,12 @@ def verify_data_integrity(download=False):
     for data_object in data_objects:
         bucket_path = data_object['path']
         file_path = os.path.join(data_root_dir, bucket_path)
+        if bucket_path.startswith("cutout_cdn") or bucket_path.startswith("sed_output"):
+            split_path = bucket_path.split("/")
+            data_dir_name_path = split_path[0]
+            transient_name = split_path[1]
+            rest_of_path = "/".join(split_path[2:])
+            file_path = os.path.join(data_root_dir, "input", transient_name, "v0.0.0", "workflow_default", data_dir_name_path, rest_of_path)
         if not os.path.isfile(file_path):
             logger.error(f'''Missing file: {bucket_path}''')
             if not download:

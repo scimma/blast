@@ -107,12 +107,17 @@ def download_and_save_cutouts(
     def download_filter_data(filter):
         # Does cutout file exist on the local disk?
         version = transient.software_version if transient.software_version else "0.0.0"
-        save_dir = f"{transient.name}/v{version}/{workflow}/cutout_cdn/{filter.survey.name}/"
-        local_fits_path = os.path.join(settings.INPUT_ROOT, save_dir + f"{filter.name}.fits")
+        save_dir = f"{settings.INPUT_ROOT}/{transient.name}/v{version}/{workflow}/cutout_cdn/{filter.survey.name}/"
+        local_fits_path = save_dir + f"{filter.name}.fits"
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.replace(settings.INPUT_ROOT, "", 1).strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
+        if not cutout_file_exists:
+            prefix = os.path.join(settings.S3_BASE_PATH, transient.name)
+            versions = s3.client.list_objects(bucket_name=s3.bucket, prefix=prefix)
+            for version in versions:
+                print(version.object_name)
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
         cutout_object = Cutout.objects.filter(
