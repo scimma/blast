@@ -224,7 +224,7 @@ def results(request, slug):
     try:
         transient = transients.get(name__exact=slug)
     except Transient.DoesNotExist:
-        return render(request, "404.html", status=404)
+        return render(request, "transient_404.html", status=404)
 
     global_aperture = select_aperture(transient)
 
@@ -671,7 +671,7 @@ def error_view(request, exception, template_name="403.html"):
 
 
 # Handler for 404 errors
-def resource_not_found_view(request, exception, template_name="404.html"):
+def resource_not_found_view(request, exception, template_name="generic_404.html"):
     return render(request, template_name, status=404)
 
 
