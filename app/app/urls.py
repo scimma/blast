@@ -26,3 +26,4 @@ urlpatterns = [
 ]
 
 handler403 = "host.views.error_view"
+handler404 = "host.views.resource_not_found_view"
