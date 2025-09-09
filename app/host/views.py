@@ -221,7 +221,10 @@ def analytics(request):
 def results(request, slug):
 
     transients = Transient.objects.all()
-    transient = transients.get(name__exact=slug)
+    try:
+        transient = transients.get(name__exact=slug)
+    except Transient.DoesNotExist:
+        return render(request, "transient_404.html", status=404)
 
     global_aperture = select_aperture(transient)
 
@@ -665,6 +668,11 @@ class FlowerProxyView(UserPassesTestMixin, ProxyView):
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):
     return render(request, template_name)
+
+
+# Handler for 404 errors
+def resource_not_found_view(request, exception, template_name="generic_404.html"):
+    return render(request, template_name, status=404)
 
 
 # View for the privacy policy
