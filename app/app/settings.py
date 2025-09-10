@@ -173,6 +173,7 @@ PROST_OUTPUT_ROOT = os.environ.get("PROST_OUTPUT_ROOT", "/tmp/prost_output")
 TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 TNS_QUERY_TIMEOUT = int(os.environ.get("TNS_QUERY_TIMEOUT", "60"))
+NED_RATE_LIMIT = int(os.environ.get("NED_RATE_LIMIT", "2"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]
 SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
 SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
