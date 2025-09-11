@@ -2010,30 +2010,35 @@
     "size": 720000164
   },
   {
+    "TODO": "Remove me",
     "path": "sbipp/SBI_model.pt",
     "version_id": "bGgAnrSKwAqAodKHhuUncVEKLs7M0pt",
     "etag": "cbf5690b49ca21cddacae4ddf24f146f-4",
     "size": 65007493
   },
   {
+    "TODO": "Replace me with data/sbipp/SBI_model_blast_zfix_global.pt",
     "path": "sbipp/SBI_model_global.pt",
     "version_id": "TqYFph0y083LP9FqdP1bBDpbnQ5G9ye",
     "etag": "255f5a086f7e5dbbb322faac659f6673-4",
     "size": 65007493
   },
   {
+    "TODO": "Replace me with data/sbipp/SBI_model_blast_zfree_global.pt",
     "path": "sbipp/SBI_model_local.pt",
     "version_id": "FtKKE82y1UkrQ1dhXkFc3HebczNWISP",
     "etag": "22b59e91fa47e87f0e688f46e4d31242-4",
     "size": 65009239
   },
   {
+    "TODO": "Replace with new model",
     "path": "sbipp_phot/sbi_phot_global.h5",
     "version_id": "TKLSBpdYgHXIg1J8js.XoTKXoRPd8RP",
     "etag": "cb5e6fd738694f4da1541e4b1fa717d5-2",
     "size": 1024005856
   },
   {
+    "TODO": "Replace with new model",
     "path": "sbipp_phot/sbi_phot_local.h5",
     "version_id": "jZiVHZ6wMlO1PLbhQbr1OA-0H-j8mqI",
     "etag": "37a90f8b01643a4699b01d027c34256c-2",

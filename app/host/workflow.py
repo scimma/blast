@@ -18,6 +18,9 @@ from host.base_tasks import task_time_limit
 from host.transient_tasks import transient_information
 from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
+from host.transient_tasks import local_aperture_photometry_zphot
+from host.transient_tasks import validate_local_photometry_zphot
+from host.transient_tasks import local_host_sed_fitting_zphot
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 
@@ -84,6 +87,38 @@ def transient_workflow(transient_name=None):
             initialise_all_tasks_status(transient)
             transient.tasks_initialized = "True"
             transient.save()
+    # Local aperture photometry chain
+    chain_local_aperture_photometry = chain(
+        local_aperture_photometry.si(transient_name),
+        validate_local_photometry.si(transient_name),
+        local_host_sed_fitting.si(transient_name),
+    )
+    # Global aperture photometry chain
+    chain_global_aperture_photometry = chain(
+        global_aperture_construction.si(transient_name),
+        global_aperture_photometry.si(transient_name),
+        validate_global_photometry.si(transient_name),
+    )
+    # Local aperture photometry photo-z chain
+    chain_local_aperture_photometry_zphot = chain(
+        local_aperture_photometry_zphot.si(transient_name),
+        validate_local_photometry_zphot.si(transient_name),
+        local_host_sed_fitting_zphot.si(transient_name)
+    )
+    # Global host SED fit chord
+    chord_global = chord((
+        mwebv_host.si(transient_name),
+        chain_global_aperture_photometry
+    ),
+        global_host_sed_fitting.si(transient_name),
+    )
+    # Photo-Z chord after global SED fit and local aperture photometry
+    chord_photometry = chord((
+        chain_local_aperture_photometry,
+        chord_global
+    ),
+        chain_local_aperture_photometry_zphot
+    )
     # Execute the workflow
     workflow = chain(
         image_download.si(transient_name),
@@ -91,27 +126,7 @@ def transient_workflow(transient_name=None):
         mwebv_transient.si(transient_name),
         host_match.si(transient_name),
         host_information.si(transient_name),
-        group(
-            chain(
-                local_aperture_photometry.si(transient_name),
-                validate_local_photometry.si(transient_name),
-                local_host_sed_fitting.si(transient_name),
-            ),
-            chord(
-                (
-                    mwebv_host.si(transient_name),
-                    chain(
-                        global_aperture_construction.si(transient_name),
-                        global_aperture_photometry.si(transient_name),
-                        validate_global_photometry.si(transient_name),
-                    ),
-                ),
-                global_host_sed_fitting.si(transient_name),
-                local_aperture_photometry_zphot.si(transient_name),
-                validate_local_photometry_zphot.si(transient_name),
-                local_host_sed_fitting_zphot.si(transient_name),
-            ),
-        ),
+        chord_photometry,
         final_progress.si(transient_name)
     )
     workflow.delay()
