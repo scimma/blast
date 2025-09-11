@@ -204,7 +204,7 @@ def build_model_nonparam(obs=None, z=None, **extras):
         "dust1_fraction",
         "log_fagn",
         "log_agn_tau",
-        #"gas_logz",
+        "gas_logz",
         "duste_qpah",
         "duste_umin",
         "log_duste_gamma",
@@ -364,19 +364,11 @@ def build_model_nonparam(obs=None, z=None, **extras):
     # --- Nebular Emission ---
     model_params["add_neb_emission"] = {"N": 1, "isfree": False, "init": True}
     model_params["add_neb_continuum"] = {"N": 1, "isfree": False, "init": True}
-    # original:
-    #model_params["gas_logz"] = {
-    #    "N": 1,
-    #    "isfree": True,
-    #    "init": -0.5,
-    #    "units": r"log Z/Z_\odot",
-    #    "prior": priors.FastUniform(a=-2.0, b=0.5),
-    #}
-    # hack!  to match Anya's model, for now
+
     model_params["gas_logz"] = {
         "N": 1,
-        "isfree": False,
-        "init": 0.0,
+        "isfree": True,
+        "init": -0.5,
         "units": r"log Z/Z_\odot",
         "prior": priors.FastUniform(a=-2.0, b=0.5),
     }
@@ -614,6 +606,7 @@ def prospector_result_to_blast(
             use_weights=use_weights,
             sbipp=sbipp,
             obs=observations,
+            has_specz = transient.best_spec_redshift is not None
         )
 
         percentiles = np.load(
@@ -632,6 +625,7 @@ def prospector_result_to_blast(
     dust1_fraction_16, dust1_fraction_50, dust1_fraction_84 = perc['dust1_fraction']
     log_fagn_16, log_fagn_50, log_fagn_84 = perc['log_fagn']
     log_agn_tau_16, log_agn_tau_50, log_agn_tau_84 = perc['log_agn_tau']
+
     gas_logz_16, gas_logz_50, gas_logz_84 = perc['gas_logz']
     duste_qpah_16, duste_qpah_50, duste_qpah_84 = perc['duste_qpah']
     duste_umin_16, duste_umin_50, duste_umin_84 = perc['duste_umin']

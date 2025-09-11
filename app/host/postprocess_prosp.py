@@ -287,6 +287,7 @@ def run_all(
     percents=[15.9, 50, 84.1],
     use_weights=True,
     obs=None,
+    has_specz=False,
     **extra
 ):
     # XXX read in prospector outputs
@@ -321,6 +322,8 @@ def run_all(
         "duste_umin",
         "log_duste_gamma",
     ]
+    if not has_specz:
+        keys += ["zred"]
     percentiles, chains, sub_idx = get_all_outputs_and_chains(res, keys=keys, zred=zred)
 
     # ---------- total mass formed -> stellar mass
@@ -330,7 +333,10 @@ def run_all(
     modspecs_all = []
 
     for i, _subidx in enumerate(sub_idx):
-        modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)], sps=sps, obs=obs)
+        if has_specz:
+            modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)][1:], sps=sps, obs=obs)
+        else:
+            modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)], sps=sps, obs=obs)
         modphots_all.append(modmags) # model photometry
         modspecs_all.append(modspec) # model spectrum
         _mass = res['chain'][int(_subidx)][mass_idx]
