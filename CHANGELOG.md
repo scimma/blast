@@ -5,6 +5,16 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0]
+
+### Changed
+
+- Revamped the "Add Transient" web form:
+  - Improved CSV handling to handle whitespace surrounding values.
+  - Changed the wording from "upload" to "add", "define", and "import" to reflect the two distinct ways users can add transients to the database.
+  - Redesigned the form structure to make the two addition methods mutually exclusive and not simultaneously visible.
+  - Improved algorithm for reporting when added transients are ignored because they already exist in the database.
+
 ## [1.5.7]
 
 ### Changed
