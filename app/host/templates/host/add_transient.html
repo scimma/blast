@@ -31,26 +31,47 @@
     display: none;
     margin-top: 2rem;
   }
-  code {
+  code, .list-group-item {
     color: #d15e00;
+  }
+  .list-group-item {
+    font-size: larger;
+  }
+  .list-group-item:hover {
+    color: #FFFFFF;
+    background-color: hsl(27, 50%, 41%);
+  }
+  .input-group-text {
+    color: #000000;
+    background-color: #ededed;
+  }
+  .container {
+    max-width: 60rem;
+    flex-direction: column;
   }
 </style>
 
 <div class="container">
 
-<div class="pt-5 px-5 text-left bg-light">
-  <h1 class="mb-3">Add Transients</h1>
-  <p class="mb-3">There are two ways to add transients to the Blast database and trigger their data processing:</p>
-  <ul class="list-group">
+  <div class="pt-5">
+    <h1 class="mb-3"><i class="bi bi-database-add"></i> Add Transients</h1>
+    <p class="mb-3">
+      <b>There are two ways to add transients to the Blast database and trigger their data processing.</b>
+      Click a method below to enter information:
+    </p>
+  </div>
+  <div class="px-5">
+    <ul class="list-group">
       <a href="#" type="button" class="list-group-item list-group-item-action" id="import-button" onclick="showImportForm();">
-      <span style="font-size: larger;"><i class="bi bi-cloud-download"></i></span>
+        <span style="font-size: larger;"><i class="bi bi-cloud-download"></i></span>
         &nbsp;&nbsp;Import transients from the Transient Name Server (TNS) by name.
-    </a>
+      </a>
       <a href="#" type="button" class="list-group-item list-group-item-action" id="define-button" onclick="showCreateForm();">
-      <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
+        <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
         &nbsp;&nbsp;Define transients by specifying properties.
-    </a>
-  </ul>
+      </a>
+    </ul>
+  </div>
   
   {% if errors|length %}
   <div class="py-3">
@@ -95,38 +116,37 @@
   </ul>
   </div>
   {% endif %}
-</div>
 
-<form class="form pt-5 px-5", method="POST">
-    {% csrf_token %}
-    <div class="input-group mb-10">
-      <div style='margin-bottom:0em'>
-        <div id="import-form" class="transient-form">
-          <p>Import transients from the TNS by supplying a list of transient names (the formal unique designations used by TNS).</p>
-          <div class="input-group-text" id="import-form">
-            {{ form.tns_names | as_crispy_field }}
+  <form class="form pt-5 px-5", method="POST">
+      {% csrf_token %}
+      <div class="input-group mb-10">
+        <div style='margin-bottom:0em'>
+          <div id="import-form" class="transient-form">
+            <p>Import transients from the TNS by supplying a list of transient names (the formal unique designations used by TNS).</p>
+            <div class="input-group-text" id="import-form">
+              {{ form.tns_names | as_crispy_field }}
+            </div>
           </div>
-        </div>
           <div id="define-form" class="transient-form">
-          <p>Create transients by supplying a comma-separated value (CSV) table,
-            where each row defines a transient with five columns of information:
-            <code>Name, RA, Dec, Redshift, Classification</code>
-            <ul>
-              
-              <li>RA/Dec must be decimal degrees.</li>
-              <li>Use "None" to indicate missing redshift or classification.</li>
-            </ul>
-          </p>
-          <div class="input-group-text">
-            {{ form.full_info | as_crispy_field }}
+            <p>Create transients by supplying a comma-separated value (CSV) table,
+              where each row defines a transient with five columns of information:
+              <code>Name, RA, Dec, Redshift, Classification</code>
+              <ul>
+                
+                <li>RA/Dec must be decimal degrees.</li>
+                <li>Use "None" to indicate missing redshift or classification.</li>
+              </ul>
+            </p>
+            <div class="input-group-text">
+              {{ form.full_info | as_crispy_field }}
+            </div>
           </div>
         </div>
+        <div class="input-group">
+          <button type="submit" id="submit-btn" class="btn btn-primary" type="button">Submit</button>
       </div>
-      <div class="input-group">
-        <button type="submit" id="submit-btn" class="btn btn-outline-success" type="button">Submit</button>
-     </div>
-  </div>
-</form>
+    </div>
+  </form>
 
 </div>
 {% endblock %}
