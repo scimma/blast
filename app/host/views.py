@@ -41,7 +41,14 @@ import csv
 import io
 from host.log import get_logger
 logger = get_logger(__name__)
-from host.object_key import *
+from host.object_key import get_sed_posterior_file_object_key_from_sed_fit_res
+from host.object_key import get_sed_chains_file_object_key_from_sed_fit_res
+from host.object_key import get_sed_percentiles_file_object_key_from_sed_fit_res
+from host.object_key import get_sed_model_file_object_key_from_sed_fit_res
+# from host.object_key import get_cutout_file_object_key_from_cutout
+# from host.object_key import get_cutout_file_local_path_from_cutout
+# from host.object_key import get_versions_sorted_transient
+# from host.object_key import get_sed_posterior_file_local_path_from_sed_fit_res
 
 
 def filter_transient_categories(qs, value, task_register=None):
