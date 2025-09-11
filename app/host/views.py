@@ -152,7 +152,7 @@ def add_transient(request):
         return existing_transient_names, new_transient_names
 
     errors = []
-    created_transient_names = []
+    defined_transient_names = []
     imported_transient_names = []
     existing_transient_names = []
 
@@ -199,13 +199,13 @@ def add_transient(request):
                                   if trans_info['name'] == transient_name][0]
                     try:
                         Transient.objects.create(**trans_info)
-                        created_transient_names += [trans_info['name']]
+                        defined_transient_names += [trans_info['name']]
                     except Exception as err:
                         err_msg = f'Error creating transient: {err}'
                         logger.error(err_msg)
                         errors.append(err_msg)
                 # Trigger processing of new transients
-                import_transient_list.delay(created_transient_names)
+                import_transient_list.delay(defined_transient_names)
 
     else:
         form = TransientUploadForm()
@@ -213,7 +213,7 @@ def add_transient(request):
     context = {
         "form": form,
         "errors": errors,
-        "created_transient_names": created_transient_names,
+        "defined_transient_names": defined_transient_names,
         "imported_transient_names": imported_transient_names,
         "existing_transient_names": existing_transient_names,
     }

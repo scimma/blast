@@ -42,13 +42,13 @@
   <h1 class="mb-3">Add Transients</h1>
   <p class="mb-3">There are two ways to add transients to the Blast database and trigger their data processing:</p>
   <ul class="list-group">
-    <a href="#" type="button" class="list-group-item list-group-item-action active" aria-current="true" id="import-button" onclick="showImportForm();">
+      <a href="#" type="button" class="list-group-item list-group-item-action" id="import-button" onclick="showImportForm();">
       <span style="font-size: larger;"><i class="bi bi-cloud-download"></i></span>
-      &nbsp;&nbsp;Import transients from the Transient Name Server (TNS).
+        &nbsp;&nbsp;Import transients from the Transient Name Server (TNS) by name.
     </a>
-    <a href="#" type="button" class="list-group-item list-group-item-action" id="create-button" onclick="showCreateForm();">
+      <a href="#" type="button" class="list-group-item list-group-item-action" id="define-button" onclick="showCreateForm();">
       <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
-      &nbsp;&nbsp;Create transients by definition.
+        &nbsp;&nbsp;Define transients by specifying properties.
     </a>
   </ul>
   
@@ -74,11 +74,11 @@
   </div>
   {% endif %}
   
-  {% if created_transient_names|length %}
+  {% if defined_transient_names|length %}
   <div class="py-3">
   <p>The following transients were successfully added to the Blast database:</p>
   <ul>
-    {% for transient_name in created_transient_names %}
+    {% for transient_name in defined_transient_names %}
     <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
     {% endfor %}
   </ul>
@@ -107,7 +107,7 @@
             {{ form.tns_names | as_crispy_field }}
           </div>
         </div>
-        <div id="create-form" class="transient-form">
+          <div id="define-form" class="transient-form">
           <p>Create transients by supplying a comma-separated value (CSV) table,
             where each row defines a transient with five columns of information:
             <code>Name, RA, Dec, Redshift, Classification</code>
@@ -134,17 +134,17 @@
 <script>
     function showImportForm() {
       document.getElementById("import-form").style.display = "block";
-      document.getElementById("create-form").style.display = "none";
+      document.getElementById("define-form").style.display = "none";
       document.getElementById("import-button").classList.add("active");
-      document.getElementById("create-button").classList.remove("active");
+      document.getElementById("define-button").classList.remove("active");
       document.getElementById("submit-btn").style.display = "block";
       document.getElementById("id_full_info").value = "";
     }
     function showCreateForm() {
       document.getElementById("import-form").style.display = "none";
-      document.getElementById("create-form").style.display = "block";
+      document.getElementById("define-form").style.display = "block";
       document.getElementById("import-button").classList.remove("active");
-      document.getElementById("create-button").classList.add("active");
+      document.getElementById("define-button").classList.add("active");
       document.getElementById("submit-btn").style.display = "block";
       document.getElementById("id_tns_names").value = "";
     }
