@@ -31,6 +31,8 @@ def theta_index(prior="p-alpha"):
     #         'dust2': slice(9, 10, None), 'dust_index': slice(10, 11, None), 'dust1_fraction': slice(11, 12, None),
     #         'log_fagn': slice(12, 13, None), 'log_agn_tau': slice(13, 14, None), 'gas_logz': slice(14, 15, None),
     #         'duste_qpah': slice(15, 16, None), 'duste_umin': slice(16, 17, None), 'log_duste_gamma': slice(17, 18, None)}
+
+    # hack!  temp model from anya
     index = {
         "zred": slice(0, 1, None),
         "logmass": slice(1, 2, None),
@@ -41,12 +43,30 @@ def theta_index(prior="p-alpha"):
         "dust1_fraction": slice(11, 12, None),
         "log_fagn": slice(12, 13, None),
         "log_agn_tau": slice(13, 14, None),
-        "gas_logz": slice(14, 15, None),
-        "duste_qpah": slice(15, 16, None),
-        "duste_umin": slice(16, 17, None),
-        "log_duste_gamma": slice(17, 18, None),
+        #"gas_logz": slice(14, 15, None),
+        "duste_qpah": slice(14, 15, None),
+        "duste_umin": slice(15, 16, None),
+        "log_duste_gamma": slice(16, 17, None),
     }
 
+    # original
+    #index = {
+    #    "zred": slice(0, 1, None),
+    #    "logmass": slice(1, 2, None),
+    #    "logzsol": slice(2, 3, None),
+    #    "logsfr_ratios": slice(3, 9, None),
+    #    "dust2": slice(9, 10, None),
+    #    "dust_index": slice(10, 11, None),
+    #    "dust1_fraction": slice(11, 12, None),
+    #    "log_fagn": slice(12, 13, None),
+    #    "log_agn_tau": slice(13, 14, None),
+    #    "gas_logz": slice(14, 15, None),
+    #    "duste_qpah": slice(15, 16, None),
+    #    "duste_umin": slice(16, 17, None),
+    #    "log_duste_gamma": slice(17, 18, None),
+    #}
+
+    
     return index
 
 
@@ -267,6 +287,7 @@ def run_all(
     percents=[15.9, 50, 84.1],
     use_weights=True,
     obs=None,
+    has_specz=False,
     **extra
 ):
     # XXX read in prospector outputs
@@ -295,11 +316,14 @@ def run_all(
         "dust1_fraction",
         "log_fagn",
         "log_agn_tau",
-        "gas_logz",
+        # hack!
+        #"gas_logz",
         "duste_qpah",
         "duste_umin",
         "log_duste_gamma",
     ]
+    if not has_specz:
+        keys += ["zred"]
     percentiles, chains, sub_idx = get_all_outputs_and_chains(res, keys=keys, zred=zred)
 
     # ---------- total mass formed -> stellar mass
@@ -309,7 +333,10 @@ def run_all(
     modspecs_all = []
 
     for i, _subidx in enumerate(sub_idx):
-        modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)], sps=sps, obs=obs)
+        if has_specz:
+            modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)][1:], sps=sps, obs=obs)
+        else:
+            modspec, modmags, sm = mod_fsps.predict(res['chain'][int(_subidx)], sps=sps, obs=obs)
         modphots_all.append(modmags) # model photometry
         modspecs_all.append(modspec) # model spectrum
         _mass = res['chain'][int(_subidx)][mass_idx]
