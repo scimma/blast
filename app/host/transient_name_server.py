@@ -184,10 +184,16 @@ def get_transients_from_tns_by_name(
     blast_transients = []
 
     for transient in transients:
-        get_data = build_tns_get_query_data(tns_bot_api_key, transient)
-        tns_transient = rate_limit_query_tns(get_data, headers, get_tns_url)
-        blast_transient = tns_to_blast_transient(tns_transient)
-        blast_transients.append(blast_transient)
+        try:
+            get_data = build_tns_get_query_data(tns_bot_api_key, transient)
+            tns_transient = rate_limit_query_tns(get_data, headers, get_tns_url)
+            if not tns_transient:
+                logger.warning(f'TNS returned no data for transient "{transient["objname"]}".')
+                continue
+            blast_transient = tns_to_blast_transient(tns_transient)
+            blast_transients.append(blast_transient)
+        except Exception as err:
+            logger.error(f'Error importing transient "{transient["objname"]}" from TNS: {err}')
 
     return blast_transients
 
