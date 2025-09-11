@@ -1,0 +1,152 @@
+{% extends 'host/base.html' %}
+{% load host_tags %}
+
+{% block title %} Transients {% endblock %}
+
+{% block body %}
+
+{% load crispy_forms_tags %}
+
+{% load render_table from django_tables2 %}
+
+{% load bootstrap4 %}
+
+<style>
+  .transient-form {
+    display: none;
+  }
+  p {
+    font-size: larger;
+  }
+  .input-group-text {
+    max-width: 32rem;
+  }
+  .list-group {
+    max-width: max-content;
+  }
+  .list-group-item.active {
+    background-color: #d15e00;
+  }
+  #submit-btn {
+    display: none;
+    margin-top: 2rem;
+  }
+  code {
+    color: #d15e00;
+  }
+</style>
+
+<div class="container">
+
+<div class="pt-5 px-5 text-left bg-light">
+  <h1 class="mb-3">Add Transients</h1>
+  <p class="mb-3">There are two ways to add transients to the Blast database and trigger their data processing:</p>
+  <ul class="list-group">
+    <a href="#" type="button" class="list-group-item list-group-item-action active" aria-current="true" id="import-button" onclick="showImportForm();">
+      <span style="font-size: larger;"><i class="bi bi-cloud-download"></i></span>
+      &nbsp;&nbsp;Import transients from the Transient Name Server (TNS).
+    </a>
+    <a href="#" type="button" class="list-group-item list-group-item-action" id="create-button" onclick="showCreateForm();">
+      <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
+      &nbsp;&nbsp;Create transients by definition.
+    </a>
+  </ul>
+  
+  {% if errors|length %}
+  <div class="py-3">
+  <p><font color="#ff0000">There were errors:</font></p>
+  <ul>
+    {% for error in errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+  
+  {% if imported_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients were scheduled for import from TNS:</p>
+  <ul>
+    {% for transient_name in imported_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+  
+  {% if created_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients were successfully added to the Blast database:</p>
+  <ul>
+    {% for transient_name in created_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+
+  {% if existing_transient_names|length %}
+  <div class="py-3">
+  <p>Ignored existing transients:</p>
+  <ul>
+    {% for transient_name in existing_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+</div>
+
+<form class="form pt-5 px-5", method="POST">
+    {% csrf_token %}
+    <div class="input-group mb-10">
+      <div style='margin-bottom:0em'>
+        <div id="import-form" class="transient-form">
+          <p>Import transients from the TNS by supplying a list of transient names (the formal unique designations used by TNS).</p>
+          <div class="input-group-text" id="import-form">
+            {{ form.tns_names | as_crispy_field }}
+          </div>
+        </div>
+        <div id="create-form" class="transient-form">
+          <p>Create transients by supplying a comma-separated value (CSV) table,
+            where each row defines a transient with five columns of information:
+            <code>Name, RA, Dec, Redshift, Classification</code>
+            <ul>
+              
+              <li>RA/Dec must be decimal degrees.</li>
+              <li>Use "None" to indicate missing redshift or classification.</li>
+            </ul>
+          </p>
+          <div class="input-group-text">
+            {{ form.full_info | as_crispy_field }}
+          </div>
+        </div>
+      </div>
+      <div class="input-group">
+        <button type="submit" id="submit-btn" class="btn btn-outline-success" type="button">Submit</button>
+     </div>
+  </div>
+</form>
+
+</div>
+{% endblock %}
+{% block script %}
+<script>
+    function showImportForm() {
+      document.getElementById("import-form").style.display = "block";
+      document.getElementById("create-form").style.display = "none";
+      document.getElementById("import-button").classList.add("active");
+      document.getElementById("create-button").classList.remove("active");
+      document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("id_full_info").value = "";
+    }
+    function showCreateForm() {
+      document.getElementById("import-form").style.display = "none";
+      document.getElementById("create-form").style.display = "block";
+      document.getElementById("import-button").classList.remove("active");
+      document.getElementById("create-button").classList.add("active");
+      document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("id_tns_names").value = "";
+    }
+</script>
+{% endblock %}

@@ -36,9 +36,11 @@ from django.template.loader import render_to_string
 import os
 from django.conf import settings
 from celery import shared_task
+from host.decorators import log_usage_metric
+import csv
+import io
 from host.log import get_logger
 logger = get_logger(__name__)
-from host.decorators import log_usage_metric
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -139,9 +141,20 @@ def transient_list(request):
 @login_required
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
-def transient_uploads(request):
+def add_transient(request):
+    def identify_existing_transients(transient_names):
+        existing_transients = Transient.objects.filter(name__in=transient_names)
+        existing_transient_names = [existing_transient.name for existing_transient in existing_transients]
+        for transient_name in existing_transient_names:
+            logger.info(f'Transient already saved: "{transient_name}"')
+        new_transient_names = [transient_name for transient_name in transient_names
+                               if transient_name not in existing_transient_names]
+        return existing_transient_names, new_transient_names
+
     errors = []
-    uploaded_transient_names = []
+    created_transient_names = []
+    imported_transient_names = []
+    existing_transient_names = []
 
     # add transients -- either from TNS or from RA/Dec/redshift
     if request.method == "POST":
@@ -149,48 +162,62 @@ def transient_uploads(request):
 
         if form.is_valid():
             info = form.cleaned_data["tns_names"]
-            retrigger = form.cleaned_data["retrigger"]
             if info:
-                transient_names = info.splitlines()
-                # Since the async import task may take a long time, the returned list
-                # of uploaded transients will not necessarily match the transients
-                # successfully imported from TNS.
-                uploaded_transient_names = transient_names
-                import_transient_list.delay(transient_names, retrigger=retrigger)
+                transient_names = [transient_name.strip() for transient_name in info.splitlines()]
+                existing_transient_names, imported_transient_names = identify_existing_transients(transient_names)
+                # Trigger import and processing of new transients
+                import_transient_list.delay(imported_transient_names)
 
             info = form.cleaned_data["full_info"]
             if info:
-                for line in info.split("\n"):
-                    # name, ra, dec, redshift, type
-                    name, ra, dec, redshift, specclass = line.split(",")
-                    redshift = None if redshift.lower() == "none" else redshift
-                    specclass = None if specclass.lower() == "none" else specclass
-                    info_dict = {
-                        "name": name,
-                        "ra_deg": ra,
-                        "dec_deg": dec,
+                trans_info_set = []
+                reader = csv.DictReader(io.StringIO(info), fieldnames=['name', 'ra', 'dec', 'redshift', 'specclass'])
+                for transient in reader:
+                    if transient['specclass'].lower().strip() == "none":
+                        spectroscopic_class = None
+                    else:
+                        spectroscopic_class = transient['specclass'].strip()
+                    if transient['redshift'].lower().strip() == "none":
+                        redshift = None
+                    else:
+                        redshift = float(transient['redshift'].strip())
+                    trans_info = {
+                        "name": transient['name'].strip(),
+                        "ra_deg": float(transient['ra'].strip()),
+                        "dec_deg": float(transient['dec'].strip()),
                         "redshift": redshift,
-                        "spectroscopic_class": specclass,
+                        "spectroscopic_class": spectroscopic_class,
                         "tns_id": 0,
                         "tns_prefix": "",
                         "added_by": request.user,
                     }
-                    # check if exists; if not, add it
+                    trans_info_set.append(trans_info)
+                transient_names = [trans_info['name'] for trans_info in trans_info_set]
+                existing_transient_names, new_transient_names = identify_existing_transients(transient_names)
+                for transient_name in new_transient_names:
+                    trans_info = [trans_info for trans_info in trans_info_set
+                                  if trans_info['name'] == transient_name][0]
                     try:
-                        Transient.objects.get(name=name)
-                        errors += [f"Transient {name} already exists in the database"]
-                    except Transient.DoesNotExist:
-                        Transient.objects.create(**info_dict)
-                        uploaded_transient_names += [name]
+                        Transient.objects.create(**trans_info)
+                        created_transient_names += [trans_info['name']]
+                    except Exception as err:
+                        err_msg = f'Error creating transient: {err}'
+                        logger.error(err_msg)
+                        errors.append(err_msg)
+                # Trigger processing of new transients
+                import_transient_list.delay(created_transient_names)
+
     else:
         form = TransientUploadForm()
 
     context = {
         "form": form,
         "errors": errors,
-        "uploaded_transient_names": uploaded_transient_names,
+        "created_transient_names": created_transient_names,
+        "imported_transient_names": imported_transient_names,
+        "existing_transient_names": existing_transient_names,
     }
-    return render(request, "transient_uploads.html", context)
+    return render(request, "add_transient.html", context)
 
 
 def analytics(request):
