@@ -709,7 +709,6 @@ class LocalAperturePhotometry(TransientTaskRunner):
                 os.remove(lock_path)
                 if not [Path(local_fits_path).parent.glob('*.lock')]:
                     try:
-
                         # Delete FITS file from local file cache
                         os.remove(local_fits_path)
                     except FileNotFoundError:

@@ -562,13 +562,7 @@ def query_ned(position):
     else:
         galaxy_data = {"redshift": None}
 
-    return galaxy_data
-
-def rate_limit_query_ned(position):
-    """
-    Get a Galaxy's redshift from NED if it is available, but with the logic used in rate_limit_query_tns.
-    """
-    
+    return galaxy_data   
 
 
 def query_sdss(position):
