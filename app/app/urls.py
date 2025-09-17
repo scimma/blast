@@ -18,7 +18,7 @@ from django.urls import include
 from django.urls import path
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("admin/", admin.site.urls, name='admin'),
     path("", include("host.urls")),
     path("api/", include("api.urls")),
     path("", include("users.urls")),
@@ -26,3 +26,4 @@ urlpatterns = [
 ]
 
 handler403 = "host.views.error_view"
+handler404 = "host.views.resource_not_found_view"

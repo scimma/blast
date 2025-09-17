@@ -18,8 +18,8 @@ if base_path != "":
     base_path = f"""{base_path}/"""
 
 urlpatterns = [
-    path(f"""{base_path}transients/""", views.transient_list),
-    path(f"""{base_path}transient_uploads/""", views.transient_uploads),
+    path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
+    path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
     path(f"""{base_path}analytics/""", views.analytics),
     path(f"""{base_path}transients/<slug:slug>/""", views.results, name="results"),
     path(
@@ -37,7 +37,7 @@ urlpatterns = [
         views.download_percentiles,
         name="download_percentiles",
     ),
-    path(f"""{base_path}acknowledgements/""", views.acknowledgements),
+    path(f"""{base_path}acknowledgements/""", views.acknowledgements, name="acknowledgements"),
     path(f"""{base_path}""", views.home),
     path(f"""{base_path}flower/""", views.flower_view),
     path(
@@ -78,6 +78,8 @@ router.register(r"host", api.views.HostViewSet)
 # Login/Logout
 api_url_patterns = [
     re_path(r"^api/", include(router.urls)),
+    # TODO: As of v1.5.7, this api/schema endpoint is broken:
+    #       "AssertionError: `inflection` must be installed for OpenAPI schema support."
     re_path(r"^api/schema/$", schema_view),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
