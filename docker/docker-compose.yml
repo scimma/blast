@@ -100,7 +100,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-      - "batch"
+    #  - "batch"
 
   rabbitmq:
     image: rabbitmq:3.10.6-management-alpine
