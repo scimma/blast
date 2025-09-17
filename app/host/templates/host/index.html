@@ -10,63 +10,67 @@
 
 <div class="container">
 <div class="text-left bg-light">
-  
-<div class="row align-items-end">
-  <div class="col-lg-3">
-    <img src="{% static 'images/blast_logo_transparent.png' %}" style="max-height: 150px;" />
+  <div class="row align-items-end">
+    <div class="col-lg-3">
+      <img src="{% static 'images/blast_logo_transparent.png' %}" style="max-height: 150px;" />
+    </div>
+    <div class="col-lg-6">
+      <h4 class="slogan">
+        A web service for the automatic, real-time characterization of transient
+        host galaxies
+      </h4>
+    </div>
   </div>
-  <div class="col-lg-6">
-    <h4 class="slogan">
-      A web service for the automatic, real-time characterization of transient
-      host galaxies
-    </h4>
-  </div>
-</div>
 </div>
 
 <div class="row pt-3">
   <div class="col-lg-5">
-      <div class="pb-3">
-        <a href="transients/" role="button" class="btn btn-primary" style="margin-right: 1rem;">
-          Search the Blast database <i class="bi bi-search"></i>
-        </a>
-        <a
-        href="https://blast.readthedocs.io/en/latest/index.html"
-        role="button"
-        class="btn btn-primary"
-        >Read the docs <i class="bi bi-book-half"></i><i class="bi bi-book-half"></i>
-      </a>
-    </div>
-      <p>
-        The host galaxies of astrophysical transients play a key role in our
-        understanding of their progenitor systems and the use of Type Ia
-        supernovae as standardizable candles for cosmology. However, fully
-        characterizing host galaxy environments requires a high-statistics,
-        unbiased, multi-wavelength dataset, preferably with 1-2&nbsp;kpc resolution.
-        Current analyses are limited by sample sizes of anywhere from ~10-200&nbsp;SNe,
-        predominantly optical host observations, and observational biases
-        such as selecting from surveys that search for SNe within a pre-selected
-        a set of galaxies.
-      </p>
+    <div class="row pt-3">
+      <div class="col-lg-12">
+        <div class="pb-3">
+          <a href="transients/" role="button" class="btn btn-primary" style="margin-right: 1rem;">
+            Search the Blast database <i class="bi bi-search"></i>
+          </a>
+          <a
+          href="https://blast.readthedocs.io/en/latest/index.html"
+          role="button"
+          class="btn btn-primary"
+          >Read the docs <i class="bi bi-book-half"></i><i class="bi bi-book-half"></i>
+          </a>
+        </div>
+        <p>
+          The host galaxies of astrophysical transients play a key role in our
+          understanding of their progenitor systems and the use of Type Ia
+          supernovae as standardizable candles for cosmology. However, fully
+          characterizing host galaxy environments requires a high-statistics,
+          unbiased, multi-wavelength dataset, preferably with 1-2&nbsp;kpc resolution.
+          Current analyses are limited by sample sizes of anywhere from ~10-200&nbsp;SNe,
+          predominantly optical host observations, and observational biases
+          such as selecting from surveys that search for SNe within a pre-selected
+          a set of galaxies.
+        </p>
 
-      <p>
-        <b></b>Blast is a public web application built to provide information in real-time for every
-        new transient reported to the <a href="https://www.iau.org/">International Astronomical Union (IAU)</a>:
-        <ul>
-          <li>determine the transient's host galaxy,</li>
-          <li>identify the available archival data,</li>
-          <li>measure the resulting host galaxy star formation rates, masses, and stellar ages.</li>
-        </ul>
-      </p>
-
-      <p>
-        For any questions or concerns, contact us using the mailto link in the footer, or email us at {% support_email %}.
-      </p>
+        <p>
+          <b></b>Blast is a public web application built to provide information in real-time for every
+          new transient reported to the <a href="https://www.iau.org/">International Astronomical Union (IAU)</a>:
+          <ul>
+            <li>determine the transient's host galaxy,</li>
+            <li>identify the available archival data,</li>
+            <li>measure the resulting host galaxy star formation rates, masses, and stellar ages.</li>
+          </ul>
+        </p>
+      </div>
     </div>
-
-    <div class="col-lg-7">
-      {% include "host/analytics_information_card.html" %}
+    <div class="row pt-3">
+      <div class="col-lg-12">
+        <p>
+          For any questions or concerns, please contact us using link in the footer or email us at <code>{% support_email %}</code>
+        </p>
+      </div>
     </div>
+  </div>
+  <div class="col-lg-7">
+    {% include "host/analytics_information_card.html" %}
   </div>
 </div>
 
