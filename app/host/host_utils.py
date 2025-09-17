@@ -567,7 +567,11 @@ def query_ned(position):
 
 def query_sdss(position):
     """Get a Galaxy's redshift from SDSS if it is available"""
-    result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
+    try:
+        result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
+    except Exception as err_to_raise:
+        logger.debug(f"""SDSS query raised exception: {err_to_raise}""")
+        raise err_to_raise
 
     if result_table is not None and "z" in result_table.keys():
         redshift = result_table["z"].value

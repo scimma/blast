@@ -1078,12 +1078,16 @@ class HostInformation(TransientTaskRunner):
         if host is None:
             return "no host"
 
-        galaxy_ned_data = query_ned(host.sky_coord)
         # too many SDSS errors
         try:
             galaxy_sdss_data = query_sdss(host.sky_coord)
         except Exception:
             galaxy_sdss_data = None
+            # Ned could also raise exceptions, rewrite that to be included inside a try-except block
+            try:
+                galaxy_ned_data = query_ned(host.sky_coord)
+            except:
+                galaxy_ned_data = None
 
         status_message = "processed"
 
