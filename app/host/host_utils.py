@@ -46,13 +46,10 @@ from .models import Aperture
 from .models import ExternalRequest
 from .object_store import ObjectStore
 from pathlib import Path
-
 from .models import TaskLock
 
-import logging
-logging.basicConfig(format='%(levelname)-8s %(message)s')
-logger = logging.getLogger(__name__)
-logger.setLevel(os.getenv('LOG_LEVEL', logging.INFO))
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 def survey_list(survey_metadata_path):
