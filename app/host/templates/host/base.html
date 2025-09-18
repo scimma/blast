@@ -90,7 +90,7 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  </style>
+</style>
   {% load bootstrap4 %}
   {% load static %}
   {% include 'latexify/stylesheets.html' %}
@@ -112,18 +112,18 @@
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
               <a class="dropdown-item" title="Home" href="/"><i class="bi bi-house"></i> Home</a>
-              <a class="dropdown-item" title="Acknowledgements" href="/acknowledgements"><i class="bi bi-mortarboard-fill"></i> Acknowledgements</a>
+              <a class="dropdown-item" title="Acknowledgements" href="{% url 'acknowledgements' %}"><i class="bi bi-mortarboard-fill"></i> Acknowledgements</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" target="_blank" title="Docs" href="https://blast.readthedocs.io/en/latest/"><i class="bi bi-book-half"></i> Docs</a>
               <a class="dropdown-item" target="_blank" title="Source code" href="https://github.com/scimma/blast"><i class="bi-github" role="img" aria-label="GitHub"></i> Source Code</a>
             </div>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/transients"><i class="bi bi-search"></i> Transients</a>
+            <a class="nav-link" href="{% url 'transient_list' %}"><i class="bi bi-search"></i> View Transients</a>
           </li>
           {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link" href="/transient_uploads"> Uploads </a>
+            <a class="nav-link" href="{% url 'add_transient' %}"><i class="bi bi-database-add"></i> Add Transients</a>
           </li>
           {% endif %}
         </ul>
@@ -133,11 +133,11 @@
           
           {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
-            <a class="nav-link" href="/admin"> Admin </a>
+            <a class="nav-link" href="{% url 'admin:index' %}"> Admin </a>
           </li>
           {% endif %}
           <li class="nav-item">
-            <a class="nav-link" href="/accounts/login">
+            <a class="nav-link" href="{% url 'login' %}">
               <i class="bi bi-person"></i>
                 {% if show_profile or user.is_authenticated %}
                   Profile
@@ -187,7 +187,7 @@
         %0A
         username: {{ user.username }}%0A
         {% endif %}
-        "><i class="bi-life-preserver" role="img" aria-label="Help"></i> Ask for help</a>
+        "><i class="bi-life-preserver" role="img" aria-label="Help"></i> Contact us</a>
         <span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="https://github.com/scimma/blast/issues"><i class="bi-github" role="img" aria-label="GitHub"></i> Report bugs/issues</a>
         <span style="margin-left:2px">
           <span class="text-muted"><span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="{% url 'privacy' %}">Privacy Policy</a></span>

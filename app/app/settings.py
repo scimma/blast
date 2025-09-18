@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.5.6'
+APP_VERSION = '1.6.1'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -192,7 +192,7 @@ USAGE_METRICS_LOGROLLER_FREQUENCY = int(os.getenv('USAGE_METRICS_LOGROLLER_FREQU
 USAGE_METRICS_LOGS_PER_ARCHIVE = int(os.getenv('USAGE_METRICS_LOGS_PER_ARCHIVE', '1000'))
 USAGE_METRICS_IGNORE_REQUESTS = [
     {
-        'path': '/transient_uploads/',
+        'path': '/add/',
         'method': 'GET',
     },
 ]
@@ -251,7 +251,7 @@ OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
 # OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 
 LOGIN_URL = '/oidc/authenticate'
-LOGIN_REDIRECT_URL = "/transient_uploads"
+LOGIN_REDIRECT_URL = "/add"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
 
 # Email for support requests

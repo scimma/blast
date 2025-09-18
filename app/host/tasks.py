@@ -81,31 +81,16 @@ def retrigger_transient(request=None, slug=''):
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
-def import_transient_list(transient_names, retrigger=False):
+def import_transient_list(transient_names):
+    '''This function assumes that the input transient_names are not in the database.'''
     def process_transient(transient_name):
         transient_workflow.delay(transient_name)
-    existing_transients = []
-    new_transient_names = []
-    for transient_name in transient_names:
-        transient = Transient.objects.filter(name__exact=transient_name)
-        logger.info(f'Querying transient "{transient_name}"...')
-        if transient:
-            logger.info(f'Transient already saved: "{transient_name}"')
-            existing_transients.append(transient[0])
-        else:
-            logger.info(f'New transient detected: "{transient_name}"')
-            new_transient_names.append(transient_name)
-    # Re-trigger workflows for existing transients
-    for transient in existing_transients:
-        if retrigger:
-            retrigger_transient(slug=transient.name)
-        else:
-            logger.info(f'Skipping existing transient "{transient.name}"')
-    # Process new transients
     uploaded_transient_names = []
-    if new_transient_names:
-        for transient_name in new_transient_names:
-            logger.info(f'Triggering workflow for new transient "{transient_name}"...')
+    for transient_name in transient_names:
+        logger.info(f'Triggering workflow for new transient "{transient_name}"...')
+        try:
             process_transient(transient_name)
-            uploaded_transient_names += [transient_name]
+            uploaded_transient_names.append(transient_name)
+        except Exception as err:
+            logger.error(f'''Error processing new transient: {err}''')
     return uploaded_transient_names
