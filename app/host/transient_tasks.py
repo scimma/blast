@@ -1072,48 +1072,42 @@ class HostInformation(TransientTaskRunner):
         return "failed"
 
     def _run_process(self, transient):
-        """Code goes here"""
+        '''Obtain a redshift value and return the task status:
+           "no host", "processed", or "no host redshift"
+        '''
 
-        host = transient.host
-        if host is None:
+        if transient.host is None:
             return "no host"
 
-        # too many SDSS errors
-        # The query functions should log what error occurred
+        # First try obtaining redshift from SDSS.
+        redshift = None
         try:
-            galaxy_sdss_data = query_sdss(host.sky_coord)
-        except Exception:
-            galaxy_sdss_data = None
-            # Ned could also raise exceptions, rewrite that to be included inside a try-except block
+            galaxy_sdss_data = query_sdss(transient.host.sky_coord)
+            assert not math.isnan(galaxy_sdss_data["redshift"])
+            redshift = galaxy_sdss_data["redshift"]
+        except Exception as err:
+            logger.warning(f''''Error querying SDSS: {err}''')
+        # If SDSS query fails to return a valid value, query NED.
+        if not redshift:
             try:
-                galaxy_ned_data = query_ned(host.sky_coord)
-            except:
-                galaxy_ned_data = None
+                galaxy_ned_data = query_ned(transient.host.sky_coord)
+                assert not math.isnan(galaxy_ned_data["redshift"])
+                redshift = galaxy_ned_data["redshift"]
+            except Exception as err:
+                logger.warning(f''''Error querying NED: {err}''')
 
-        status_message = "processed"
-
+        # If one of the queries yielded a redshift value, assign it.
+        if redshift:
+            transient.host.redshift = redshift
+            transient.save()
         if (
-            galaxy_sdss_data is not None and   # noqa: W504
-            galaxy_sdss_data["redshift"] is not None and   # noqa: W504
-            not math.isnan(galaxy_sdss_data["redshift"])
+            transient.host.redshift
+            or transient.host.photometric_redshift is not None
+            or transient.redshift is not None
         ):
-            host.redshift = galaxy_sdss_data["redshift"]
-        elif galaxy_ned_data["redshift"] is not None and not math.isnan(
-            galaxy_ned_data["redshift"]
-        ):
-            host.redshift = galaxy_ned_data["redshift"]
-        elif host.photometric_redshift is not None:
-            pass
-        elif transient.redshift is not None:
-            pass
+            status_message = "processed"
         else:
             status_message = "no host redshift"
-
-        host.save()
-
-        # shouldn't be necessary but seeing weird behavior on prod
-        transient.host = host
-        transient.save()
 
         return status_message
 
