@@ -1,4 +1,3 @@
-from datetime import datetime, timezone, timedelta
 import os
 import math
 import time
@@ -43,7 +42,6 @@ from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
 from .models import Cutout
 from .models import Aperture
-from .models import ExternalRequest
 from .object_store import ObjectStore
 from pathlib import Path
 from .models import TaskLock
@@ -535,16 +533,14 @@ def query_ned(position):
         time.sleep(settings.NED_RATE_LIMIT)
 
     try:
-        err_to_raise = None
         result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
-    except ExpatError:
-        err_to_raise = RuntimeError("too many requests to NED")
+    except ExpatError as err:
+        logger.error(f"Too many requests to NED: {err}")
+        raise RuntimeError("Too many requests to NED")
     finally:
         # Release the NED query lock
         logger.debug('''Releasing NED query lock...''')
         TaskLock.objects.release_lock('ned_query')
-        if err_to_raise:
-            raise err_to_raise
 
     result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
 
@@ -559,7 +555,7 @@ def query_ned(position):
     else:
         galaxy_data = {"redshift": None}
 
-    return galaxy_data   
+    return galaxy_data
 
 
 def query_sdss(position):
