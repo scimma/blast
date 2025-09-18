@@ -1079,6 +1079,7 @@ class HostInformation(TransientTaskRunner):
             return "no host"
 
         # too many SDSS errors
+        # The query functions should log what error occurred
         try:
             galaxy_sdss_data = query_sdss(host.sky_coord)
         except Exception:
