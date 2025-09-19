@@ -8,10 +8,6 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 
-class ExternalRequestManager(models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
-
 
 class TransientManager(models.Manager):
     def get_by_natural_key(self, name):
