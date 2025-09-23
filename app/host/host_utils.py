@@ -524,13 +524,14 @@ def construct_aperture(image, position):
 def query_ned(position):
     """Get a Galaxy's redshift from NED if it is available."""
 
+    timeout = settings.QUERY_TIMEOUT
     logger.debug('''Aquiring NED query lock...''')
     while True:
         # Wait indefinitely until a NED query lock is acquired; rely on task timeout to terminate a stalled process.
         if TaskLock.objects.request_lock('ned_query'):
             break
         logger.debug('''Waiting to aquire NED query lock...''')
-        time.sleep(settings.NED_RATE_LIMIT)
+        time.sleep(1)
 
     try:
         result_table = Ned.query_region(position, radius=1.0 * u.arcsec)

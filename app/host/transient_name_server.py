@@ -68,7 +68,7 @@ def rate_limit_query_tns(data, headers, search_url):
     """
     Query TNS but wait if we have reached too many api requests.
     """
-    timeout = settings.TNS_QUERY_TIMEOUT
+    timeout = settings.QUERY_TIMEOUT
     time_start = time.time()
     logger.debug('''Aquiring TNS query lock...''')
     while timeout > time.time() - time_start:
