@@ -61,7 +61,7 @@ class TaskLockManager(models.Manager):
     def new_expiration_time(self, name):
         '''Calculate the expiration time for a new lock, which can vary depending on the lock purpose.
         Expiration timeout values must be in units of seconds.'''
-        if name == 'tns_query':
+        if name in ['tns_query', 'ned_query']:
             expiration_period = settings.QUERY_TIMEOUT
         else:
             expiration_period = 60
