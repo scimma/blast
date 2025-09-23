@@ -525,16 +525,25 @@ def query_ned(position):
     """Get a Galaxy's redshift from NED if it is available."""
 
     timeout = settings.QUERY_TIMEOUT
+    time_start = time.time()
     logger.debug('''Aquiring NED query lock...''')
-    while True:
+    while timeout > time.time() - time_start:
         # Wait indefinitely until a NED query lock is acquired; rely on task timeout to terminate a stalled process.
         if TaskLock.objects.request_lock('ned_query'):
             break
         logger.debug('''Waiting to aquire NED query lock...''')
         time.sleep(1)
 
+    galaxy_data = {"redshift": None}
     try:
         result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
+        result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
+        redshift = result_table["Redshift"].value
+        if len(redshift):
+            pos = SkyCoord(result_table["RA"].value, result_table["DEC"].value, unit=u.deg)
+            sep = position.separation(pos).arcsec
+            iBest = np.where(sep == np.min(sep))[0][0]
+            galaxy_data = {"redshift": redshift[iBest]}
     except ExpatError as err:
         logger.error(f"Too many requests to NED: {err}")
         raise RuntimeError("Too many requests to NED")
@@ -542,19 +551,6 @@ def query_ned(position):
         # Release the NED query lock
         logger.debug('''Releasing NED query lock...''')
         TaskLock.objects.release_lock('ned_query')
-
-    result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
-
-    redshift = result_table["Redshift"].value
-
-    if len(redshift):
-        pos = SkyCoord(result_table["RA"].value, result_table["DEC"].value, unit=u.deg)
-        sep = position.separation(pos).arcsec
-        iBest = np.where(sep == np.min(sep))[0][0]
-
-        galaxy_data = {"redshift": redshift[iBest]}
-    else:
-        galaxy_data = {"redshift": None}
 
     return galaxy_data
 
