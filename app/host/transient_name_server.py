@@ -68,7 +68,7 @@ def rate_limit_query_tns(data, headers, search_url):
     """
     Query TNS but wait if we have reached too many api requests.
     """
-    timeout = settings.TNS_QUERY_TIMEOUT
+    timeout = settings.QUERY_TIMEOUT
     time_start = time.time()
     logger.debug('''Aquiring TNS query lock...''')
     while timeout > time.time() - time_start:
@@ -87,18 +87,20 @@ def rate_limit_query_tns(data, headers, search_url):
         logger.debug('''Releasing TNS query lock...''')
         TaskLock.objects.release_lock('tns_query')
         return []
-    # Query the TNS server. Resend request after the indicated delay if a rate limiting HTTP code 429 is received.
-    response = query_tns(data, headers, search_url)
-    too_many_requests = response["response_id_code"] == 429
-    while too_many_requests:
-        time_util_rest = response["response_reset_time"]
-        time.sleep(time_util_rest + 1)
+    try:
+        # Query the TNS server. Resend request after the indicated delay if a rate limiting HTTP code 429 is received.
         response = query_tns(data, headers, search_url)
         too_many_requests = response["response_id_code"] == 429
-    # Release the TNS query lock
-    logger.debug('''Releasing TNS query lock...''')
-    TaskLock.objects.release_lock('tns_query')
-    return response["data"]
+        while too_many_requests:
+            time_util_rest = response["response_reset_time"]
+            time.sleep(time_util_rest + 1)
+            response = query_tns(data, headers, search_url)
+            too_many_requests = response["response_id_code"] == 429
+    finally:
+        # Release the TNS query lock
+        logger.debug('''Releasing TNS query lock...''')
+        TaskLock.objects.release_lock('tns_query')
+        return response["data"]
 
 
 def get_transients_from_tns(time_after, sandbox=False, tns_credentials=None):
