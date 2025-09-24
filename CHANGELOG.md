@@ -11,6 +11,7 @@ and this project (mostly) adheres to [Semantic Versioning](https://semver.org/sp
 
 - Refactored and revised logic in HostInformation task.
 - Use TaskLock for global rate limiting of NED queries.
+- Fix minor bug in TransientTaskRunner task
 
 ## [1.6.2]
 

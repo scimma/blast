@@ -244,6 +244,7 @@ class TransientTaskRunner(TaskRunner):
             transient = task_register_item.transient
 
             start_time = process_time()
+            status_message = ''
             try:
                 status_message = self._run_process(transient)
             except SoftTimeLimitExceeded:
