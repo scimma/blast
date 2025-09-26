@@ -5,12 +5,19 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.4]
+
+### Changed
+
+- Use TaskLock for global rate limiting of SDSS queries.
+- Bypass need for file locking in aperture tasks by redundant downloads named uniquely to each task. There were occasional failures of the file lock mechanism that are not worth debugging.
+
 ## [1.6.3]
 
 ### Changed
 
 - Refactored and revised logic in HostInformation task.
-- Use TaskLock for global rate limiting of NED and SDSS queries.
+- Use TaskLock for global rate limiting of NED queries.
 - Fix minor bug in TransientTaskRunner task
 
 ## [1.6.2]
