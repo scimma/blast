@@ -528,7 +528,6 @@ def query_ned(position):
     time_start = time.time()
     logger.debug('''Aquiring NED query lock...''')
     while timeout > time.time() - time_start:
-        # Wait indefinitely until a NED query lock is acquired; rely on task timeout to terminate a stalled process.
         if TaskLock.objects.request_lock('ned_query'):
             break
         logger.debug('''Waiting to aquire NED query lock...''')
@@ -544,9 +543,12 @@ def query_ned(position):
             sep = position.separation(pos).arcsec
             iBest = np.where(sep == np.min(sep))[0][0]
             galaxy_data = {"redshift": redshift[iBest]}
+        assert not math.isnan(galaxy_data['redshift'])
     except ExpatError as err:
         logger.error(f"Too many requests to NED: {err}")
         raise RuntimeError("Too many requests to NED")
+    except Exception as err:
+        logger.warning(f'''Error obtaining redshift from NED: {err}''')
     finally:
         # Release the NED query lock
         logger.debug('''Releasing NED query lock...''')
@@ -557,23 +559,27 @@ def query_ned(position):
 
 def query_sdss(position):
     """Get a Galaxy's redshift from SDSS if it is available"""
+
+    timeout = settings.QUERY_TIMEOUT
+    time_start = time.time()
+    logger.debug('''Aquiring SDSS query lock...''')
+    while timeout > time.time() - time_start:
+        if TaskLock.objects.request_lock('SDSS_query'):
+            break
+        logger.debug('''Waiting to aquire SDSS query lock...''')
+        time.sleep(1)
+    galaxy_data = {"redshift": None}
     try:
         result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
-    except Exception as err_to_raise:
-        logger.debug(f"""SDSS query raised exception: {err_to_raise}""")
-        raise err_to_raise
-
-    if result_table is not None and "z" in result_table.keys():
         redshift = result_table["z"].value
-        if len(redshift) > 0:
-            if not math.isnan(redshift[0]):
-                galaxy_data = {"redshift": redshift[0]}
-            else:
-                galaxy_data = {"redshift": None}
-        else:
-            galaxy_data = {"redshift": None}
-    else:
-        galaxy_data = {"redshift": None}
+        assert not math.isnan(redshift[0])
+        galaxy_data["redshift"] = redshift[0]
+    except Exception as err:
+        logger.warning(f'''Error obtaining redshift from SDSS: {err}''')
+    finally:
+        # Release the SDSS query lock
+        logger.debug('''Releasing SDSS query lock...''')
+        TaskLock.objects.release_lock('sdss_query')
 
     return galaxy_data
 
