@@ -27,7 +27,7 @@ from host.prospector import build_obs
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
-from bokeh.io import curdoc
+from bokeh.io import curdoc, export_png
 
 # import extinction
 # from bokeh.models import Circle
@@ -49,6 +49,7 @@ from bokeh.io import curdoc
 
 from host.log import get_logger
 logger = get_logger(__name__)
+import time
 
 
 def scale_image(image_data):
@@ -136,12 +137,21 @@ def plot_image_grid(image_dict, apertures=None):
 
 
 def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None):
-    def generate_plot(fig, image_data):
+    def generate_plot(fig, image_data, local_image_path:str):
         hide_loading_indicator = CustomJS(args=dict(), code="""
             document.getElementById('loading-indicator').style.display = "none";
         """)
         fig.x_range.js_on_change('end', hide_loading_indicator)
         plot_image(image_data, fig)
+        if local_image_path:
+            # image path exists, so we can save the image
+            export_png(fig, filename=local_image_path)
+            s3 = ObjectStore()
+            png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+            logger.info(f"Putting {png_object_key} in bucket")
+            s3.put_object(path=png_object_key, file_path=local_image_path)
+            # Remove the image
+            os.remove(local_image_path)
 
         script, div = components(fig)
         return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
@@ -159,7 +169,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         fig.xgrid.visible = False
         fig.ygrid.visible = False
         image_data = np.zeros((500, 500))
-        return generate_plot(fig, image_data)
+        return generate_plot(fig, image_data, "")
 
     # If there is no cutout data, generate an empty plot
     if cutout is None:
@@ -167,12 +177,25 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
 
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
+    local_image_path = local_fits_path.replace(".fits", ".png")
+    s3 = ObjectStore()
+    png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+    if s3.object_exists(png_object_key):
+        # The png for the cutout exists, we can use that to save time
+        # Download PNG file local file cache
+        starttime = time.time()
+        s3.download_object(path=png_object_key, file_path=local_image_path)
+        logger.info(f"Downloading the image took {time.time() - starttime}")
+
+        # remove the image
+        os.remove(local_image_path)
     if not os.path.isfile(local_fits_path):
-        s3 = ObjectStore()
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         if s3.object_exists(object_key):
             # Download FITS file local file cache
+            starttime = time.time()
             s3.download_object(path=object_key, file_path=local_fits_path)
+            logger.info(f"Downloading the image took {time.time() - starttime}")
         else:
             logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
     # If the file is missing for some reason, generate an empty plot with an error title
@@ -247,7 +270,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 "legend_label": "Local Aperture",
             },
         )
-    return generate_plot(fig, image_data=image_data)
+    return generate_plot(fig, image_data=image_data, local_image_path=local_image_path)
 
 
 def plot_sed(transient=None, sed_results_file=None, type=""):

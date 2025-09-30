@@ -41,6 +41,8 @@ import csv
 import io
 from host.log import get_logger
 logger = get_logger(__name__)
+import time
+
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -245,15 +247,18 @@ def analytics(request):
 
 
 @log_usage_metric()
+@silk_profile(name="Transient result for some transient")
 def results(request, slug):
-
+    starttime_query_call = time.time()
     transients = Transient.objects.all()
     try:
         transient = transients.get(name__exact=slug)
     except Transient.DoesNotExist:
         return render(request, "transient_404.html", status=404)
-
+    logger.info(f"Transients query call took {(time.time()-starttime_query_call)}")
+    starttime_select_aperture = time.time()
     global_aperture = select_aperture(transient)
+    logger.info(f"Select aperture call took {(time.time()-starttime_select_aperture)}")
 
     local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
     local_aperture_photometry = AperturePhotometry.objects.filter(
@@ -389,7 +394,9 @@ def results(request, slug):
         try:
             # Download SED results files to local file cache
             object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+            starttime_s3 = time.time()
             s3.download_object(path=object_key, file_path=file_path)
+            logger.info(f"Downloading {file_path} took {(time.time()-starttime_s3)}")
             assert os.path.isfile(file_path)
         except Exception as err:
             logger.error(f'''Error downloading SED file "{file_path}": {err}''')
@@ -448,23 +455,28 @@ def results(request, slug):
                 cutout = cutout[0]
         except IndexError:
             cutout = None
-
+    starttime_plot_cutout = time.time()
     bokeh_context = plot_cutout_image(
         cutout=cutout,
         transient=transient,
         global_aperture=global_aperture.prefetch_related(),
         local_aperture=local_aperture.prefetch_related(),
     )
+    logger.info(f"Plotting the cutout took {(time.time() - starttime_plot_cutout)}")
+    starttime_plot_local_sed = time.time()
     bokeh_sed_local_context = plot_sed(
         transient=transient,
         type="local",
         sed_results_file=local_sed_file,
     )
+    logger.info(f"Plotting the local sed took {(time.time() - starttime_plot_local_sed)}")
+    starttime_plot_global_sed = time.time()
     bokeh_sed_global_context = plot_sed(
         transient=transient,
         type="global",
         sed_results_file=global_sed_file,
     )
+    logger.info(f"Plotting the global sed took {(time.time() - starttime_plot_global_sed)}")
 
     if local_aperture.exists():
         local_aperture = local_aperture[0]

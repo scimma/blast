@@ -30,4 +30,5 @@ mysqlclient==2.2.7
 photutils==2.2.0
 sbi==0.22.0
 scikit-image==0.25.2
+selenium==4.35.0
 watchdog==6.0.0
