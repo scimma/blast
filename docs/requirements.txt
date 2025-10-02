@@ -10,7 +10,7 @@ sphinxcontrib-serializinghtml
 furo
 django-latexify
 crispy-bootstrap4==2025.6
-Django==5.1.12
+Django==5.1.13
 django_celery_results==2.6.0
 django-bootstrap4==25.2
 django-celery-beat==2.8.1
