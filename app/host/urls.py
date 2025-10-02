@@ -56,6 +56,11 @@ urlpatterns = [
         name="report_issue",
     ),
     path(
+        f"""{base_path}reset_task/<item_id>""",
+        views.reset_task,
+        name="reset_task",
+    ),
+    path(
         f"""{base_path}resolve_issue/<item_id>""",
         views.resolve_issue,
         name="resolve_issue",

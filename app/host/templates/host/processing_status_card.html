@@ -11,54 +11,64 @@
 </div>
 
 <table class="table table-striped">
-    <thead>
-        <tr>
-            <th scope="col">Task Name</th>
-            <th scope="col">Status</th>
-            <th scope="col">Time taken (s)</th>
-	    <th scope="col">Warning Flag</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for item in transient_taskregister_set %}
-        <tr>
-	  {% if item.user_warning %}
-            <td><b style="color:red">{{item.task.name}}</b></td>
-	  {% else %}
-            <td>{{ item.task.name }}</td>
-	  {% endif %}
-            <td> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
-            <td>
-                {% if item.last_processing_time_seconds == 'None' %}
-                    --
-                {% else %}
-                    {{item.last_processing_time_seconds}}
-                {% endif %}
-            </td>
-	    <td>
-                {% if item.user_warning %}
-                  <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'resolve_issue' item.pk %}','_self')">
-                    <span>Resolve</span>
-                  </button>
-		{% else %}
-                  <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'report_issue' item.pk %}','_self')">
-                    <span>Report</span>
-                  </button>
-                {% endif %}
-	    </td>
-        </tr>
-       {% endfor %}
-       <tr>
-        <td>Processing status</td>
-        <td>
-          <span class="badge {{ processing_status_badge_class }}">
-            {{ transient.processing_status }}
-          </span>
-        </td>
-        <td>N/A</td>
-        <td>N/A</td>
-       </tr>
-    </tbody>
+  <thead>
+    <tr>
+      <th scope="col">Task Name</th>
+      <th scope="col">Status</th>
+      <th scope="col">Time taken (s)</th>
+      <th scope="col">Warning Flag</th>
+      {% if is_auth and has_perm_reprocess_transient %}
+      <th scope="col">Reset</th>
+      {% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in transient_taskregister_set %}
+    <tr>
+      {% if item.user_warning %}
+      <td><b style="color:red">{{item.task.name}}</b></td>
+      {% else %}
+      <td>{{ item.task.name }}</td>
+      {% endif %}
+      <td> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
+      <td>
+        {% if item.last_processing_time_seconds == 'None' %}
+        --
+        {% else %}
+        {{item.last_processing_time_seconds}}
+        {% endif %}
+      </td>
+      <td>
+        {% if item.user_warning %}
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'resolve_issue' item.pk %}','_self')">
+          <span>Resolve</span>
+        </button>
+        {% else %}
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'report_issue' item.pk %}','_self')">
+          <span>Report</span>
+        </button>
+        {% endif %}
+      </td>
+      {% if is_auth and has_perm_reprocess_transient %}
+      <td>
+        <button style="margin-bottom:5px;" type="button" class="report btn-danger" onclick="window.open('{% url 'reset_task' item.pk %}','_self')">
+          <span><i class="bi bi-arrow-counterclockwise"></i></span>
+        </button>
+      </td>
+      {% endif %}
+    </tr>
+    {% endfor %}
+    <tr>
+      <td>Processing status</td>
+      <td>
+        <span class="badge {{ processing_status_badge_class }}">
+          {{ transient.processing_status }}
+        </span>
+      </td>
+      <td>N/A</td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
 </table>
 
 {% endblock %}

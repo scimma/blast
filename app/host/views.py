@@ -23,6 +23,7 @@ from host.models import SEDFittingResult
 from host.models import TaskRegister
 from host.models import TaskRegisterSnapshot
 from host.models import Transient
+from host.models import Status
 from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
 from host.plotting_utils import plot_sed
@@ -661,6 +662,17 @@ def flower_view(request):
 def report_issue(request, item_id):
     item = TaskRegister.objects.get(pk=item_id)
     item.user_warning = True
+    item.save()
+    return HttpResponseRedirect(
+        reverse_lazy("results", kwargs={"slug": item.transient.name})
+    )
+
+
+@login_required
+@log_usage_metric()
+def reset_task(request, item_id):
+    item = TaskRegister.objects.get(pk=item_id)
+    item.status = Status.objects.get(message__exact="not processed")
     item.save()
     return HttpResponseRedirect(
         reverse_lazy("results", kwargs={"slug": item.transient.name})
