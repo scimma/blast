@@ -185,10 +185,10 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         # Download PNG file local file cache
         starttime = time.time()
         s3.download_object(path=png_object_key, file_path=local_image_path)
-        logger.info(f"Downloading the image took {time.time() - starttime}")
-
-        # remove the image
-        os.remove(local_image_path)
+        logger.info(f"Downloading the image (png) took {time.time() - starttime}")
+        script = "<script>document.getElementById('loading-indicator').style.display = \"none\";</script>"
+        context = {"bokeh_cutout_script": script, "bokeh_cutout_div": f"<img src=\"{local_image_path}\"/>"}
+        return context
     if not os.path.isfile(local_fits_path):
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         if s3.object_exists(object_key):
