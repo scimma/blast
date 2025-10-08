@@ -93,9 +93,11 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
         if hosts['host_redshift_info'][0] == 'SPEC':
             host.redshift = hosts["host_redshift_mean"][0]
             host.redshift_err = hosts["host_redshift_std"][0]
-        elif hosts['host_redshift_info'][0] == 'PHOT' and hosts['best_cat'][0] != 'panstarrs':
-            host.photometric_redshift = hosts["host_redshift_mean"][0]
-            host.photometric_redshift_err = hosts["host_redshift_std"][0]
+        
+        # 8/15/25: removing photo-z -- we're going to estimate from prospector directly
+        #elif hosts['host_redshift_info'][0] == 'PHOT' and hosts['best_cat'][0] != 'panstarrs':
+        #    host.photometric_redshift = hosts["host_redshift_mean"][0]
+        #    host.photometric_redshift_err = hosts["host_redshift_std"][0]
     finally:
         # Cleanup Prost file cache
         # TODO: Over time we may accumulate Prost temp files that are not deleted

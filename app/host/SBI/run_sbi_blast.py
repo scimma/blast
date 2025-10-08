@@ -40,10 +40,14 @@ run_params = {
 }
 
 sbi_params = {
-    "anpe_fname_global": f"{settings.SBIPP_ROOT}/SBI_model_global.pt",  # trained sbi model
-    "train_fname_global": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_global.h5",  # training set
-    "anpe_fname_local": f"{settings.SBIPP_ROOT}/SBI_model_local.pt",  # trained sbi model
-    "train_fname_local": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_local.h5",  # training set
+    #"anpe_fname_global": f"{settings.SBIPP_ROOT}/SBI_model_global.pt",  # trained sbi model
+    #"train_fname_global": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_global.h5",  # training set
+    #"anpe_fname_local": f"{settings.SBIPP_ROOT}/SBI_model_local.pt",  # trained sbi model
+    #"train_fname_local": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_local.h5",  # training set
+    "anpe_fname_zspec": f"{settings.SBIPP_ROOT}/SBI_model_blast_zfix_global.pt",  # trained sbi model
+    "train_fname_zspec": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_blast_zfix_global.h5",  # training set
+    "anpe_fname_zphot": f"{settings.SBIPP_ROOT}/SBI_model_blast_zfree_global.pt",  # trained sbi model
+    "train_fname_zphot": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_blast_zfree_global.h5",  # training set
     "nhidden": 500,  # architecture of the trained density estimator
     "nblocks": 15,  # architecture of the trained density estimator
 }
@@ -76,7 +80,7 @@ ir_filters = [
 
 # training set
 def run_training_set():
-    for _fit_type in ["global", "local"]:
+    for _fit_type in ["zspec", "zphot"]:
         data = h5py.File(sbi_params[f"train_fname_{_fit_type}"], "r")
         x_train = np.array(data["theta"])  # physical parameters
         y_train = np.array(data["phot"])  # fluxes & uncertainties
@@ -109,76 +113,104 @@ def run_training_set():
             )
         )
         anpe._x_shape = Ut.x_shape_from_simulation(y_tensor)
-        if _fit_type == "global":
-            hatp_x_y_global = anpe.build_posterior(
+        if _fit_type == "zspec":
+            hatp_x_y_zspec = anpe.build_posterior(
                 p_x_y_estimator, sample_with="rejection"
             )
-            y_train_global = y_train[:]
-            x_train_global = x_train[:]
-        elif _fit_type == "local":
-            hatp_x_y_local = anpe.build_posterior(
+            y_train_zspec = y_train[:]
+            x_train_zspec = x_train[:]
+        elif _fit_type == "zphot":
+            hatp_x_y_zphot = anpe.build_posterior(
                 p_x_y_estimator, sample_with="rejection"
             )
-            y_train_local = y_train[:]
-            x_train_local = x_train[:]
+            y_train_zphot = y_train[:]
+            x_train_zphot = x_train[:]
 
     print("""Storing training sets as data files...""")
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zspec.pkl"), "wb"
     ) as handle:
-        pickle.dump(hatp_x_y_global, handle)
+        pickle.dump(hatp_x_y_zspec, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zspec.pkl"), "wb"
     ) as handle:
-        pickle.dump(y_train_global, handle)
+        pickle.dump(y_train_zspec, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zspec.pkl"), "wb"
     ) as handle:
-        pickle.dump(x_train_global, handle)
+        pickle.dump(x_train_zspec, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zphot.pkl"), "wb"
     ) as handle:
-        pickle.dump(hatp_x_y_local, handle)
+        pickle.dump(hatp_x_y_zphot, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zphot.pkl"), "wb"
     ) as handle:
-        pickle.dump(y_train_local, handle)
+        pickle.dump(y_train_zphot, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zphot.pkl"), "wb"
     ) as handle:
-        pickle.dump(x_train_local, handle)
+        pickle.dump(x_train_zphot, handle)
 
-
+        
 try:
     print("""Loading training sets from data files...""")
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zspec.pkl"), "rb"
     ) as handle:
-        hatp_x_y_global = pickle.load(handle)
+        hatp_x_y_zspec = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zspec.pkl"), "rb"
     ) as handle:
-        y_train_global = pickle.load(handle)
+        y_train_zspec = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zspec.pkl"), "rb"
     ) as handle:
-        x_train_global = pickle.load(handle)
+        x_train_zspec = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zphot.pkl"), "rb"
     ) as handle:
-        hatp_x_y_local = pickle.load(handle)
+        hatp_x_y_zphot = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zphot.pkl"), "rb"
     ) as handle:
-        y_train_local = pickle.load(handle)
+        y_train_zphot = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zphot.pkl"), "rb"
     ) as handle:
-        x_train_local = pickle.load(handle)
+        x_train_zphot = pickle.load(handle)
     print("""Training sets loaded.""")
 except Exception as err:
     print(f"""Error loading training sets: {err}. Regenerating...""")
     run_training_set()
+    print("""Loading training sets from data files...""")
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zspec.pkl"), "rb"
+    ) as handle:
+        hatp_x_y_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zspec.pkl"), "rb"
+    ) as handle:
+        y_train_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zspec.pkl"), "rb"
+    ) as handle:
+        x_train_zspec = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_zphot.pkl"), "rb"
+    ) as handle:
+        hatp_x_y_zphot = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_zphot.pkl"), "rb"
+    ) as handle:
+        y_train_zphot = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_zphot.pkl"), "rb"
+    ) as handle:
+        x_train_zphot = pickle.load(handle)
+    print("""Training sets loaded.""")
+
+
     print("""Training sets generated.""")
 
 
@@ -189,7 +221,7 @@ def maggies_to_asinh(x):
     return -a * math.asinh((x / 2.0) * np.exp(mu / a)) + mu
 
 
-def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
+def fit_sbi_pp(observations, n_filt_cuts=True):
     np.random.seed(100)  # make results reproducible
 
     # toy noise model
@@ -260,6 +292,8 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         "mags_unc"
     ] = mags_unc  ##2.5/np.log(10)*observations['maggies_unc']/observations['maggies']
     obs["redshift"] = observations["redshift"]
+    if observations["redshift"] is not None: fit_type="zspec"
+    else: fit_type="zphot"
     obs["wavelengths"] = wavelengths
     obs["filternames"] = filternames
 
@@ -268,14 +302,14 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         return {}, 1
 
     # prepare to pass the reconstructed model to sbi_pp
-    if fit_type == "global":
-        sbi_params["y_train"] = y_train_global
-        sbi_params["theta_train"] = x_train_global
-        sbi_params["hatp_x_y"] = hatp_x_y_global
-    elif fit_type == "local":
-        sbi_params["y_train"] = y_train_local
-        sbi_params["hatp_x_y"] = hatp_x_y_local
-        sbi_params["theta_train"] = x_train_local
+    if fit_type == "zspec":
+        sbi_params["y_train"] = y_train_zspec
+        sbi_params["theta_train"] = x_train_zspec
+        sbi_params["hatp_x_y"] = hatp_x_y_zspec
+    elif fit_type == "zphot":
+        sbi_params["y_train"] = y_train_zphot
+        sbi_params["hatp_x_y"] = hatp_x_y_zphot
+        sbi_params["theta_train"] = x_train_zphot
 
     # Run SBI++
     chain, obs, flags = sbi_pp.sbi_pp(

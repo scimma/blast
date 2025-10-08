@@ -56,7 +56,10 @@ def rerun_failed_task(task_register):
         TNSDataIngestion(),
         InitializeTransientTasks(),
         IngestMissedTNSTransients(),
-        SnapshotTaskRegister()
+        SnapshotTaskRegister(),
+        LocalAperturePhotometryZPhot(task_register.transient.name),
+        ValidateLocalPhotometryZPhot(task_register.transient.name),
+        LocalHostSEDFittingZPhot(task_register.transient.name),        
     ]
 
     
