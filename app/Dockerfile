@@ -29,13 +29,6 @@ COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
 COPY --from=deps /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --from=deps /usr/local/bin/ /usr/local/bin/
 
-# Install Prost from source
-# TODO: Remove this when astro-prost package is published (see also requirements.txt)
-RUN git clone https://github.com/alexandergagliano/Prost.git /tmp/prost && cd /tmp/prost && \
-    git checkout 8c41162 && \
-    pip uninstall --yes astro-prost && pip install --no-cache-dir . && \
-    cd / && rm -rf /tmp/prost
-
 RUN mkdir /app
 COPY . /app
 WORKDIR /app

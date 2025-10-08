@@ -5,6 +5,64 @@ All notable changes to the Blast application will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Types of changes:
+- `Added`: for new features.
+- `Changed`: for changes in existing functionality.
+- `Deprecated`: for soon-to-be removed features.
+- `Removed`: for now removed features.
+- `Fixed`: for any bug fixes.
+- `Security`: in case of vulnerabilities.
+
+## [1.6.5]
+
+### Security
+
+- Upgraded Django to v5.1.13
+
+## [1.6.4]
+
+### Changed
+
+- Use TaskLock for global rate limiting of SDSS queries.
+- Bypass need for file locking in aperture tasks by redundant downloads named uniquely to each task. There were occasional failures of the file lock mechanism that are not worth debugging.
+
+## [1.6.3]
+
+### Changed
+
+- Refactored and revised logic in HostInformation task.
+- Use TaskLock for global rate limiting of NED queries.
+- Fix minor bug in TransientTaskRunner task
+
+## [1.6.2]
+
+### Changed
+
+- Update Prost host galaxy matcher to v1.2.13.
+
+## [1.6.1]
+
+### Changed
+
+- Added plaintext email for support requests or contacts.
+- Disabled celery-beat when running in batch mode.
+
+## [1.6.0]
+
+### Changed
+
+- Revamped the "Add Transient" web form:
+  - Improved CSV handling to handle whitespace surrounding values.
+  - Changed the wording from "upload" to "add", "define", and "import" to reflect the two distinct ways users can add transients to the database.
+  - Redesigned the form structure to make the two addition methods mutually exclusive and not simultaneously visible.
+  - Improved algorithm for reporting when added transients are ignored because they already exist in the database.
+
+## [1.5.7]
+
+### Security
+
+- Upgraded Django to v5.1.12
+
 ## [1.5.6]
 
 ### Added

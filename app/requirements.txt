@@ -1,23 +1,22 @@
 astro-datalab==2.24.0
 astro-prospector==1.4.0
-# TODO: Replace this with published astro-prost package version (see also Dockerfile)
-#astro-prost
+astro-prost==1.2.13
 astro-sedpy==0.4.0
 astroquery==0.4.7
 bokeh==3.7.3
 coverage==7.9.0
 crispy-bootstrap4==2025.6
-Django==5.0.14
+Django==5.1.13
 django_celery_results==2.6.0
-django-bootstrap4==25.1
+django-bootstrap4==25.2
 django-celery-beat==2.8.1
-django-cron==0.6.0
+git+https://github.com/jorenham/django-cron.git@cec7465#egg=django-cron  # 2025/09/10 Replaced with fork due to v0.6.0 incompatibility with Django v5.1. 
 django-filter==25.1
 django-latexify==0.3
 django-revproxy==0.13.0
-django-silk==5.4.0
+django-silk==5.4.3
 django-tables2==2.7.5
-djangorestframework==3.16.0
+djangorestframework==3.16.1
 dustmaps==1.0.14
 dynesty==2.1.5
 extinction==0.4.7
