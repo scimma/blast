@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.6.6]
+
+## Changed
+
+- Updated associated institutions in footer.
+- Added a Blast team member page with photos and bios.
+
 ## [1.6.5]
 
 ### Security
