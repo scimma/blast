@@ -598,6 +598,11 @@ def acknowledgements(request):
     return render(request, "acknowledgements.html", context)
 
 
+def team(request):
+    context = {}
+    return render(request, "team_members.html", context)
+
+
 def home(request):
     # This view can only reached in development mode where the webserver proxy, which serves
     # static content and governs endpoints, either does not exist or can be bypassed.

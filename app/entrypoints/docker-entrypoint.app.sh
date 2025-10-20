@@ -40,7 +40,12 @@ else
   # Create data folders on persistent volume and symlink to expected paths
   bash entrypoints/initialize_data_dirs.sh
   # Verify and download missing and invalid files
-  python entrypoints/initialize_data.py
+  if [[ "${SKIP_INITIALIZATION}" != "true" ]]
+  then
+    python entrypoints/initialize_data.py
+  else
+    echo "Skipping data initialization."
+  fi
 
   rm -f "${INIT_STARTED_DATA}"
   echo "Data initialization complete."
