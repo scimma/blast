@@ -176,6 +176,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     if cutout is None:
         return generate_empty_plot(title="No cutout selected")
 
+    logger.info(f"S3 path is {settings.MEDIA_URL}")
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
     local_image_path = local_fits_path.replace(".fits", ".png")
