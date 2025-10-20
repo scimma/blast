@@ -28,6 +28,7 @@ from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
 from bokeh.io import curdoc, export_png
+from django.http import FileResponse
 
 # import extinction
 # from bokeh.models import Circle
@@ -147,7 +148,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
             # image path exists, so we can save the image
             export_png(fig, filename=local_image_path)
             s3 = ObjectStore()
-            png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+            png_object_key = os.path.join(settings.S3_BASE_PATH, "public", local_image_path.strip('/'))
             logger.info(f"Putting {png_object_key} in bucket")
             s3.put_object(path=png_object_key, file_path=local_image_path)
             # Remove the image
@@ -179,15 +180,21 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     local_fits_path = cutout.fits.name
     local_image_path = local_fits_path.replace(".fits", ".png")
     s3 = ObjectStore()
-    png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+    png_object_key = os.path.join(settings.S3_BASE_PATH, "public", local_image_path.strip('/'))
     if s3.object_exists(png_object_key):
         # The png for the cutout exists, we can use that to save time
         # Download PNG file local file cache
         starttime = time.time()
-        s3.download_object(path=png_object_key, file_path=local_image_path)
+        if not os.path.isfile(local_image_path):
+            s3.download_object(path=png_object_key, file_path=local_image_path)
         logger.info(f"Downloading the image (png) took {time.time() - starttime}")
+        #response = FileResponse(open(local_image_path, "rb"), as_attachment=True, filename=f"{cutout.name.split['/'][-1]}_{cutout.fits.name.replace('.fits', '')}.png")
         script = "<script>document.getElementById('loading-indicator').style.display = \"none\";</script>"
-        context = {"bokeh_cutout_script": script, "bokeh_cutout_div": f"<img src=\"{local_image_path}\"/>"}
+        # img_filename = response.headers['Content-Disposition'].split('=')[1].strip('"')
+        # logger.info(f"Image name is {img_filename}")
+        # logger.info(f"Headers: {response.headers}")
+        display_tag = f"<img src=\"{local_image_path}\"/>"
+        context = {"bokeh_cutout_script": script, "bokeh_cutout_div": display_tag}
         return context
     if not os.path.isfile(local_fits_path):
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
