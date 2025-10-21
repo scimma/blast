@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from photutils.aperture import SkyEllipticalAperture
 from sedpy import observate
+from app.boto_storage import S3MediaStorage
 
 from .managers import ApertureManager
 from .managers import CatalogManager
@@ -414,6 +415,8 @@ class Cutout(models.Model):
     # used if some downloads fail
     # warning = models.BooleanField(default=False)
     objects = CutoutManager()
+
+    cutout_image = models.FileField(storage=S3MediaStorage(), null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION

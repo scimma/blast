@@ -148,7 +148,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
             # image path exists, so we can save the image
             export_png(fig, filename=local_image_path)
             s3 = ObjectStore()
-            png_object_key = os.path.join(settings.S3_BASE_PATH, "public", local_image_path.strip('/'))
+            png_object_key = os.path.join(settings.S3_BASE_PATH, "media", local_image_path.strip('/'))
             logger.info(f"Putting {png_object_key} in bucket")
             s3.put_object(path=png_object_key, file_path=local_image_path)
             # Remove the image
@@ -181,7 +181,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     local_fits_path = cutout.fits.name
     local_image_path = local_fits_path.replace(".fits", ".png")
     s3 = ObjectStore()
-    png_object_key = os.path.join(settings.S3_BASE_PATH, "public", local_image_path.strip('/'))
+    png_object_key = os.path.join(settings.S3_BASE_PATH, "media", local_image_path.strip('/'))
     if s3.object_exists(png_object_key):
         # The png for the cutout exists, we can use that to save time
         # Download PNG file local file cache
