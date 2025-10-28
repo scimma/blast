@@ -150,6 +150,26 @@ def add_transient(request):
         new_transient_names = [transient_name for transient_name in transient_names
                                if transient_name not in existing_transient_names]
         return existing_transient_names, new_transient_names
+    
+    def identify_existing_transients_by_coords(transient_names, ra_degs, dec_degs):
+        """For checking if a transient already exists with those coordinates and redshifts"""
+        all_transients = Transient.objects.all()
+        existing_transient_names = []
+        for transient in all_transients:
+            for ra, dec in zip(ra_degs, dec_degs):
+                if ra -1 <= transient.ra_deg <= ra + 1 and dec - 1 <= transient.dec_deg <= dec + 1:
+                    existing_transient_names.append(transient.name)
+                    logger.info(f'Transient already saved: "{transient.name}"')
+                    break
+                if transient_name in transient_names:
+                    existing_transient_names.append(transient_name)
+                    logger.info(f'Transient already saved: "{transient_name}"')
+                    break
+            
+        new_transient_names = [transient_name for transient_name in transient_names
+                               if transient_name not in existing_transient_names]
+        return existing_transient_names, new_transient_names
+
 
     errors = []
     defined_transient_names = []
@@ -193,7 +213,9 @@ def add_transient(request):
                     }
                     trans_info_set.append(trans_info)
                 transient_names = [trans_info['name'] for trans_info in trans_info_set]
-                existing_transient_names, new_transient_names = identify_existing_transients(transient_names)
+                ra_degs = [trans_info['ra_deg'] for trans_info in trans_info_set]
+                dec_degs = [trans_info['dec_deg'] for trans_info in trans_info_set]
+                existing_transient_names, new_transient_names = identify_existing_transients_by_coords(transient_names, ra_degs, dec_degs)
                 for transient_name in new_transient_names:
                     trans_info = [trans_info for trans_info in trans_info_set
                                   if trans_info['name'] == transient_name][0]
