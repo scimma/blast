@@ -142,32 +142,34 @@ def transient_list(request):
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
 def add_transient(request):
-    def identify_existing_transients(transient_names):
-        existing_transients = Transient.objects.filter(name__in=transient_names)
-        existing_transient_names = [existing_transient.name for existing_transient in existing_transients]
+    def identify_existing_transients(transient_names, ra_degs=None, dec_degs=None):
+        if ra_degs==None and dec_degs==None:
+        
+            existing_transients = Transient.objects.filter(name__in=transient_names)
+            existing_transient_names = [existing_transient.name for existing_transient in existing_transients]
+            for transient_name in existing_transient_names:
+                logger.info(f'Transient already saved: "{transient_name}"')
+            new_transient_names = [transient_name for transient_name in transient_names
+                                if transient_name not in existing_transient_names]
+            return existing_transient_names, new_transient_names
+        existing_transient_names = []
+        for transient in zip(transient_names, ra_degs, dec_degs):
+            transient_name = transient[0]
+            transient_ra_deg = transient[1]
+            transient_dec_deg = transient[2]
+            arcsec = 0.0002778                  # 1 arcsecond in decimal degrees
+            existing_transients = Transient.objects.filter(Q(name=transient[0]) | 
+                                                           (Q(ra_deg__gt=transient_ra_deg-arcsec) 
+                                                            & Q(ra_deg__lt=transient_ra_deg+arcsec)
+                                                            & Q(dec_deg__gt=transient_dec_deg-arcsec) 
+                                                            & Q(dec_deg__lt=transient_dec_deg+arcsec)
+                                                            ))
+            for existing_transient in existing_transients:
+                existing_transient_names.append(existing_transient.name)
         for transient_name in existing_transient_names:
             logger.info(f'Transient already saved: "{transient_name}"')
         new_transient_names = [transient_name for transient_name in transient_names
-                               if transient_name not in existing_transient_names]
-        return existing_transient_names, new_transient_names
-    
-    def identify_existing_transients_by_coords(transient_names, ra_degs, dec_degs):
-        """For checking if a transient already exists with those coordinates and redshifts"""
-        all_transients = Transient.objects.all()
-        existing_transient_names = []
-        for transient in all_transients:
-            for ra, dec in zip(ra_degs, dec_degs):
-                if ra -1 <= transient.ra_deg <= ra + 1 and dec - 1 <= transient.dec_deg <= dec + 1:
-                    existing_transient_names.append(transient.name)
-                    logger.info(f'Transient already saved: "{transient.name}"')
-                    break
-                if transient_name in transient_names:
-                    existing_transient_names.append(transient_name)
-                    logger.info(f'Transient already saved: "{transient_name}"')
-                    break
-            
-        new_transient_names = [transient_name for transient_name in transient_names
-                               if transient_name not in existing_transient_names]
+                            if transient_name not in existing_transient_names]
         return existing_transient_names, new_transient_names
 
 
@@ -215,10 +217,16 @@ def add_transient(request):
                 transient_names = [trans_info['name'] for trans_info in trans_info_set]
                 ra_degs = [trans_info['ra_deg'] for trans_info in trans_info_set]
                 dec_degs = [trans_info['dec_deg'] for trans_info in trans_info_set]
-                existing_transient_names, new_transient_names = identify_existing_transients_by_coords(transient_names, ra_degs, dec_degs)
+                existing_transient_names, new_transient_names = identify_existing_transients(transient_names, ra_degs, dec_degs)
                 for transient_name in new_transient_names:
                     trans_info = [trans_info for trans_info in trans_info_set
                                   if trans_info['name'] == transient_name][0]
+                    if trans_info['name'].startswith("SN") or trans_info['name'].startswith("AT"):
+                        trans_name = trans_info["name"]
+                        err_msg = f'Error creating transient: {trans_name} starts with an illegal prefix (SN or AT)'
+                        logger.error(err_msg)
+                        errors.append(err_msg)
+                        continue
                     try:
                         Transient.objects.create(**trans_info)
                         defined_transient_names += [trans_info['name']]
