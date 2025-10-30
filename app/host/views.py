@@ -153,23 +153,25 @@ def add_transient(request):
                                 if transient_name not in existing_transient_names]
             return existing_transient_names, new_transient_names
         existing_transient_names = []
+        new_transient_names = []
         for transient in zip(transient_names, ra_degs, dec_degs):
             transient_name = transient[0]
             transient_ra_deg = transient[1]
             transient_dec_deg = transient[2]
-            arcsec = 0.0002778                  # 1 arcsecond in decimal degrees
+            arcsec_dec = 0.0002778                  # 1 arcsecond in decimal degrees
+            arcsec_ra = 0.004167                    # 1 arcsecond when using right ascension units
             existing_transients = Transient.objects.filter(Q(name=transient[0]) | 
-                                                           (Q(ra_deg__gt=transient_ra_deg-arcsec) 
-                                                            & Q(ra_deg__lt=transient_ra_deg+arcsec)
-                                                            & Q(dec_deg__gt=transient_dec_deg-arcsec) 
-                                                            & Q(dec_deg__lt=transient_dec_deg+arcsec)
+                                                           (Q(ra_deg__gte=transient_ra_deg-arcsec_ra) 
+                                                            & Q(ra_deg__lte=transient_ra_deg+arcsec_ra)
+                                                            & Q(dec_deg__gte=transient_dec_deg-arcsec_dec) 
+                                                            & Q(dec_deg__lte=transient_dec_deg+arcsec_dec)
                                                             ))
             for existing_transient in existing_transients:
                 existing_transient_names.append(existing_transient.name)
+            if not existing_transients:
+                new_transient_names.append(transient_name)
         for transient_name in existing_transient_names:
             logger.info(f'Transient already saved: "{transient_name}"')
-        new_transient_names = [transient_name for transient_name in transient_names
-                            if transient_name not in existing_transient_names]
         return existing_transient_names, new_transient_names
 
 
