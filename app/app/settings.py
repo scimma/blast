@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.6.6'
+APP_VERSION = '1.7.0'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -109,13 +109,13 @@ WSGI_APPLICATION = "app.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQL_DATABASE", "blast_db"),
-        "USER": os.environ.get("MYSQL_USER", ""),
-        "PASSWORD": os.environ.get("MYSQL_ROOT_PASSWORD", "password"),
-        "HOST": os.environ.get("DATABASE_HOST", "database"),
-        "PORT": os.environ.get("DATABASE_PORT", "3306"),
-    }
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME', 'blast'),
+        'USER': os.getenv('DB_USER', 'blast'),
+        'PASSWORD': os.getenv('DB_PASS', 'password'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+    },
 }
 
 # Password validation

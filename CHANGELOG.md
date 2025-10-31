@@ -13,6 +13,17 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.7.0]
+
+## Added
+
+- Added a `DISABLE_CELERY_BEAT` environment variable that when set to `true` will prevent Celery Beat from running. This
+  is occasionally useful during local development and testing.
+
+## Changed
+
+- Replaced MariaDB with PostgreSQL database.
+
 ## [1.6.6]
 
 ## Changed
