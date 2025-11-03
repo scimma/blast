@@ -91,6 +91,14 @@ services:
       - ../env/.env.default
       - ../env/.env.dev
 
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
   flower:
     extends:
       file: docker-compose.yml

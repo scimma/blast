@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     "users",
     "django_cron",
     "django_filters",
-    'django_celery_results',
+    'django_celery_results',  # TODO: This can be removed if using Redis as Celery backend
     'mozilla_django_oidc',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
@@ -205,18 +205,27 @@ CELERY_IMPORTS = [
     "host.transient_tasks",
 ]
 
+# Backends & brokers: https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
 rabbitmq_user = os.environ.get("RABBITMQ_USERNAME", "guest")
 rabbitmq_password = os.environ.get("RABBITMQ_PASSWORD", "guest")
 rabbitmq_host = os.environ.get("MESSAGE_BROKER_HOST", "rabbitmq")
 rabbitmq_port = os.environ.get("MESSAGE_BROKER_PORT", "5672")
+CELERY_BROKER_URL = f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
 
-CELERY_BROKER_URL = (
-    f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
-)
-
-# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend  # noqa
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_CACHE_BACKEND = 'default'
+# Caching: https://docs.djangoproject.com/en/5.2/topics/cache/#django-s-cache-framework
+REDIS_SERVICE = os.environ.get('REDIS_SERVICE', 'redis')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+CACHES = {
+    'default': {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{REDIS_SERVICE}:{REDIS_PORT}",
+    }
+}
+# Results backend: https://docs.celeryq.dev/en/stable/userguide/configuration.html#conf-redis-result-backend
+CELERY_RESULT_BACKEND = f"redis://{REDIS_SERVICE}:{REDIS_PORT}"
+# TODO: Remove CELERY_CACHE_BACKEND if not using django-celery-results
+#       https://docs.celeryq.dev/en/stable/userguide/configuration.html#cache-backend
+# CELERY_CACHE_BACKEND = 'default'
 
 CELERYD_REDIRECT_STDOUTS_LEVEL = "INFO"
 CRISPY_TEMPLATE_PACK = "bootstrap4"

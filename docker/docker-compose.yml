@@ -124,6 +124,18 @@ services:
       - "full_dev"
       - "batch"
 
+  redis:
+    image: redis:alpine
+    restart: always
+    ports:
+      - 127.0.0.1:${REDIS_PORT:-6379}:6379
+    networks:
+      - internal
+    profiles:
+      - "full_prod"
+      - "full_dev"
+      - "batch"
+
   flower:
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.flower.sh

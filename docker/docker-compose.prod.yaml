@@ -58,6 +58,14 @@ services:
       - ../env/.env.default
       - ../env/.env.prod
 
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
   flower:
     extends:
       file: docker-compose.yml
