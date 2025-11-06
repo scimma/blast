@@ -46,13 +46,16 @@ email David Jones (dojones@hawaii.edu) or create a GitHub issue.
 Uploading New Transients
 ++++++++++++++++++++++++
 
-A link to the transient upload page, :code:`<blast_base_url>/uploads` will
+A link to the transient upload page, :code:`<blast_base_url>/add` will
 appear in the toolbar at the top of the page for authorized users.  Users
 can input a list of transients by ID to be imported from the Transient
 Name Server (TNS), or they can manually specify, via comma-delimited list,
 a transient's name, RA, dec (both in decimal degrees), redshift, and
 type (SN Ia, for example).  Redshift and type are optional but
 recommended; write "None" if you do not have this information.
+Transient names cannot start with "SN" or "AT". Furthermore, if a transient
+already exists in the database (either by name or by being within one arcsecond
+of an existing transient by RA and dec), it will not be added again.
 
 .. image:: ../_static/blast_upload_page.png
 
