@@ -36,10 +36,14 @@ from .models import Filter
 from .object_store import ObjectStore
 from .photometric_calibration import mJy_to_maggies  ##jansky_to_maggies
 
+from host.log import get_logger
+logger = get_logger(__name__)
+
 try:
     all_filters = [filt for filt in Filter.objects.all().select_related()]
     trans_curves = [f.transmission_curve() for f in all_filters]
-except ProgrammingError:
+except (ProgrammingError, ValueError) as err:
+    logger.error(err)
     pass
 
 
