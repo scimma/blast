@@ -710,3 +710,8 @@ def resource_not_found_view(request, exception, template_name="generic_404.html"
 # View for the privacy policy
 def privacy_policy(request):
     return render(request, "privacy_policy.html")
+
+
+# View for the privacy policy
+def healthz(request):
+    return HttpResponse()
