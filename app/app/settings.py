@@ -180,6 +180,8 @@ TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/tra
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 
+JOB_SCRATCH_FREE_SPACE = int(float(os.getenv('JOB_SCRATCH_FREE_SPACE', str(5 * 1024**3))))  # 5 GiB
+
 # S3_ENDPOINT_URL example: "https://js2.jetstream-cloud.org:8001"
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "")

@@ -45,9 +45,16 @@ from .models import Aperture
 from .object_store import ObjectStore
 from pathlib import Path
 from .models import TaskLock
+from uuid import uuid4
+from shutil import rmtree
+from app.celery import app
+from .models import Status
+from .models import TaskRegister
 
 from host.log import get_logger
 logger = get_logger(__name__)
+
+uuid_regex = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 
 
 def survey_list(survey_metadata_path):
@@ -655,3 +662,136 @@ def get_directory_size(directory):
         # if for whatever reason we can't open the folder, return 0
         return 0
     return total
+
+
+def get_job_scratch_prune_lock_id(scratch_root):
+    '''Create or parse a lock file containing a unique ID for the scratch root directory.
+       In conjunction with the TaskLock global mutex, this lock file prevents more than 
+       a single process from attempting to prune scratch files therein.'''
+    # Determine worker ID from "prune_lock.yaml" file
+    semaphore_path = os.path.join(scratch_root, 'prune_lock.yaml')
+    try:
+        with open(semaphore_path, 'r') as meta_file:
+            metadata = yaml.load(meta_file, Loader=yaml.SafeLoader)
+        worker_id = metadata['id']
+    except Exception as err:
+        logger.warning(f'Assuming missing or invalid scratch metadata file; creating new one. (Error: {err})')
+        worker_id = str(uuid4())
+        with open(semaphore_path, 'w') as meta_file:
+            yaml.dump({'id': worker_id}, meta_file)
+    return f'prune_scratch_files_{worker_id}'
+
+
+def calculate_units(size):
+    '''Return the best units to express the file size along with the rounded integer in those units.'''
+    units = 'bytes'
+    size_in_units = size
+    if size > 1024**4:
+        units = 'TiB'
+        size_in_units = round(size / 1024**4, 0)
+    elif size > 1024**3:
+        units = 'GiB'
+        size_in_units = round(size / 1024**3, 0)
+    elif size > 1024**2:
+        units = 'MiB'
+        size_in_units = round(size / 1024**2, 0)
+    return units, size_in_units
+
+
+def wait_for_free_space():
+    # Wait until enough scratch space is available before launching the workflow tasks.
+    for scratch_root in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
+        while True:
+            # Calculate size of /scratch to determine free space. If CE_JOB_SCRATCH_MAX_SIZE is finite, calculate free
+            # space using the supplied value; otherwise, attempt to calculate using statvfs.
+            scratch_total = settings.JOB_SCRATCH_FREE_SPACE
+            if scratch_total:
+                scratch_used = get_directory_size(scratch_root)
+                scratch_free = scratch_total - scratch_used
+            else:
+                # See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/statvfs.h.html
+                # and https://docs.python.org/3/library/os.html#os.statvfs
+                statvfs = os.statvfs(scratch_root)
+                # Capacity of filesystem in bytes
+                scratch_total = statvfs.f_frsize * statvfs.f_blocks
+                # Number of free bytes available to non-privileged process.
+                scratch_free = statvfs.f_frsize * statvfs.f_bavail
+            free_percentage = round(100.0 * scratch_free / scratch_total)
+            logger.debug(f'''Job scratch free space is {scratch_free} bytes ({free_percentage}%) '''
+                         f'''for a scratch volume capacity of {scratch_total} bytes.''')
+            # If there is sufficient free scratch space, stop waiting
+            if scratch_free > settings.JOB_SCRATCH_FREE_SPACE:
+                return
+            # If there is insufficient free space, attempt to delete orphaned data
+            logger.info(f'''Insufficient free scratch space {round(scratch_free / 1024**2)} MiB '''
+                        f'''({free_percentage}%). Pruning scratch files...''')
+            lock_id = get_job_scratch_prune_lock_id(scratch_root)
+            if TaskLock.objects.request_lock(lock_id):
+                prune_workflow_scratch_dirs(scratch_root)
+                TaskLock.objects.release_lock(lock_id)
+                break
+            else:
+                # Give the existing prune operation time to complete before recalculating free disk space.
+                logger.debug('''Waiting for running prune operation to complete...''')
+                time.sleep(20)
+
+
+def inspect_worker_tasks():
+    inspect = app.control.inspect()
+    all_worker_tasks = []
+    # Query the task workers to collect the name and arguments for all the queued and active tasks.
+    for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
+        try:
+            items = inspect_func(safe=True).items()
+        except AttributeError:
+            items = []
+        tasks = [task for worker, worker_tasks in items for task in worker_tasks]
+        all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
+    return all_worker_tasks
+
+
+def prune_workflow_scratch_dirs(root_path, dry_run=False):
+    # List scratch directories first to ensure that a subsequently launched transient
+    # workflow's scratch files cannot be accidentally deleted.
+    scratch_dirs = os.listdir(root_path)
+    all_tasks = [task for task in inspect_worker_tasks()]
+    total_size = 0
+    for transient_name in scratch_dirs:
+        scratch_path = os.path.join(os.path.realpath(root_path), transient_name)
+        dir_size = get_directory_size(scratch_path)
+        total_size += dir_size
+        # If there is an active or queued task with the transient's name as the argument,
+        # the transient workflow is still processing.
+        if [task for task in all_tasks if task['args'].find(transient_name) >= 0]:
+            logger.debug(f'''["{transient_name}"] is queued or active. Skipping.''')
+            continue
+        # If the workflow is not queued or active, purge the scratch files.
+        log_msg = f'''["{transient_name}"] Purging scratch files ({dir_size} bytes): "{scratch_path}"'''
+        if dry_run:
+            logger.info(f'''{log_msg} [dry-run]''')
+        else:
+            logger.info(log_msg)
+            rmtree(scratch_path, ignore_errors=True)
+
+
+def reset_workflow_if_not_processing(transient, worker_tasks, reset_failed=False):
+    # If there is an active or queued task with the transient's name as the argument,
+    # the transient workflow is still processing.
+    if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
+        logger.debug(f'''Workflow for transient "{transient.name}" is queued or running.''')
+        return False
+    logger.debug(f'''Detected stalled workflow for transient "{transient.name}". '''
+                 '''Resetting "processing" statuses to "not processed"...''')
+    # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
+    processing_status = Status.objects.get(message__exact="processing")
+    not_processed_status = Status.objects.get(message__exact="not processed")
+    processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                        if task.status == processing_status]
+    failed_tasks = []
+    if reset_failed:
+        failed_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                        if task.status.type == 'error']
+    for task in processing_tasks + failed_tasks:
+        task.status = not_processed_status
+        task.save()
+    return True

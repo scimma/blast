@@ -1,5 +1,4 @@
 import os
-from shutil import rmtree
 from celery import shared_task
 from dateutil import parser
 from django.conf import settings
@@ -13,14 +12,13 @@ from host.base_tasks import task_time_limit
 from host.workflow import reprocess_transient
 from host.workflow import transient_workflow
 from host.trim_images import trim_images
-from host.host_utils import get_directory_size
+from host.host_utils import inspect_worker_tasks
+from host.host_utils import wait_for_free_space
+from host.host_utils import reset_workflow_if_not_processing
 from app.celery import app
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 import gzip
-import os
 
-from .models import Status
-from .models import TaskRegister
 from .models import TaskRegisterSnapshot
 from .models import Transient
 from .models import UsageMetricsLog
@@ -204,36 +202,13 @@ class SnapshotTaskRegister(SystemTaskRunner):
 
 
 class GarbageCollector(SystemTaskRunner):
-    def prune_workflow_scratch_dirs(self, root_path, dry_run=False):
-        riw = RetriggerIncompleteWorkflows()
-        # List scratch directories first to ensure that a subsequently launched transient
-        # workflow's scratch files cannot be accidentally deleted.
-        scratch_dirs = os.listdir(root_path)
-        all_tasks = [task for task in riw.inspect_worker_tasks()]
-        total_size = 0
-        for transient_name in scratch_dirs:
-            scratch_path = os.path.join(os.path.realpath(root_path), transient_name)
-            dir_size = get_directory_size(scratch_path)
-            total_size += dir_size
-            # If there is an active or queued task with the transient's name as the argument,
-            # the transient workflow is still processing.
-            if [task for task in all_tasks if task['args'].find(transient_name) >= 0]:
-                logger.debug(f'''["{transient_name}"] is queued or active. Skipping.''')
-                continue
-            # If the workflow is not queued or active, purge the scratch files.
-            log_msg = f'''["{transient_name}"] Purging scratch files ({dir_size} bytes): "{scratch_path}"'''
-            if dry_run:
-                logger.info(f'''{log_msg} [dry-run]''')
-            else:
-                logger.info(log_msg)
-                rmtree(scratch_path, ignore_errors=True)
-
     def run_process(self):
         """
-        Run garbage collector.
+        Run garbage collector. This should be redundant with the scratch file pruning
+        that occurs at the beginning of each transient workflow, and may no longer be
+        necessary.
         """
-        self.prune_workflow_scratch_dirs(settings.CUTOUT_ROOT)
-        self.prune_workflow_scratch_dirs(settings.SED_OUTPUT_ROOT)
+        wait_for_free_space()
 
     @property
     def task_name(self):
@@ -249,51 +224,15 @@ class GarbageCollector(SystemTaskRunner):
 
 
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
-    def reset_workflow_if_not_processing(self, transient, worker_tasks, reset_failed=False):
-        # If there is an active or queued task with the transient's name as the argument,
-        # the transient workflow is still processing.
-        if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
-            logger.debug(f'''Workflow for transient "{transient.name}" is queued or running.''')
-            return False
-        logger.debug(f'''Detected stalled workflow for transient "{transient.name}". '''
-                     '''Resetting "processing" statuses to "not processed"...''')
-        # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
-        processing_status = Status.objects.get(message__exact="processing")
-        not_processed_status = Status.objects.get(message__exact="not processed")
-        processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
-                            if task.status == processing_status]
-        failed_tasks = []
-        if reset_failed:
-            failed_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
-                            if task.status.type == 'error']
-        for task in processing_tasks + failed_tasks:
-            task.status = not_processed_status
-            task.save()
-        return True
-
-    def inspect_worker_tasks(self):
-        inspect = app.control.inspect()
-        all_worker_tasks = []
-        # Query the task workers to collect the name and arguments for all the queued and active tasks.
-        for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
-            try:
-                items = inspect_func(safe=True).items()
-            except AttributeError:
-                items = []
-            tasks = [task for worker, worker_tasks in items for task in worker_tasks]
-            all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
-        return all_worker_tasks
-
     def run_process(self):
         """
         Retrigger incomplete workflows.
         """
-
-        all_worker_tasks = self.inspect_worker_tasks()
+        all_worker_tasks = inspect_worker_tasks()
         # Iterate over incomplete transient workflows and retrigger stalled
         for incomplete_transient in Transient.objects.filter(Q(progress__lt=100) | Q(processing_status='processing')):
             logger.debug(f'''Analyzing incomplete transient workflow "{incomplete_transient.name}"...''')
-            if self.reset_workflow_if_not_processing(incomplete_transient, all_worker_tasks):
+            if reset_workflow_if_not_processing(incomplete_transient, all_worker_tasks):
                 transient_workflow.delay(incomplete_transient.name)
 
     @property
