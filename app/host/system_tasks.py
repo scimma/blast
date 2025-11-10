@@ -276,7 +276,10 @@ class RetriggerIncompleteWorkflows(SystemTaskRunner):
         all_worker_tasks = []
         # Query the task workers to collect the name and arguments for all the queued and active tasks.
         for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
-            items = inspect_func(safe=True).items()
+            try:
+                items = inspect_func(safe=True).items()
+            except AttributeError:
+                items = []
             tasks = [task for worker, worker_tasks in items for task in worker_tasks]
             all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
         return all_worker_tasks
