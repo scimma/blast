@@ -205,27 +205,29 @@ CELERY_IMPORTS = [
     "host.transient_tasks",
 ]
 
-# Backends & brokers: https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
-rabbitmq_user = os.environ.get("RABBITMQ_USERNAME", "guest")
-rabbitmq_password = os.environ.get("RABBITMQ_PASSWORD", "guest")
-rabbitmq_host = os.environ.get("MESSAGE_BROKER_HOST", "rabbitmq")
-rabbitmq_port = os.environ.get("MESSAGE_BROKER_PORT", "5672")
-CELERY_BROKER_URL = f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
-
-# Caching: https://docs.djangoproject.com/en/5.2/topics/cache/#django-s-cache-framework
 REDIS_SERVICE = os.environ.get('REDIS_SERVICE', 'redis')
 REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+# If running Redis in high-availability mode using Sentinel, there must be a master group name set
+REDIS_MASTER_GROUP_NAME = os.environ.get('REDIS_MASTER_GROUP_NAME', '')
+REDIS_OR_SENTINEL = 'sentinel' if REDIS_MASTER_GROUP_NAME else 'redis'
+# Caching: https://docs.djangoproject.com/en/5.2/topics/cache/#django-s-cache-framework
 CACHES = {
     'default': {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{REDIS_SERVICE}:{REDIS_PORT}",
+        "LOCATION": f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}",
     }
 }
+# Backends & brokers: https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
+CELERY_BROKER_URL = f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}"
+CELERY_BROKER_TRANSPORT_OPTIONS = {'master_name': REDIS_MASTER_GROUP_NAME}
 # Results backend: https://docs.celeryq.dev/en/stable/userguide/configuration.html#conf-redis-result-backend
-CELERY_RESULT_BACKEND = f"redis://{REDIS_SERVICE}:{REDIS_PORT}"
-# TODO: Remove CELERY_CACHE_BACKEND if not using django-celery-results
-#       https://docs.celeryq.dev/en/stable/userguide/configuration.html#cache-backend
-# CELERY_CACHE_BACKEND = 'default'
+CELERY_RESULT_BACKEND = f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}"
+CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
+    'master_name': REDIS_MASTER_GROUP_NAME,
+    'retry_policy': {
+        'timeout': 5.0
+    }
+}
 
 CELERYD_REDIRECT_STDOUTS_LEVEL = "INFO"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
