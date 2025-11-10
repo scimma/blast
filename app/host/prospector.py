@@ -19,12 +19,12 @@ from prospect.io import write_results as writer
 from prospect.io.write_results import write_h5_header
 from prospect.io.write_results import write_obs_to_h5
 from prospect.models import priors
-from prospect.models import SpecModel
+# from prospect.models import SpecModel
 from prospect.models.sedmodel import PolySpecModel
-from prospect.models.templates import TemplateLibrary
-from prospect.models.transforms import logsfr_ratios_to_sfrs
-from prospect.models.transforms import zred_to_agebins
-from prospect.sources import CSPSpecBasis
+# from prospect.models.templates import TemplateLibrary
+# from prospect.models.transforms import logsfr_ratios_to_sfrs
+# from prospect.models.transforms import zred_to_agebins
+# from prospect.sources import CSPSpecBasis
 from prospect.sources import FastStepBasis
 from prospect.utils.obsutils import fix_obs
 from scipy.special import gamma
