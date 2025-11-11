@@ -49,15 +49,19 @@ services:
       - "batch"
 
   database:
-    image: mariadb:11.1
+    image: postgres:16
     platform: linux/x86_64
     restart: always
     volumes:
-      - blast-db:/var/lib/mysql/
+      - blast-db:/var/lib/postgresql/data
     networks:
       internal:
         aliases:
-          - ${DATABASE_HOST}
+          - ${DB_HOST}
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
     profiles:
       - "full_prod"
       - "slim_prod"
@@ -104,17 +108,13 @@ services:
       - "full_dev"
     #  - "batch"
 
-  rabbitmq:
-    image: rabbitmq:3.10.6-management-alpine
+  redis:
+    image: redis:alpine
     restart: always
+    ports:
+      - 127.0.0.1:${REDIS_PORT:-6379}:6379
     networks:
       - internal
-    # ports:
-    #   - 127.0.0.1:5672:${MESSAGE_BROKER_PORT}
-    #   - 127.0.0.1:15672:${MESSAGE_BROKER_MANAGEMENT_PORT}
-    volumes:
-      - ../data/rabbitmq_data:/data
-      - ../data/rabbitmq_data/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
     profiles:
       - "full_prod"
       - "full_dev"

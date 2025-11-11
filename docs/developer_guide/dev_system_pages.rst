@@ -35,20 +35,3 @@ you to see which tasks are being run and which tasks are failing.
 Once Blast is running locally to see the Flower dashboard go to `<localhost:8888>`_.
 
 .. image:: ../_static/flower_dashboard.png
-
-
-RabbitMQ
---------
-
-The RabbitMQ management dashboard (see the docs `here <https://www.rabbitmq.com/documentation.html>`_)
-allows you to see the message broker traffic where Blast computation tasks are
-sent to workers.
-
-Once Blast is running locally to see the RabbitMQ management dashboard go
-to `<localhost:15672>`_. where you will be prompted for a login. The login user and
-password are set by :code:`RABBITMQ_USERNAME`
-:code:`RABBITMQ_PASSWORD` defined in your :code:`env/.env.dev` file.
-
-Once logged in, you see a page like this:
-
-.. image:: ../_static/rabbitmq_screenshot.png

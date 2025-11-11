@@ -19,12 +19,12 @@ from prospect.io import write_results as writer
 from prospect.io.write_results import write_h5_header
 from prospect.io.write_results import write_obs_to_h5
 from prospect.models import priors
-from prospect.models import SpecModel
+# from prospect.models import SpecModel
 from prospect.models.sedmodel import PolySpecModel
-from prospect.models.templates import TemplateLibrary
-from prospect.models.transforms import logsfr_ratios_to_sfrs
-from prospect.models.transforms import zred_to_agebins
-from prospect.sources import CSPSpecBasis
+# from prospect.models.templates import TemplateLibrary
+# from prospect.models.transforms import logsfr_ratios_to_sfrs
+# from prospect.models.transforms import zred_to_agebins
+# from prospect.sources import CSPSpecBasis
 from prospect.sources import FastStepBasis
 from prospect.utils.obsutils import fix_obs
 from scipy.special import gamma
@@ -36,10 +36,14 @@ from .models import Filter
 from .object_store import ObjectStore
 from .photometric_calibration import mJy_to_maggies  ##jansky_to_maggies
 
+from host.log import get_logger
+logger = get_logger(__name__)
+
 try:
     all_filters = [filt for filt in Filter.objects.all().select_related()]
     trans_curves = [f.transmission_curve() for f in all_filters]
-except ProgrammingError:
+except (ProgrammingError, ValueError) as err:
+    logger.error(err)
     pass
 
 

@@ -26,6 +26,7 @@ from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
 from django.contrib.auth.decorators import login_required, permission_required
 from host.decorators import log_usage_metric
+from .host_utils import wait_for_free_space
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -36,6 +37,15 @@ logger = get_logger(__name__)
 @log_usage_metric()
 def reprocess_transient_view(request=None, slug=''):
     return reprocess_transient(request, slug)
+
+
+@shared_task(
+    name="Workflow init",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def workflow_init():
+    wait_for_free_space()
 
 
 def reprocess_transient(request=None, slug=''):
@@ -86,6 +96,7 @@ def transient_workflow(transient_name=None):
             transient.save()
     # Execute the workflow
     workflow = chain(
+        workflow_init.si(),
         image_download.si(transient_name),
         transient_information.si(transient_name),
         mwebv_transient.si(transient_name),
