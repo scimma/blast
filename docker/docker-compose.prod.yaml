@@ -50,14 +50,6 @@ services:
       - ../env/.env.default
       - ../env/.env.prod
 
-  rabbitmq:
-    extends:
-      file: docker-compose.yml
-      service: rabbitmq
-    env_file:
-      - ../env/.env.default
-      - ../env/.env.prod
-
   redis:
     extends:
       file: docker-compose.yml

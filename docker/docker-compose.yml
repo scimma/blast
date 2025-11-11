@@ -108,22 +108,6 @@ services:
       - "full_dev"
     #  - "batch"
 
-  rabbitmq:
-    image: rabbitmq:3.10.6-management-alpine
-    restart: always
-    networks:
-      - internal
-    # ports:
-    #   - 127.0.0.1:5672:${MESSAGE_BROKER_PORT}
-    #   - 127.0.0.1:15672:${MESSAGE_BROKER_MANAGEMENT_PORT}
-    volumes:
-      - ../data/rabbitmq_data:/data
-      - ../data/rabbitmq_data/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-    profiles:
-      - "full_prod"
-      - "full_dev"
-      - "batch"
-
   redis:
     image: redis:alpine
     restart: always

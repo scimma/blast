@@ -83,14 +83,6 @@ services:
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
       - ../app:/app
 
-  rabbitmq:
-    extends:
-      file: docker-compose.yml
-      service: rabbitmq
-    env_file:
-      - ../env/.env.default
-      - ../env/.env.dev
-
   redis:
     extends:
       file: docker-compose.yml
