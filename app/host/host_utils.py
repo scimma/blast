@@ -643,6 +643,8 @@ def pick_largest_aperture(position, image_dict):
 def get_directory_size(directory):
     """Returns the `directory` size in bytes."""
     total = 0
+    # Avoid returning zero length for symlinks
+    directory = os.path.realpath(directory)
     try:
         # print("[+] Getting the size of", directory)
         for entry in os.scandir(directory):
