@@ -702,9 +702,9 @@ def wait_for_free_space():
     # Wait until enough scratch space is available before launching the workflow tasks.
     for scratch_root in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
         while True:
-            # Calculate size of /scratch to determine free space. If CE_JOB_SCRATCH_MAX_SIZE is finite, calculate free
+            # Calculate size of /scratch to determine free space. If JOB_SCRATCH_MAX_SIZE is finite, calculate free
             # space using the supplied value; otherwise, attempt to calculate using statvfs.
-            scratch_total = settings.JOB_SCRATCH_FREE_SPACE
+            scratch_total = settings.JOB_SCRATCH_MAX_SIZE
             if scratch_total:
                 scratch_used = get_directory_size(scratch_root)
                 scratch_free = scratch_total - scratch_used
