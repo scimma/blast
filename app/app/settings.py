@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     'mozilla_django_oidc',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
-    "storages",
 ]
 
 MIDDLEWARE = [
@@ -162,9 +161,8 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-PUBLIC_MEDIA_LOCATION = "media"
-MEDIA_URL = f'{os.getenv("S3_ENDPOINT_URL", "")}/{os.getenv("S3_BUCKET", "")}/apps/blast/{PUBLIC_MEDIA_LOCATION}/'
-#DEFAULT_FILE_STORAGE = "app.boto_storage.S3MediaStorage"
+MEDIA_URL = "/cutouts/"
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
