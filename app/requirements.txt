@@ -6,7 +6,7 @@ astroquery==0.4.7
 bokeh==3.7.3
 coverage==7.9.0
 crispy-bootstrap4==2025.6
-Django==5.1.13
+Django==5.1.14
 django_celery_results==2.6.0
 django-bootstrap4==25.2
 django-celery-beat==2.8.1
