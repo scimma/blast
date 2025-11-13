@@ -19,7 +19,8 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, permission_required
 from host.decorators import log_usage_metric
-
+from host.host_utils import inspect_worker_tasks
+from host.host_utils import reset_workflow_if_not_processing
 from host.log import get_logger
 logger = get_logger(__name__)
 
@@ -55,11 +56,10 @@ def retrigger_transient(request=None, slug=''):
         if processing_status in ['processing', 'blocked']:
             logger.debug(f'''"{transient.name}": "{processing_status}"''')
             # If the transient workflow is already in progress, do nothing; otherwise, retrigger the workflow.
-            riw = RetriggerIncompleteWorkflows()
             # Filter out the current task executing this function, or the transient will never be retriggered!
-            all_tasks = [task for task in riw.inspect_worker_tasks()
+            all_tasks = [task for task in inspect_worker_tasks()
                          if task['name'] != 'Import transients from TNS']
-            if riw.reset_workflow_if_not_processing(transient, all_tasks, reset_failed=True):
+            if reset_workflow_if_not_processing(transient, all_tasks, reset_failed=True):
                 logger.info(f'Retriggering workflow for transient "{transient.name}"')
                 result = transient_workflow.delay(transient_name)
             else:
