@@ -117,6 +117,7 @@ def download_and_save_cutouts(
         cutout_object = Cutout.objects.filter(
             name=cutout_name, filter=filter, transient=transient
         )
+        #replace w django get or create
         cutout_object_exists = cutout_object.exists()
         cutout_object = (cutout_object[0]
                          if cutout_object_exists
@@ -131,11 +132,13 @@ def download_and_save_cutouts(
         # file or the Cutout object are missing, redownload the data
         if not overwrite == "False" or not cutout_file_exists or not cutout_object_exists:
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
-            # If a download error occurred, report it and exit.
+            # If a download error occurred, try it again 
+
             if status == 1:
                 cutout_object.message = "Download error"
+                logger.debug(err)
                 cutout_object.save()
-                return processed_value
+                return "failed"
         if fits:
             # Write FITS file to local cache
             os.makedirs(save_dir, exist_ok=True)
@@ -618,6 +621,9 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg")):
                 )
                 status = 0
                 err = None
+                if fits is None:
+                    status = 1
+                    err = "No image returned"
             except Exception as e:
                 print(f"Could not download {survey.name} data")
                 print(f"exception: {e}")
