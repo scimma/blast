@@ -196,24 +196,30 @@ def add_transient(request):
                 trans_info_set = []
                 reader = csv.DictReader(io.StringIO(info), fieldnames=['name', 'ra', 'dec', 'redshift', 'specclass'])
                 for transient in reader:
-                    if transient['specclass'].lower().strip() == "none":
-                        spectroscopic_class = None
-                    else:
-                        spectroscopic_class = transient['specclass'].strip()
-                    if transient['redshift'].lower().strip() == "none":
-                        redshift = None
-                    else:
-                        redshift = float(transient['redshift'].strip())
-                    trans_info = {
-                        "name": transient['name'].strip(),
-                        "ra_deg": float(transient['ra'].strip()),
-                        "dec_deg": float(transient['dec'].strip()),
-                        "redshift": redshift,
-                        "spectroscopic_class": spectroscopic_class,
-                        "tns_id": 0,
-                        "tns_prefix": "",
-                        "added_by": request.user,
-                    }
+                    try:
+                        if transient['specclass'].lower().strip() == "none":
+                            spectroscopic_class = None
+                        else:
+                            spectroscopic_class = transient['specclass'].strip()
+                        if transient['redshift'].lower().strip() == "none":
+                            redshift = None
+                        else:
+                            redshift = float(transient['redshift'].strip())
+                        trans_info = {
+                            "name": transient['name'].strip(),
+                            "ra_deg": float(transient['ra'].strip()),
+                            "dec_deg": float(transient['dec'].strip()),
+                            "redshift": redshift,
+                            "spectroscopic_class": spectroscopic_class,
+                            "tns_id": 0,
+                            "tns_prefix": "",
+                            "added_by": request.user,
+                        }
+                    except Exception as err:
+                        err_msg = f'''Error parsing line "{transient}": {err}'''
+                        logger.error(err_msg)
+                        errors.append(err_msg)
+                        continue
                     trans_info_set.append(trans_info)
                 transient_names = [trans_info['name'] for trans_info in trans_info_set]
                 ra_degs = [trans_info['ra_deg'] for trans_info in trans_info_set]
