@@ -143,8 +143,8 @@ def transient_list(request):
 @log_usage_metric()
 def add_transient(request):
     def identify_existing_transients(transient_names, ra_degs=None, dec_degs=None):
-        if ra_degs==None and dec_degs==None:
-        
+        # If no coordinates are provided, search only by transient name
+        if not (ra_degs or dec_degs):
             existing_transients = Transient.objects.filter(name__in=transient_names)
             existing_transient_names = [existing_transient.name for existing_transient in existing_transients]
             for transient_name in existing_transient_names:
