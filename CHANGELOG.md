@@ -13,6 +13,34 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.7.1]
+
+### Security
+
+- Upgraded Django to v5.1.14 to address CVE-2025-64458 and CVE-2025-64459. Set static versions for docs dependencies.
+
+## [1.7.0]
+
+### Added
+
+- Added a `DISABLE_CELERY_BEAT` environment variable that when set to `true` will prevent Celery Beat from running. This
+  is occasionally useful during local development and testing.
+- Added scratch file pruning to a new "Workflow init" task in the transient workflow. If the JOB_SCRATCH_MAX_SIZE value
+  minus the calculated disk space consumed is less than the JOB_SCRATCH_FREE_SPACE value, the pruning function is invoked.
+
+### Removed
+
+- Replaced RabbitMQ with Redis, supporting high-availability mode with Redis Sentinel. Redis now performs the functions of Django caching, Celery results backend, and Celery message broker.
+- Replaced MariaDB with PostgreSQL database.
+
+### Changed
+
+- Configuration of Celery Flower instance is now consistent with the workers using `-A app`
+
+### Fixed
+
+- Error handling was added in a few places where errors were noticed in the application logs.
+
 ## [1.6.6]
 
 ## Changed

@@ -2,7 +2,12 @@
 
 set -e
 
-bash entrypoints/wait-for-it.sh ${DATABASE_HOST}:${DATABASE_PORT} --timeout=0
+if [[ $DISABLE_CELERY_BEAT == "true" ]]; then
+    echo "Celery Beat is disabled. Terminating."
+    exit 0
+fi
+
+bash entrypoints/wait-for-it.sh ${DB_HOST}:${DB_PORT} --timeout=0
 bash entrypoints/wait-for-it.sh ${MESSAGE_BROKER_HOST}:${MESSAGE_BROKER_PORT} --timeout=0
 bash entrypoints/wait-for-it.sh ${WEB_APP_HOST}:${WEB_APP_PORT} --timeout=0
 

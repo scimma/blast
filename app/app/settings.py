@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.6.6'
+APP_VERSION = '1.7.1'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     "users",
     "django_cron",
     "django_filters",
-    'django_celery_results',
+    'django_celery_results',  # TODO: This can be removed if using Redis as Celery backend
     'mozilla_django_oidc',
     "silk",  # Django Silk profiler (https://github.com/jazzband/django-silk),
     "latexify",
@@ -109,13 +109,13 @@ WSGI_APPLICATION = "app.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("MYSQL_DATABASE", "blast_db"),
-        "USER": os.environ.get("MYSQL_USER", ""),
-        "PASSWORD": os.environ.get("MYSQL_ROOT_PASSWORD", "password"),
-        "HOST": os.environ.get("DATABASE_HOST", "database"),
-        "PORT": os.environ.get("DATABASE_PORT", "3306"),
-    }
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME', 'blast'),
+        'USER': os.getenv('DB_USER', 'blast'),
+        'PASSWORD': os.getenv('DB_PASS', 'password'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+    },
 }
 
 # Password validation
@@ -180,6 +180,10 @@ TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/tra
 
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
 
+# Set JOB_SCRATCH_MAX_SIZE to 0 to determine scratch volume capacity using os.statvfs
+JOB_SCRATCH_MAX_SIZE = int(float(os.getenv('JOB_SCRATCH_MAX_SIZE', str(20 * 1024**3))))  # 20 GiB
+JOB_SCRATCH_FREE_SPACE = int(float(os.getenv('JOB_SCRATCH_FREE_SPACE', str(5 * 1024**3))))  # 5 GiB
+
 # S3_ENDPOINT_URL example: "https://js2.jetstream-cloud.org:8001"
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "")
@@ -205,18 +209,29 @@ CELERY_IMPORTS = [
     "host.transient_tasks",
 ]
 
-rabbitmq_user = os.environ.get("RABBITMQ_USERNAME", "guest")
-rabbitmq_password = os.environ.get("RABBITMQ_PASSWORD", "guest")
-rabbitmq_host = os.environ.get("MESSAGE_BROKER_HOST", "rabbitmq")
-rabbitmq_port = os.environ.get("MESSAGE_BROKER_PORT", "5672")
-
-CELERY_BROKER_URL = (
-    f"amqp://{rabbitmq_user}:{rabbitmq_password}@{rabbitmq_host}:{rabbitmq_port}//"
-)
-
-# ref: https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html#django-celery-results-using-the-django-orm-cache-as-a-result-backend  # noqa
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_CACHE_BACKEND = 'default'
+REDIS_SERVICE = os.environ.get('REDIS_SERVICE', 'redis')
+REDIS_PORT = int(os.environ.get('REDIS_PORT', '6379'))
+# If running Redis in high-availability mode using Sentinel, there must be a master group name set
+REDIS_MASTER_GROUP_NAME = os.environ.get('REDIS_MASTER_GROUP_NAME', '')
+REDIS_OR_SENTINEL = 'sentinel' if REDIS_MASTER_GROUP_NAME else 'redis'
+# Caching: https://docs.djangoproject.com/en/5.2/topics/cache/#django-s-cache-framework
+CACHES = {
+    'default': {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}",
+    }
+}
+# Backends & brokers: https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/index.html
+CELERY_BROKER_URL = f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}"
+CELERY_BROKER_TRANSPORT_OPTIONS = {'master_name': REDIS_MASTER_GROUP_NAME}
+# Results backend: https://docs.celeryq.dev/en/stable/userguide/configuration.html#conf-redis-result-backend
+CELERY_RESULT_BACKEND = f"{REDIS_OR_SENTINEL}://{REDIS_SERVICE}:{REDIS_PORT}"
+CELERY_RESULT_BACKEND_TRANSPORT_OPTIONS = {
+    'master_name': REDIS_MASTER_GROUP_NAME,
+    'retry_policy': {
+        'timeout': 5.0
+    }
+}
 
 CELERYD_REDIRECT_STDOUTS_LEVEL = "INFO"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
