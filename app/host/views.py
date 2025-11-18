@@ -150,7 +150,7 @@ def add_transient(request):
             for transient_name in existing_transient_names:
                 logger.info(f'Transient already saved: "{transient_name}"')
             new_transient_names = [transient_name for transient_name in transient_names
-                                if transient_name not in existing_transient_names]
+                                   if transient_name not in existing_transient_names]
             return existing_transient_names, new_transient_names
         existing_transient_names = []
         new_transient_names = []
@@ -160,12 +160,12 @@ def add_transient(request):
             transient_dec_deg = transient[2]
             arcsec_dec = 0.0002778                  # 1 arcsecond in decimal degrees
             arcsec_ra = 0.004167                    # 1 arcsecond when using right ascension units
-            existing_transients = Transient.objects.filter(Q(name=transient[0]) | 
-                                                           (Q(ra_deg__gte=transient_ra_deg-arcsec_ra) 
-                                                            & Q(ra_deg__lte=transient_ra_deg+arcsec_ra)
-                                                            & Q(dec_deg__gte=transient_dec_deg-arcsec_dec) 
-                                                            & Q(dec_deg__lte=transient_dec_deg+arcsec_dec)
-                                                            ))
+            existing_transients = Transient.objects.filter(Q(name__exact=transient_name)
+                                                           | (Q(ra_deg__gte=transient_ra_deg - arcsec_ra)
+                                                              & Q(ra_deg__lte=transient_ra_deg + arcsec_ra)
+                                                              & Q(dec_deg__gte=transient_dec_deg - arcsec_dec)
+                                                              & Q(dec_deg__lte=transient_dec_deg + arcsec_dec)
+                                                              ))
             for existing_transient in existing_transients:
                 existing_transient_names.append(existing_transient.name)
             if not existing_transients:
@@ -173,7 +173,6 @@ def add_transient(request):
         for transient_name in existing_transient_names:
             logger.info(f'Transient already saved: "{transient_name}"')
         return existing_transient_names, new_transient_names
-
 
     errors = []
     defined_transient_names = []
@@ -219,7 +218,8 @@ def add_transient(request):
                 transient_names = [trans_info['name'] for trans_info in trans_info_set]
                 ra_degs = [trans_info['ra_deg'] for trans_info in trans_info_set]
                 dec_degs = [trans_info['dec_deg'] for trans_info in trans_info_set]
-                existing_transient_names, new_transient_names = identify_existing_transients(transient_names, ra_degs, dec_degs)
+                existing_transient_names, new_transient_names = identify_existing_transients(
+                    transient_names, ra_degs, dec_degs)
                 for transient_name in new_transient_names:
                     trans_info = [trans_info for trans_info in trans_info_set
                                   if trans_info['name'] == transient_name][0]
