@@ -114,18 +114,12 @@ def download_and_save_cutouts(
         cutout_file_exists = s3.object_exists(object_key)
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
-        cutout_object = Cutout.objects.filter(
+        cutout_object = Cutout.objects.get_or_create(
             name=cutout_name, filter=filter, transient=transient
         )
-        #TODO replace w django get or create
-        cutout_object_exists = cutout_object.exists()
-        cutout_object = (cutout_object[0]
-                         if cutout_object_exists
-                         else Cutout(name=cutout_name, filter=filter, transient=transient))
-
         # If we know there is no image to download, exit.
         if cutout_object.message == "No image found":
-            return processed_value
+            return True
 
         fits = None
         # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
@@ -138,7 +132,7 @@ def download_and_save_cutouts(
                 cutout_object.message = "Download error"
                 logger.debug(err)
                 cutout_object.save()
-                return "failed"
+                return False
         if fits:
             # Write FITS file to local cache
             os.makedirs(save_dir, exist_ok=True)
@@ -154,6 +148,7 @@ def download_and_save_cutouts(
         else:
             cutout_object.message = "No image found"
         cutout_object.save()
+        return True
 
     processed_value = "processed"
     if filter_set is None:
