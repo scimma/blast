@@ -28,7 +28,7 @@ from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
 from bokeh.io import curdoc, export_png
-from django.http import FileResponse
+from django.urls import reverse
 import base64
 
 # import extinction
@@ -138,16 +138,18 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None):
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True):
     def generate_plot(fig, image_data, local_image_path:str):
         hide_loading_indicator = CustomJS(args=dict(), code="""
             document.getElementById('loading-indicator').style.display = "none";
         """)
         fig.x_range.js_on_change('end', hide_loading_indicator)
         plot_image(image_data, fig)
-        if local_image_path:
+        s3 = ObjectStore()
+        png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+        if local_image_path and not s3.object_exists(png_object_key):
             # image path exists, so we can save the image
-            export_png(fig, filename=local_image_path)
+            export_png(fig, filename=local_image_path, width=800, height=800)
             s3 = ObjectStore()
             png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
             logger.info(f"Putting {png_object_key} in bucket")
@@ -183,18 +185,35 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     local_image_path = local_fits_path.replace(".fits", ".png")
     s3 = ObjectStore()
     png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
-    if s3.object_exists(png_object_key):
+    if s3.object_exists(png_object_key) and display_png:
         # The png for the cutout exists, we can use that to save time
         # Download PNG file local file cache
         starttime = time.time()
         image_data = s3.get_object(path=png_object_key)
         logger.info(f"Downloading the image (png) took {time.time() - starttime}")
-        # response = FileResponse(open(local_image_path, "rb"), as_attachment=True, filename=f"{cutout.name.split('/')[-1]}_{cutout.fits.name.replace('.fits', '')}.png")
-        image_script = "<script>document.getElementById('loading-indicator').style.display = \"none\";</script>"
+        image_script = """<script>
+        document.getElementById('loading-indicator').style.display = \"none\";
+        function cutoutImgClick(transient, cutout) {
+            console.log("Clicked");
+            $.ajax({
+                url : '""" + reverse("cutout_fits_plot") +"""',
+                type : "GET",
+                data : { transient_name : transient,
+                        cutout_name : cutout},
+                success : function() {
+                    console.log("Yippee");
+                },
+            });
+        }
+        </script>"""
         image_css = """<style>
             #cutout-img {
                 max-width:100%;
                 max-height:100%;
+            }
+            #cutout-img-button {
+                background: transparent;
+                border: none !important;
             }
         </style>"""
         script_to_return = image_script+image_css
@@ -202,7 +221,10 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         # logger.info(f"Image name is {img_filename}")
         # logger.info(f"Headers: {response.headers}")
         image_data_encoded = base64.b64encode(image_data).decode()
-        display_tag = f"<img id=\"cutout-img\" src=\"data:image/png;base64,{image_data_encoded}\"/>"
+        display_tag = f"""
+        <button id="cutout-img-button" onclick="cutoutImgClick('{transient.name}', '{cutout.name}')">
+            <img id=\"cutout-img\" src=\"data:image/png;base64,{image_data_encoded}\"/>
+        </button>"""
         context = {"bokeh_cutout_script": script_to_return, "bokeh_cutout_div": display_tag}
         return context
     if not os.path.isfile(local_fits_path):

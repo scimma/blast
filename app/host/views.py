@@ -42,6 +42,7 @@ import io
 from host.log import get_logger
 logger = get_logger(__name__)
 import time
+import json
 
 
 
@@ -727,3 +728,25 @@ def privacy_policy(request):
 # View for the privacy policy
 def healthz(request):
     return HttpResponse()
+
+
+# Function for getting the cutout FITS plot
+def cutout_fits_plot(request):
+    logger.info("Called the cutout plotting function")
+    if request.method == 'GET':
+        transient_name = request.GET.get('transient_name')
+        cutout_name = request.GET.get('cutout_name')
+        logger.info(f"{transient_name} and {cutout_name}")
+
+        response_data = 'successful!'
+
+        return HttpResponse(
+            json.dumps(response_data),
+            content_type="application/json"
+        )
+
+    else:
+        return HttpResponse(
+            json.dumps({"nothing to see": "this isn't happening"}),
+            content_type="application/json"
+        )
