@@ -133,8 +133,10 @@
               <code>Name, RA, Dec, Redshift, Classification</code>
               <ul>
                 
+                <li>Name cannot start with <code>SN</code> or <code>AT</code></li>
                 <li>RA/Dec must be decimal degrees.</li>
                 <li>Use "None" to indicate missing redshift or classification.</li>
+                <li>A transient will not be added if the name already exists in the database or if the coordinates are within one arcsecond of an existing transient.</li>
               </ul>
             </p>
             <div class="input-group-text">

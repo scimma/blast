@@ -61,7 +61,8 @@ urlpatterns = [
         views.resolve_issue,
         name="resolve_issue",
     ),
-    path(f"""{base_path}privacy""", views.privacy_policy, name='privacy')
+    path(f"""{base_path}privacy""", views.privacy_policy, name='privacy'),
+    path(f"""{base_path}healthz""", views.healthz, name='healthz')
 ]
 
 router = DefaultRouter()
