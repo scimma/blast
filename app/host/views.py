@@ -39,6 +39,8 @@ from celery import shared_task
 from host.decorators import log_usage_metric
 import csv
 import io
+from host.host_utils import ARCSEC_DEC_IN_DEG
+from host.host_utils import ARCSEC_RA_IN_DEG
 from host.log import get_logger
 logger = get_logger(__name__)
 
@@ -142,37 +144,52 @@ def transient_list(request):
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
 def add_transient(request):
-    def identify_existing_transients(transient_names, ra_degs=None, dec_degs=None):
-        # If no coordinates are provided, search only by transient name
-        if not (ra_degs or dec_degs):
-            existing_transients = Transient.objects.filter(name__in=transient_names)
-            existing_transient_names = [existing_transient.name for existing_transient in existing_transients]
-            for transient_name in existing_transient_names:
-                logger.info(f'Transient already saved: "{transient_name}"')
-            new_transient_names = [transient_name for transient_name in transient_names
-                                   if transient_name not in existing_transient_names]
-            return existing_transient_names, new_transient_names
-        existing_transient_names = []
-        new_transient_names = []
-        for transient in zip(transient_names, ra_degs, dec_degs):
-            transient_name = transient[0]
-            transient_ra_deg = transient[1]
-            transient_dec_deg = transient[2]
-            arcsec_dec = 0.0002778                  # 1 arcsecond in decimal degrees
-            arcsec_ra = 0.004167                    # 1 arcsecond when using right ascension units
-            existing_transients = Transient.objects.filter(Q(name__exact=transient_name)
-                                                           | (Q(ra_deg__gte=transient_ra_deg - arcsec_ra)
-                                                              & Q(ra_deg__lte=transient_ra_deg + arcsec_ra)
-                                                              & Q(dec_deg__gte=transient_dec_deg - arcsec_dec)
-                                                              & Q(dec_deg__lte=transient_dec_deg + arcsec_dec)
-                                                              ))
-            for existing_transient in existing_transients:
-                existing_transient_names.append(existing_transient.name)
-            if not existing_transients:
-                new_transient_names.append(transient_name)
-        for transient_name in existing_transient_names:
-            logger.info(f'Transient already saved: "{transient_name}"')
-        return existing_transient_names, new_transient_names
+    def identify_existing_transients(transients=[]):
+        '''Input "transients" is a list of dicts of the form:
+            [{
+                'name': str (required),
+                'ra_deg': float (optional),
+                'dec_deg': float (optional),
+            }]
+        '''
+        errors = []
+        transient_names = [tr['name'] for tr in transients]
+        existing_transients = list(Transient.objects.filter(name__in=transient_names))
+        # Filter the input transients list for members with names not found in the existing_transients object list
+        nonexisting_transients = [new_tr for new_tr in transients
+                                  if new_tr['name'] not in [tr.name for tr in existing_transients]]
+        # Discard any transients whose coordinates are too close to an existing transient
+        new_transients = []
+        for transient in nonexisting_transients:
+            if ('ra_deg' in transient
+                    and 'dec_deg' in transient
+                    and isinstance(transient['ra_deg'], float)
+                    and isinstance(transient['dec_deg'], float)):
+                proximate_transients = list(Transient.objects.filter(
+                    Q(ra_deg__gte=transient['ra_deg'] - ARCSEC_RA_IN_DEG)
+                    & Q(ra_deg__lte=transient['ra_deg'] + ARCSEC_RA_IN_DEG)
+                    & Q(dec_deg__gte=transient['dec_deg'] - ARCSEC_DEC_IN_DEG)
+                    & Q(dec_deg__lte=transient['dec_deg'] + ARCSEC_DEC_IN_DEG)))
+            else:
+                proximate_transients = []
+            if proximate_transients:
+                # If there are transients too close, discard the input transient
+                prox_trans_names = ', '.join([tr.name for tr in proximate_transients])
+                err_msg = (f'''Transient "{transient['name']}" is within 1 arcsec of existing transient(s) '''
+                           f'''{prox_trans_names}. Discarding.''')
+                logger.info(err_msg)
+                errors.append(err_msg)
+                # Append proximate transients to the list of existing transients
+                for proximate_transient in proximate_transients:
+                    if proximate_transient.name not in [tr.name for tr in existing_transients]:
+                        existing_transients.append(proximate_transient)
+            else:
+                # if there are no nearby transients, consider the input transient new
+                new_transients.append(transient)
+        existing_transient_names = [tr.name for tr in existing_transients]
+        new_transient_names = [tr['name'] for tr in new_transients]
+        logger.info(f'''Existing transients detected: {','.join(existing_transient_names)}''')
+        return existing_transient_names, new_transient_names, errors
 
     errors = []
     defined_transient_names = []
@@ -187,7 +204,12 @@ def add_transient(request):
             info = form.cleaned_data["tns_names"]
             if info:
                 transient_names = [transient_name.strip() for transient_name in info.splitlines()]
-                existing_transient_names, imported_transient_names = identify_existing_transients(transient_names)
+                existing_transient_names, imported_transient_names, identify_errors = identify_existing_transients([{
+                    'name': name,
+                    'ra_deg': None,
+                    'dec_deg': None,
+                } for name in transient_names])
+                errors.extend(identify_errors)
                 # Trigger import and processing of new transients
                 import_transient_list.delay(imported_transient_names)
 
@@ -222,10 +244,12 @@ def add_transient(request):
                         continue
                     trans_info_set.append(trans_info)
                 transient_names = [trans_info['name'] for trans_info in trans_info_set]
-                ra_degs = [trans_info['ra_deg'] for trans_info in trans_info_set]
-                dec_degs = [trans_info['dec_deg'] for trans_info in trans_info_set]
-                existing_transient_names, new_transient_names = identify_existing_transients(
-                    transient_names, ra_degs, dec_degs)
+                existing_transient_names, new_transient_names, identify_errors = identify_existing_transients([{
+                    'name': trans_info['name'],
+                    'ra_deg': trans_info['ra_deg'],
+                    'dec_deg': trans_info['dec_deg'],
+                } for trans_info in trans_info_set])
+                errors.extend(identify_errors)
                 for transient_name in new_transient_names:
                     trans_info = [trans_info for trans_info in trans_info_set
                                   if trans_info['name'] == transient_name][0]

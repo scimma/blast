@@ -55,6 +55,8 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 uuid_regex = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+ARCSEC_DEC_IN_DEG = 0.0002778  # 1 arcsecond declination in degrees
+ARCSEC_RA_IN_DEG = 0.004167  # 1 arcsecond right ascension in degrees
 
 
 def survey_list(survey_metadata_path):
