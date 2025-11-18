@@ -117,7 +117,7 @@ def download_and_save_cutouts(
         cutout_object = Cutout.objects.filter(
             name=cutout_name, filter=filter, transient=transient
         )
-        #replace w django get or create
+        #TODO replace w django get or create
         cutout_object_exists = cutout_object.exists()
         cutout_object = (cutout_object[0]
                          if cutout_object_exists
@@ -608,6 +608,9 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg")):
                 fits = hips_cutout(transient, survey, image_size=num_pixels)
                 status = 0
                 err = e
+                if fits is None:
+                    status = 1
+                    err = "No image returned"
             except Exception as e:
                 print(f"Conection timed out, could not download {survey.name} data")
                 fits = None
