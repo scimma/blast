@@ -10,6 +10,7 @@ volumes:
   blast-data:
     name: "blast-data"
   object-data: {}
+  astrodash-data: {}
 
 services:
   nginx:
@@ -40,6 +41,7 @@ services:
       - blast-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
+      - astrodash-data:/mnt/astrodash-data
     profiles:
       - "full_prod"
       - "slim_prod"

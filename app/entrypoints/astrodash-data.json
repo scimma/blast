@@ -1,0 +1,4862 @@
+[
+  {
+    "path": "pre_trained_models/dash/agnosticZ/model_info.txt",
+    "version_id": "w64QjSDtvyNS3jEo7oMKFb3mDNcaYqs",
+    "etag": "942281ffb144ae02b3cbfea3153703ac",
+    "size": 509
+  },
+  {
+    "path": "pre_trained_models/dash/agnosticZ/pytorch_model.pth",
+    "version_id": "WZ-9dyMIzQEZMp.2p-9hj6mtYRFaw9e",
+    "etag": "4c2ffb5e50e5b9b90b313d915d08d47b-2",
+    "size": 18247688
+  },
+  {
+    "path": "pre_trained_models/dash/agnosticZ/training_params.pickle",
+    "version_id": "VX-mJnpAZQzX4TNCVljNvUuTlbLofib",
+    "etag": "3de3e5d056c31e787eb2fda28419e4ef",
+    "size": 501
+  },
+  {
+    "path": "pre_trained_models/dash/model_info.txt",
+    "version_id": "Ytvnlzfa.nHvzYOjVD2t7V.e1ivfRXO",
+    "etag": "942281ffb144ae02b3cbfea3153703ac",
+    "size": 509
+  },
+  {
+    "path": "pre_trained_models/dash/pytorch_model.pth",
+    "version_id": "UnWzDBa.RcRWg4GgnAwmKhoV2Ihm974",
+    "etag": "4c2ffb5e50e5b9b90b313d915d08d47b-2",
+    "size": 18247688
+  },
+  {
+    "path": "pre_trained_models/dash/training_params.pickle",
+    "version_id": "WdcWrTTbjVtvvlRemttG4sjuogQ3Srp",
+    "etag": "3de3e5d056c31e787eb2fda28419e4ef",
+    "size": 501
+  },
+  {
+    "path": "pre_trained_models/dash/zeroZ/model_info.txt",
+    "version_id": "Y.HmX-NHo7v7CkeCB3gtKp1T3C7xqZx",
+    "etag": "11ef0eb3f1ddf2ea79b751824a9ac65d",
+    "size": 380
+  },
+  {
+    "path": "pre_trained_models/dash/zeroZ/pytorch_model.pth",
+    "version_id": "x0LsZ7gGvRWjnGi8clrStKauaEjXzGy",
+    "etag": "0fa3515815047832a802a734c4ee7ade-2",
+    "size": 18247688
+  },
+  {
+    "path": "pre_trained_models/dash/zeroZ/training_params.pickle",
+    "version_id": "ju4uDi9SUeIWzMB2Pi7BCfkp7gJK.tu",
+    "etag": "3de3e5d056c31e787eb2fda28419e4ef",
+    "size": 501
+  },
+  {
+    "path": "pre_trained_models/templates/sn_and_host_templates.npz",
+    "version_id": ".2TIS1FJY8I5CLtFDKRqcTwSfDsnlX.",
+    "etag": "cef18d806312eaf66c7be9a25307e505-2",
+    "size": 22015317
+  },
+  {
+    "path": "pre_trained_models/templates/sneLineList.txt",
+    "version_id": "J.yoHvzNuD4V3ZVReb3fcYPoXYw7Er.",
+    "etag": "512813805cb9c8e79a760cafec12918f",
+    "size": 1065
+  },
+  {
+    "path": "pre_trained_models/transformer/TF_wiserep_v6.pt",
+    "version_id": "m7kKPDpEc4gcEV6Mt1XinD73gfrddLc",
+    "etag": "2c816e36fcbfb4dbc0ff30e59aa932e1",
+    "size": 5350671
+  },
+  {
+    "path": "pre_trained_models/transformer/TF_wiserep_v6_torchscript.pt",
+    "version_id": "cn3XJ0.681mzqjiyU0kByDld0b.1Dke",
+    "etag": "3b1513598d8ec3a75ed634bb7d7d0c6d",
+    "size": 5495747
+  },
+  {
+    "path": "spectra/0068f835-a3e2-40b0-937d-57971aa2f024.json",
+    "version_id": "jc9ApuBNnBST-VW1t-Zddi6GMZ1FWtG",
+    "etag": "52f507520a7f5b0cc9ad2c703e06cd2e",
+    "size": 9155
+  },
+  {
+    "path": "spectra/013a87f6-7f7c-4e64-b39a-2bea3442480f.json",
+    "version_id": "lTZLetTQBvapFHLh4tKK9aV.3TiaNWY",
+    "etag": "ee3f7add9346fa9e9bc823c134d64e46",
+    "size": 19659
+  },
+  {
+    "path": "spectra/01c597d8-cf65-401a-a4e9-79d5717675ab.json",
+    "version_id": "a27wIX05nuOtVuFGKArheGKFDdczcZE",
+    "etag": "7ffd4b957f3259ff87445ec475087a8e",
+    "size": 20908
+  },
+  {
+    "path": "spectra/024b3a38-ac05-47d0-9d81-2b9dbde62c1d.json",
+    "version_id": "HsO01pAw9XQ4HY7jidOoNgrS60KdqhT",
+    "etag": "045d8b021d05a933306d0c585e17c18d",
+    "size": 64890
+  },
+  {
+    "path": "spectra/0271bf46-6b31-4040-9b7a-18febde00a68.json",
+    "version_id": "oO2WEE6SjkxyZaLzO7Z1KcWX6ZnD6LP",
+    "etag": "696b3d215c3a076d81462eaef43a9559",
+    "size": 26836
+  },
+  {
+    "path": "spectra/03896c62-6540-48e1-8196-33afbb84c23a.json",
+    "version_id": "59uipiA8CeqJrs3zJgEjbE5d6Iels18",
+    "etag": "d38de2cb812cce517d9737f3d3cd2b6d",
+    "size": 9489
+  },
+  {
+    "path": "spectra/03ebc50d-88a5-440b-b31b-d53cc9efdb92.json",
+    "version_id": "ttIxp-TUdq5v0Yg9rWhPK3he11ej-oh",
+    "etag": "0be4c420de2955d44ccc74df4cdc2fb9",
+    "size": 20908
+  },
+  {
+    "path": "spectra/04406c77-91d9-486a-be20-b4c3e604926e.json",
+    "version_id": "dG2UzVYhWkSsaDJrQ4Qzpjvyi2BQRZq",
+    "etag": "5e2623ddff88a3e2375ed27b2ad0e6d4",
+    "size": 182898
+  },
+  {
+    "path": "spectra/04ca92bd-cefa-47a2-ba3e-a8e68a34e5ec.json",
+    "version_id": "G.QLHl4B5vHWNqp.1zeXxDbKdjeiVOh",
+    "etag": "33bbf09c19d869b25a92222e26b4c3ac",
+    "size": 9324
+  },
+  {
+    "path": "spectra/04ead8ea-f9bf-4a92-821e-00c40737c32f.json",
+    "version_id": "c4MksPMov8bOTMXe6RDb0-3w13hRSRX",
+    "etag": "de24ee4e0a8933c80cb8a58541679fb6",
+    "size": 10519
+  },
+  {
+    "path": "spectra/04f4459e-da9c-4942-9df6-a0b4ddabad59.json",
+    "version_id": "HmE5w6UHPD1CgRqx-7rZ0uAcobGCwEq",
+    "etag": "bc30f7878064d5ab48f93b3914e94211",
+    "size": 9467
+  },
+  {
+    "path": "spectra/050456bb-31a8-41c5-8f90-878dabe7fedc.json",
+    "version_id": "7dD6vX17FyqBijdbxOblnxB94a967a-",
+    "etag": "f61633a7aa9d0dca58d175d3aed222e6",
+    "size": 64896
+  },
+  {
+    "path": "spectra/0594ae4e-d817-4e99-badc-fca73639a6c0.json",
+    "version_id": "YJH28uFX6TvzZkqD75D6gtbvdK.N8Yk",
+    "etag": "9e4a251a52d1b693444f7d1c04a432f4",
+    "size": 9805
+  },
+  {
+    "path": "spectra/06e62870-dfd8-469c-8ed5-132ca553877a.json",
+    "version_id": "M.A4J6uqeK9EvAxkkSAC6jziArgVEL1",
+    "etag": "38901d055047a68bca09123776e34e40",
+    "size": 9435
+  },
+  {
+    "path": "spectra/0710bdb9-b0af-4278-9ec0-e44de6f2c64c.json",
+    "version_id": "wP1rfAkTRs9Lmg10xo3fgwEjV0k54kL",
+    "etag": "322e9f99079494f3081f45d22069718b",
+    "size": 9605
+  },
+  {
+    "path": "spectra/072992f7-5b2c-4a30-afa2-e14e98c44265.json",
+    "version_id": "z.6bUufx1D3K2uOJIqIouEpm.6THPqR",
+    "etag": "8e15479697564527d601c18d9f373c0f",
+    "size": 9522
+  },
+  {
+    "path": "spectra/07351fab-884c-4651-b3e8-3e3352ed6712.json",
+    "version_id": "ExTDPbX55n79hMcnNO9ZOK-avRiMfhN",
+    "etag": "f17e5cf734639ba58b77d7a915cd4b36",
+    "size": 9489
+  },
+  {
+    "path": "spectra/07d99265-51cb-4025-ac47-9071948cbfb9.json",
+    "version_id": "6kieT1JhOCgIPx2muiz6BSBj8NXbEvP",
+    "etag": "54baa80b6c684d07664c86c94cfafd55",
+    "size": 64896
+  },
+  {
+    "path": "spectra/07ff40ca-6c1c-40cd-84e4-c680c6bc2921.json",
+    "version_id": "z2Yca9UINZZWQ8aIhzB08uxoU1RmHCM",
+    "etag": "bcf7dafccc929d34fd8551f3723db30f",
+    "size": 9467
+  },
+  {
+    "path": "spectra/081d2f98-5869-4f31-878e-8a9ac5559f9c.json",
+    "version_id": "D0tyl6EGtmvOyBmvuRjuqfHzpeRlyt2",
+    "etag": "73ac59717c52959238377b342f6b08fe",
+    "size": 9908
+  },
+  {
+    "path": "spectra/089a97ea-9173-48da-b75c-2833a00edc3b.json",
+    "version_id": "EykLsqip1KZVpCavGwX3N9nMn8fnOmz",
+    "etag": "1bbc57026cf51f8bdf6a685b1c4b9123",
+    "size": 9526
+  },
+  {
+    "path": "spectra/08e8ce78-88a8-4f17-81f1-93ae11c7d525.json",
+    "version_id": "HrSaqBCRoVrrzak.l-uqLU6TuSXZ-bS",
+    "etag": "4a53a919d41770675a84640e31e2376f",
+    "size": 22960
+  },
+  {
+    "path": "spectra/09d08ed2-a1d5-4dd9-9024-b8ed205bb624.json",
+    "version_id": "iaeds3rIy10.SDzAei.QheIqZo61q4J",
+    "etag": "313dace3d02d13eb53c3e3d88734adbf",
+    "size": 30966
+  },
+  {
+    "path": "spectra/09dfdce9-a644-4db0-8d26-065f52cce19c.json",
+    "version_id": "DwH4niIpc5gRlv4ySi7AZJXuNiqZ9Tl",
+    "etag": "2f41eda179a8092f4b0cfbd09eb07a20",
+    "size": 9522
+  },
+  {
+    "path": "spectra/09fa4265-feb8-4af2-a297-611cf988da17.json",
+    "version_id": "VN9PI23xMmFhME.AqHKKrRfI8a47q5x",
+    "etag": "c985d9a22935cb1bb32f17fe433bf44e",
+    "size": 9908
+  },
+  {
+    "path": "spectra/09fce6d7-0a68-4f48-9773-a56e3b7db528.json",
+    "version_id": "Ukz9XAOxA.yeDxQNRNUibuJZxr.jGSV",
+    "etag": "1103512c8a6cff122eacf90f0f045afc",
+    "size": 182898
+  },
+  {
+    "path": "spectra/0c1e1bd4-099e-40ff-a810-da735aecccef.json",
+    "version_id": "Pt-8G7Y.IdGMZD9XzqNwf3gVq6jn.Uo",
+    "etag": "e34a775cd97178182c8b131b9e99ee5a",
+    "size": 9435
+  },
+  {
+    "path": "spectra/0c2930ff-9abc-4b16-8954-358635d0aa48.json",
+    "version_id": "VVvJxgNJheZQdHKKUofmYBd83lgqyuD",
+    "etag": "5652422006a3cfc15492e99a148cc9cb",
+    "size": 9973
+  },
+  {
+    "path": "spectra/0c603e2a-94f2-42a9-84dd-33a6abfb355a.json",
+    "version_id": "UVRdXP2V0iz7kM5YGihi9bgqORNDMc7",
+    "etag": "a416a3c30a77d6a1a608d930ae21d50f",
+    "size": 21225
+  },
+  {
+    "path": "spectra/0ca0c5ae-28bf-4df2-9079-95a916a45034.json",
+    "version_id": "yRGUXMOigiNZgBPcrnn5LkLTORks-Vq",
+    "etag": "b580dc627b9402323ca84bce6d18c3bd",
+    "size": 9940
+  },
+  {
+    "path": "spectra/0cced9bd-6bc6-4bcf-8671-bdfc9010de4c.json",
+    "version_id": "-jaxlwlJa1557CppgFGpeNS8y6LiIRO",
+    "etag": "056eb8fab628aa7581fc1bb06f9f2794",
+    "size": 9569
+  },
+  {
+    "path": "spectra/0cdfa8df-6df5-422e-835c-1be8b8f0c9c0.json",
+    "version_id": "74tv-u0A9yCZC.d0K7E55BxjZEGVlml",
+    "etag": "9f89d2eb0d61714b90ec26ed89e9e4a3",
+    "size": 64890
+  },
+  {
+    "path": "spectra/0e9e85af-f179-4a45-8362-d5d8d4052e6d.json",
+    "version_id": "uZvUffHmZhnUmSAgYXHEBRcemnVjQ5N",
+    "etag": "19002532f8b268eb0ac2b96c0c340876",
+    "size": 19659
+  },
+  {
+    "path": "spectra/0f6aeaac-b2f9-481a-9926-7a39e2d74b4b.json",
+    "version_id": "IP4LyHY9SuTI8i2CxOu8O5CDxQuRU9P",
+    "etag": "997d71c26c87788ab76b0dd971b62c85",
+    "size": 9591
+  },
+  {
+    "path": "spectra/0f7b6a7d-74bd-4c7c-8174-17c4688b06db.json",
+    "version_id": "GFmzpNzsgxW.elOeHwHL1P238SXUJff",
+    "etag": "105a789821f3db70770248fa5df74c03",
+    "size": 9526
+  },
+  {
+    "path": "spectra/0fce5520-89ee-4e25-87d8-3cbc9261f786.json",
+    "version_id": "g1dJ2Wzs9G8j7g8yejDKDgEoX8fBtXV",
+    "etag": "d990511740538e84cd2fd3026430b160",
+    "size": 9928
+  },
+  {
+    "path": "spectra/0ff417c9-84be-419c-976a-3e1ceef71752.json",
+    "version_id": "Edwfk-8mtSy5Dwm93gUk52rHgaz4Mkq",
+    "etag": "4e0dbb1a0f306615ed6b31dacf6d542d",
+    "size": 9324
+  },
+  {
+    "path": "spectra/1073082d-6a4e-4db2-8578-a9474a581962.json",
+    "version_id": "1cmIJAlJ85esG2vPX1nDKX6Pw3Y0jBb",
+    "etag": "520525d6cb26959e6a1f330c83f978c5",
+    "size": 22960
+  },
+  {
+    "path": "spectra/1090fea2-94e6-45eb-a35b-730428813573.json",
+    "version_id": "a5IXkz7HyM5gNniPuHhnTkMLK8HjX1N",
+    "etag": "6206ac42daa551ff462762bc81e9d349",
+    "size": 9805
+  },
+  {
+    "path": "spectra/10d76ffd-9ce1-437a-91ba-acd97ea01b6c.json",
+    "version_id": "M1scMNg0L4DCCOK33UUyWyAU.yRKIcs",
+    "etag": "38f806bf146124407ce2d657445c0c6d",
+    "size": 9467
+  },
+  {
+    "path": "spectra/10e7bbe3-c8de-4e09-9af0-a58e29befb06.json",
+    "version_id": "DE.7KJFdtSfbBGkbSDSEhvQi8reQGxa",
+    "etag": "6e301f035447617c810f841bdc25b534",
+    "size": 9697
+  },
+  {
+    "path": "spectra/1165196a-c38b-4dd0-9908-09269704fad2.json",
+    "version_id": "6XyiNCKHwFHeSVihHms7HJeGrQbALml",
+    "etag": "6a19f85a13e0dca01409d8fd02c0b6c2",
+    "size": 64896
+  },
+  {
+    "path": "spectra/1197187b-a1bf-44cc-9951-7b7815d31ec1.json",
+    "version_id": "htbb8RjrCEb8KaCr8H8U8Y9DuRYm5uL",
+    "etag": "72e7a286bbde9dcc520e310000165cfb",
+    "size": 64890
+  },
+  {
+    "path": "spectra/11b6b855-eb6d-4898-9036-f33c9c55a2e3.json",
+    "version_id": "4a-Jjo5PurxwpGuI0ZznW8DX29dcgIY",
+    "etag": "8df325b4179cd7d5e0e90b9d19d16d51",
+    "size": 9506
+  },
+  {
+    "path": "spectra/11e38c3b-a5e6-4478-8298-d95f9c489347.json",
+    "version_id": "SJQriEGCR9D06aSVPCg5LtD6m7IWPOm",
+    "etag": "5a01d653c66dc9fb58be016b19937591",
+    "size": 35340
+  },
+  {
+    "path": "spectra/1218b86a-203e-42b5-a804-025ad1887c50.json",
+    "version_id": "r6lVOAwCaHZY5VTle.SR4xeTTHsY.M3",
+    "etag": "795f70af9ab656da3c982cac4600c24c",
+    "size": 19659
+  },
+  {
+    "path": "spectra/124dd4d3-292e-4f5b-b3dc-f4199092a407.json",
+    "version_id": "6K.FhU3.ytY9iktOZWsmmbRY22JA3te",
+    "etag": "10eed303009ea978f0f7e1bfc21131bc",
+    "size": 30966
+  },
+  {
+    "path": "spectra/12a366d7-25ff-41c9-ae3e-2be92f63b68b.json",
+    "version_id": "xM.HFQeEH8Vz2xjonq23GJWTmVYShKE",
+    "etag": "b497da7b518e3f8eb572e5feac31b9ee",
+    "size": 22787
+  },
+  {
+    "path": "spectra/12da3448-bd2b-484a-8fae-e65b3fde18d8.json",
+    "version_id": "zfCST.G3e5NoNOos3O2q65YFG9qeAdQ",
+    "etag": "920389132dcedd2c13bee159558d4e88",
+    "size": 22960
+  },
+  {
+    "path": "spectra/133cdf33-5de1-4c3e-b30d-74ece604ab8f.json",
+    "version_id": "H0ErK5n-iBT2RLjAva3v-xmLbmZmt-1",
+    "etag": "16c498cba9cddbd7deb0758a22c57dfc",
+    "size": 26836
+  },
+  {
+    "path": "spectra/133d89b0-495a-47f8-9b39-da00937563d2.json",
+    "version_id": "km3isZJpUl-iLBZgNFDO-y6BtJcqzqw",
+    "etag": "66892d44bd6a9aaf9e2ab47da66a95d3",
+    "size": 9973
+  },
+  {
+    "path": "spectra/139ebbde-0241-4e46-850a-9e838fb2711b.json",
+    "version_id": "yrT3oYKdHCnkXNFpENE5YCyjx2sPGlH",
+    "etag": "f946c49331bd3dfd246877de5b415a4e",
+    "size": 35340
+  },
+  {
+    "path": "spectra/13fc792e-944a-463f-ac94-48728455e1ca.json",
+    "version_id": "F3aDBh34j4CKihLO1b1hDJzM7zMB3ct",
+    "etag": "e6bf599729f251a7816252cf92e3d157",
+    "size": 9522
+  },
+  {
+    "path": "spectra/14475136-71ca-46af-9cb1-59c7306b59bc.json",
+    "version_id": "BcSzlB7EGl-hvj4oXAvtIwHVFN3GFr0",
+    "etag": "68c0119ee890b9fc5614a2c81f1b71db",
+    "size": 9868
+  },
+  {
+    "path": "spectra/150c316e-bcad-48ff-ba9a-a5ff28d46aab.json",
+    "version_id": "DN0FBtOwMvfLRfHgwoyfs.ADISPtMV2",
+    "etag": "dd7c63320fd5fdce272baa11a5acc1b6",
+    "size": 30966
+  },
+  {
+    "path": "spectra/15a9269c-fcb5-4c41-ae21-293b2ea6cad5.json",
+    "version_id": "GoC0KCq234OLn-SKRZjjoj7wva5dryG",
+    "etag": "4bb7e354b20846fe36ceadd4cbb7666b",
+    "size": 9506
+  },
+  {
+    "path": "spectra/16c8e994-a298-437a-8121-ae2f2161a31f.json",
+    "version_id": "m3OZli2O-GzUCUDB9R4T3opqsuX966W",
+    "etag": "cf172f38078d3e5cc9fb7a5bef237f9d",
+    "size": 182289
+  },
+  {
+    "path": "spectra/17bf5a43-e569-4e22-ac8c-902ba1bfcad5.json",
+    "version_id": "rKQ8Try2atpUFg0bUFC0UMLhFcCbqgb",
+    "etag": "e6ee3bdabfb17b86b5856a3f3a48cd03",
+    "size": 9155
+  },
+  {
+    "path": "spectra/18d40fcf-86e9-455c-b80b-5ee5591c8c2e.json",
+    "version_id": "qWZu5b.mHRJgUom0bNwUFF2M3ZqHKw4",
+    "etag": "4d198a3bc65d30c58e9efee95d40cb79",
+    "size": 9877
+  },
+  {
+    "path": "spectra/18e7c934-eda9-4cea-a302-67787b7b142a.json",
+    "version_id": "loGfoxUddHZ0mpzDqHfvYS4gwGH1b8T",
+    "etag": "3355c55dbab25dc7585295918c353c8b",
+    "size": 9901
+  },
+  {
+    "path": "spectra/18ffa1ac-fe8d-448a-8c30-2d1809a50ae1.json",
+    "version_id": "69EHtTixheB9Wd.O.L7jXWBmr5coDGM",
+    "etag": "aa4080fd73a6c8b5be2a992227e7d5c8",
+    "size": 9928
+  },
+  {
+    "path": "spectra/19d1f4f1-42ae-4ef8-a3e4-8b8e3ab61e01.json",
+    "version_id": "x6Yy5v5K3uxrHsr7XQZ1RNoHC2Bj.Cn",
+    "etag": "c1de3d8fd3721adc4e00a4dfe36a0987",
+    "size": 22787
+  },
+  {
+    "path": "spectra/1ac5a9a4-351e-438e-b4cb-8aea6fffea8e.json",
+    "version_id": "NQkY9IL68YHoEsVPw7b9-38wmdN2h54",
+    "etag": "970fd6ea20a9a6db9f4a8c1bd9fb7586",
+    "size": 9526
+  },
+  {
+    "path": "spectra/1b1aa15d-df8b-43a3-8c4a-de83a68401bc.json",
+    "version_id": "wo0Ba.4dSB83MIoQA.nVkSw4oDdDNWg",
+    "etag": "1ba37a0cc77085d53558512f11796f99",
+    "size": 19659
+  },
+  {
+    "path": "spectra/1ba0d683-9de5-41d5-85c1-0118a49215b1.json",
+    "version_id": "1dmLnWPqTzfikmVgx-sbLMO9MXVejvt",
+    "etag": "97f506349378c8fa92647e082e6e9b90",
+    "size": 9884
+  },
+  {
+    "path": "spectra/1bf408cb-36aa-417a-ad96-892de491e77b.json",
+    "version_id": "AiF0NRQITa6dPi3s1nQDX7xb5WXq0iO",
+    "etag": "8dfff7608d553b009fde3f225647ef36",
+    "size": 9446
+  },
+  {
+    "path": "spectra/1c539863-da1e-4d29-8cd3-ee95bc85b698.json",
+    "version_id": "Sipf0dBZVwUYgdgIcogLQ7YhrQBMLcc",
+    "etag": "9aab452ad42b834bc6426cfae656d02c",
+    "size": 9886
+  },
+  {
+    "path": "spectra/1d921d55-6add-4664-97ab-035b8304d6b9.json",
+    "version_id": "t9kGsJAaMQ6FiC6fTpeK8Dob0l.dET1",
+    "etag": "21042216cb680e5b9dd7cf35b7b3e55b",
+    "size": 19659
+  },
+  {
+    "path": "spectra/1f5bb6b9-907e-44db-874f-9bb74c888fc7.json",
+    "version_id": "NwibPgen28Njiq99jJjGiM18cWeIpRQ",
+    "etag": "87f154206cb1f521ca3fd1bbd713ee49",
+    "size": 9526
+  },
+  {
+    "path": "spectra/1fc745d0-c713-4acb-b709-7afde2c099b6.json",
+    "version_id": "Yf5u4ZB-dqlm5nkaw0a5NGAQr8Lj.js",
+    "etag": "b14d8a323bf4e9481b78f93910e2adfb",
+    "size": 9928
+  },
+  {
+    "path": "spectra/20388bbf-7222-448d-97ef-871c4b26e879.json",
+    "version_id": "Ht-EnfqNiF8ZR.wd8Br.kv8CtpdIq0.",
+    "etag": "f4ca7e4c48d5bdc932bdeea350625763",
+    "size": 9908
+  },
+  {
+    "path": "spectra/203d4f44-d641-44b9-9d2d-cbe5f4c3caf7.json",
+    "version_id": "vQGRCiDhGeyPoFVgkgDVeqft5MgddI8",
+    "etag": "543c3c758b0d57351eca58dc9798cecd",
+    "size": 64384
+  },
+  {
+    "path": "spectra/205bafef-9c0d-408d-ab1d-034d4b6061a7.json",
+    "version_id": "HzcDZJpzIm.d47zOuJqCBml65lxESm4",
+    "etag": "3c1670c867e868181cb31650d6a8097c",
+    "size": 9489
+  },
+  {
+    "path": "spectra/2065c045-3bcd-4bd0-a484-90f23ac3b33b.json",
+    "version_id": "fouHd96ztrhbXN7JKh7sCSpaC6Gjtdm",
+    "etag": "bf122cd2ad654a391c409dec2e64ea34",
+    "size": 19659
+  },
+  {
+    "path": "spectra/20d657ab-c6aa-45f0-a68d-2c37386f9cf9.json",
+    "version_id": "eXopgaueObBRHMdm4qbbqpA0WZWVTzL",
+    "etag": "0c09838fd1725cbb6bb7c8b39581a676",
+    "size": 9554
+  },
+  {
+    "path": "spectra/2117f2c4-19a9-4d18-bef9-a762ae961199.json",
+    "version_id": "J9ZC9aH-TzjCSuPgvVxztkR2ccRbvk6",
+    "etag": "5bf819bc0657bb451b63231a7956c614",
+    "size": 19659
+  },
+  {
+    "path": "spectra/211bda55-661f-4970-a0db-345abb0dd5ea.json",
+    "version_id": "LKqPFLAEb-kKHU6ouZ-3fzY9D-dLre3",
+    "etag": "a3fcca9ef169dd797198871e362546d7",
+    "size": 9886
+  },
+  {
+    "path": "spectra/2153fa26-12e1-4d7e-8bd2-b379705a91a8.json",
+    "version_id": "WAVXSV6qy9cE.w48xTEjVoz8xF6fqfY",
+    "etag": "5f83057dd976fd04f29b4b117cf6e17c",
+    "size": 64896
+  },
+  {
+    "path": "spectra/215c1c87-8c3e-416e-b3ec-8543bea2ae5c.json",
+    "version_id": "oVAlUtpwgPUIenn8452AISegnrZzhdi",
+    "etag": "bcd52b5528ceb520f42d03a0d964a028",
+    "size": 9877
+  },
+  {
+    "path": "spectra/2171b4e8-7a67-45c9-841a-2ca7bc8f5ba8.json",
+    "version_id": "V1xH.u-QsHmc-qr0TGDigNlSsUNUMmq",
+    "etag": "c5051aa9b141e261974385ba435edb9c",
+    "size": 182289
+  },
+  {
+    "path": "spectra/21b1e553-eba8-44be-a711-7771b20a4fe8.json",
+    "version_id": "aoktq7rLupXvPwleONkaVtTNH0V7rq2",
+    "etag": "f8d15bfe97548e2c04a14b87779a081d",
+    "size": 9502
+  },
+  {
+    "path": "spectra/220bc7c3-082e-462c-97e6-50435d28f905.json",
+    "version_id": "Cn4IJNYl3nlSpTyxC0b3e4e4W7HbVaL",
+    "etag": "3e098a3a0b4b0a6e8c063242dfca9371",
+    "size": 19659
+  },
+  {
+    "path": "spectra/2355c54d-0486-4522-aa73-df8948925bd5.json",
+    "version_id": "MN0cvs-M11m-qA5jA1dOQs5IH5v99Ir",
+    "etag": "adb8d33d748aa1740002164c83dbaf20",
+    "size": 9928
+  },
+  {
+    "path": "spectra/23752332-3611-49bf-8fd7-1bd53f8a5c50.json",
+    "version_id": "1WeIPFcJeZSXlhJAJTzdB5xzNXJ3MbU",
+    "etag": "4413cc54570b64d9bc77fdef59d7da38",
+    "size": 9901
+  },
+  {
+    "path": "spectra/23978101-36a6-435f-8c81-b11d45119a4e.json",
+    "version_id": "ubt4HeXkMB12.YHiqZJuhltDZN0ATD5",
+    "etag": "cb0abba9c4c155180263834c2895e149",
+    "size": 9522
+  },
+  {
+    "path": "spectra/23ecb561-7247-435c-a29d-3503a7d1935f.json",
+    "version_id": "quWTH0jhl23FwO6mbeNBZ95DLSRspoe",
+    "etag": "c51f4e731343f946ee881c321930a4c3",
+    "size": 9554
+  },
+  {
+    "path": "spectra/24277730-3d0f-4cf4-88e0-b4d9e36e0cdd.json",
+    "version_id": "guYcB8BEGDudgFUIy56-6BLQ8gYnZvK",
+    "etag": "03a17fea2d5c5f821fffcedd1f4d72ba",
+    "size": 64890
+  },
+  {
+    "path": "spectra/247a2563-0bc9-42dd-8498-c44c4d914ad1.json",
+    "version_id": "CmKZ2s43KRt4.B3lpz1dZFE.Zs9jIQd",
+    "etag": "5eb418b8d2864b45c33d9c096559d11e",
+    "size": 26836
+  },
+  {
+    "path": "spectra/24ac7e29-573a-468c-aba9-0b219703aaa5.json",
+    "version_id": "SBwS0E7wR-4rZYbXpLvVT6B5.OnqNsn",
+    "etag": "0854e4f5cf1d20b290ed649542a655f7",
+    "size": 26836
+  },
+  {
+    "path": "spectra/250780af-5b3d-4f2b-8978-035a15c1895c.json",
+    "version_id": "Hm-v94G6x8RsCVAtzcm5Dbpcb9xYwc7",
+    "etag": "de6e0906ea7b70f34940bd72e539d2fd",
+    "size": 9697
+  },
+  {
+    "path": "spectra/2557c535-353c-48f9-8e33-8a994c1e1141.json",
+    "version_id": "SfxxgwirzUpyWBrNYDSBvwp-KaXANSr",
+    "etag": "f3cbb53dbafa0f5a9ff4b6a32fb13bb2",
+    "size": 64384
+  },
+  {
+    "path": "spectra/2585b872-0af5-4645-be7e-196c9609d134.json",
+    "version_id": "bIzyvGVQK26pbrCPaDyY.PtWtQ6a1KW",
+    "etag": "68b8a1f9e26b77041be238d7cd7b378a",
+    "size": 35436
+  },
+  {
+    "path": "spectra/25a12d4c-b069-4d1d-87ce-af832acf42ca.json",
+    "version_id": "QrI1a1qfcJZgFrVD1W96wQeHrpZZy32",
+    "etag": "00a5fd0425bb3b23cd9a434feb796413",
+    "size": 9513
+  },
+  {
+    "path": "spectra/25d7ac45-e6e8-4c71-89d5-6f3cf0959d17.json",
+    "version_id": "FcbtJUMfT5mt2U00XWEtbEZpejdiw.5",
+    "etag": "b47a4646c10bf9718bccbacfc4472ca6",
+    "size": 9973
+  },
+  {
+    "path": "spectra/25d7ca9a-ebdb-46b8-8bfe-fd2f7b7701fc.json",
+    "version_id": "OFfzbNPoQKE5MB1NlXQEJH6AKXQbG.A",
+    "etag": "a90655bbe92bd5b7c35fbb91543c30e0",
+    "size": 30966
+  },
+  {
+    "path": "spectra/2634815c-1609-4abf-a203-b2cbbfcabdc4.json",
+    "version_id": "MxDfxMPTF8ZQ3rMfocy5TdoSHCDViiX",
+    "etag": "3e0bc2de9d007e9ba03e15721aa0fffb",
+    "size": 9506
+  },
+  {
+    "path": "spectra/26963a59-3e1a-427a-a7c9-a02188e5c713.json",
+    "version_id": "ZnubzlvHzBStL46xcbt9GSHrl2yLxrr",
+    "etag": "49d128bf43c10cf1d89a2f50577efd75",
+    "size": 35184
+  },
+  {
+    "path": "spectra/276670d1-0ee6-4c59-a7e8-c13d8002084f.json",
+    "version_id": "DANdAzK5o3ZaIJNewAxnfTgdBnxZYe4",
+    "etag": "12e3745c562836a77ea4a05df097d3f7",
+    "size": 9605
+  },
+  {
+    "path": "spectra/28620c0a-b754-48d8-a9f5-7160cfebc385.json",
+    "version_id": "mmX.t0Y9T6Q9NLlmPZqdGS51yOhbOa2",
+    "etag": "911338d2b19376a020ccdeee78a86f66",
+    "size": 30966
+  },
+  {
+    "path": "spectra/28b27b9c-e637-4830-af11-c3e033d31953.json",
+    "version_id": "AQMWAJOO5PvPZuAsk3b3b6eHqsp6e.c",
+    "etag": "3d17da1f31777df95901e19e45d631fb",
+    "size": 9908
+  },
+  {
+    "path": "spectra/28b99841-5029-4acf-9f7d-56c9cd91895e.json",
+    "version_id": ".Nh3hw0OzRC8UvIdtTJ8gATIz2RDYZS",
+    "etag": "f2052f1bc85d510018b49cc2993e8024",
+    "size": 9928
+  },
+  {
+    "path": "spectra/28ba4bfd-b9ea-4dd2-8fd9-3f1ded7af202.json",
+    "version_id": "O22yP3qQ0-LcosPIEQZhL6N1QMLKk0m",
+    "etag": "84392fe6d49e20b7c1154799742cc8d4",
+    "size": 9155
+  },
+  {
+    "path": "spectra/28f5ffb3-6494-4098-9218-cb5ec135adc0.json",
+    "version_id": "tcEv.vvW-9KAQ4TYM.dDl0UMf3-Po-t",
+    "etag": "87f4d00f981e699a8c85c4238661fc49",
+    "size": 9940
+  },
+  {
+    "path": "spectra/2aeceaa6-547f-45b9-a99d-f17d83fef6f7.json",
+    "version_id": "5sOTponXrF8Z2LFVcTk8lqCo34kD8eo",
+    "etag": "60891912a043e2c60cc37752e3e8a4de",
+    "size": 35184
+  },
+  {
+    "path": "spectra/2b151f81-e1af-4932-9e70-9cc8fdba8ce6.json",
+    "version_id": "JURJw4oi3OOGLaLEILVoR6kmX2uzp2S",
+    "etag": "0f9971ea8a5af2e2340a18c0f444ad6e",
+    "size": 64896
+  },
+  {
+    "path": "spectra/2b1df11d-91cf-4435-b8ea-a29a210c9ae4.json",
+    "version_id": "Eoyme4cAeKos0i-BoTJagpal6e-OCXU",
+    "etag": "e9e19a10393c8f353912222b38d139a4",
+    "size": 182289
+  },
+  {
+    "path": "spectra/2b4fbeea-0618-4db5-929f-a9c8af8bf7d5.json",
+    "version_id": "ncnVhFXosPv0PaQq-kE9rlbxiqStvve",
+    "etag": "d2aa6df9bfda2b2dd8e48a2821f1c182",
+    "size": 9526
+  },
+  {
+    "path": "spectra/2b507942-7fb9-4ec9-8a90-3f5aad354d7b.json",
+    "version_id": "7GCmb6Ko5-3Xa-zir5RgKh8ExlNvRWW",
+    "etag": "efe9eb1fc065b0bd6a473127b6f3a5e4",
+    "size": 9973
+  },
+  {
+    "path": "spectra/2bc6bc4b-a0ba-4ed7-83fc-48b3fb81ee8d.json",
+    "version_id": "yxA0fpR8NhtCqIOJS07v5amAlUTAltN",
+    "etag": "0831d4ddfaa74ce835a6aeafd646f574",
+    "size": 64384
+  },
+  {
+    "path": "spectra/2c4ce05c-2a9b-43bf-bc88-e42ae653a6bf.json",
+    "version_id": "vHF2qnIvztr5UHVnajFKbL9j1PazMUJ",
+    "etag": "c5d48eab0d7050ef41a36c7299760c9d",
+    "size": 9928
+  },
+  {
+    "path": "spectra/2c96556c-3fdc-4e15-8f66-e91d2bbdb5d1.json",
+    "version_id": "PzJ3t-Qq277B7hUYe-rSjyrIm6D0d04",
+    "etag": "bec26c7b5877ebe4364e1975217c25ba",
+    "size": 19659
+  },
+  {
+    "path": "spectra/2cf142bb-3fcd-49c2-b446-d1b287d97be7.json",
+    "version_id": "TpXYzFKiztfCF8HstQW53lOgwMs8OYT",
+    "etag": "754d24b2fda4a4de6ac2521078158ad9",
+    "size": 35340
+  },
+  {
+    "path": "spectra/2cfbd689-7401-4075-af7f-883147421a21.json",
+    "version_id": "YNsIMxdob9ukP8vnOz0A57qRXguskzL",
+    "etag": "972fb12cd4e49184b0a06396e0ed3726",
+    "size": 21225
+  },
+  {
+    "path": "spectra/2d6f1e16-bb26-4721-8a33-3455964ca31f.json",
+    "version_id": "07ykOR7S-4Q1kn7Ao3KnCfFLH0dG2JX",
+    "etag": "2b157b99f4460ed5b4b23cc01850f46e",
+    "size": 22787
+  },
+  {
+    "path": "spectra/2d84b8ad-037d-4852-b34c-3536f5e7f0d9.json",
+    "version_id": "O9W1220mYQfPTxASSLqnI8146SHDA22",
+    "etag": "ea530feff346a81f263ce0a4e040423b",
+    "size": 9822
+  },
+  {
+    "path": "spectra/2d971b45-22e2-49bc-81ad-5de348d39d9d.json",
+    "version_id": "eN6Ih8QDoeeErqgYBYhna.EflvdAgqw",
+    "etag": "45f5c6aa3416be03e94669a73d4d4e5c",
+    "size": 9884
+  },
+  {
+    "path": "spectra/2e251515-5051-4f8c-9bac-cf22e6724a23.json",
+    "version_id": "bPj-sKuEs7o14tLXv.wL6Vnds2XFZLC",
+    "etag": "0f76a54c4ad84804db94699a2b538442",
+    "size": 35436
+  },
+  {
+    "path": "spectra/2eca21b2-b7e4-45fa-a61c-fb0be660c0f3.json",
+    "version_id": "g83z.Wk3kSCS-yNpfeBbASsYrOL.daU",
+    "etag": "3afb382e7b6ef2acd9e4b9ffed63c611",
+    "size": 9908
+  },
+  {
+    "path": "spectra/2f03b6bc-3daa-4f9b-86b9-f6c2c9988356.json",
+    "version_id": "zqaDrp3L45YJd6mkGoPNdnzTaAU.dhG",
+    "etag": "ea8dc607c43625b1c952fec3ce34870f",
+    "size": 20908
+  },
+  {
+    "path": "spectra/2f0da846-6128-4d81-a5f0-16d56a1fe34e.json",
+    "version_id": "IcqTZrKem3V6LHSa8dY91ZLW24h.oUS",
+    "etag": "8b2c68764eaa0f74a5b1a2c57e2cd42c",
+    "size": 182289
+  },
+  {
+    "path": "spectra/2f21d303-2c67-40bd-92a2-b88ab16b7d2e.json",
+    "version_id": "XIZeozgEdYqP9nxDzME7W8t2jDC2slv",
+    "etag": "be04bda9f34d1d82ce1671ee3fc0cf98",
+    "size": 10519
+  },
+  {
+    "path": "spectra/2f422d10-3ad9-4966-b760-04597a7cb21e.json",
+    "version_id": "vv7Zzan5Pi8nnGDHf2Js062TgdhYWQM",
+    "etag": "198627846c05f380941f79f949243caa",
+    "size": 9966
+  },
+  {
+    "path": "spectra/2f707c33-c79e-4f0d-84dc-8702ae18fd90.json",
+    "version_id": "b9eF3EhtBWj6PgEDQbj1xLRp7t1IZT7",
+    "etag": "cfb32fbb0aaee577e0d703609d107b50",
+    "size": 26836
+  },
+  {
+    "path": "spectra/2f8a36fd-9776-434c-ae21-6ddd98424072.json",
+    "version_id": "Tmc3qcz9oYAyD-pD96LQzfcJxh0e87q",
+    "etag": "30ff5e1c31bc577b3cea5440cfb65e95",
+    "size": 22787
+  },
+  {
+    "path": "spectra/2fc5e4ab-9ebb-48a5-854f-04fa6ee0e68e.json",
+    "version_id": ".WkpYgZf208e.Ywg5-PBaF1eULZMQQr",
+    "etag": "3572f611f4b8d8fc4053fffb12f5ee97",
+    "size": 9446
+  },
+  {
+    "path": "spectra/302c9d91-528e-404a-a047-b756285679a4.json",
+    "version_id": "QFeYkKPP8H11BsUgGck7IZ7-6Kv.bU4",
+    "etag": "9502b314135e9039e1d2f549a8705752",
+    "size": 22042
+  },
+  {
+    "path": "spectra/30af4b3e-bd3c-43f9-a17c-392030de3127.json",
+    "version_id": "2-B70DsyKRXczdXLtMsR3UTuL0wnzBx",
+    "etag": "137ad193f69533c084df25adef241fd2",
+    "size": 9155
+  },
+  {
+    "path": "spectra/30c127d9-8025-4dfc-a520-b015e4fa7ada.json",
+    "version_id": "Hcf2y6X3VwiAgMZcJQ1Q6pK.rVIyX9V",
+    "etag": "f008126b421362fd4b07033eb1a18cac",
+    "size": 9928
+  },
+  {
+    "path": "spectra/30edff44-d328-4b9d-8a9a-4441d9536816.json",
+    "version_id": "d8n0ajMQVx4sgz1W56dBMbROYMywxKd",
+    "etag": "2c0284ec508047f48cfbc10fd5338e28",
+    "size": 64896
+  },
+  {
+    "path": "spectra/30fa661d-c290-4499-898c-65990e40cc4d.json",
+    "version_id": "wVf4l.a6epDyUogJ4dTZCxzwfbqWIph",
+    "etag": "0b2b12deb271c7fef0728ad6d9ecf5bb",
+    "size": 20908
+  },
+  {
+    "path": "spectra/313aa85f-c9e5-408d-bfa4-71203ec75da4.json",
+    "version_id": "4VTpN4eBwJRJMAX7.WL92YOzGpr3oLg",
+    "etag": "d04c82abad1822983a15ac559cc65ae1",
+    "size": 9908
+  },
+  {
+    "path": "spectra/313b722e-1fe7-46de-92e8-08438dfab84a.json",
+    "version_id": "BatGRwF7EtmX99pcfK3oXCQ39vHS4QB",
+    "etag": "9b948cd35ed3e95723c2f189b080cca8",
+    "size": 9506
+  },
+  {
+    "path": "spectra/31703898-286d-4dd4-b86b-c457bf3a883a.json",
+    "version_id": "Vzwk5yGqSI0wvy71-JLiDFCQqksoR8h",
+    "etag": "9a34bade49b09aa3ac111808b3d18969",
+    "size": 182289
+  },
+  {
+    "path": "spectra/3197fbfc-08a9-4eb1-a801-9a92c3c125c6.json",
+    "version_id": "2K6OK6UWN-6u4aXvWz3FVZFsM.nlTue",
+    "etag": "09148a5e97e5c53fa1a92c25b30e68a6",
+    "size": 9435
+  },
+  {
+    "path": "spectra/31f6b9f1-0eed-448e-8b12-aa35d458e828.json",
+    "version_id": "9SVRQqPp2u9aIQtx81Yo2F2hQVxv8KX",
+    "etag": "b6afb0b1493b708dc600d1a01c935929",
+    "size": 26836
+  },
+  {
+    "path": "spectra/32557197-69a9-40d2-8ff3-318f33645ec6.json",
+    "version_id": "xaCgrspmplPagJgSCkBCPHnfffkeuYY",
+    "etag": "862021479addb1e0f8fbd4ceabd0be13",
+    "size": 9973
+  },
+  {
+    "path": "spectra/327e0955-658e-4a47-9fed-819cdc26622e.json",
+    "version_id": "7D3FtpzZgX6NM3vEtovHoEFe4l.n5.v",
+    "etag": "07435bea74e45f0be33a6bcd101da833",
+    "size": 64883
+  },
+  {
+    "path": "spectra/32909961-f6b6-4f5b-99d1-984a9e531a70.json",
+    "version_id": "OsbP8EjytMvqsYhkCSZlziteh5W8l8O",
+    "etag": "6f81ab9ecb2dc55834f63bc44145bf55",
+    "size": 9522
+  },
+  {
+    "path": "spectra/33e82dda-a031-41d7-993a-6f184ddab253.json",
+    "version_id": "RIyY9wsVsjwOxE.Y-rfpOv6138EpcLH",
+    "etag": "00982da4042cde142c764fb3d6c5bd61",
+    "size": 64896
+  },
+  {
+    "path": "spectra/33f5a809-881f-4a24-a817-9b29da98bfb9.json",
+    "version_id": "zc9El6yhiLK9HlrHeLZmM..ZrHzSr7n",
+    "etag": "ba713df3412e48530958894c776c39c5",
+    "size": 35340
+  },
+  {
+    "path": "spectra/3418cafe-6972-4a50-a2c2-f95fe4c596d2.json",
+    "version_id": "MSwvzEaepsdJmAYt81isfgnHLKkZdz5",
+    "etag": "55e29827ef4642f22c64ecb76e3108e5",
+    "size": 9868
+  },
+  {
+    "path": "spectra/3437a74b-4440-447a-aa7d-422011d2c558.json",
+    "version_id": "5VWZL54z8kpbMr3app038XsDY.o4HZl",
+    "etag": "e04b28adb40dd0ff7605bf56a2d527ab",
+    "size": 35423
+  },
+  {
+    "path": "spectra/347e04f6-807d-48bc-904b-f72cbf83aa03.json",
+    "version_id": "RN-00f1kKU8sb95TgN96GatQoC063Xg",
+    "etag": "cb5f6f4830bb9614e3ca084baec8e201",
+    "size": 9868
+  },
+  {
+    "path": "spectra/34e5f9aa-196c-4466-81ec-cbc239bc2a3c.json",
+    "version_id": "KvdrGqilW7x18nSxADtoT1HnS6Pk.Df",
+    "etag": "7b109be6fe10214f21e52752df1c7dfb",
+    "size": 22960
+  },
+  {
+    "path": "spectra/353b2ca3-a682-4199-ad24-9c9b0c3a79ef.json",
+    "version_id": "DmGJf4Lpyv9xYayHA7DHdqUj-7bT0gi",
+    "etag": "158c855acd8d544a6c7bc94ad019d693",
+    "size": 182289
+  },
+  {
+    "path": "spectra/35c3d419-2912-423e-85ae-4e195649a29b.json",
+    "version_id": "425ab8sTfdiXbkd.0H6SuZJhaDnMh5l",
+    "etag": "e594839198f740d5b88ce3106dc41999",
+    "size": 9805
+  },
+  {
+    "path": "spectra/35dbf9b4-120c-4ad3-9bd5-735907b97103.json",
+    "version_id": "9UeAe3VaVg.ph-FEJAK.70EUkL30lR-",
+    "etag": "7e45917f4a4b0d30722de016c2dde082",
+    "size": 182289
+  },
+  {
+    "path": "spectra/35dce42a-1bf9-4367-b00d-3de687ab7aa9.json",
+    "version_id": "Sf4OfN567SueQajZ8JqmNwSKY2wRVuh",
+    "etag": "ad5adb3edc0b85a6fde76376f91782f1",
+    "size": 9506
+  },
+  {
+    "path": "spectra/363bca37-7794-4702-8012-c8f583c4f560.json",
+    "version_id": "e1TzpqN5qwnKzQO19kjiWYt6VD8mjlG",
+    "etag": "edc1ad1ff9f9c0284dbf5fd14941f4ef",
+    "size": 9805
+  },
+  {
+    "path": "spectra/3740e931-f5c0-4ee8-80d9-64e101f09fa8.json",
+    "version_id": "Tg.sjmc8ebOl2aJi5qKlO5eiMkEdRk9",
+    "etag": "5fadea9c01b0ba98c6e30e74def5c6d9",
+    "size": 22787
+  },
+  {
+    "path": "spectra/3791128e-cb38-426c-bff3-e267bb72737d.json",
+    "version_id": "EdFsqK.Yz9cONEUJhrszXGVKAGTNj66",
+    "etag": "5d1e9aed5ee333d69505fd46316a1d9b",
+    "size": 9489
+  },
+  {
+    "path": "spectra/37a2c551-c3ed-4a97-b5f9-274d6fdde768.json",
+    "version_id": "bCY6f6fsKVQE5EQvyE71GbS2L6UkQo8",
+    "etag": "0a444c0fb79c74042cbd318824a266b0",
+    "size": 182898
+  },
+  {
+    "path": "spectra/38bfaaa0-ab8c-4ce6-b204-5565fa390c0a.json",
+    "version_id": "FJ8db1VRDnfpRm56pVSzmWDMse.rNk1",
+    "etag": "d3e17283d2ebcd09b0efaffc7b978a97",
+    "size": 64896
+  },
+  {
+    "path": "spectra/393a2f12-1cc7-4cb4-935c-d797d060c6d1.json",
+    "version_id": "MxbJzNLIRrBCk0bu1sGjSJiBIt1Nw2J",
+    "etag": "28e672f6d94217ae0ef68a6e2bf2e183",
+    "size": 35184
+  },
+  {
+    "path": "spectra/3980f2db-59ec-484d-921b-d5fedca8190c.json",
+    "version_id": "FRSYeGDNgmoVmBtvTIuXehwDSut.qb5",
+    "etag": "4e5b7999263054bdd86f0d30e200ad14",
+    "size": 21238
+  },
+  {
+    "path": "spectra/39f4af87-4ea2-4612-a2cf-35d2c62bd0e8.json",
+    "version_id": "-LY1jy2ESuVsok0yhFRz6Tamd6yxy71",
+    "etag": "ac203cb2d59d21bdc4c115a51be89add",
+    "size": 22042
+  },
+  {
+    "path": "spectra/3a70e130-019c-4fcc-be07-13f75215a031.json",
+    "version_id": "8qBbAPQ0BBOfx4dH5sbLPIoZkuT3NAs",
+    "etag": "1fe37fe661679cdd8689aa06aba10b10",
+    "size": 9929
+  },
+  {
+    "path": "spectra/3abbd418-a1c3-4402-8a48-2785560fd159.json",
+    "version_id": "y1hWxECIezKNFz9e9IXKnBtRRGcwgA.",
+    "etag": "e1c310bc2a91030ad8fa2c9db5fb4821",
+    "size": 9908
+  },
+  {
+    "path": "spectra/3ad2eb8b-07db-4042-9b47-be3d51aca482.json",
+    "version_id": "aiVMjCdBixEOEwsl11fR1IgMtgYx1Xj",
+    "etag": "90e33c2cb4e212c893f80109441b5464",
+    "size": 9812
+  },
+  {
+    "path": "spectra/3ae22914-347a-4cae-bc98-6b285fbd7480.json",
+    "version_id": "F7VHv4sB-InAwmq2vNZV-cM-RzZBOcE",
+    "etag": "240dfb72e1d06cde6b91627346f30642",
+    "size": 9868
+  },
+  {
+    "path": "spectra/3ae6af2d-9a63-4fb5-9b95-47ae5dfbc544.json",
+    "version_id": "KwzP0HrdiPX9PHzEkBssdgZeahNUeFH",
+    "etag": "03916cb7b276b2be8ef52101279acd4a",
+    "size": 182898
+  },
+  {
+    "path": "spectra/3af0e9a5-f178-4622-a7cc-1be6eb729770.json",
+    "version_id": "hfHVu5BrfeWGO0Z.1Iiu9y4gSTpXjCI",
+    "etag": "5cb979d44d25c87383cfa3ec3b0003db",
+    "size": 64890
+  },
+  {
+    "path": "spectra/3bcf3f4e-828e-4336-be0d-285872d9872d.json",
+    "version_id": "RIFYOjUmlCePwLlc4KseIzguyGzjEnj",
+    "etag": "fb8a05c6205d40ff968252c1687cccda",
+    "size": 9324
+  },
+  {
+    "path": "spectra/3be12199-c391-4786-868f-9b8613ab6be5.json",
+    "version_id": "cCyyMb-9KfzIGPvBR94.RTVLwwKFIRV",
+    "etag": "af6c8924fa4959be9651775c418495e2",
+    "size": 9389
+  },
+  {
+    "path": "spectra/3c04e89d-0d6c-4828-bb5e-814ad773b436.json",
+    "version_id": "YPrwG.C9RD4.rjD3Y8Y840QlSF38Frc",
+    "etag": "3a132e6a21986c3a65152a16ddef6403",
+    "size": 22960
+  },
+  {
+    "path": "spectra/3c65cbba-3113-4fb4-8b4a-7652c9ecf008.json",
+    "version_id": "Fhfd9Xb45CndGAq0lwRa.vo874O-xgE",
+    "etag": "1d48ff4466e182b51d28daab194e0024",
+    "size": 9897
+  },
+  {
+    "path": "spectra/3d13617e-a847-4d29-a9a7-cc614a36d1a1.json",
+    "version_id": "BOrJyUuYgBJMrj4soUrm6jiTZhOtu3A",
+    "etag": "fe2ce54afebc986262f56f9cc8fda854",
+    "size": 9868
+  },
+  {
+    "path": "spectra/3d4a1185-bb10-4c6b-a5c7-909ad356854c.json",
+    "version_id": "g6Y1afawPmGQj-uwxBWSJycZM4awcAi",
+    "etag": "33b37972f6fecfe1aafe55d5f1db39be",
+    "size": 9973
+  },
+  {
+    "path": "spectra/3e3bf150-90b6-495c-8f4d-b79b023f6d3d.json",
+    "version_id": "uBxsOX6-B-ojyFjoZCW-HLW7SEBRQRZ",
+    "etag": "cc695a87eb26853d8cd64d17379963c2",
+    "size": 19659
+  },
+  {
+    "path": "spectra/3e7f5aad-b2d9-4a13-8719-e4aa4b00b8b1.json",
+    "version_id": "pIXpKdluksUeuSJbL9ceklW2AIuC21d",
+    "etag": "70ad59ca5368a5b3b5477ffc877e9d0a",
+    "size": 22960
+  },
+  {
+    "path": "spectra/3e864967-e954-401a-a2c3-e6aaf4a9927c.json",
+    "version_id": "TCQg6nYyoQEOtMx7m6f17EyDXS5qmp3",
+    "etag": "867bac9e74585d8aa4c50d3256d63143",
+    "size": 64384
+  },
+  {
+    "path": "spectra/3ea0bd5c-2cd2-4beb-9ed2-2caee8d0d317.json",
+    "version_id": "w81KpMdhmIUeRK6bLoY8ItIxVWgVDYE",
+    "etag": "e85a7ac48aed0713378a08300a7f6749",
+    "size": 10519
+  },
+  {
+    "path": "spectra/3f63ee5b-e6e2-4536-bd93-92c8bf3b07c3.json",
+    "version_id": "9Pzq36tVP05Zu4YGxoBm3HV9v7oTwAr",
+    "etag": "80236c8a3e1cef855e8e7e9ad24d55dd",
+    "size": 35184
+  },
+  {
+    "path": "spectra/3fa54b08-9641-4b64-b2ed-c64fcc4cc4ba.json",
+    "version_id": "5yOKsEBt3-5V5L6J0R0lxTN.WxV3CDS",
+    "etag": "f76035a186db23e1738c2c92856fa145",
+    "size": 9605
+  },
+  {
+    "path": "spectra/3fd49199-a54d-4a12-8366-718ae0933a8f.json",
+    "version_id": "o9CLvUTXwp9F7V1WUQiFLEk9Yyh0WM6",
+    "etag": "e9ee9a2cd167d5b549208202909eb133",
+    "size": 9389
+  },
+  {
+    "path": "spectra/41349ca4-ec2e-4b46-8811-a1a858b6cd35.json",
+    "version_id": "Muuu5BY9aIPKoZwSirPMD8Vd6xIt6PJ",
+    "etag": "e6b1af3e11e592459b9f6aa08e23c2f8",
+    "size": 22787
+  },
+  {
+    "path": "spectra/4157108c-2e98-48a8-a881-fab38b3de4f6.json",
+    "version_id": "c8PYBpRgwXxUg2m3Mt4SvDzCn.SIxuJ",
+    "etag": "f0c15f7dcbaa0316e8d0e52adc4785f8",
+    "size": 182276
+  },
+  {
+    "path": "spectra/4218d9c0-c1a6-4205-ad42-16348aafa278.json",
+    "version_id": "8YL0YosiiqDuEdqP.Y8bYveOx.6hTiP",
+    "etag": "db9a229f9aefe396e2c84923ae9f02d6",
+    "size": 22787
+  },
+  {
+    "path": "spectra/42f12485-26ee-4e47-81e1-98f35df6ad38.json",
+    "version_id": "5w4ZAIov0LYcEuqdusjqOZfUvbY4EiA",
+    "etag": "3dbd05e8df381fc338769f3d11bb8875",
+    "size": 9908
+  },
+  {
+    "path": "spectra/430487da-d12e-4886-bd45-efa27225d450.json",
+    "version_id": "RgU3kZZmmAl4uA7yHZpYHwcY5-cu23i",
+    "etag": "6528a3bd0a6c1538edf2d0e6f0f6fd05",
+    "size": 9435
+  },
+  {
+    "path": "spectra/44079c96-7174-4089-8986-5785b148e203.json",
+    "version_id": "LHDiKg8MaCL03xORX2ezv9iWfLN0SWQ",
+    "etag": "c7dd65910c73eab60e1a79fa362dae87",
+    "size": 64896
+  },
+  {
+    "path": "spectra/441cf54f-ed1a-40b0-97e3-c97bb38bb278.json",
+    "version_id": "nzh5NIb6JA9UM1zpPALeYLrkfi619Br",
+    "etag": "034e4aefe3a118d2a29e7ecfbe312f0f",
+    "size": 64896
+  },
+  {
+    "path": "spectra/444f60c3-3b03-4a5d-8677-0c7981f06df1.json",
+    "version_id": "HBH4fedN54OnAt0pXy1DeDwdZB8oP4m",
+    "etag": "db9caaaa03ae314ed2e8e33885903ed3",
+    "size": 35184
+  },
+  {
+    "path": "spectra/4500c9b2-2cef-4824-9198-af3687150f87.json",
+    "version_id": "4MbK3w9zHJmwaQVuKoWt396aaT7SvfQ",
+    "etag": "2dc371a62e68ccd842f4b589df0b373c",
+    "size": 9526
+  },
+  {
+    "path": "spectra/452c6276-4dd6-4aea-87e2-6c928c69e04a.json",
+    "version_id": "CHWw2vhs4gHVAzIxp0jlUXjtjgxBZQ2",
+    "etag": "3b4d2ffed30dec73cf1ba2dce346d026",
+    "size": 9526
+  },
+  {
+    "path": "spectra/45817147-0482-45e7-9daa-8b6554003c93.json",
+    "version_id": "6FHoxai-Ml6tJFIazoN5FNPt.CBcBHp",
+    "etag": "be4e21ab8d140cfdb76f8411f1773072",
+    "size": 9940
+  },
+  {
+    "path": "spectra/4593a137-c63e-4e2e-be5c-92d301d3ada3.json",
+    "version_id": "mZHwNkyn3zxWEt2RT9DmC15r1GTbrrm",
+    "etag": "38000e1c4b22d0b320e13324b1c0b59d",
+    "size": 26836
+  },
+  {
+    "path": "spectra/4656a23e-b159-40e7-8569-7c968da43234.json",
+    "version_id": ".CibQPqa0UY4.t28xZGiNUdtTbqO.86",
+    "etag": "6ed4d93e34e8f015dee3abad70ee290a",
+    "size": 26836
+  },
+  {
+    "path": "spectra/47173f9f-260b-4c8c-9ac1-6cc12e9b56ed.json",
+    "version_id": "I5Pp6UnSFflwqkG2n9CEHQsu202wfs3",
+    "etag": "51768822dff851dea5642c6854a24fc0",
+    "size": 30966
+  },
+  {
+    "path": "spectra/475d48b5-08da-4323-9328-6ee31c6eb148.json",
+    "version_id": "I6loNyM4ZNkNRjQe-KbhMA1rRqfRDCu",
+    "etag": "b7a73b48c7cf4e8e4469faf0c4f70110",
+    "size": 9973
+  },
+  {
+    "path": "spectra/482ca0ec-79d5-47db-9be7-487fb8ddff24.json",
+    "version_id": "cRE8wu-SPS9mk88XEoP03vLYYbuIW0F",
+    "etag": "f7a9583d11a97df3780518f8f9d7d01c",
+    "size": 9526
+  },
+  {
+    "path": "spectra/48645189-ac65-49a8-9a90-d982c0ec7b99.json",
+    "version_id": "326J-4JGHuzk9eAB9.mk0fT.wOJm3Bb",
+    "etag": "474e8767710e48130323d67d8676cac4",
+    "size": 9928
+  },
+  {
+    "path": "spectra/48a67027-99f7-4505-808d-0bd4f6e300af.json",
+    "version_id": "NYOX5-VJj2cqGf.EkmlJh5xjTCbDNnU",
+    "etag": "243a7937650cf68990130e4baae0cb36",
+    "size": 22787
+  },
+  {
+    "path": "spectra/4946274d-c8aa-4b4c-84ef-f963dc16ec9e.json",
+    "version_id": "qdcaQkSWyrwQtTbsQzny8dkEyFENGob",
+    "etag": "8c5ae058d11964b37f6e3dbf1d3d1f5e",
+    "size": 9389
+  },
+  {
+    "path": "spectra/4955db3d-1be8-4f98-87ec-f7806553264b.json",
+    "version_id": "QaG7naBcMLrRliwgJxtzHmjV-XlnnZB",
+    "etag": "1f513f0baf3df1926e3f5db8091f0a4e",
+    "size": 35184
+  },
+  {
+    "path": "spectra/497c363f-359e-4590-b922-fec47e4c2eb7.json",
+    "version_id": "q3ELgKu8EvkwJJFvhSdb-RwByO3iGG-",
+    "etag": "deb4798bc9454ec06ea157f8af842f74",
+    "size": 22042
+  },
+  {
+    "path": "spectra/49a717f8-9ed7-4d12-96b7-f9068ce478db.json",
+    "version_id": "JulxibLUnhKObdlTQl4NQgAiFDe-lsP",
+    "etag": "4db8d290c42baae8f08091e70495f101",
+    "size": 9805
+  },
+  {
+    "path": "spectra/4a81a8e9-c06a-4429-b75f-8053e0374b5d.json",
+    "version_id": "GpkiM4ox3vEtHh86pAxgpo2ioTMYiP1",
+    "etag": "5544ea8691db00820cba3fe6d913eb94",
+    "size": 9973
+  },
+  {
+    "path": "spectra/4a92fc43-026e-4078-94bb-5a3951a08cdd.json",
+    "version_id": "nDDlMTddpvNm88WBzG56QbBXCjgXtXZ",
+    "etag": "b79e287107b2676b2b1bb976a961132a",
+    "size": 64890
+  },
+  {
+    "path": "spectra/4bbce60f-a82c-4ac1-8c25-f35b64e8b736.json",
+    "version_id": "Qzs74GB0CrJKJTbHLJse-RSCaQiSAYh",
+    "etag": "53f369d43127c3d98f22db08d09b3234",
+    "size": 9886
+  },
+  {
+    "path": "spectra/4bed9a6a-b04b-44f1-b2fa-293dc1d88ba9.json",
+    "version_id": "rq3siAR8atVc8uV2YmoyJwo.2B2vYD6",
+    "etag": "c5de02b20236ee012b66892c05543648",
+    "size": 9929
+  },
+  {
+    "path": "spectra/4c177dc9-5d8d-4861-b9de-00f93e1731dd.json",
+    "version_id": "J.C8VUWxO1eBdNcyQ8iPFiBxaEu-IzH",
+    "etag": "b288cb0dc5b0bebbe074db86061d53a8",
+    "size": 35184
+  },
+  {
+    "path": "spectra/4ca6028c-32ee-414f-9c2b-1c0cb4b97f0f.json",
+    "version_id": "nZatxtP5DZCZgLeHjjAipj4fkuiudH0",
+    "etag": "3eaccb078c05b7428dba5ead8ab9949f",
+    "size": 64890
+  },
+  {
+    "path": "spectra/4cad1c71-2b11-46e0-ad26-53f390054ce0.json",
+    "version_id": "NMJ1GrVN6-r4Xnv73M3mJsx9IHvQg5I",
+    "etag": "66daea33148fe8bfafdbaecc47dd06c1",
+    "size": 9973
+  },
+  {
+    "path": "spectra/4d4dcda5-06d2-479b-98f4-285692e696dd.json",
+    "version_id": "yHOqJmQMPXmw0vN.nPIjpLmpmpiT61H",
+    "etag": "76873763eb9f3da3ae3d3291f4bf7484",
+    "size": 22787
+  },
+  {
+    "path": "spectra/4dfe97f7-6861-4a20-9115-9d90fec392a4.json",
+    "version_id": "q7HuPDA8OkM6cX2yk2BHiyEQh6JdM7-",
+    "etag": "cd1f9ef1f2fc915ca8558cf9d847d3a7",
+    "size": 64890
+  },
+  {
+    "path": "spectra/4e2a5153-4dd6-41e6-8004-d321d1f93a9b.json",
+    "version_id": "OYUBgATMi3LwsA4fDKCmw6NqalySJNI",
+    "etag": "12be012eb3719c85fde258ebe9b93f5e",
+    "size": 9973
+  },
+  {
+    "path": "spectra/4e7c67ef-539c-4982-b6c7-bdb7094e467b.json",
+    "version_id": "GHdrgSXy7pbmMjr-eXTa.1Re5Jbg5ei",
+    "etag": "97712b67d3978a5eeb85c3b2a82a2a7e",
+    "size": 9886
+  },
+  {
+    "path": "spectra/4ee460a7-1a12-4ef2-a560-d363d50a2b0f.json",
+    "version_id": "9dcOh4yZWdJIf1Td4mPEJtyIOfPOxmh",
+    "etag": "3f80e46cdef40be0a31011f1797d9953",
+    "size": 20908
+  },
+  {
+    "path": "spectra/4f5dbc65-5d9c-4015-a787-f8a394051da4.json",
+    "version_id": "nlsiVSchPwACUv9vIT.uHqQkqBUV02i",
+    "etag": "810afbec8fdaac62614272fd663940e3",
+    "size": 9591
+  },
+  {
+    "path": "spectra/4f7afcc3-4879-4b6e-99f8-dccd2fb32e46.json",
+    "version_id": "0qHwSBOoKRMB4HJdCABXT5PcIsdDqhB",
+    "etag": "2e5f41da80598eca108b97c031cd218e",
+    "size": 9966
+  },
+  {
+    "path": "spectra/4fd958fc-d647-48dd-bbf1-eb2d7e9bafdf.json",
+    "version_id": "ff7XrLz9XkLAQa5Lf9Je.dx1TlUrZ3V",
+    "etag": "c36ffc99de9049bf961146a9d94881a4",
+    "size": 9884
+  },
+  {
+    "path": "spectra/5055bcfe-a1b4-47fc-a48d-6da8c36617d2.json",
+    "version_id": "q1NAIEq-1a.58AzktdmNGUkNXKdk2Wn",
+    "etag": "21ff1f3432d97962ed840a6c423424b9",
+    "size": 9268
+  },
+  {
+    "path": "spectra/50b9b2dd-782e-4f6f-874a-441da2626634.json",
+    "version_id": "Mi.tiA7BT8zLPtuqi0u4Y8ViUwemH4q",
+    "etag": "7365243e133436f7dc5714bf9078939b",
+    "size": 9506
+  },
+  {
+    "path": "spectra/512fe118-f4a1-4652-bd1a-a939596f98fb.json",
+    "version_id": "6nfTryHtEdbiClHk61KIZAf6ktjilaj",
+    "etag": "9ff8fc8b10c3fb5e44f93e12743b4671",
+    "size": 9897
+  },
+  {
+    "path": "spectra/52d7cfc5-0475-4152-875f-b5ed9b8f5116.json",
+    "version_id": "8p7A7wKI0O5.QiQiT36siP6etyeS5IJ",
+    "etag": "6ecc113bcdc0c9523b06c6f109822a5d",
+    "size": 35184
+  },
+  {
+    "path": "spectra/52e58dbe-3850-47ca-8f78-b574fd798238.json",
+    "version_id": "d2ThBUE1KOCtZSz6uIgUS9iKk8mJRCI",
+    "etag": "925be853de8f936ab0a797b0831337ee",
+    "size": 30966
+  },
+  {
+    "path": "spectra/5313f9cd-a583-49e9-8d2f-716502a8d3a5.json",
+    "version_id": "0LCRbM3yMx6DceK0fZscTLrszVkbfpX",
+    "etag": "92e79ce9882c814a4ce96df842ce98cf",
+    "size": 9886
+  },
+  {
+    "path": "spectra/53d65234-2206-44e2-914b-e3aa1dad3cb5.json",
+    "version_id": "MeCo7uz7Iy6gW3UJ94nIisVlSmpAxgi",
+    "etag": "771de2feb0d5a91ebbba34b92652af67",
+    "size": 9526
+  },
+  {
+    "path": "spectra/5402b360-1d58-4ed1-9e01-6f685922827b.json",
+    "version_id": "k3QRYb-xJhUcxMXTG09rP5V.Td-haMr",
+    "etag": "92ba8043e47ccfacd9408676a31661ef",
+    "size": 9901
+  },
+  {
+    "path": "spectra/5430d592-cfbb-453f-9acd-42bd7334fcb7.json",
+    "version_id": "M4LmM8uoSuu3fT-4XUUuqRpVV8z3beu",
+    "etag": "45d998def35043053584c0178522f1ba",
+    "size": 9605
+  },
+  {
+    "path": "spectra/547f7cdd-ba40-4939-ae16-b9049969500b.json",
+    "version_id": "EdNGMoVnL8sHsZ0e23sqdyGS78C5eo0",
+    "etag": "b9fc6e9a3e8fa43c886b4fa0c955c97e",
+    "size": 22042
+  },
+  {
+    "path": "spectra/5484622d-3a2d-4817-a118-74ccede63203.json",
+    "version_id": "jsgiAk5u7di2ezpGKAJiDyAgAHdWpmx",
+    "etag": "e4c72fb0c524a1a9d59e804da56f7f8e",
+    "size": 30966
+  },
+  {
+    "path": "spectra/54eb05af-5af8-475b-bb79-4b2ed1635576.json",
+    "version_id": "4aORRZLwRg8eij6OnD5-VOCADWbIU3F",
+    "etag": "703ba7e8fa79e101ba74e347479b32a6",
+    "size": 182898
+  },
+  {
+    "path": "spectra/55641a3c-9b9a-49c8-b0ae-8927c08fa948.json",
+    "version_id": "2AwOqomCt9hRx3PS97gHjY2Dxp7-FIr",
+    "etag": "2aa3eaa0302907191c0e8b1c1f8eea14",
+    "size": 21238
+  },
+  {
+    "path": "spectra/557cebf8-0ebc-49d5-84d2-2e2c2f1dc847.json",
+    "version_id": "-siH.OGSV10ISrwn5Hf5jOqUkJt-.Vp",
+    "etag": "1440906b72c7d10e34e3675f4e2e1fc1",
+    "size": 30966
+  },
+  {
+    "path": "spectra/55b9a375-1527-442b-84be-058842f4f78c.json",
+    "version_id": "K5y-qSav2Ub3UYhbk6DUMVajcLqjiiC",
+    "etag": "c9dd13c011861215e5d9beedcad75afd",
+    "size": 35436
+  },
+  {
+    "path": "spectra/55f8c52e-58a1-4276-8d7b-905b6f670436.json",
+    "version_id": "vysekMDZHDOa4GFd0kM0uTzAzKQjUtu",
+    "etag": "5869e5bed83420d60dcf2f6130394c74",
+    "size": 182898
+  },
+  {
+    "path": "spectra/570c5332-027a-43e3-88f9-f024c005dec3.json",
+    "version_id": "5.jvfh4L5aqephrCizL3bsCsx-XnnZX",
+    "etag": "c8c8bce0143ad1926d83ca16eecdfc56",
+    "size": 9467
+  },
+  {
+    "path": "spectra/57127346-a238-461a-90a7-e530f40a9ba8.json",
+    "version_id": "-a3FftaqsAbwKaVEX1n5tjmkCjS.oE8",
+    "etag": "5178028971f972885d14874db856ff4a",
+    "size": 9324
+  },
+  {
+    "path": "spectra/574f2b75-aec5-4897-b30e-03132a29a8e5.json",
+    "version_id": "lfDVwiSJHdX5v19h8uB4fsSoTXoFHbu",
+    "etag": "ac174973d655d3cba6e9788bb7721413",
+    "size": 9389
+  },
+  {
+    "path": "spectra/576dc1aa-bd4d-4778-821f-c4cef572d3dc.json",
+    "version_id": "3KG-8opFHUluxDPzRJQ8m.XE257l2HP",
+    "etag": "2cf8d6b9ee4a0555966ebd302e66db40",
+    "size": 9697
+  },
+  {
+    "path": "spectra/5780e717-9d8e-47b6-82a5-c195ca9db5a3.json",
+    "version_id": "ty7-n9xZkIwt4LRg1F-lMMf9zPTX.54",
+    "etag": "877b0db68d95b7b39a54738dce2b2804",
+    "size": 9554
+  },
+  {
+    "path": "spectra/57c26ae9-b45d-4866-8b3e-3b9150707309.json",
+    "version_id": "lHvXNZ.WWf0ZDR1aLntXU.00r6cN4qe",
+    "etag": "548c96a6f9340e4ef07d29bc657cd741",
+    "size": 64384
+  },
+  {
+    "path": "spectra/580ece7c-b89d-4589-90be-1a9dc49d249a.json",
+    "version_id": "PyFGPmkIUNsF6i3O6onnmgcCTQPkBIU",
+    "etag": "b25a87107fdea8111d5141ec02622979",
+    "size": 9554
+  },
+  {
+    "path": "spectra/5858d13f-dfc3-45ef-8263-5f4c1a04560f.json",
+    "version_id": "69i1p7aFSx-yjXTc2uqon107ZaUzZTE",
+    "etag": "c03e54b0c939551a230fe5e797b8fd7e",
+    "size": 9522
+  },
+  {
+    "path": "spectra/58cdbd1c-33b4-43da-bb96-7a1e30819cb2.json",
+    "version_id": "Mo8EkfbNpyVzRZMfdek9ru5q-g9Qj5m",
+    "etag": "73f7442021f768095ddb6c4823f59c58",
+    "size": 9940
+  },
+  {
+    "path": "spectra/59df1ea9-00a9-4c42-82a8-5331cefd96a0.json",
+    "version_id": "RfcYqggmkDGMsK.nGaQNkQnEEsESXEp",
+    "etag": "733c129680aa7b3405b0908e7e0b1dd8",
+    "size": 9812
+  },
+  {
+    "path": "spectra/5a02cedd-a9fb-4cbb-8408-629de42ee155.json",
+    "version_id": "V2yCNxYY7lo4Vu.tnMN8dWWeM0CBUeS",
+    "etag": "0dbacb6747ca0a9e07eb79f9cafd86b0",
+    "size": 9901
+  },
+  {
+    "path": "spectra/5a252f37-642a-475d-8b43-ba61f776d480.json",
+    "version_id": "qYgbu-LX29SIpOABv.PfXPHBP5-FUL-",
+    "etag": "24bbf44854c1d8034355679a994b0cdd",
+    "size": 9697
+  },
+  {
+    "path": "spectra/5a3eab9a-9caf-4c70-84c2-19832f8ab9bb.json",
+    "version_id": "eXO-Dh6S7v8SEFTeunz.uhkdXIkCkc1",
+    "etag": "814ab50690375b41ed09e6488affba6f",
+    "size": 35184
+  },
+  {
+    "path": "spectra/5a4b866d-56f1-4d42-8baf-8836a33ab486.json",
+    "version_id": "Tm8T4Lg17Rs0KFIRToqGWUS4riycAvg",
+    "etag": "1a436baf694b5c29aa589cdf3ede082f",
+    "size": 64890
+  },
+  {
+    "path": "spectra/5a980190-d5c2-425a-8547-e57961366f4f.json",
+    "version_id": "tXvQCbD3VJ6.TfEKkFaGxXy3-kRym5s",
+    "etag": "87df23e90ea3f1de92c1a408d55c180b",
+    "size": 9946
+  },
+  {
+    "path": "spectra/5ad904cf-71dc-462b-9530-4997cc1e38bf.json",
+    "version_id": "J7Z9LCrwZ205-JAZEQYXNhTU1vFVLMV",
+    "etag": "b184c24ca3e1405a254828636faa4172",
+    "size": 9268
+  },
+  {
+    "path": "spectra/5b12bb4e-d5f4-41e7-b131-4fad0d00dc35.json",
+    "version_id": "jE1BMkgiUKGFZ08Fxeygg8sPoeu-VLf",
+    "etag": "42e00811e7791a9680c811c7a26eadef",
+    "size": 9605
+  },
+  {
+    "path": "spectra/5bb88508-9d8c-42dd-a0b4-3158b9decf5a.json",
+    "version_id": "7zWOcxbnYZ6XzgmdqzZzc5PtQJz2Mg8",
+    "etag": "8ffa79b58b10f5a80f55d416341dc545",
+    "size": 9324
+  },
+  {
+    "path": "spectra/5c4327ac-d8e0-419c-86a3-f0cd1ef6a719.json",
+    "version_id": "qsNZXLdviRpGkixGnfo4fBIEnydEwvq",
+    "etag": "ac8c1facf09ab83f16c2392bae062df9",
+    "size": 9928
+  },
+  {
+    "path": "spectra/5cb0a52a-8755-45e1-b51b-ab566c0da2de.json",
+    "version_id": "9dy2frrW9kyvc07g4YbJVJueMZeeI1R",
+    "etag": "a2dbd5588b8cc9d568a76fbd1613e169",
+    "size": 9822
+  },
+  {
+    "path": "spectra/5cb0b48a-0bcd-44c3-9b29-4aaa5ef73071.json",
+    "version_id": "EgDaelIuOnnTXp7QXhLyTaffsF5ekz6",
+    "etag": "67d4dd0b4a9053d0574b1e3d72ee09d8",
+    "size": 21238
+  },
+  {
+    "path": "spectra/5cde7b43-4f8c-4c50-b8b1-059b5999a755.json",
+    "version_id": "I2mc4EXdUwY0htsyvjOQs0DUV4kiV2z",
+    "etag": "c9f70a679cba766d25aefb6ec421874d",
+    "size": 9526
+  },
+  {
+    "path": "spectra/5d0c1ec0-d061-40c3-b6a1-36ac187c9343.json",
+    "version_id": "pZrDhk5deweaDIFeQ7NnOATPLXSbIJY",
+    "etag": "5dfda7846fff36661b6c15c52737ba91",
+    "size": 35436
+  },
+  {
+    "path": "spectra/5d3b8f9e-e990-47dc-af49-85b68348b34e.json",
+    "version_id": "PTKz5YdxvyVPak0bDE27SWJ37F.d8re",
+    "etag": "708712efe9388965e632d906c1b8777e",
+    "size": 182898
+  },
+  {
+    "path": "spectra/5d558cda-800a-43d5-b9b0-7fcab2bdb0ac.json",
+    "version_id": "tQkQaz57.drbe0Z4KDe3bYMg2hjLT.9",
+    "etag": "7e3b68437987eed4239de2955d13238d",
+    "size": 64883
+  },
+  {
+    "path": "spectra/5dda103a-ad0d-4e17-8d95-966165d65999.json",
+    "version_id": "XX13Uh2bjL1kq5yv.IVjoXXS8Oxwozk",
+    "etag": "68f877a2d40ddd033a784e347c4dc793",
+    "size": 9502
+  },
+  {
+    "path": "spectra/5df89565-1683-4a58-bb83-d0a874b2a6e7.json",
+    "version_id": "X9wR2gCQbK1O7p2WmAOVYIRZfwtDtHV",
+    "etag": "35b4dbd940490e594003528e5abf429f",
+    "size": 35436
+  },
+  {
+    "path": "spectra/5df8beb7-0b52-486a-9a7b-4c2801024dcf.json",
+    "version_id": "SmqEMLOVNKh8IyzYMsdBNmS0ojSx5Uc",
+    "etag": "52dd8143ff9c4b6254e1d5d6774f93d1",
+    "size": 9569
+  },
+  {
+    "path": "spectra/5e4a0369-a988-4cb1-a894-b7428cf1f67b.json",
+    "version_id": "hno2etWXpsuJZzeX6vhe-dDkhM6PXdX",
+    "etag": "0d3e363ea1c85faf747005e00b773ce4",
+    "size": 9435
+  },
+  {
+    "path": "spectra/5e9b8499-4b57-411d-86f4-d613c0c578e2.json",
+    "version_id": "N4Gy7rChKB44YWOXlebXbXn4NCkPgCk",
+    "etag": "055244b8979214bf53f9db503e6ea8ea",
+    "size": 9324
+  },
+  {
+    "path": "spectra/5f5420a8-815f-45b4-bc6e-e03d6406bdd1.json",
+    "version_id": "bIAqbTYjo6K8e4enclid5gYqH-ZMOkX",
+    "etag": "4c584a6d406c2db51ecd365c88b332b7",
+    "size": 9877
+  },
+  {
+    "path": "spectra/5fb88113-fa88-4e2b-bc8c-cda605ed20bd.json",
+    "version_id": "AxQZcpP1YWrFKh2ZDjiylvHuPdwSxPA",
+    "etag": "8f6ff97bcf3428a2aba336d28afce4db",
+    "size": 9526
+  },
+  {
+    "path": "spectra/5fd1214a-0278-4785-af5d-7e30c2b13ee0.json",
+    "version_id": "gOtkjfy3Xlzx-5QhZzaG5B9H1MmWdfb",
+    "etag": "5b3128bf06a926980f3993b189102513",
+    "size": 182289
+  },
+  {
+    "path": "spectra/606fa32a-90d5-4f3e-b2c5-611de61c6375.json",
+    "version_id": "blWWgYa3SUl7XydiiH-PN.PMOpDFEMD",
+    "etag": "52285cebeb9ca14528b7e39502c7767f",
+    "size": 9908
+  },
+  {
+    "path": "spectra/6099ab0d-91b3-417a-a97d-b7568578664a.json",
+    "version_id": "RY6vHOIZ82EyJW0kZWMxR6qJSerDKVF",
+    "etag": "b0b50081634d0cdbb24cfbb7e4f44f01",
+    "size": 64384
+  },
+  {
+    "path": "spectra/609c36fd-345a-4b29-b10d-05d32035e159.json",
+    "version_id": "XgCLNhv6T9WbvRV3YYewRnt-hu1h1NE",
+    "etag": "354492bb503662e442cbf43a5bc684bb",
+    "size": 64896
+  },
+  {
+    "path": "spectra/60a2cd4b-7e66-4b4f-b679-2ecd8fc6a7e1.json",
+    "version_id": "lSj.gdSOnHwSoAaglNG2C.NfCSLXDNP",
+    "etag": "42e403637c07c0a60c6091296fcd8c54",
+    "size": 9605
+  },
+  {
+    "path": "spectra/60c38e1c-c690-4092-9315-d9765f836aab.json",
+    "version_id": "4JqX7zpjQyXtKg4.g-Os7DRf3Rrze1y",
+    "etag": "f636d65da21834f49878ee2c7ab8437d",
+    "size": 9973
+  },
+  {
+    "path": "spectra/61681c42-61cf-45a5-a2c3-bdbf8003b5a5.json",
+    "version_id": "R9fzs7eV1LVh3c9.nbhAm86OoLG6vYU",
+    "etag": "4e727395d4fec0ce010bd8a9bc8a3641",
+    "size": 22787
+  },
+  {
+    "path": "spectra/619291f6-b735-43a9-aceb-e220631f5287.json",
+    "version_id": "PDgJB.rpkAdnkXmdWKgCj6OeS7V4Q7H",
+    "etag": "6a1e2f9745ed000d3a2b1c354952c1f1",
+    "size": 21238
+  },
+  {
+    "path": "spectra/61e06b63-992f-4cf8-acf6-3f2ac577b5e8.json",
+    "version_id": "SHtPs1Y0VKqmwWIM7BxSTku5MLRFzEZ",
+    "etag": "f363f85834c8da1a9b4c997f96b157a6",
+    "size": 20908
+  },
+  {
+    "path": "spectra/61ff780e-3340-4d44-86c0-84e8875886ab.json",
+    "version_id": "yhRg9aBgYoou4b-rW4aM6gYHIYrMcNZ",
+    "etag": "ceae33bc501c6ba45f820fcb4ace44d4",
+    "size": 64896
+  },
+  {
+    "path": "spectra/6289e744-c0e7-4752-8ca3-452d45e00646.json",
+    "version_id": "a.UEnaYKu6jJCj1nIQqHd.CBG-Wt6CY",
+    "etag": "fd6ac0d6f6e26a3313230e7eab5eb724",
+    "size": 20908
+  },
+  {
+    "path": "spectra/62972bcf-1dc5-4e3b-a586-363ef007c0b2.json",
+    "version_id": ".-xG6JLOTxBCLJv-AZ9E0.pje90shSA",
+    "etag": "36a25de023a7ae0555ad4528e7f3f1c4",
+    "size": 22787
+  },
+  {
+    "path": "spectra/62a112ca-2515-47f8-b136-8cd931362378.json",
+    "version_id": ".9Vch1MYEznhi10CdoiScZwRJ7wcpxf",
+    "etag": "7288eb709a44bfbd6a9321a3263b7620",
+    "size": 9389
+  },
+  {
+    "path": "spectra/6306371c-7df0-49a2-ab4d-866a1754a86b.json",
+    "version_id": "r-S6VpjLktZPYpIHfT3BA0eFjqDnCR5",
+    "etag": "1bc6be002361078f3b89a16ab71cb352",
+    "size": 9966
+  },
+  {
+    "path": "spectra/63206907-8d42-4d2f-9394-b54041eec8af.json",
+    "version_id": "rBvRQpFQhvayKlD8oc5MlQGvG7-1NkX",
+    "etag": "1062fd7ca08b68396d9085856226a8f7",
+    "size": 22787
+  },
+  {
+    "path": "spectra/64704b06-0e47-4dcc-bc81-270daee9eaea.json",
+    "version_id": "E4nkAsnsuALTpWrwNYoVGepg.z34NKi",
+    "etag": "6ded30f8b18948a9058ad44757946c11",
+    "size": 9946
+  },
+  {
+    "path": "spectra/648fd57b-e610-4b74-87da-02b30ab8cbd4.json",
+    "version_id": "2dzs5K91bNJo6WgOOrSAPsdutTpRokL",
+    "etag": "8767b2f43b7c9c08ef9cb090b3f5a58d",
+    "size": 9446
+  },
+  {
+    "path": "spectra/65da38f0-fe3c-451c-84ae-04b03c1de92d.json",
+    "version_id": "4zKKaE90QVYC2BPq2pM6KyRCfJa2hUI",
+    "etag": "6afb67083a11af18e7b4c16fd8f77860",
+    "size": 64890
+  },
+  {
+    "path": "spectra/660addf6-9422-427d-b035-e780de6db8b7.json",
+    "version_id": ".IFqMyAaTfVf.pdHFxBZxpAxeF78OBC",
+    "etag": "c54d1755c9d184141c2f068a61e56b26",
+    "size": 9526
+  },
+  {
+    "path": "spectra/6782c4fd-ab0a-4063-8c38-2e55c6efdf1b.json",
+    "version_id": "F0mw9GtIQKk0M5mYn1SbRCU491XhF3.",
+    "etag": "5bf1afa1ca20edbc7deb7a8927b232cd",
+    "size": 35340
+  },
+  {
+    "path": "spectra/67ae6fb5-e449-4e03-b49a-780ef3fd3117.json",
+    "version_id": "g9Z4iHmev6h6Xv6w.NRoZuoh6AwA0xT",
+    "etag": "66fbb223371eb10b8439aeadd057a08b",
+    "size": 9895
+  },
+  {
+    "path": "spectra/6805e316-0fd9-45d1-bf2b-20f9829a3c82.json",
+    "version_id": "pGTxFEyzctcu5i3l5ltqaAsZtIeG9CS",
+    "etag": "5cff81bf06a671ee53ef3b5e23637914",
+    "size": 21238
+  },
+  {
+    "path": "spectra/681d205c-b85c-4455-ac69-99e13c5651b9.json",
+    "version_id": "armuPZcK1iuEYYX8SQO3OrxgFCj.OyQ",
+    "etag": "a0aebfc7ac8152f788ff99a0b1056d9b",
+    "size": 26836
+  },
+  {
+    "path": "spectra/68e8b7c4-e6cc-4821-a083-08fc3943efcf.json",
+    "version_id": "ExEDXHUpC3XH54ZB8Wq4r4WyByrBU79",
+    "etag": "d0bfa4cf8cac3f4fe92843bf683e1039",
+    "size": 9877
+  },
+  {
+    "path": "spectra/69b9c91d-cee4-403d-b860-37585b3eeb69.json",
+    "version_id": "J4gky1TxblNZpf6mhWcO0NEEXm9R-y1",
+    "etag": "cfff0a46a594b475c758fbfc4cf04a4b",
+    "size": 9605
+  },
+  {
+    "path": "spectra/6a5239b4-d2ff-461d-8a79-eda43f2aa65d.json",
+    "version_id": "BTfGT-ZD3BF5BNIl6ha4bp4HdSHM1kr",
+    "etag": "d210d5e987ffff32d84d41540ed6ba86",
+    "size": 26836
+  },
+  {
+    "path": "spectra/6a5542ac-0236-4129-be10-15fc35420dfc.json",
+    "version_id": "IUs8oDSWloPu4lzmRwrVkkmQTAHSlPj",
+    "etag": "55daaed2b0c5a6fa99d33b84db96eca0",
+    "size": 9522
+  },
+  {
+    "path": "spectra/6a5d43ee-34c4-4f56-9484-9c3530357155.json",
+    "version_id": "Kb6xxRVv6pBBN1ZdVBInKLkv0oQyEse",
+    "etag": "e0e7cc5845a9166742112073e0f810f2",
+    "size": 9605
+  },
+  {
+    "path": "spectra/6aae71d2-33e9-43ee-be27-7c3358b1d762.json",
+    "version_id": "tdqUv1MlcXGHequsvn2xSQs3dulpPcX",
+    "etag": "a8a0e844dc22329ecef8ec31f8d499b4",
+    "size": 9929
+  },
+  {
+    "path": "spectra/6abed005-0ec7-4538-8e8c-bfbcd65e5345.json",
+    "version_id": "qtDSp0lrtoNSrT6-nU7wnloWRrjDYBJ",
+    "etag": "c9a0f5b115b1ff55fe6bd7b2e57eb396",
+    "size": 9929
+  },
+  {
+    "path": "spectra/6b0f140a-4713-45fa-84ab-0ed40ae03517.json",
+    "version_id": "tNHtmwVOdOZnl62o.Ydd1r9VoYpDo3v",
+    "etag": "3dc65313d8f646fd92a11a095e4e68ab",
+    "size": 22960
+  },
+  {
+    "path": "spectra/6b4e8e39-b8de-45d3-a8f2-702bd089835d.json",
+    "version_id": "-C43Xjxado6Prmg5FYP-E.2j5xIdtzp",
+    "etag": "289b457704678256f3eda36b03a82cbb",
+    "size": 10519
+  },
+  {
+    "path": "spectra/6bc96034-6a72-4e21-8bae-9c2e3327fcf7.json",
+    "version_id": "SuKN9rO.4H7hB38ODeQFzVSpc9wPSXc",
+    "etag": "90a84779d80b8a800c238ab1a9cc9b9e",
+    "size": 182289
+  },
+  {
+    "path": "spectra/6c3104c7-0120-4667-9268-655eb2399969.json",
+    "version_id": "s70Gt5N3m3DouqsSlvGKrfLEgnXe2pJ",
+    "etag": "ae61087b29ed468094d5cea56cd20b66",
+    "size": 20908
+  },
+  {
+    "path": "spectra/6c63b756-be4d-4bb9-8505-7fda75ea3b4a.json",
+    "version_id": "6ogDGBRWzDG8OeJDqGsw-BRGjevWm-4",
+    "etag": "13a4d1c7b3340404d58788b37522868f",
+    "size": 64384
+  },
+  {
+    "path": "spectra/6c6ed6c1-59a4-43fa-8e88-0945158d0a47.json",
+    "version_id": "T0YnNJcWNQIbtEYU1h7I7KgsCXzFSVT",
+    "etag": "6d9b0f89cfe2d9ad93e993c45925a94d",
+    "size": 182289
+  },
+  {
+    "path": "spectra/6d8c1f6e-886e-42b3-9c75-f0de106756b2.json",
+    "version_id": "ah0eVdkkE2VC-B4DzHDyoyMtWSZqsPh",
+    "etag": "f241b25ace13c2f4ff3f2a59e04c96f0",
+    "size": 9526
+  },
+  {
+    "path": "spectra/6e02acdd-d516-43e0-82ed-6f366aafe880.json",
+    "version_id": "Ox8OCEk.ujahUdG8FAp1h-gJmznImiN",
+    "etag": "37aa7db8269a3017cdfd089789946b2e",
+    "size": 9895
+  },
+  {
+    "path": "spectra/6eee847a-87cf-4d30-b6b7-84d62f37d3bf.json",
+    "version_id": "eKaPGnyhZ1Mawuz2I3uSwfrvRDvYYr5",
+    "etag": "696420b1a6b7e860fa7c47678b96f8d3",
+    "size": 64890
+  },
+  {
+    "path": "spectra/6efc7765-8ab1-4665-9e1d-df95389c17ab.json",
+    "version_id": "yVPcTnWhaR0VR6-rKenlKbusgSUy-da",
+    "etag": "91804adc56a282befc09e7d77b35355d",
+    "size": 9268
+  },
+  {
+    "path": "spectra/6f04a52a-be92-4d38-9bfd-e350b0813e5d.json",
+    "version_id": "6REzih3xs.2FvFLOpkA9hvexu2TfLzj",
+    "etag": "fcdef7221203d465307bcab805c89d54",
+    "size": 9868
+  },
+  {
+    "path": "spectra/70000566-89ee-4876-b863-24f85cfcb8de.json",
+    "version_id": "FIxMnbLlCmUabJgLgfROUd-QW1vonBX",
+    "etag": "abd6d8a84442f193dfbe36dfe6efcf18",
+    "size": 30966
+  },
+  {
+    "path": "spectra/7060bebf-e71c-4383-94b3-6abe77d91a15.json",
+    "version_id": "NmXTsakNY7BV4C0T8zEWzaoazUcaWhI",
+    "etag": "ff36dd1110cb015f537f8650080db79a",
+    "size": 64883
+  },
+  {
+    "path": "spectra/706d8ab9-76b0-46af-8f6b-28aee1283254.json",
+    "version_id": "b2ZHO85vJZR91QnIkDtry4f4kUnGz4M",
+    "etag": "f5556186693251002f2a2cbb6d3341b7",
+    "size": 9554
+  },
+  {
+    "path": "spectra/70e62cc0-885d-48ee-a152-a00e4b5ac09e.json",
+    "version_id": "B2Y.5wG0FZT4jU7HkLzBDQXFnw8fNft",
+    "etag": "56e66da0721c25bc5478236b253e2138",
+    "size": 9526
+  },
+  {
+    "path": "spectra/71c42ca6-7987-4be7-b680-311f20100a80.json",
+    "version_id": "DRWsL3NPXaaLtzKkGlGePo7sy.YkP7J",
+    "etag": "d036a1907fc6b9fea6c820cb57e6308d",
+    "size": 182289
+  },
+  {
+    "path": "spectra/71fba9c0-4d5f-4dd5-8ff9-6e01890d81da.json",
+    "version_id": "1aVZsKTW2fMe-a9XJt-qRIcDXcHv872",
+    "etag": "d14d4fbcce431399a6935a4d21eca602",
+    "size": 182898
+  },
+  {
+    "path": "spectra/7223d7b9-ec85-4c5c-806a-01f447d3765c.json",
+    "version_id": "I1nIwgZZlQdrvpHENEiUleLGwr65vKV",
+    "etag": "d4cc0e1794d6e26957a8e4af08bf9dc2",
+    "size": 35436
+  },
+  {
+    "path": "spectra/727aad21-2da1-4d82-9cb1-e99fd373cd20.json",
+    "version_id": "7oSBCEwLTsobofbXuzXSg0yf9Xdg5hu",
+    "etag": "225992b5dd4534e279a7a32dd2b41667",
+    "size": 9928
+  },
+  {
+    "path": "spectra/728320f6-ee4e-435c-8559-6cdbb6ad3211.json",
+    "version_id": "1FPxOZKHMT5oV4Nn1YJJq5EvweTze1d",
+    "etag": "33a641cf3c6cf08fca8efc00b9ed1c09",
+    "size": 9435
+  },
+  {
+    "path": "spectra/72b7e65f-49ca-4f68-814b-5b435aa47483.json",
+    "version_id": "35dmvNIhTiHrcjrCgFqbqKDYiN0w7e8",
+    "etag": "f92884b965b2f5cebdd1182211783281",
+    "size": 22960
+  },
+  {
+    "path": "spectra/7329cbb5-dc20-4bf3-aabe-1f16615df27d.json",
+    "version_id": "-eJseixZr9NpBtjos78BdFsFi4X5hDW",
+    "etag": "53a2ccafee7fd45df00c03e8d214e0d0",
+    "size": 9591
+  },
+  {
+    "path": "spectra/73acd3bf-c09f-419c-9d0c-6750d27280b9.json",
+    "version_id": "VFVJuVB5JKmopkHnMlvi5TbS4WmNtuB",
+    "etag": "2d6a8e930409dced2a04f3344e7a5bb8",
+    "size": 9506
+  },
+  {
+    "path": "spectra/73f41e19-637c-4c9f-842d-860ae023db69.json",
+    "version_id": "R0gkfIaRT-K5299tp1ZYvZ2QFQzXPS8",
+    "etag": "a9fa4e44b9081d2effaf0eefdfab9805",
+    "size": 9554
+  },
+  {
+    "path": "spectra/7411a260-3b04-42ee-b4ce-006c72ec4eb3.json",
+    "version_id": "omy.amiiYwoDh7uliGM.bkGjUHTYQpm",
+    "etag": "25585c2b28c94130d0daa9bca2847878",
+    "size": 9805
+  },
+  {
+    "path": "spectra/74646531-1587-479b-abc5-76c482f45e32.json",
+    "version_id": "n0lUXaSPP2ieJi4P.J1JzYxDzkxmuNt",
+    "etag": "fb9f7b9123099889e791a16f4acd40c5",
+    "size": 64896
+  },
+  {
+    "path": "spectra/7476eb84-9e10-48a3-b038-a44c52da639b.json",
+    "version_id": "QAU-n-kvIb6S28bXrR8rr7wTywof9ma",
+    "etag": "db18b7567aa3ab284020d8d0f5c1c55a",
+    "size": 9928
+  },
+  {
+    "path": "spectra/74edad69-c453-495c-8f76-28011fbba14a.json",
+    "version_id": "dVaDXQGbgRsOXT9osZXxZeBeascATmD",
+    "etag": "7f192fa0512df494ce11e7d8f6c2a744",
+    "size": 21238
+  },
+  {
+    "path": "spectra/7552eac3-8b36-4139-ac1b-9419396efeca.json",
+    "version_id": "lQ0ke5eSulPMtGpbcQzr6TNPn9ExSx1",
+    "etag": "672823adf05baa4c5690f7843aceb694",
+    "size": 21238
+  },
+  {
+    "path": "spectra/75daa79e-3b3e-4674-86ce-e230351e3275.json",
+    "version_id": "SB0oHWegV9aLl2ZNO8XU47xlZe47nsZ",
+    "etag": "4bbf2e1d5fec008b0e28b9a35f164e52",
+    "size": 64890
+  },
+  {
+    "path": "spectra/764f263d-7d98-46d3-8e2e-3a8291bb59bb.json",
+    "version_id": "ctE8nYkmilD-s0xvvyniAUkY8WLzEx2",
+    "etag": "c023d5c448a740ea53877364a1dd181d",
+    "size": 9389
+  },
+  {
+    "path": "spectra/769e46fa-35e6-4631-8f1e-e629675e1d0a.json",
+    "version_id": "M8TCl5x1OxbB7UrW9dPBqUaxQ8DR4ec",
+    "etag": "874807e555556e44cecf7a6a40786421",
+    "size": 9605
+  },
+  {
+    "path": "spectra/76b90093-3fc4-41d4-abde-12dec71d766a.json",
+    "version_id": "UhrgcYOnnIKfN1fnUC7g8z9AsrXGlnX",
+    "etag": "e4cfa125671b2338c03374f1fa461feb",
+    "size": 9522
+  },
+  {
+    "path": "spectra/76cd1b88-b69f-481c-985d-704bcf77e372.json",
+    "version_id": "HGBRVr.6zye1WfCxp1WG5ZBqOE69DQj",
+    "etag": "f6afc27a734ec42718e45087e44d1a32",
+    "size": 9506
+  },
+  {
+    "path": "spectra/770ce280-01f2-4d84-b7ab-3e7ec0498cdc.json",
+    "version_id": "0hliqNM2c9ZXuT6RxWdlg22fm7van1P",
+    "etag": "377212cea5c1d16afdc9b28a43466905",
+    "size": 9868
+  },
+  {
+    "path": "spectra/771ae2ca-6bc7-4bf4-99df-667acc70e873.json",
+    "version_id": "SSq.KO0JhhPtQxd1rvxXylUkTOurXZS",
+    "etag": "a26d668807590d89d5fb2cf66b25efab",
+    "size": 9324
+  },
+  {
+    "path": "spectra/778b9f70-b4ef-4df4-8163-7d5e5b1fb445.json",
+    "version_id": "CZhva4C8kIK3RW3sYkaNOvVgbU4-8CH",
+    "etag": "3a859f86eaa9abe5d29588b24e8315c9",
+    "size": 35340
+  },
+  {
+    "path": "spectra/77cd5291-1a31-4750-912c-4974ded98ca8.json",
+    "version_id": "uArlxlJtpoFzkvMsaH50WCOLjVCEXJM",
+    "etag": "80f2f6ecbb92b63c5960b717361889c7",
+    "size": 22960
+  },
+  {
+    "path": "spectra/780651f9-fdc0-4195-acd6-24117208429c.json",
+    "version_id": "pxjVQ2HInkJCPrjilpPWhm6vNmIWa1K",
+    "etag": "2f9c3a3133d2634797c3f0ae6ea16bdf",
+    "size": 21238
+  },
+  {
+    "path": "spectra/7822e714-0d20-440b-8c3c-d380c704af64.json",
+    "version_id": "7iBkuze5IRJcxA0cTnz3L4tR6niw724",
+    "etag": "8adb33b681a1b0a43228b6af39be6e49",
+    "size": 9605
+  },
+  {
+    "path": "spectra/782ac950-cf86-41e7-a0f3-75f4f5f4aa84.json",
+    "version_id": "rCuOp2cz4JLuGM0Fm0yLsKd.X0cuJ52",
+    "etag": "e915fdfbc0d5ed612b1c3119113b92d1",
+    "size": 64896
+  },
+  {
+    "path": "spectra/782c73f6-f38f-4035-8c89-322ffa45d0c4.json",
+    "version_id": "Nk39ju7QJxS9rH1UsNVwRkCVizPrdAK",
+    "etag": "8341e0476ea075a6bd0cc70316d1197f",
+    "size": 9908
+  },
+  {
+    "path": "spectra/78d1f040-5fe0-4f35-a5f8-099396ce6b3c.json",
+    "version_id": "ZXFB75gzZeeywAivkdknEPuMFtxAy7k",
+    "etag": "079110f373a6576278e94c6da42588c5",
+    "size": 9522
+  },
+  {
+    "path": "spectra/78d5288e-7591-4458-9889-bf116f89488c.json",
+    "version_id": "xyI6fzP10tBDVggck52q9xGy9hIfLPT",
+    "etag": "f4db95e5cccc660953ae605daad3f718",
+    "size": 26836
+  },
+  {
+    "path": "spectra/796244e0-f53f-4a9f-84c7-bd4322c72bcd.json",
+    "version_id": "jSaAxoNuoIvd2JJ5WgJEGQCg9s1PvWJ",
+    "etag": "ce3234faf78ef16c6a0cd814ec318576",
+    "size": 9504
+  },
+  {
+    "path": "spectra/79969e33-c507-4339-8a86-259a7c0f05a6.json",
+    "version_id": "KTT3.CjcIMaZgV0Fb4GP5GrDiaXp1p8",
+    "etag": "ab07ca29486154251e2d05fff8186ac9",
+    "size": 19659
+  },
+  {
+    "path": "spectra/7a454f3a-bd72-4c51-954e-5451be8b3db3.json",
+    "version_id": "kBp.xrYfV4momeW-.0IvFizgdHgYZ08",
+    "etag": "01abefc184206e24deedb64ffa94ae0f",
+    "size": 35436
+  },
+  {
+    "path": "spectra/7a5a6aec-4a21-42df-b5ff-9857cfa9c735.json",
+    "version_id": "og4U5faPxJA3iVgcU8xFzg9Y3ZHmy0t",
+    "etag": "6ff84f60dc86e41fe95c45ff9ea53864",
+    "size": 22960
+  },
+  {
+    "path": "spectra/7ace63ea-737f-475a-b306-2bc00d417b87.json",
+    "version_id": "iv7P3cykzEF0dtIWshl8k1bnVy0OM4k",
+    "etag": "4f4b4bdb1555940795b15c8837426500",
+    "size": 64384
+  },
+  {
+    "path": "spectra/7b0ff245-0150-419a-908a-cf5efbdf1a0e.json",
+    "version_id": "TOBDJyNh255sl.MbLXLQljN4xhiDaFQ",
+    "etag": "c19372e4e393acb56ee0de57aec3bcba",
+    "size": 22042
+  },
+  {
+    "path": "spectra/7be182d6-0505-4111-8b11-c61dfebdcd06.json",
+    "version_id": ".DyXWy3KqS8gjIKo1tKWnhQcT2o8ZMJ",
+    "etag": "a7287a2bd763dd3986cd6d35818ca5da",
+    "size": 10519
+  },
+  {
+    "path": "spectra/7be4ed39-99cd-45b1-be92-3bd356eb5f73.json",
+    "version_id": "YuPFPL-8jF4fkX.RocaMlc7ygoNzExZ",
+    "etag": "e078f317a46f9783930193e5444d1cbf",
+    "size": 9805
+  },
+  {
+    "path": "spectra/7beab0f1-06ad-42ba-a163-6d80eced9a73.json",
+    "version_id": "6HZboTqGOyx3ZxU2xHmbvwip2jDzXEI",
+    "etag": "ef4eac60d80c0b56ca06db902b826219",
+    "size": 9268
+  },
+  {
+    "path": "spectra/7bfcdc97-69e8-411b-8ce7-52b05d30f7de.json",
+    "version_id": "z0VtX9jK4-CxbXNFLCIuNGA5fLcf5LU",
+    "etag": "0c752cf19451eb311e2abc43e21e2f6f",
+    "size": 9389
+  },
+  {
+    "path": "spectra/7c22aafe-2231-4d35-bff0-54c4de834110.json",
+    "version_id": "H9e2uXtbM61cQFEnFT9iCTu3D0AX6o1",
+    "etag": "df9c726780f60e422bab1b8a497460f8",
+    "size": 9389
+  },
+  {
+    "path": "spectra/7c3cc1f5-b7b4-49bd-841a-c4b779ebc84f.json",
+    "version_id": "eJOs.clWCBvcInhro9FZSTNn5mfVSLj",
+    "etag": "0a17081721418a587c74bba61b84b1b0",
+    "size": 22042
+  },
+  {
+    "path": "spectra/7cd12a34-cd16-4570-b92c-55231fc08f49.json",
+    "version_id": "VFLKy6d6o4cZu0S2BgdBshtt7EQkgF.",
+    "etag": "88c9d089e74ab19fc86de0acbfabdf64",
+    "size": 10519
+  },
+  {
+    "path": "spectra/7d44ad7b-20d3-4538-b33c-73730e9a79d3.json",
+    "version_id": "wC07MA2mgw9CKG2ijYU0WADTCU6j7CD",
+    "etag": "8b18700c71fe2b08c194b7621b8ed497",
+    "size": 22960
+  },
+  {
+    "path": "spectra/7d5d77c5-0aaf-4170-9d0b-076b1a775d1b.json",
+    "version_id": "Vu.14svVt4CCMcKe4ud11AIAEq1iPyg",
+    "etag": "e69fdddf7c9b1e974325c2cd27348ed5",
+    "size": 35340
+  },
+  {
+    "path": "spectra/7d7e5eb0-84d1-4e3a-b7f6-81db47dad296.json",
+    "version_id": "KM3qW.xE0prbw0xBTvCwkFWMxmICz.S",
+    "etag": "31761321feaeb9c3f47627376e00ec50",
+    "size": 64890
+  },
+  {
+    "path": "spectra/7d969c5f-2e99-40dd-b44f-9445927a0d7b.json",
+    "version_id": "B5S5.XKyYeOfTDSWMHh8HTHYAoAIxGZ",
+    "etag": "af779397dc7582b4ac831a26b6b94ef0",
+    "size": 22042
+  },
+  {
+    "path": "spectra/7ded8385-e4aa-4ec1-99da-e1ab0817667a.json",
+    "version_id": "w6JuVZUVtbwT5Y0hhYGJfwMYZv3V3se",
+    "etag": "9b1ac7684742510e48085bb336ce7b10",
+    "size": 9929
+  },
+  {
+    "path": "spectra/7ec40265-a177-4d56-bf2a-46c0bba6d519.json",
+    "version_id": "A9o.8l725-lfcDs0hKgzBzcGYMEitJY",
+    "etag": "352d67d92d927fa0a51982305720273e",
+    "size": 20908
+  },
+  {
+    "path": "spectra/7f5a0759-f8c9-4345-920e-4f84d23f59ea.json",
+    "version_id": "u6--sFC9pOw9JbehSxotGzsV83n-uhg",
+    "etag": "c34c5c451294650382a9faec6cb3b3b7",
+    "size": 30966
+  },
+  {
+    "path": "spectra/7f69957d-52c1-4507-ad4d-ddbcf2296624.json",
+    "version_id": "uEakG32GzRksjVjKNXE6DHMkx94rd1h",
+    "etag": "cb59128e56a1d5310ffe3a7cacf22606",
+    "size": 19659
+  },
+  {
+    "path": "spectra/7ff54779-9be5-4b18-bd0a-7c34422c599f.json",
+    "version_id": "9RSiJ7hOjtk5RFhkJ6.iiVt8Ld6yDXy",
+    "etag": "8d408718694fd0832f1ae7d711455ed2",
+    "size": 9554
+  },
+  {
+    "path": "spectra/80860346-69a3-425b-be4a-d2d1e3d7380a.json",
+    "version_id": "ksW0ANVfzt-X4ljfp7VdbPxxyxACsxW",
+    "etag": "3e1dec10ab20b54be3c3012131e6c984",
+    "size": 9928
+  },
+  {
+    "path": "spectra/80c05b8f-dae4-4d58-803d-da0a9f8799bd.json",
+    "version_id": "v0C.gYclsbaigzUimRuoMFV4dUX.g7y",
+    "etag": "7b8499204e77f40071a77f5ca97a1595",
+    "size": 30966
+  },
+  {
+    "path": "spectra/80f2d125-67ba-4bd0-bd98-bb2f350bdadf.json",
+    "version_id": "YpPWgKOEZWC2T.ByN4yLmnlfjEs.C46",
+    "etag": "1c68a865be9634bcbe578cc99d59ff2c",
+    "size": 9502
+  },
+  {
+    "path": "spectra/811cec7a-9af8-4a5b-a353-2b029512926b.json",
+    "version_id": "h5Bu72Jl4DE59nf2fi0b3dYcMpvh-pE",
+    "etag": "7125535bf895c12ca7a58f9cd98047d5",
+    "size": 9897
+  },
+  {
+    "path": "spectra/81371879-5104-4ad9-86e8-614b64eecc8b.json",
+    "version_id": "J6ROKYkgS4ar6QUaX3OhRmj6WZWQV.i",
+    "etag": "1129815d98dbde250a8bf608fe820356",
+    "size": 35340
+  },
+  {
+    "path": "spectra/8188006f-ad73-4258-b3b7-f42ba51e8b76.json",
+    "version_id": "bBCPLzy5hZewppfmQU-n1h8sgtQTFNg",
+    "etag": "073eb3e09d5d1251d5bfdf0a41a10c32",
+    "size": 9884
+  },
+  {
+    "path": "spectra/81c4c1bc-2917-43d7-816d-cef2827fe86e.json",
+    "version_id": "gRO-V9Q-hK9bPv-MQl3dRF9TcL22WmZ",
+    "etag": "5bb97bceb228ec6815d5d9ec283f4fe2",
+    "size": 35436
+  },
+  {
+    "path": "spectra/820ee37e-275b-44e9-96de-9a87ae383437.json",
+    "version_id": "rcGnbQhTfI1gpxGZFCg3KMlHsh7qSve",
+    "etag": "f286d9185729532fbbc1862734177207",
+    "size": 9868
+  },
+  {
+    "path": "spectra/8312665e-941a-4be0-8b3c-0a21ab59c3ad.json",
+    "version_id": "iZvnZeQtKXcCjEsE1Qf9oWsCYEvSgyt",
+    "etag": "723a7b91f536f0cc75dbc640110eca5d",
+    "size": 9805
+  },
+  {
+    "path": "spectra/83199042-8efa-497e-9e32-f50a7ff512e7.json",
+    "version_id": "MS604u2Hmx9wHj0nQrO44F47DILFKzp",
+    "etag": "9e068bb7af019747219263d8d25b9046",
+    "size": 35340
+  },
+  {
+    "path": "spectra/840a07c4-704f-4719-912a-e944dc6a9c3b.json",
+    "version_id": ".jv4-NWWFMmJwwDMq-l90e.0xJ3pv6u",
+    "etag": "5466500af10e5ac33ae1d21732714aa7",
+    "size": 182289
+  },
+  {
+    "path": "spectra/8425381f-98c5-4749-82fe-6767026f6ff6.json",
+    "version_id": "hmbnNIwFvfpy9EZX4EHHEtQlknZSnzx",
+    "etag": "a7a937a952d90737c7822400e49db783",
+    "size": 22787
+  },
+  {
+    "path": "spectra/8461737b-e9d9-439e-8ba3-49ab8c281252.json",
+    "version_id": "Bgaydy7dCvDACTZXP-T8jDSy4cYeSYy",
+    "etag": "34d9b62f442313cd6bfa2d3c7b671b83",
+    "size": 9389
+  },
+  {
+    "path": "spectra/848930f8-44a1-4a77-a367-8bcd139fc517.json",
+    "version_id": "vysA00MmMzlGTXVC4rOUSeky7G7M3TQ",
+    "etag": "ab7352b58a2360e7cdbc2efb4640d9b5",
+    "size": 9435
+  },
+  {
+    "path": "spectra/85095c0e-783c-4339-990e-6b00f0ab7a3f.json",
+    "version_id": "QEmssWGBURzs4wOi26Jdy9SsNdSe6Cg",
+    "etag": "d31a0139d367255ab906b671b3d8f51f",
+    "size": 9446
+  },
+  {
+    "path": "spectra/851245ba-1f32-4467-bfe8-a562c26ba393.json",
+    "version_id": "elj4k8rW0hObrzx9z2mu9G9xTh8G9Vr",
+    "etag": "3e4fc8ace99f5f6aba75e7feeac20c0f",
+    "size": 9489
+  },
+  {
+    "path": "spectra/85641fa9-265b-45b5-b8b6-efa2be34e0fc.json",
+    "version_id": "2j4ZWHh1VFKEnhDq3BWNLyjp9FCfUgQ",
+    "etag": "c1e311d072d04e2a13c1d753512ebae1",
+    "size": 9435
+  },
+  {
+    "path": "spectra/85b672be-87eb-466b-ad15-c765c01c4fd6.json",
+    "version_id": "nS3LxQOC-YBtYs314dVs2JP322NN0f5",
+    "etag": "b3ea3a65482dcb13bf7021036bbf4e42",
+    "size": 9940
+  },
+  {
+    "path": "spectra/868ef775-91c5-4457-9e58-5cd2b3a8cf57.json",
+    "version_id": "TDVEcePttXy.t8-bafSid1JYFatOIZy",
+    "etag": "8d615abc66fe3dde88d010b888cff01e",
+    "size": 9901
+  },
+  {
+    "path": "spectra/86a01e8e-7f6a-48f3-b13a-f2f63e6c3913.json",
+    "version_id": "6BdYaPS1GsFCdtwDsJ2ZT0dSpWRXXHl",
+    "etag": "927d8e8506408c5b16b153d6eee07af1",
+    "size": 9868
+  },
+  {
+    "path": "spectra/86bb098b-bd6c-48b2-881a-758f106de95d.json",
+    "version_id": "dZrWWo3ZBJFShVmwDatNSPDObU6TRqP",
+    "etag": "62e018b2e8fa0b5b5439192146889a0c",
+    "size": 9554
+  },
+  {
+    "path": "spectra/8800b777-cf93-4611-9179-314fdd969f61.json",
+    "version_id": "ynxDD18W7dy4Da.90EgkuuSC.D43Yi2",
+    "etag": "6e0f203e05afd19239ed28656da89254",
+    "size": 182289
+  },
+  {
+    "path": "spectra/88cec3de-d0a9-412a-ac21-8800964e4238.json",
+    "version_id": "bQkJHKD1PzauwwuorC36Ut3E323Morx",
+    "etag": "4ab825426c0b267d6e7bbe069e33cbaa",
+    "size": 30966
+  },
+  {
+    "path": "spectra/88d6c7e1-73c0-41ff-82a8-d94e5ad9831b.json",
+    "version_id": "GUntEGZg1nLDCrw3ebDGHD2dZ841eQx",
+    "etag": "1010a5bcb9bdf3bfeff00dd3f39f3bf3",
+    "size": 26836
+  },
+  {
+    "path": "spectra/8940d60b-a7c1-461f-b187-9a1237953f6f.json",
+    "version_id": "i0xCuQlbJ2u1cjoUIPunLWggMeTf.sX",
+    "etag": "8403faf62030d0977f17a0e228e7f453",
+    "size": 20908
+  },
+  {
+    "path": "spectra/89a80776-57ca-4f03-8863-2e8bf192d7c7.json",
+    "version_id": "FiqR5d89et2RXh0bchGPQxohDr.uw7c",
+    "etag": "6dad1ae5336afb1328bc2ee895ebb533",
+    "size": 20908
+  },
+  {
+    "path": "spectra/89d8456c-742a-4b5d-a016-5aaa432be5f4.json",
+    "version_id": "7hKWXM5JCXrPVTLenGxKUW07m5qCZ1y",
+    "etag": "c3daa69c8f7d6e25b4f1c4c477dd3319",
+    "size": 10519
+  },
+  {
+    "path": "spectra/8a05c8cc-d8d0-4152-b919-e505280e7e93.json",
+    "version_id": "4AmDxR9ieDIJSEuKgp0piOC2GcFqpWx",
+    "etag": "4691e0bbbc1094a5704649da34b78b0f",
+    "size": 21238
+  },
+  {
+    "path": "spectra/8a26bd05-bbd4-4d61-ad18-cf4c9b30dcda.json",
+    "version_id": "lK16vL-hmxlyb6kti.hvvr9g2ZOAD.v",
+    "etag": "9377105fe2c1f0cc84369ec327d9d1de",
+    "size": 9554
+  },
+  {
+    "path": "spectra/8b27d7af-f192-4bcd-b66c-1048ccabb92d.json",
+    "version_id": "LCjulFY9f4-QSxgccs03i6PO3eUKyLR",
+    "etag": "0118be02dda4ae9a546b8a14d0cbe3de",
+    "size": 9569
+  },
+  {
+    "path": "spectra/8b2c1613-56f2-4ad3-9a6e-2aae41d7b16a.json",
+    "version_id": "3811mdsT93Qsupl9G.vDycqOKptvOSq",
+    "etag": "5600f87d0eb2e50f38590ee73bc02925",
+    "size": 21238
+  },
+  {
+    "path": "spectra/8be5e351-f3b3-452e-82b6-5f933806f9d6.json",
+    "version_id": "fm2mse8vdTeEDG3NjBg6ji7nOtRmaW8",
+    "etag": "1cd3b3fb2b6cbef41a726d9656ed1ff5",
+    "size": 22042
+  },
+  {
+    "path": "spectra/8c06702f-a357-4971-817e-07f80f33df6f.json",
+    "version_id": "hax3XOX5FFIBioRISDwBiZPZ44pJeaK",
+    "etag": "40ab4e5de41fb6a8ac1bcd16cc1bd772",
+    "size": 9513
+  },
+  {
+    "path": "spectra/8c2a0af6-5a0b-4c68-8d7e-d62104b5b0c8.json",
+    "version_id": "1gdWa9AKB6xIsJ2XKDeqO154WIVVY8E",
+    "etag": "d53564969fa082c8dd160edf352106ed",
+    "size": 9805
+  },
+  {
+    "path": "spectra/8c2ad59f-7db1-4492-8fd6-31f8a7f892ab.json",
+    "version_id": "B-5vhZRCH5z6mFHeIqYCATz5UjC.8aF",
+    "etag": "aae32a7a21a0566cb89c0b0a1b231414",
+    "size": 9435
+  },
+  {
+    "path": "spectra/8c4eb5cb-a1ee-4e2d-aa5c-3e59ff0fd3c8.json",
+    "version_id": "c0W6v4p5Rnu4WANl6.wJ3zJIGhQRF0e",
+    "etag": "7b546526f170379db57afbc284dc9f03",
+    "size": 19659
+  },
+  {
+    "path": "spectra/8cd60009-21fe-4aad-a42a-ee135446943a.json",
+    "version_id": "fRC8XN-dpwpqIPU08R87I-fEEMIBT.-",
+    "etag": "619a1284ef6a959d9eb9f956bc771c6f",
+    "size": 22042
+  },
+  {
+    "path": "spectra/8d5d391b-f1d6-4354-8817-28cff4ebc8eb.json",
+    "version_id": "VjOB1.wgmty.jkPRZNBVmJ9wPGjZ.Df",
+    "etag": "7893b6bc3f2780c97e94bb9c586efb32",
+    "size": 9502
+  },
+  {
+    "path": "spectra/8e31490e-721c-4906-bdc6-0ce012e0fddd.json",
+    "version_id": "RSYq9nsMX3JzmNjEaP4c5VLudbcDKZ2",
+    "etag": "519bf0b96c629feb5b0a211324a12463",
+    "size": 9812
+  },
+  {
+    "path": "spectra/8e3b09cf-f778-4528-9c9a-6687f2e36048.json",
+    "version_id": "DAd-Yr5TYpW2tLgnR9vRbXRNMm81qYS",
+    "etag": "e78d582c6aa34c777057562382e393f8",
+    "size": 9504
+  },
+  {
+    "path": "spectra/8e3ffc91-2b0f-49b8-9ea8-8751f61b1e8e.json",
+    "version_id": "d0wEkId5N5GQl2i2fMToeXe7M9nJ8lv",
+    "etag": "95e5d83a830375beb21be9ccb5405534",
+    "size": 9324
+  },
+  {
+    "path": "spectra/8e502953-1636-4653-81fb-9e36f7cad36a.json",
+    "version_id": "hkBSkn9XXLuOg0xFicTdM4dTVkNIRaY",
+    "etag": "b6804afafcdf4ea61b4b4663affd7ec8",
+    "size": 9940
+  },
+  {
+    "path": "spectra/8f167e68-817b-4001-b1ff-bc4ba21207ad.json",
+    "version_id": "ApEPaxh2cOoU1.cjn7L1Vhl9NDwLt3A",
+    "etag": "c42769feffd1e00e62b6458865b5f169",
+    "size": 64384
+  },
+  {
+    "path": "spectra/8f2d17bf-70dc-4c5b-bc88-6a14efa25337.json",
+    "version_id": "j.Spbqvfw3mSOZ58mIQVps4w5uq8gsu",
+    "etag": "b88afb92f5f13e740e88409885faf4b4",
+    "size": 9886
+  },
+  {
+    "path": "spectra/8f717987-1ded-4d92-a617-7cc4d1762e6e.json",
+    "version_id": "UENS2H1-wMm8HtQcD00TxpzX2fUDbi6",
+    "etag": "aafcd9422424f6826af2c1abeb784008",
+    "size": 9805
+  },
+  {
+    "path": "spectra/8f98d4bb-2ea8-4ab8-9657-4bfebe121f7e.json",
+    "version_id": "ncN9faEh11lfNfqMPhO5esDSYV-wHq1",
+    "etag": "81616c1b609dc959cd7c431f4d47a995",
+    "size": 26836
+  },
+  {
+    "path": "spectra/8fd54c56-6266-4369-98fd-2c96e2ce6962.json",
+    "version_id": "5PIFuwwuxdE7dXHroRLMbCw8AD9cLsw",
+    "etag": "76311becac8294fdb58c93ed7f322fff",
+    "size": 9877
+  },
+  {
+    "path": "spectra/8ffa6bde-4d99-463f-a77f-1bc91c184223.json",
+    "version_id": "AYw4y0stpQt.0rDDBNBjeWZ1hXO9CCX",
+    "etag": "046b3c584c1f74eb456c3e7b35e4a5be",
+    "size": 26836
+  },
+  {
+    "path": "spectra/9008b41e-ccd9-4c45-9c06-0819e2a57258.json",
+    "version_id": "-fWBKZeLmt58nFPFbWliNdsgyhu01.n",
+    "etag": "3ff4cc18ec31171cc2646abaf3bb1a84",
+    "size": 9908
+  },
+  {
+    "path": "spectra/901bb4a0-3d7b-4afb-a0b2-86e1cf5343f7.json",
+    "version_id": "9A6ImrhduQuSNF.Cvrm.RxsqGbk2Nba",
+    "etag": "3689ee9945aae954d216c1c0aaeae818",
+    "size": 9389
+  },
+  {
+    "path": "spectra/902ba4a0-04f5-42cf-952b-d826eca94322.json",
+    "version_id": "nrMB4skHkXQGISzKg-SqkliF0GvSrtU",
+    "etag": "2dc13f370bcca35131dbd4c8cb101027",
+    "size": 19659
+  },
+  {
+    "path": "spectra/909091e0-9587-4a9b-b721-a05ad1babe58.json",
+    "version_id": "r2TNegZin5g1vSFFbVfo1raYOvKSm1u",
+    "etag": "effdeddd15b08377f6493df969b2f181",
+    "size": 9506
+  },
+  {
+    "path": "spectra/90f67ebc-9f7d-45f9-b8bf-e61b840facdb.json",
+    "version_id": "J8yrfFyxVTW6VoB7Q67E6yBHQvC1fsm",
+    "etag": "6c65e2139bf7865a79b6bdc562912e1f",
+    "size": 21238
+  },
+  {
+    "path": "spectra/91194591-c5a7-4494-98f5-c4b1d525a718.json",
+    "version_id": "-CoqN2znz64QfUISnfF-3u4JrpX03T3",
+    "etag": "f07ec99aac47255b3ab0fb1ab75b1ec6",
+    "size": 9868
+  },
+  {
+    "path": "spectra/913b12e0-d882-4d13-8730-68cab79385bc.json",
+    "version_id": "jr6raP5iI4t.qYzWf0ENsSJvbKk0FMX",
+    "etag": "437bc7aca1f4144e062d0e9b33dc1143",
+    "size": 9929
+  },
+  {
+    "path": "spectra/91fb1e9a-fa99-46a6-93b4-e75f13ace45f.json",
+    "version_id": "MXk-YQkobBMM77wCm8ihgTHNoeB5Jkr",
+    "etag": "b078a4cb8705f2a86665237e0ec044ce",
+    "size": 9946
+  },
+  {
+    "path": "spectra/92dacda4-0221-411a-bf6c-690fb76f3aa7.json",
+    "version_id": ".33.ez.V5aSVJH2CQ9.qyuBDw.kZf9k",
+    "etag": "5c5dc4af3d2253db2b70be2b7cbcfca4",
+    "size": 9605
+  },
+  {
+    "path": "spectra/93235206-487a-490f-8397-d2bd5bd5e196.json",
+    "version_id": "oFL.jtZWzA3MfZXHVrQlGAcJauOtTOv",
+    "etag": "879689ecb5c857f3d7603066ae1f816b",
+    "size": 35184
+  },
+  {
+    "path": "spectra/933b4be8-fb8e-424c-ad68-9cb09bf80488.json",
+    "version_id": "F-bDFZnBtGR7OB9dNjCaKqFA3u9N0yh",
+    "etag": "ed5f26fbb8e2fa8a1e4784481b625204",
+    "size": 9868
+  },
+  {
+    "path": "spectra/93568657-49c0-419e-878d-ddf3a094cf04.json",
+    "version_id": "zcds74PAQkshyIFHTFBZZJM-n5f3Ohn",
+    "etag": "af1c3246e1886ab889305a92ad522690",
+    "size": 30966
+  },
+  {
+    "path": "spectra/93f8bd59-3358-4da4-9736-9c936dbc885d.json",
+    "version_id": "rUOxmB4ipPc3qSbVrLzd7zf6ujwQz3f",
+    "etag": "e502a4bc1f968ef7e8b015f923b157c8",
+    "size": 9966
+  },
+  {
+    "path": "spectra/944c4cdd-4c9d-47a8-b762-5daeb0766e54.json",
+    "version_id": "K.4HbdNUtX-13l20gTQHmwRuYXEkZrQ",
+    "etag": "5f9aa6be8dfe52b9effaa71c99eaf8d9",
+    "size": 9268
+  },
+  {
+    "path": "spectra/944ca615-7b8e-4084-ae3d-bb248cfbe50b.json",
+    "version_id": "4coqgDNUwmwBI4VyEq6XEQNmlJFSAKk",
+    "etag": "a7aacbd2fa82d66f53fea00cd8c44142",
+    "size": 22787
+  },
+  {
+    "path": "spectra/9483f0be-6b23-4041-86f2-b0ce757a2e17.json",
+    "version_id": "rFJ4vusgwXQS1ANByb8HQ.IkOEtGux6",
+    "etag": "f666ace19e205471e0aa1c8559489d7b",
+    "size": 9554
+  },
+  {
+    "path": "spectra/948bbea3-89ba-4ab4-bba2-3bc2661dfc1e.json",
+    "version_id": "3tiEAQ-qIyeDEKbyzWGwL42GZQMqvve",
+    "etag": "1eb7474eafc45bd015feeb37b166859a",
+    "size": 9805
+  },
+  {
+    "path": "spectra/949b025d-15e4-4f91-900d-7b2290a85c80.json",
+    "version_id": "2yPenAZ5n-iu7d-XgVCDYQhRBfHHVyI",
+    "etag": "15701924d435f9b1158dbcc52d352e2f",
+    "size": 9805
+  },
+  {
+    "path": "spectra/94b3e4fa-0564-4195-805c-77b30a3f25a2.json",
+    "version_id": "WjzkH570N3Fk6RSTvngx.uFcNgD7xvg",
+    "etag": "7b832c84dc97bfd6023db3d2598ad39c",
+    "size": 9467
+  },
+  {
+    "path": "spectra/94dd533e-1466-41c1-b19e-16dc7e9a7332.json",
+    "version_id": "nssyZoMfeWFhHevsgJc.VSn.mLPvQxZ",
+    "etag": "43945cbe681f0c2818b96fac24ab9389",
+    "size": 9886
+  },
+  {
+    "path": "spectra/9526e1ed-9b94-46d8-b72f-f13252101287.json",
+    "version_id": "sBFCG7IgARx2oOS2NcS9bAOCpatUN7H",
+    "etag": "53c1330291338976c602d71b6fc9c44a",
+    "size": 9822
+  },
+  {
+    "path": "spectra/95b5155e-754a-4f09-90ba-ec6c83021a28.json",
+    "version_id": "-xT4HUKRwPbWbW3kfawloyGuRU2ipFH",
+    "etag": "dcc8304ae193059c71c1e434035ad569",
+    "size": 9389
+  },
+  {
+    "path": "spectra/95d41bc6-542c-4b21-8a60-ee4fc86e2e0d.json",
+    "version_id": "tEYSWQdNnQl8KWNlpUsnhS8pfdiG-nT",
+    "etag": "1eb42dd9c0dfd215845e1ca0cd897f9e",
+    "size": 9929
+  },
+  {
+    "path": "spectra/960cf6bd-78aa-491e-a61a-7b11ad168893.json",
+    "version_id": "44EvIKCJSUIzU5-9yhsIe8EYrEPVAcr",
+    "etag": "488a6d132de9314edc1b66b6a3d8a27d",
+    "size": 9526
+  },
+  {
+    "path": "spectra/962cb964-0787-474d-b66e-c9663dd506db.json",
+    "version_id": "pwVSMlNdcYTLX55dFotChTicOqN5rbT",
+    "etag": "6764faf5356275a93935ad158577cf49",
+    "size": 9504
+  },
+  {
+    "path": "spectra/967ff2ce-43b5-4833-ab5d-ccedf29b7c7e.json",
+    "version_id": "aRWps1J8wQFL367f6YI6Jnn1gbC0PV5",
+    "etag": "efca016decd9d331243b54a997cc9bbc",
+    "size": 182289
+  },
+  {
+    "path": "spectra/968fd27a-1276-4b44-8b6d-86a7a59ca324.json",
+    "version_id": "6DCdfowCc-WExYsOt3yidZHKd7tdqH1",
+    "etag": "09cf47edf35f4f1c84e51bada98b4580",
+    "size": 35340
+  },
+  {
+    "path": "spectra/96ce6e06-e30f-4c22-8b85-550cc6c80236.json",
+    "version_id": "MyqrXmwrtT1oj-LUzXuPWOcwyV3Ppae",
+    "etag": "ac7b7471e9f029fcfae55a23f90962d4",
+    "size": 9324
+  },
+  {
+    "path": "spectra/976f47db-c2d5-4779-8f45-24e8f19a2f5c.json",
+    "version_id": ".-XKerKr306tJ2CZFMP5owXsQ2f7r1A",
+    "etag": "003c561a2b9488293b4c366222d4c6ea",
+    "size": 64890
+  },
+  {
+    "path": "spectra/977c8cce-0d19-47cf-887f-eac2d02523e8.json",
+    "version_id": "Z4gwk5DXD7.SWLan2p9obB5KGeko-Ke",
+    "etag": "f05c4f42497829a4e142db0de418ea9d",
+    "size": 64896
+  },
+  {
+    "path": "spectra/9788ab1d-0969-40c0-9de8-2a2f8a4dd9e9.json",
+    "version_id": "Dqb01ktAwZ1v-DteDG2mcef9HdDam5x",
+    "etag": "b8c5b5434cbeaf8adac50f3a28b4df57",
+    "size": 35340
+  },
+  {
+    "path": "spectra/97c1f4ac-1492-4e0d-a43d-5c20404c6b7a.json",
+    "version_id": "QwvmIEIDM8v.vKDftCwwezZVD2caMy5",
+    "etag": "ca7e4309e0f10f3bc7213599de14d19c",
+    "size": 182898
+  },
+  {
+    "path": "spectra/9860fbd3-f967-4d17-a15c-ffb1c86f5c95.json",
+    "version_id": "mjm72fsHEOXhgnak.ZpQ1W9ZKgSRkz1",
+    "etag": "38ffb740cdf8ffb66879622096ef2891",
+    "size": 22787
+  },
+  {
+    "path": "spectra/98f180bc-4a1c-4e84-bac7-8b6db316d8f5.json",
+    "version_id": "Zb8i-1ps-vnVlreOH1xhPivyiJdKt8w",
+    "etag": "ad429d2670c109640d3b28746906f766",
+    "size": 22787
+  },
+  {
+    "path": "spectra/990924f9-ab9c-45c4-863c-63b13c1bffee.json",
+    "version_id": "iCm1osXl0G4S3DKb7ngwdJ7J6vMXg-m",
+    "etag": "de12800674cdd679e7d4ba946811ce4d",
+    "size": 35340
+  },
+  {
+    "path": "spectra/9921c44f-18c2-4cb4-99b3-598f62e1444b.json",
+    "version_id": "dDckCpkTFiS0xBFaGF-QmZllF6qiuhb",
+    "etag": "a506183b6e1371d21558df65304c86d0",
+    "size": 9822
+  },
+  {
+    "path": "spectra/994a1c60-4350-440b-84d9-4ab4366cc89b.json",
+    "version_id": "rq306wS7gQWtBaUFsqw0SLlXtveDSFr",
+    "etag": "52032de6e0f4a04600b58c8515d7347b",
+    "size": 9886
+  },
+  {
+    "path": "spectra/99b5f77a-f799-4b7f-95e5-1b1c5ef39b65.json",
+    "version_id": "VMuYMpWdQNZCMqWlicC25QrHwFUeM6A",
+    "etag": "513c285d945577b02b0a1469a6e9b338",
+    "size": 9605
+  },
+  {
+    "path": "spectra/99da0bd5-2612-4165-9404-30d559387d84.json",
+    "version_id": "PMZWyg8ru1soAzWTuFHuY.HGbkQNJ04",
+    "etag": "cb515842b6eca153e79b41b49446b6cd",
+    "size": 9929
+  },
+  {
+    "path": "spectra/99f7bdb5-7976-4439-9dba-9d03a6834290.json",
+    "version_id": "Y5DM7Utv.oRqPqW9LIM9itLHeCPH24L",
+    "etag": "592b045851a9f3190e1b17eae1e7323b",
+    "size": 64896
+  },
+  {
+    "path": "spectra/9a06f9f7-3a46-40e3-a0d5-8b85f2200b27.json",
+    "version_id": "BNzAFDItk6jb1af00ttQh2hHyYnZmVk",
+    "etag": "2ece4c7dbf0b929be3c669aab731194f",
+    "size": 35436
+  },
+  {
+    "path": "spectra/9acb41a3-d974-4745-a4ee-8354be3c93b1.json",
+    "version_id": "psxUx2z5nEY6mC7U4w9QjsOaDuGrbZZ",
+    "etag": "625645cd88835f1871066c697b041270",
+    "size": 21238
+  },
+  {
+    "path": "spectra/9aeb826c-a3e9-4278-92b2-6fdc314bb3fb.json",
+    "version_id": "l5iG65c6VVwtxIBiVUwynKDTaCzZYmU",
+    "etag": "f84f512ad60c532ee55ecb8f69064c99",
+    "size": 9897
+  },
+  {
+    "path": "spectra/9af29b78-a009-4d94-8505-d7ff330309a2.json",
+    "version_id": "SIARu.3ExALb9ydRM6eUg61XTTL1-gn",
+    "etag": "20801854dd1aa8a3cb6a73ffa341974f",
+    "size": 9324
+  },
+  {
+    "path": "spectra/9b8ddcc3-c3c0-4de2-b51b-58b38c1eaafb.json",
+    "version_id": "7b5RZM6EGX.KqrUp7zEPYofDEjoMo0M",
+    "etag": "01a73ba4d2c28d819c92b9a1276702ea",
+    "size": 20908
+  },
+  {
+    "path": "spectra/9b9f853a-23d9-4175-9ea4-890b33f9eab4.json",
+    "version_id": "4mleQXNqGZ6hfygEuYK6StrMR0ab65o",
+    "etag": "e04481ba3dae7d9fe194bc3020326cdf",
+    "size": 9908
+  },
+  {
+    "path": "spectra/9bb79d09-75a1-40a8-b898-ae287ed9c82e.json",
+    "version_id": "-qM-NI46WIbsWNepqMquausZ8BCQA73",
+    "etag": "ee671b895c2a88aae7bbf9289f4fdffc",
+    "size": 26836
+  },
+  {
+    "path": "spectra/9bfbbeab-8a1d-4dab-8955-f04ac6717fcc.json",
+    "version_id": "0B-a5ckP79cZWiQ-BmpfLDmX1dg4kOG",
+    "etag": "063c49bfdb6c10f8037e6382dda242ec",
+    "size": 9522
+  },
+  {
+    "path": "spectra/9c47ee40-945e-4e36-b8cb-73598bc74de3.json",
+    "version_id": "SWhu55gtqlt2SgsR9qpUFO4QHCFYo7E",
+    "etag": "31825a6c9d414ed069f0611ae975ff9b",
+    "size": 9973
+  },
+  {
+    "path": "spectra/9ccfd0df-92ed-4885-82d8-8a5e7b4a6586.json",
+    "version_id": "f3exUy4lFlegA9LEPN3T.9DLTgkoPGL",
+    "etag": "6663a6aa72acb85a72a11e36c4c121fa",
+    "size": 9605
+  },
+  {
+    "path": "spectra/9ce3d657-5315-455c-b818-06732d38898b.json",
+    "version_id": "c0mXMdmtac07rPZGEeW78Vmx5KwbJzR",
+    "etag": "ce475ed229c9402e00a5c7a55f15a88b",
+    "size": 22960
+  },
+  {
+    "path": "spectra/9d981c94-b598-4586-80f2-5cd191c645c3.json",
+    "version_id": "63ZbV8Ry9E9Lh7XGPZYASVryqSLlbBl",
+    "etag": "ffa4df6bd96d5e6359b6e316ff751f31",
+    "size": 35436
+  },
+  {
+    "path": "spectra/9db2b7ce-90a8-4ee3-becd-bc9e183aba42.json",
+    "version_id": "3KvFKvyRw3LYXe3MABGRmvhi0PtKiJ2",
+    "etag": "08dca8d10a48bdab755b72dcee44c0a5",
+    "size": 26836
+  },
+  {
+    "path": "spectra/9dec2221-86ef-4986-b11c-1c5feb803df5.json",
+    "version_id": "yBVNtNuAqziFxTJwIl.wB8DYGikk2wd",
+    "etag": "be35e5e288951a1ba0cb6e38cc8448cb",
+    "size": 22960
+  },
+  {
+    "path": "spectra/9e0e26ff-912f-4feb-b956-2726d92ce975.json",
+    "version_id": "CST.Bes4o4.s-BXbdMGE8OPEzmIP-Uf",
+    "etag": "bac8afb34a08575a38600dc40ba7fe45",
+    "size": 19659
+  },
+  {
+    "path": "spectra/9e6b4443-f304-4cbf-9ad3-8c84c63ae805.json",
+    "version_id": "DCWnQ7E9Xyk3X6eHR-9iPNOMphzmfFR",
+    "etag": "f45a595b6615d421c41923ca32c2ec7d",
+    "size": 9884
+  },
+  {
+    "path": "spectra/9ee860bb-d5a4-4d2d-955f-93a2b309b313.json",
+    "version_id": "Ojey3u3N0trnEF7WuPzO..zAbJGLor4",
+    "etag": "e59061a5a4d93d3ec06ea262ab0ea81b",
+    "size": 35340
+  },
+  {
+    "path": "spectra/9ef55a9d-e551-4777-b18c-99ce4bd55ccb.json",
+    "version_id": "LWeLAE7KU9BuJ.H5Z6RvVTrE9xn6NUP",
+    "etag": "b674ccdf0344420fa8532e5e99d70549",
+    "size": 9605
+  },
+  {
+    "path": "spectra/9f98910b-00b6-4b1e-9a8d-6440e2e57d32.json",
+    "version_id": "Z74D7uSrrUw7mhmava4f0d-JzsOTIzY",
+    "etag": "28e47e1092c618fe28c98bd88aea9582",
+    "size": 9155
+  },
+  {
+    "path": "spectra/9fcdbae2-1693-4675-b2dd-8dbe942512dc.json",
+    "version_id": "O1uCI6FVbLxvVLa0eYMjoRrL39J-Q23",
+    "etag": "24f9831c675f80cdb9162f05eb824f57",
+    "size": 9506
+  },
+  {
+    "path": "spectra/a01f5947-690f-4373-9986-4f634347be57.json",
+    "version_id": "DpEfCsv4QugCrVc-OYzmFXVO.-fWiJF",
+    "etag": "ca2e5f620f2004454a7e7e1f6d4e4a3e",
+    "size": 9886
+  },
+  {
+    "path": "spectra/a0867748-49f3-4c9e-ad0e-52586a9b4369.json",
+    "version_id": "--JwWK.msq.LEOpidq.Aq4M2gxC3fis",
+    "etag": "c3f65e19df38e81efa3e76f393617e19",
+    "size": 9435
+  },
+  {
+    "path": "spectra/a0a4ed9c-c9f3-4608-82a1-e0f0b8eb9fc4.json",
+    "version_id": "kPUK5h-pyZjKzcKxdMs73Xwxmp.dqcN",
+    "etag": "343574cca10250b59cabdb4fcdecfbf3",
+    "size": 9946
+  },
+  {
+    "path": "spectra/a127e283-6dfc-4ecf-882f-010560d4a1d5.json",
+    "version_id": "pbr6lWLh0y-CXYRJpOJFVwJsUVGhYVc",
+    "etag": "d85faf4a1d1eeb2499816a39d9b1c5a3",
+    "size": 9901
+  },
+  {
+    "path": "spectra/a133f348-6ffe-42ec-a1a1-2dd620feb4b6.json",
+    "version_id": "eZWO.qotWoQk1CoPuW1DZH-A5mNwK4n",
+    "etag": "446640ad0da55a0174799fcf505e0fc3",
+    "size": 9569
+  },
+  {
+    "path": "spectra/a15718b4-aa34-4fac-b698-42d8dcfa6d51.json",
+    "version_id": "X6E.5c7sJQPoO3bWm-4Rj0zAVc5PzAj",
+    "etag": "a6ea84e29a56dcda306e061ebb9d10c7",
+    "size": 9605
+  },
+  {
+    "path": "spectra/a20ce8fb-6aed-4cab-b703-a1051530263d.json",
+    "version_id": "b7VhrBe3rgPmBmUKPyCrI6t725RK-rN",
+    "etag": "ad6e0bfada0dd40f3533a725ab264c00",
+    "size": 9435
+  },
+  {
+    "path": "spectra/a2387b27-7fd3-470f-8707-e84e9b6b1c1d.json",
+    "version_id": "UnJgr0FSANhDw9vf4FYbuGzZ0maF0oR",
+    "etag": "000a8e2bf211c1bdda9e45fa8dd61287",
+    "size": 64384
+  },
+  {
+    "path": "spectra/a2868383-be9d-444f-9d04-f17247307c35.json",
+    "version_id": "9JkDBTbqszDiIs7PR1BZcb87kL6yKkg",
+    "etag": "18d8446f00d0e61e4cfa4b89ea4256d4",
+    "size": 9526
+  },
+  {
+    "path": "spectra/a29e942e-f033-45a1-94cd-77d77c4319fd.json",
+    "version_id": "rTHOXpIBfeGVEUIKIFnpuCUCViUFKQu",
+    "etag": "70730335a9dc6335f095d6e9b6bd11f6",
+    "size": 9389
+  },
+  {
+    "path": "spectra/a31da0fd-b2a3-43c4-b419-6019e153171d.json",
+    "version_id": "VvrXIlFTMcZFGvBvLEbOudrjW69nfd1",
+    "etag": "f180dda8e2b5515bbdb796f9b4973296",
+    "size": 9324
+  },
+  {
+    "path": "spectra/a33a5b40-5c30-49e5-8684-a73a87473dec.json",
+    "version_id": "BOVgWFGnqkFZQZJaTGwwJOw1eECptss",
+    "etag": "2bbf94c6352dbba7eaa1276777e43095",
+    "size": 9389
+  },
+  {
+    "path": "spectra/a342c1e6-1db2-4a95-a7c4-a55e85c56a39.json",
+    "version_id": "NCmoXh3KpyWQ5oD7ZM8XarIXZo9NQ24",
+    "etag": "94fffbcb9e90d8cc9be83ff0a68edcb0",
+    "size": 9502
+  },
+  {
+    "path": "spectra/a4c38dff-16ee-4c47-8ac1-3cc792824dc3.json",
+    "version_id": "aVVpv7Fo3JP4G1r8cDqH5bFjblpgin4",
+    "etag": "e54d932815fa1877c8df77430b69172c",
+    "size": 9389
+  },
+  {
+    "path": "spectra/a5a3b0eb-6478-42d2-9231-a9a4d6e01031.json",
+    "version_id": "yXU2EqzJ9a3TmISAXYmx5TOAImHAMzS",
+    "etag": "5f010c3237dc66f9c7b9fc4b573c1da9",
+    "size": 9506
+  },
+  {
+    "path": "spectra/a5adc83c-50a3-4de0-925f-b86051045eda.json",
+    "version_id": "QkceUu37elygVUH1upYsHuY6gBrEY4v",
+    "etag": "955629b22aceaedc5b36a43725a6065a",
+    "size": 9928
+  },
+  {
+    "path": "spectra/a60669be-5599-40b0-832d-712b10fcad4f.json",
+    "version_id": "XHclwFJdcJ3cxN0p7ucmwK1oB5WuCnN",
+    "etag": "03e6e73409ad0c11563aee4833c1dc07",
+    "size": 19659
+  },
+  {
+    "path": "spectra/a66cfa5c-8dd9-4bcc-a839-9501bf3766bf.json",
+    "version_id": "mqSifjmw3qvYVvGctVYi34d4a60yGiI",
+    "etag": "89a0b9cae2fa6712179b525fa05e5d7a",
+    "size": 9928
+  },
+  {
+    "path": "spectra/a74efa39-01a7-4a05-85ef-b003c20f5d0d.json",
+    "version_id": "Oy9092j8W7q8cZDEfG9EE-z6B8p.oSc",
+    "etag": "85629f2390880cef1840d82e3283c947",
+    "size": 19659
+  },
+  {
+    "path": "spectra/a75356f2-14e6-4f90-a637-aabadb69ea0e.json",
+    "version_id": "MwLqsygHo5Z606WCI4ecGcoCuPfXLle",
+    "etag": "c3720988031cab5e8664a3e1532d83b4",
+    "size": 9506
+  },
+  {
+    "path": "spectra/a75a92e7-1c36-4975-957e-64415fc8a7b3.json",
+    "version_id": "7iAm.XIm4UmTWyXvANyxa6D0z7lI9XE",
+    "etag": "dbe5c22f2a42386b2bad71efba9f604f",
+    "size": 64890
+  },
+  {
+    "path": "spectra/a7a72811-a536-43e8-9483-5839678a3599.json",
+    "version_id": "VK36A8bGbPb9b1oHeOQVDG9rRPCaRiE",
+    "etag": "37fd6fbc35d969c17eeb2ab83aee20e2",
+    "size": 9504
+  },
+  {
+    "path": "spectra/a7f02957-3a62-42d2-8602-6b7acb99378c.json",
+    "version_id": "pOcyGdVcMf5rNKh9VSvcR-X4Wvke8kd",
+    "etag": "82f2fcddc47d02452366f4daacdfc8de",
+    "size": 64896
+  },
+  {
+    "path": "spectra/a83e0f24-37f1-4e5d-baa0-0dafd59f53e7.json",
+    "version_id": "vEUKEyoylgcnOmvyR0EUO1QgFthVm0M",
+    "etag": "4360ac6a73613ee95dc2eec28747c8f3",
+    "size": 9605
+  },
+  {
+    "path": "spectra/a88df146-18b3-48f3-be2d-7ea4d0085986.json",
+    "version_id": "JyqGJcHQdrn6wZemKUsCOveVGJCh79i",
+    "etag": "776ddc7b7ab99a3287562081d08c9401",
+    "size": 9928
+  },
+  {
+    "path": "spectra/a8a8483b-1b9a-4817-8f1e-52866530cc78.json",
+    "version_id": "IkiQB4VNHXltNsqY4RIgrmi9d5aDBwP",
+    "etag": "5ca2f8119ec1918d78e5e18bdea534a2",
+    "size": 64384
+  },
+  {
+    "path": "spectra/a8bfdda1-8393-4eee-bb65-ef1694c58f8c.json",
+    "version_id": "r3JoJ0MoXkthE.bohfQ0x1jofY9rhRR",
+    "etag": "7c7a12021a41c540f7bc78f1c5fb7b06",
+    "size": 9868
+  },
+  {
+    "path": "spectra/a8f45ba1-af6d-497f-bb70-b7a86e561527.json",
+    "version_id": "92vJm51E2ld9D57wIixd1pCK2XqULPO",
+    "etag": "59ca0821778fd963c59567077d6deba1",
+    "size": 26836
+  },
+  {
+    "path": "spectra/a92f2bf4-af4b-4cac-a71f-0c874f431898.json",
+    "version_id": "CHifm93M9ss1ONIqUvAhnqqF-hXHVba",
+    "etag": "5f5267d089482c4c883132d4910c7906",
+    "size": 9389
+  },
+  {
+    "path": "spectra/a939150c-7b78-491f-b48f-fc8cead8b8b8.json",
+    "version_id": "x.qB2ebW1ys6Ipxi0j3ISro9J2ISaIX",
+    "etag": "dc55e97e3fa9c331331cfa0b0234446a",
+    "size": 9324
+  },
+  {
+    "path": "spectra/a9c62915-51b1-4151-94a6-4c5c95cebb9b.json",
+    "version_id": "fQUOXvTlAtP5bKtfukDGFtH5RBD6MRH",
+    "etag": "a8ee431e648d4459154f21e5f3a845eb",
+    "size": 9868
+  },
+  {
+    "path": "spectra/aa1cc942-a9a8-4e80-bc7a-9194a405debe.json",
+    "version_id": "AribeE9WxwgnmcOXiv.JOn0yePOxMm3",
+    "etag": "25363503b0f44e8fa6b67cfcc42d7934",
+    "size": 22042
+  },
+  {
+    "path": "spectra/aa4001c5-bd66-44a4-be1d-40c3b3640e66.json",
+    "version_id": "2xZS-b31XgVlzTE90rVPApPI.pRTAMf",
+    "etag": "509d9dc8257d985389293dbcb796b443",
+    "size": 9805
+  },
+  {
+    "path": "spectra/aa5412f5-6fad-4acb-95f8-a4f7f4d72462.json",
+    "version_id": "s8HdX00cYHGZ9MpHA4Fa11pNeeOzwyA",
+    "etag": "487718ef57e8689c79032c5e05bc098d",
+    "size": 10519
+  },
+  {
+    "path": "spectra/aa5c53c6-c5b5-4134-8454-bd1be8b134f7.json",
+    "version_id": "rkQCqmhVzVfgCBHJfr23mSrB5rlAH0K",
+    "etag": "86caac15b33603cbcf7ebcd266b06bd0",
+    "size": 9908
+  },
+  {
+    "path": "spectra/aac09fcd-02fe-4b67-9ab2-73f102b507ee.json",
+    "version_id": "VdVryNQvktAzo2SPWQaZds-In8LXjez",
+    "etag": "e81397069ea13a25e9d60e2e20a5435e",
+    "size": 9929
+  },
+  {
+    "path": "spectra/ab12c369-223b-4a8d-ac7d-85949e87edf7.json",
+    "version_id": "7hlX3S0NUVrN1AofcWoSPcUcn-UnZS7",
+    "etag": "c5d624e2f2cff9b05a7688fc98ac1173",
+    "size": 9324
+  },
+  {
+    "path": "spectra/ab4497c0-faa7-465f-85bc-8fa5d60c8453.json",
+    "version_id": "NVbpKxZ7T4C04ytU3jFs9XMCPVJSntR",
+    "etag": "0dab7a3cc2e3995c8a7d2f3c82c6f152",
+    "size": 9569
+  },
+  {
+    "path": "spectra/ac0730cb-4579-4135-bece-c6d8a4061281.json",
+    "version_id": "K3ri6pS4tKfhPbJRpwU439-XCfmbCv5",
+    "etag": "537da092f526fa54fd471924bb74864c",
+    "size": 9506
+  },
+  {
+    "path": "spectra/ac8711b6-3cd8-4a23-8a52-e95568d1c66c.json",
+    "version_id": "Afmw43n-N05zb2R.3li.gTY.Je7Ugjp",
+    "etag": "69fce4ff679cd1332c8e95853eb61eab",
+    "size": 35184
+  },
+  {
+    "path": "spectra/aceacda0-e67a-4ab9-bf3d-2139ab5c3086.json",
+    "version_id": "K.momB6yKIU38sG2FbEbHAwP7ayWJGP",
+    "etag": "f0e72d01d8304630c502bf86934435b5",
+    "size": 9973
+  },
+  {
+    "path": "spectra/ad31574b-4e1b-46d5-aae8-6fb1851a54d4.json",
+    "version_id": "u.B5gN2jistvbLjy8sz.PUn6JeWiciT",
+    "etag": "5f6f671e71aa608b1df5dbb23e3482de",
+    "size": 21238
+  },
+  {
+    "path": "spectra/ae1160fb-1d32-4fc2-9a10-b4b17948e214.json",
+    "version_id": "Ypr44grdCu4J-Z4q1VoSuhDMizXKuAF",
+    "etag": "04d97006c85a3c5e5d0ccb99df1cee5d",
+    "size": 21238
+  },
+  {
+    "path": "spectra/ae4f96a3-38f7-4c22-a314-5da71de12221.json",
+    "version_id": "sFQFgs6zv1IZ.IcjqNSH1TLZJclbzYD",
+    "etag": "b4815977cf5cd95ec900cedc9378a346",
+    "size": 9467
+  },
+  {
+    "path": "spectra/aee1b43f-da17-4933-9ac3-92e1a1ce0c96.json",
+    "version_id": "pVobH4Hc0ziF55hm77iLEBmosO-IrKL",
+    "etag": "92540d3b5496f0ac1d5d3e73937eea23",
+    "size": 9526
+  },
+  {
+    "path": "spectra/af5f2698-5ec2-42e3-9379-1953bee413dd.json",
+    "version_id": "9-ZINTcfNLP9ijgV5Lk9TLq-Ww6Yy0m",
+    "etag": "70bb1801b99583c252fa20a1b17b3125",
+    "size": 22960
+  },
+  {
+    "path": "spectra/afc97d26-8818-469d-bda1-93f432fbcd99.json",
+    "version_id": "dM4Va5L34VkQjf1xMhCsiHJ.zZnWJ6h",
+    "etag": "43a446abb5cc75122a2ba3c95e775990",
+    "size": 30966
+  },
+  {
+    "path": "spectra/aff0bf69-45df-4311-a169-7a5ead2cd2e1.json",
+    "version_id": "Icef7Shz8BE41Vs2cfnte2lSI.tuHCy",
+    "etag": "d1a529476857e0764c6b32cc382409f5",
+    "size": 10519
+  },
+  {
+    "path": "spectra/b018e79d-2673-4991-97ca-2fd457271786.json",
+    "version_id": "s0Mhem8XD2xpqovHLww3R1DAlw0U5wH",
+    "etag": "1b592a7b76b569d38ccb890d66f58e1f",
+    "size": 182898
+  },
+  {
+    "path": "spectra/b0d64ac1-e58e-4cea-8fa3-2abe6b42d42a.json",
+    "version_id": "SeFkTG4nmSJLr0MKUrs7ATtRbi18N3l",
+    "etag": "fda8b33cf8303b823e5b8fda2622a173",
+    "size": 9908
+  },
+  {
+    "path": "spectra/b0f1474d-fb02-4c67-87d8-2a8d8713b6ef.json",
+    "version_id": "5iEl5GltOTk.v4H3P3KmldhKjLa1rLn",
+    "etag": "2b116db82386f6ad4e5d0c905182fc68",
+    "size": 64384
+  },
+  {
+    "path": "spectra/b116fc62-a0fc-4a41-ae15-48bd32e84b45.json",
+    "version_id": "ICjUpaoDNI3TaqMNC7neT6eGoBU7sWJ",
+    "etag": "30e83b369cc424b272a15849bba8777f",
+    "size": 10519
+  },
+  {
+    "path": "spectra/b14fecaa-bfe8-4ea4-9b25-0506bc0a5093.json",
+    "version_id": "o1ZraO9AwSH4bhpE.0Lraprcrg5k2XO",
+    "etag": "77ae07c39dc0ef2acf9f571af757b5df",
+    "size": 9805
+  },
+  {
+    "path": "spectra/b156d8fd-ad25-4cb0-8dac-7b8324c81973.json",
+    "version_id": "KasJ6c2KG-hTCibcELPlvgYR4o.uhQ3",
+    "etag": "f5eda518657057c13d625c8414a71f92",
+    "size": 21238
+  },
+  {
+    "path": "spectra/b16516f9-f499-4145-a3c1-5a163cfb4e67.json",
+    "version_id": "31cAWoDkhzCAXSHND8Yx7D91t-fFY.Y",
+    "etag": "73c11bf5188284edfebcf13b0f9cfe39",
+    "size": 9908
+  },
+  {
+    "path": "spectra/b20c7d06-1f92-4bee-8fe8-49d0a173986f.json",
+    "version_id": "0-CGWk29Swqcl.1BGfq0JStWJqzciU4",
+    "etag": "defeb3b98a41b2ccd3b6b438d8043448",
+    "size": 35340
+  },
+  {
+    "path": "spectra/b2d50174-6598-456d-827a-baee8c213433.json",
+    "version_id": "VwP64b1TUY3kQ3rskVKTiLyNeLMD3qB",
+    "etag": "791fab01f5d9e46c7650c33b10b7001c",
+    "size": 9522
+  },
+  {
+    "path": "spectra/b3229ccb-7e07-42bc-b968-8d50714af496.json",
+    "version_id": "CRQ2oXBxDFtQ4PmbmCNykECTUA7Vowi",
+    "etag": "6e9b6a6879d70e47f8fead1af0205688",
+    "size": 9697
+  },
+  {
+    "path": "spectra/b351cf78-d139-4f89-a11c-db0fdf12ec23.json",
+    "version_id": "xtOcsnn27b-FH8-H9NANPXODVGNycwv",
+    "etag": "23cdce59bc6f1b3bcea045603d1776db",
+    "size": 9554
+  },
+  {
+    "path": "spectra/b374f088-f3a5-4c1b-aa7c-7fd820cabfe1.json",
+    "version_id": "udKNFfG6YuvGPAI1eFoSnDtZferN8GN",
+    "etag": "1d80e4eb5f5a184971e24f038b0c334d",
+    "size": 9522
+  },
+  {
+    "path": "spectra/b410399a-5d47-4385-96d6-31df20057606.json",
+    "version_id": "cMCU68M9ewBg9vaSFC5fU1YaWNRXK9Z",
+    "etag": "41fad502a2119cb1c5ccea8516c67288",
+    "size": 9822
+  },
+  {
+    "path": "spectra/b41f7876-80af-4a70-a68e-b8915a6eb1b1.json",
+    "version_id": "uqBrlIfZAUd-G.NbZR3SpIvhK1bhz7j",
+    "etag": "a831e2d14f34ec77119eb1224b80367f",
+    "size": 64384
+  },
+  {
+    "path": "spectra/b4876f0b-0967-4e95-b5ed-ae08c8444b73.json",
+    "version_id": "F90wUugUs63N4wbXXuMYDWSqAei-7vk",
+    "etag": "7ee28eefdf7b6bed3dbe09276b538d29",
+    "size": 20908
+  },
+  {
+    "path": "spectra/b5cbc850-e735-4819-8802-558488bb46eb.json",
+    "version_id": "V.i6BumlNo-pNjT645ElLeIS5HGJCzt",
+    "etag": "07ccc3d868674b3094f27a309e2fdda6",
+    "size": 9435
+  },
+  {
+    "path": "spectra/b62e6a53-7881-400d-bf78-f1c6646b0e2e.json",
+    "version_id": "b0MyvohEPtq9jZuMRXL8oJSERUYMbKt",
+    "etag": "36bee7214c2a5d141397eabb4fcf58c7",
+    "size": 182289
+  },
+  {
+    "path": "spectra/b667b70e-c25f-4306-8ab9-182742f7c252.json",
+    "version_id": "HkhSG0oGdrGhSu33PjsoECzLprnKrkc",
+    "etag": "86a724e1d3c3bcc34daadbc53ca69cec",
+    "size": 182289
+  },
+  {
+    "path": "spectra/b6a43f0b-a0b5-4623-ad86-0ca3607a4521.json",
+    "version_id": "KVs3siSd0q-92wLyxyoLs8BAGDEi9Pc",
+    "etag": "a7930b1e94b83925702ec60ae97d9ce7",
+    "size": 30966
+  },
+  {
+    "path": "spectra/b719a740-2c54-408b-be5e-e53225bee3bb.json",
+    "version_id": "5gwlYe2Ls8GE-RJZwmCIc-p23t9uhC9",
+    "etag": "19e85c91f1ee2246cfd2c2c9f8e6c5b4",
+    "size": 64384
+  },
+  {
+    "path": "spectra/b730e8df-7aef-45cc-abad-163319ed6bf7.json",
+    "version_id": "kIqinoiT2QbgsOr-eGKAFzEnN6cZwk6",
+    "etag": "c44f9c7faf18d50480ee8b549c22ae99",
+    "size": 182289
+  },
+  {
+    "path": "spectra/b75fd7fe-f84a-4ee8-9ce1-4d08d44116cf.json",
+    "version_id": "pEgo2Bqol-GbH9ldxg48.KFzZzuqcjt",
+    "etag": "f0f9916be82273c6c5a9d67a2d70427c",
+    "size": 20908
+  },
+  {
+    "path": "spectra/b7d25a48-8c5d-467f-a557-586b129cdb14.json",
+    "version_id": "ZRAgGm6t9BlORCT7twE2PfGfqb0t6r4",
+    "etag": "fecbe44916bd8f3e11a01980bdeab9b0",
+    "size": 9886
+  },
+  {
+    "path": "spectra/b81678fc-4382-4886-815f-a0eb31bbbcb9.json",
+    "version_id": "aHcFs51p3eVdyGLI4CVt9XE9sKOfx2q",
+    "etag": "46bf746f8032fa78c09a19213526d5aa",
+    "size": 22960
+  },
+  {
+    "path": "spectra/b8358d54-7eae-4a6b-9257-0832ed452804.json",
+    "version_id": "hTGJgnCJUr81y66DiJlBWh3mUP1f9is",
+    "etag": "7a41274d89eb5c4d5db26bf77e74240d",
+    "size": 9886
+  },
+  {
+    "path": "spectra/b838007e-0c9a-45be-9600-2dcf0cd740a4.json",
+    "version_id": "alom6Nkos4K9vT9SXdIGBYnPrt1TEGj",
+    "etag": "ed365876e9c1e39c295ee4dad069c289",
+    "size": 30966
+  },
+  {
+    "path": "spectra/b8594bf8-8b0a-498f-a20c-f454f7f689f4.json",
+    "version_id": "CYezAobxxK65ziN1kFsnXKdiNHzEMlO",
+    "etag": "49422af8b408ee9e7bc2de422b797426",
+    "size": 20908
+  },
+  {
+    "path": "spectra/b86a9c54-dc7b-4239-96a9-5dc6f1e62512.json",
+    "version_id": "DNhtqMpUsK0Dg-7ywUgBhXBOinLNj0B",
+    "etag": "ce7b21bc207a822725bfe22ed5181493",
+    "size": 9435
+  },
+  {
+    "path": "spectra/b87f54c9-7a54-48c4-9718-1d9577690369.json",
+    "version_id": "WwuVE.nAQw5XFtOWG4795Wh9loFk3xG",
+    "etag": "9ba4a526a4dd536c3f44692599318ea6",
+    "size": 9506
+  },
+  {
+    "path": "spectra/b8ac8b9f-1c4c-4643-9194-ce65a8adf35a.json",
+    "version_id": "plpksT4olyDr4bs6p5YOih-UbCoIf-9",
+    "etag": "8286941fd1375458704379fd2ad466cf",
+    "size": 9324
+  },
+  {
+    "path": "spectra/b8d4bd57-d29c-43dd-9469-ecb6d642513c.json",
+    "version_id": "HDLV8pZwYuwWPpniAdFzrAyB0VKIltS",
+    "etag": "b5696587f737c3459a458d72d9a326ba",
+    "size": 182898
+  },
+  {
+    "path": "spectra/b8db13b6-54a3-4c0a-9c62-be5dba269d39.json",
+    "version_id": "eO-WfB0MSxt848urSUbSkzwkDjdefzW",
+    "etag": "58eefbd83c241050f159c34fb4b089dd",
+    "size": 9940
+  },
+  {
+    "path": "spectra/b8fa02ca-afe9-49d9-86f7-91527b4a53a8.json",
+    "version_id": "IiEXzG0sKIsy-XlDcqCObByvs3wgZf4",
+    "etag": "d9b5d5fba01720d037b828b860284080",
+    "size": 9554
+  },
+  {
+    "path": "spectra/b93beac0-1b56-4fc5-b2c9-e05037b8bb5d.json",
+    "version_id": "Ygs9yAKOzgnTcdzSdONPGBwJSOqlG2I",
+    "etag": "f78302aac0d7460a56bc11b030d73322",
+    "size": 9605
+  },
+  {
+    "path": "spectra/b97c64a4-eb86-478b-9450-29cc5cee0560.json",
+    "version_id": "z.yIn.sl4maXy.E-nf6irpAWVj2gRvP",
+    "etag": "df8a81fc5cb6d843f4d9ec17455f3cc0",
+    "size": 9908
+  },
+  {
+    "path": "spectra/b9abface-6ae7-4943-a015-e43de97185a6.json",
+    "version_id": "OiiVAmAVPbp6uGh-Z97gB-TVS0uwIFn",
+    "etag": "4f1b072e3100886485f134285b626bd9",
+    "size": 9928
+  },
+  {
+    "path": "spectra/b9b5f09c-247f-4147-a3ba-0c12f6b08dca.json",
+    "version_id": "QXLae8nlj5R8nGzm2CgBzD0VkbIuwL7",
+    "etag": "c75119fc02de4a8d09607d4365b50d8c",
+    "size": 10519
+  },
+  {
+    "path": "spectra/ba695a24-b010-4f72-aff9-340b5c21d504.json",
+    "version_id": "8M-mEkQ10YuSfyzZxGB5CEFf6wsLUSo",
+    "etag": "feb5f2dfd098258691c369f40c24597e",
+    "size": 9868
+  },
+  {
+    "path": "spectra/bad8a91c-10f0-41f7-b410-ea8f701625c0.json",
+    "version_id": "YwkkNUkNfloviYg7My1MUU5yYQ3A7wz",
+    "etag": "e11e83721adf7aef4ea643c4e3fdb4bc",
+    "size": 21238
+  },
+  {
+    "path": "spectra/baf8e69d-2d43-4eb5-9da7-749ce830e140.json",
+    "version_id": "1Bm0WGh6jWLZsXVzk93bitwo8S3wizc",
+    "etag": "4c1c66274b3776e0bd56ac974a14424d",
+    "size": 9868
+  },
+  {
+    "path": "spectra/bb023a89-2a40-4ffb-a469-5cae09360025.json",
+    "version_id": "vOdMV78hvnGeMmzfiZhBe3DSaHGc2jn",
+    "etag": "f0ead26d174910c19273a86ce417d184",
+    "size": 21225
+  },
+  {
+    "path": "spectra/bb34765f-956d-4c7b-a7e7-f352697d1cfa.json",
+    "version_id": "6fIQ9d2h7JHRvvKTyU7kYrgm8KXpthi",
+    "etag": "a38aa68a55edd88be894a38e578860d4",
+    "size": 182898
+  },
+  {
+    "path": "spectra/bb392498-1615-4e9e-bd46-1f805115e3c3.json",
+    "version_id": "JYVNvYtGaJEdIjSLjGtEWyP8snnXm12",
+    "etag": "69529add63fd055bf9262a4a4d4e6d7f",
+    "size": 30966
+  },
+  {
+    "path": "spectra/bb82ba14-fa7c-43ae-a4d3-e588db754386.json",
+    "version_id": "kblJPqcVlyWaMyUY76KFrlWwRjzR0QR",
+    "etag": "471ed9277cc79ed279b6857c6076ccb3",
+    "size": 26836
+  },
+  {
+    "path": "spectra/bba3cad7-da97-4f74-9355-4483f027efe4.json",
+    "version_id": "lkQXFrJRLCeYE20asLpIE4CaZ7QWufA",
+    "etag": "3f9981880a766ac6eb3ddf4017f7c5f7",
+    "size": 9868
+  },
+  {
+    "path": "spectra/bba43a65-990a-44dc-82eb-3538e3e814e0.json",
+    "version_id": "X7lcUSlVAnfNcanq8RHyg2sRVJwxhLT",
+    "etag": "052340e944af3316f278eb268c1e2e14",
+    "size": 22042
+  },
+  {
+    "path": "spectra/bbc4f48e-1812-480d-bc36-524f38aec2ad.json",
+    "version_id": "H8HuEPa7-xsB3tWdyc6w3v8P.Pd1Hg0",
+    "etag": "05f1c7b9cfb728202105c5f044602ede",
+    "size": 21225
+  },
+  {
+    "path": "spectra/bc0782ea-5ef4-4d6c-819d-1652c5dfde20.json",
+    "version_id": "BcP5IwesWqWPSmRkDpByRUUT8-GpNN2",
+    "etag": "e06b78591b24203e962a24213da38e8f",
+    "size": 10519
+  },
+  {
+    "path": "spectra/bc60577e-41ba-48b2-b60c-0ffdc7fc4559.json",
+    "version_id": "-yO39iEzz0Lcv9e0PoY.NSLrC32b4UI",
+    "etag": "0db04615ce80a7fef08610597b29f811",
+    "size": 35436
+  },
+  {
+    "path": "spectra/bd19266d-f510-4149-9a59-b8822991da67.json",
+    "version_id": "0ZYYjKqSIBdRuZa2UCLQibfHIH12ozS",
+    "etag": "99099689da858059619eb3015ffc4a4f",
+    "size": 9812
+  },
+  {
+    "path": "spectra/bd84ea69-ceb0-47c0-8530-4d3ee5e583be.json",
+    "version_id": "9GXrN-QyJothUjcRjh8YxH8RFGKjrGL",
+    "etag": "56abbba65d25da5091480bca37f599c8",
+    "size": 9908
+  },
+  {
+    "path": "spectra/bd9b9c2e-792d-4ee3-84a9-d069d7980181.json",
+    "version_id": "eCDqraHaVZ7MNwXyUW-W71C-QEl-vub",
+    "etag": "d61806e1ea0cca8e87e0fb340db1cbe0",
+    "size": 64890
+  },
+  {
+    "path": "spectra/bd9cb481-6ab9-4436-a268-4aad01f01cb1.json",
+    "version_id": "kIK84ND7Ld34curI6UgyQZEjljoPTYJ",
+    "etag": "4a0f27f01ae58e7a57847e8778e04be1",
+    "size": 9268
+  },
+  {
+    "path": "spectra/be5072c8-d3be-463d-976c-900a86221157.json",
+    "version_id": "3Mj0RdXBE40jV5rQV-G9zW8b9c.RHwz",
+    "etag": "586e4f7a7284c57ce314b794d2207003",
+    "size": 9805
+  },
+  {
+    "path": "spectra/be7a98f8-3a15-4187-a3dd-a5ffeb877c9f.json",
+    "version_id": "mqb7aThliN0Kyx0.M28zZmNc2tqsXw7",
+    "etag": "c3b4af3d89510df2a5d9f40e951d9eb4",
+    "size": 9897
+  },
+  {
+    "path": "spectra/beaf2bc2-6bf3-4308-96fb-f93217bc65cc.json",
+    "version_id": "HWf4e1ghK-r-7YpOysvkcKTQJYnHWdN",
+    "etag": "1a13f3bfef1beb9bcf72b60817031216",
+    "size": 64384
+  },
+  {
+    "path": "spectra/bf652215-2a45-47a2-9195-ff246611597b.json",
+    "version_id": "IvXMUPd-n.-qwpYEl-6c6x-TidycnSH",
+    "etag": "eb9155ff5f4a6ad0fd9e6c049cda66e0",
+    "size": 9526
+  },
+  {
+    "path": "spectra/bfc58c79-efab-4f95-a430-bb4eebbbbc5e.json",
+    "version_id": "D.6NCTMQ7PbTnog7DcwsfWfg54l93Kb",
+    "etag": "23050227c9b7a79e3dcc43eebe7f62ec",
+    "size": 9268
+  },
+  {
+    "path": "spectra/bfccffc3-784b-496f-9620-26dce2172f93.json",
+    "version_id": "dhg2rGKeBslMTTOKc3Yx2BumwrwQoGf",
+    "etag": "e760f797e8eec89657256e45dd2bbadb",
+    "size": 9522
+  },
+  {
+    "path": "spectra/bfdf0220-aefa-456f-ba8f-eb598a0eceff.json",
+    "version_id": "2CAlQGNT1FxOtUySJ3bHCQiqXiY7JCJ",
+    "etag": "e8d130d723fdcbb917e8349f89a66378",
+    "size": 9928
+  },
+  {
+    "path": "spectra/bfee0d3f-0e6b-493e-bef1-9647efdf28d1.json",
+    "version_id": "yKi95gpAiZBA37VoqfKkvwumfgmq22y",
+    "etag": "f7ae2031a93863dcd0883ee32f71d614",
+    "size": 9554
+  },
+  {
+    "path": "spectra/c0406b71-3957-42c9-87b6-8a3bd2b406f7.json",
+    "version_id": "2jCnxwKjlyRIqBFAWOidpp4l6UF4i6s",
+    "etag": "c9ce3f1f5a9a0d198c7906299b17cbeb",
+    "size": 30966
+  },
+  {
+    "path": "spectra/c06f88be-ee18-4b66-a2a8-a9bbbbb66ca7.json",
+    "version_id": "nhZO7MtJoeFc.o6j17TZif7L-6uMRTB",
+    "etag": "813a4bdba35e4206cf72ec2b26295652",
+    "size": 9805
+  },
+  {
+    "path": "spectra/c08c49b5-d327-453c-a3f3-f1bfc92dadcf.json",
+    "version_id": "qYjOSRegk86MNrPzRf2.WhDTaCwh79D",
+    "etag": "b23510c7f9b606c1c1636e02e47ca65b",
+    "size": 182898
+  },
+  {
+    "path": "spectra/c0c1762f-5e30-4b6b-8da7-8df73c2919a4.json",
+    "version_id": "RNWRdEyvLgKdPCvi-sa.StjigWFnY9U",
+    "etag": "4c1a0437da8a56cbdebd2b02ec9b4567",
+    "size": 9886
+  },
+  {
+    "path": "spectra/c0dec9e4-a24f-4043-b2b1-04053c929e4e.json",
+    "version_id": "PCgaTkf4AHTXm9rA5KeAjmPau.uP4TI",
+    "etag": "7441586bbf95a04ab645fe6ae878d23a",
+    "size": 9897
+  },
+  {
+    "path": "spectra/c12caef9-51a1-4f4c-bbd7-fa5c00b60f42.json",
+    "version_id": "EdbZABMjxRgUdSxFqyI0pTHJwVD3r91",
+    "etag": "b71b9b422082db7762cc0cf9816db1cc",
+    "size": 9435
+  },
+  {
+    "path": "spectra/c230fe48-886e-49b9-83a6-3978d6339f5a.json",
+    "version_id": "r5XiVm6W1222dfOqotKt7pCfGHXkdnV",
+    "etag": "9f22aff1653bdaf8b78720fc5380689d",
+    "size": 9526
+  },
+  {
+    "path": "spectra/c2bd5861-d023-4d3d-ab3b-5ce20dcdb7a5.json",
+    "version_id": "zYrGrL5K4kY1X-G2AlOkj4dLQPe4FBy",
+    "etag": "c0e05002d3b7911dcd26010ff79d87e6",
+    "size": 22787
+  },
+  {
+    "path": "spectra/c2ce92b0-02b9-4bd9-8064-ea80dadc7ab9.json",
+    "version_id": "mEPkO4L7eBff40RBuz.0ZD-d0YbbQB2",
+    "etag": "9c7c5db8a647b2121d47541d8d91d9c3",
+    "size": 182289
+  },
+  {
+    "path": "spectra/c2d9e5ad-9e26-4010-833c-55485771fb45.json",
+    "version_id": "kkW1aYXaUpeJuTr3kCJxBNVTD4hP76.",
+    "etag": "2646ed6251a808e28cd05030efdb4198",
+    "size": 10519
+  },
+  {
+    "path": "spectra/c2e718c3-28c3-4e72-9823-23ada131d8a3.json",
+    "version_id": "J8S-WLIF4U4ww67XnttbS-wgHhCXaK9",
+    "etag": "78dd59dacce843128d506511e3c43e35",
+    "size": 10519
+  },
+  {
+    "path": "spectra/c41ebe14-3486-4b10-a68f-7c178c89c289.json",
+    "version_id": "bFQRjjns33PCs7jiByODVoPmfKK1YxY",
+    "etag": "05f89940bc06e3201acea7440720c738",
+    "size": 9605
+  },
+  {
+    "path": "spectra/c50873c6-f91a-4725-8bb8-e565a44ed11b.json",
+    "version_id": "MK7xjoeIyPtPZSZ9t8x-zSl2C.szhIQ",
+    "etag": "26d6788d2635a46102423ed506ba7480",
+    "size": 9973
+  },
+  {
+    "path": "spectra/c538ef3a-0677-4396-b62c-07adba990b0f.json",
+    "version_id": "wp.l7IS9irkII8qkswG7A1sZpGRwqtF",
+    "etag": "caf5e19f43e207a523567a6390056cd2",
+    "size": 9973
+  },
+  {
+    "path": "spectra/c5a01531-a532-4c28-95e4-3659e3964469.json",
+    "version_id": "PJ9P86DHpQUbg5DJJYTILOvMTUZdgM.",
+    "etag": "522b6e41a4e30202b9e61f85c5c879db",
+    "size": 9908
+  },
+  {
+    "path": "spectra/c61c19e9-d987-43fd-81da-d01da9850fa5.json",
+    "version_id": "HSXb0EXQlk0eK2pDPzHZ22RGV2ipMSV",
+    "etag": "39a0025cddafe2da552d7b26fbd09607",
+    "size": 9886
+  },
+  {
+    "path": "spectra/c61f6753-5003-48f0-b542-c59d3de343a7.json",
+    "version_id": "2fwrlLAKfQnCxmdn2vdaZ28BxzHrW6P",
+    "etag": "4ddea5ed26c983e47c78571edbb24367",
+    "size": 35184
+  },
+  {
+    "path": "spectra/c68daf45-cbaa-4b96-ba14-53600548d0ee.json",
+    "version_id": "5o41Zh2IicWq44js-sNyT9ecyfT.oZv",
+    "etag": "a192c9a9d2e9f62a14db049d65734aca",
+    "size": 182898
+  },
+  {
+    "path": "spectra/c6b9a19e-4f15-4ba1-bc41-dae3977dc9fd.json",
+    "version_id": "heDPwm1IzB8kuSb0R9f3UoQm53AqXLm",
+    "etag": "4346e9bb58c00034faac1d94be5c5dda",
+    "size": 22042
+  },
+  {
+    "path": "spectra/c6cd77ac-9dd3-47e6-9411-47b3471ec754.json",
+    "version_id": "LWQArdqQt70dVDGw1mEz5oWql1io2uo",
+    "etag": "b6381434e478ff4d719b0ddd6c99ca4a",
+    "size": 22042
+  },
+  {
+    "path": "spectra/c6f4acd4-1752-4bcd-b68a-f7afd7119a8a.json",
+    "version_id": "OFgifP.J2QxduWZ6HYbS5WXZ20aS3kD",
+    "etag": "8f155b38d6fd6bc1db1a54ca72327222",
+    "size": 22787
+  },
+  {
+    "path": "spectra/c70aabbc-31ef-49b2-8138-b5050a0521f3.json",
+    "version_id": "Lq4lUhYAdRGNddXSAWSzFjzgS8GpLkZ",
+    "etag": "7696b4d149d24fb1535be105bda2e99d",
+    "size": 9929
+  },
+  {
+    "path": "spectra/c71c8ece-aa05-4b04-bff3-ff3e41557cab.json",
+    "version_id": "KCZjZImABaCqF9CVhkdPn4XFj.npEE4",
+    "etag": "6fd596363bee079c9e0150747c7d1fbc",
+    "size": 22960
+  },
+  {
+    "path": "spectra/c759582f-ad35-49d0-b63a-3f6d24dbdae2.json",
+    "version_id": "ZdvGY9bw-zNPcv5FumLtUgb6Dstqn14",
+    "etag": "8d771a2e842ea13c7616b3437749da23",
+    "size": 9966
+  },
+  {
+    "path": "spectra/c76d1ba7-0f68-4024-994e-e5067dd494fc.json",
+    "version_id": "BwRQyRsUMUvTjSgupzB6yALg-qSC2rN",
+    "etag": "082be9e9bad689f07b4ff8bc794ba008",
+    "size": 22042
+  },
+  {
+    "path": "spectra/c8122724-301d-4ae7-a755-3cc5c4bc0a6b.json",
+    "version_id": "PohuRIRZEDkAcUACnK6GPDgH7orvwey",
+    "etag": "e1e1dc33a0714378bb10eaece9dfec27",
+    "size": 21225
+  },
+  {
+    "path": "spectra/c8601b22-ad5f-4a83-b740-c0f81c087877.json",
+    "version_id": "0xK2OlKkGB9-Sv30.nOJSaQS.5PdGHH",
+    "etag": "53e010e7f214a2970a7a967169429e1a",
+    "size": 9435
+  },
+  {
+    "path": "spectra/c862a45e-89f2-48f7-a166-809fec3a4d77.json",
+    "version_id": "Sdo4z7ocT2MrvkGPMI9y.U0-bL009Cr",
+    "etag": "2f5e88ff0f13cf41ecd845eb25f5ca4f",
+    "size": 64890
+  },
+  {
+    "path": "spectra/c8b851c1-59e9-42d7-ae61-d614b031e1f3.json",
+    "version_id": "WqgVXZjiPoR5-wOdnYU5S2DIvDq7tki",
+    "etag": "f1156df40a22ee10cd2c6436f0e30099",
+    "size": 9868
+  },
+  {
+    "path": "spectra/c8eeb5d2-dd54-4f38-bf82-b174485f2b3c.json",
+    "version_id": "NUswb7ebcuWtRAO0QzLnMVmsAl-QBi8",
+    "etag": "6e98f7e928a5f3a5451fbf558eeb70c5",
+    "size": 10519
+  },
+  {
+    "path": "spectra/c92fd662-864f-45e7-856f-85fe75beda9b.json",
+    "version_id": "46CGcUN2Roc12tXlcMY6gvPuugVomqf",
+    "etag": "a58526196112a547f186a748f1055fa7",
+    "size": 9973
+  },
+  {
+    "path": "spectra/c9793e16-618a-4762-9f93-a0f8f05c612f.json",
+    "version_id": "hbh7EUF7..8Q5FFRcddP2HEMD4d2awt",
+    "etag": "6c7ccb000de8e6a89ad2cfde2ea99485",
+    "size": 35436
+  },
+  {
+    "path": "spectra/c9a9ab7d-11ae-4c73-b70d-1496ea1dce82.json",
+    "version_id": "F6vm2pt0bknbLC9zeZpfc-smXfTDUwa",
+    "etag": "9468580ed108c2b5e6d37f82c80aca4c",
+    "size": 35436
+  },
+  {
+    "path": "spectra/ca22aa53-5b6c-4955-a72e-191eae2f0374.json",
+    "version_id": "yLsj8985ssDMCGbNqapS9vQS9Mvq1Ey",
+    "etag": "df8823de849244ad942e2fd0f5a49730",
+    "size": 9929
+  },
+  {
+    "path": "spectra/ca6d6918-d9b6-4243-8698-044563536205.json",
+    "version_id": "se716QigEoWC-pt4cOo2TRdUtFtN9LL",
+    "etag": "cf209dd26e9633f38dc7321e949c0b92",
+    "size": 20908
+  },
+  {
+    "path": "spectra/ca8f7525-9840-4121-8c03-e8ca3d75987b.json",
+    "version_id": "nhgim3k505LxwOgjaTTMxFgJ8zAO7IE",
+    "etag": "71bc87570b4d396f74ae74320826badf",
+    "size": 9605
+  },
+  {
+    "path": "spectra/ca9bef6a-749d-43fa-a4cf-61b96826953c.json",
+    "version_id": "s-Tl245GSI8ZckY-mP3TwaVHE9vwINK",
+    "etag": "f9f9aa7388fa6e1274f1240ed1cdd3f7",
+    "size": 9812
+  },
+  {
+    "path": "spectra/caedd43a-1d15-47bf-b8aa-74060cf52151.json",
+    "version_id": "PjLC2ni1z41hZsHtiaLCk33qTV7nSfg",
+    "etag": "0a0cf05fa7c6e4a53afe60d9f50919f4",
+    "size": 9526
+  },
+  {
+    "path": "spectra/cb2348d3-90dd-4f87-9bd1-849aea4f1952.json",
+    "version_id": "5Ly7a5JMD9uIom2S.7q0vJCAtz7vhfr",
+    "etag": "4a33d58af9699958b2ff1120f38c0477",
+    "size": 9435
+  },
+  {
+    "path": "spectra/cb90bf42-dfbb-423d-81e3-21ea30f7d4e2.json",
+    "version_id": "9AL.4rLiP4EnhNLmG6IUTUy36zWAQPf",
+    "etag": "421bebc59baaf71871bcb4e3e7e3c900",
+    "size": 9877
+  },
+  {
+    "path": "spectra/cbb7fe39-7377-4bc6-9c0a-87ca2d7dc3e2.json",
+    "version_id": "qmt-2y8zH3WLGYXFVmLqal9gGD04NCd",
+    "etag": "364926aa2f461f1340674c345d1aaae5",
+    "size": 9554
+  },
+  {
+    "path": "spectra/cc28b585-6e7b-4663-b585-c0284b58980f.json",
+    "version_id": "5xEYMHq9P2kd259R0EI5gEtPYGHK0Ru",
+    "etag": "3b1179a856ae3a65366abfa66aa6855a",
+    "size": 9506
+  },
+  {
+    "path": "spectra/cc29b7ad-159e-4ea6-9045-05da90685142.json",
+    "version_id": "E.iELL8T9s.PSYsyX8wsO4c4fs5k1tD",
+    "etag": "e449a30dc71c73567ad011c982590859",
+    "size": 182898
+  },
+  {
+    "path": "spectra/cc35786f-fbec-444f-ab10-26695fe88776.json",
+    "version_id": "zfdPNZoj2NGDkCHrKumMCGTTfn.XnWJ",
+    "etag": "0fc753ef0df962597c2cf0501402f8ca",
+    "size": 9504
+  },
+  {
+    "path": "spectra/cc61f73b-7196-4074-833d-5b43adf3237b.json",
+    "version_id": "rITJtGvALul7w1sQZcCyMpD0mS7P7I1",
+    "etag": "9444eae83079ad2c5acec2f2a162824b",
+    "size": 9591
+  },
+  {
+    "path": "spectra/cc90879b-4c86-4b0a-9535-155da48acd42.json",
+    "version_id": "EmiNlhLv36qAXnap4jzslZyHcoBOEGq",
+    "etag": "f8f27747395b8f2679f25bd7b9e5ed7c",
+    "size": 9886
+  },
+  {
+    "path": "spectra/ccc6ff50-5a66-42e1-8e2d-7b7f2878dd9e.json",
+    "version_id": "45zBsluZyTgn4SGGYmzFQLayqs01XkR",
+    "etag": "9910f55cd17bc387eea25f2a3a9bf10a",
+    "size": 9973
+  },
+  {
+    "path": "spectra/cd73c6bf-c52a-4188-922a-856ecaf461d0.json",
+    "version_id": "-WvhLtPEVs97UfNvypZTzvciFSLnF-t",
+    "etag": "553e6284f60ab2e69ac75f4be1e0a306",
+    "size": 21238
+  },
+  {
+    "path": "spectra/ce388090-8fdf-483a-924b-e6adcc5936e3.json",
+    "version_id": "32KLqAqnviF0MfxyR-W3VxykqvZVdrI",
+    "etag": "8e202fe9a6fa8ee159a7dd57d032cf2e",
+    "size": 9446
+  },
+  {
+    "path": "spectra/ce47abe6-5e33-4578-b46a-f828d40e6a41.json",
+    "version_id": "5Ayg92IDMKsmb52JfHALKve9atO1Nr2",
+    "etag": "ef52e5912b563c908b082f233f392c4f",
+    "size": 9697
+  },
+  {
+    "path": "spectra/ce54341e-0df5-43b1-88d2-1ac37abdb774.json",
+    "version_id": "nuw1O-PrnxIxxoviolEr2SH0yVcfSrH",
+    "etag": "00f0e59da3bd0140d7f9afbb11aaa43a",
+    "size": 9389
+  },
+  {
+    "path": "spectra/cf1034c3-3713-45a1-9c6f-6b5b9f9fe1ec.json",
+    "version_id": "NG7Dja6m8uZt7llHUTIqRgOZ8L7Cd1A",
+    "etag": "e01a08700f4f6923630ca4463f8e84a9",
+    "size": 9822
+  },
+  {
+    "path": "spectra/cf66ecab-06e6-4d09-9fba-d6f067a390cf.json",
+    "version_id": "OOYbqrtW7nAHVfoNfm.FUgc0hKw.VUn",
+    "etag": "66120cec96dfaca82a1fb2cfa4702ccb",
+    "size": 9884
+  },
+  {
+    "path": "spectra/cf7d9f2d-0960-43a0-8294-2e5da29d157a.json",
+    "version_id": "wCKmNHY2bwGDTBcfghu5fYn-ybXkT2u",
+    "etag": "a8487823711af9fc76bd6284da0bfecc",
+    "size": 9605
+  },
+  {
+    "path": "spectra/cfe975c9-5247-4c7e-adbd-2fc5130bdb66.json",
+    "version_id": "2uhyNiBVtk2ycdllGSnmpahL8eI7iLj",
+    "etag": "5fd7f7a01235e93003d9ecbb60de9248",
+    "size": 9435
+  },
+  {
+    "path": "spectra/cfed1611-50a5-40a3-87f3-e616f57d3562.json",
+    "version_id": ".BLvoVZ98RcKE7ls7Rt.BT3TdIB82xv",
+    "etag": "8c4499ff228413ee6a5527c0c9545e28",
+    "size": 20908
+  },
+  {
+    "path": "spectra/d0899ed4-f2a0-49ff-907e-abbeeb0199fa.json",
+    "version_id": "0PmmO1cGW5lKPghA9pGIFxivCybQqaY",
+    "etag": "e5e3cd4cad86d7852a4bc6e055f6c155",
+    "size": 21238
+  },
+  {
+    "path": "spectra/d0ee3a1d-f6be-482e-8cb7-8de290b22295.json",
+    "version_id": "byjDQ3ltok3c5rGgdMgPDEeRJ5phupd",
+    "etag": "53a0bcfa818e94e22b1c28be4f70b979",
+    "size": 9805
+  },
+  {
+    "path": "spectra/d139ab8a-e6f1-4641-bfc9-0bb3276bf1cf.json",
+    "version_id": "HnaFl3sBBTsDk2Do6nrdCPuAPEiQqsq",
+    "etag": "19fb96626b73ac2fd0813722fab5613d",
+    "size": 9886
+  },
+  {
+    "path": "spectra/d1950591-01e8-484b-8ecf-0200fb11996c.json",
+    "version_id": "99Y35H6dAwZAOJpx0Y7H.3lS.m5M6Is",
+    "etag": "9decb9f1d3fe7f6e6ca3a982d85ae037",
+    "size": 35184
+  },
+  {
+    "path": "spectra/d262c534-b316-42ae-94fa-e9e4e9e5a3f4.json",
+    "version_id": "ul48XIGJ5F1ilE8tUf7YffhFAi9HOj7",
+    "etag": "9701e75491b8280fdb7e06c7dede6c99",
+    "size": 9522
+  },
+  {
+    "path": "spectra/d2cf6c1e-9c81-44ae-b8d0-4e751adb9ab0.json",
+    "version_id": "CVEn.JHehJ1ChSlk4Ebp0Jh5PxOohNi",
+    "etag": "7c873a2102683a98f64b3bcb3882cc5f",
+    "size": 9324
+  },
+  {
+    "path": "spectra/d34a2dc0-cdb0-4f36-9392-5bcd5739a155.json",
+    "version_id": "h.uStBn7MoMuMWycF7jZsuJARbXUXNG",
+    "etag": "846d6f47772e251a0c7808841a40d49b",
+    "size": 35184
+  },
+  {
+    "path": "spectra/d3a150eb-67a9-4daa-98f5-2f3ebf24c4c0.json",
+    "version_id": "t8ENk8YwR.FKIYyC-dhIwV3os-TBrjF",
+    "etag": "c6984e2f1c46485558c7045e4c1a5a7f",
+    "size": 9522
+  },
+  {
+    "path": "spectra/d44f0d98-4cca-4487-963e-e2a7610365c9.json",
+    "version_id": "PZOVroa.l6vzF58YGN-DaP9PyplbCMh",
+    "etag": "59ca6974069533d68b0086869e389903",
+    "size": 9868
+  },
+  {
+    "path": "spectra/d48ce8bd-fc02-4539-9aa3-8259ea43a676.json",
+    "version_id": "2po-yg2LZ5AlK4zi1zRl8FHWSKmhoHc",
+    "etag": "3cb9e4446edb23a508dd584597013694",
+    "size": 9929
+  },
+  {
+    "path": "spectra/d50425b5-1f03-4956-9e2b-c36d2c9f5d71.json",
+    "version_id": "tZcPSJDzFGl7SkEWVAMos0NXuQZBXKx",
+    "etag": "4cf5e0d61916f9985de4e4e25f2b65c2",
+    "size": 10519
+  },
+  {
+    "path": "spectra/d5afdf59-d25f-41e5-ac3d-ca256c99e42b.json",
+    "version_id": "6QtHfCria.fsCCxYtKJFq-FZITKHgl3",
+    "etag": "6ed003f0b3cd9e236add762401192cc6",
+    "size": 26836
+  },
+  {
+    "path": "spectra/d5ede459-2fca-49db-a0cd-af90d60b12c9.json",
+    "version_id": "PwQg3lCDiKaNYu0QURg5ztxIdVfxvo1",
+    "etag": "c73551af0e15594c08d555fa8176478b",
+    "size": 9812
+  },
+  {
+    "path": "spectra/d6005622-8775-413d-a6c6-6da88a87cfa7.json",
+    "version_id": "edTp4IKFXgtnqVkmycG5UPhTQk0wnCT",
+    "etag": "2ed41240377a0c72a89405d9c9688f07",
+    "size": 9554
+  },
+  {
+    "path": "spectra/d66d2224-6254-475d-8996-a88c3a336d73.json",
+    "version_id": "GwaJWbTv61m66hEIicIRviZxS9NUe.P",
+    "etag": "cafc245036469d047f3fc61ab9397ef8",
+    "size": 9324
+  },
+  {
+    "path": "spectra/d6ad684a-4f81-4565-82ad-f58b31656c4e.json",
+    "version_id": "nInnQsdDd-XnN3ZEM-U9n76x2aROALO",
+    "etag": "513f5e805342fad22ca98d825227a706",
+    "size": 182289
+  },
+  {
+    "path": "spectra/d6cc1425-be13-4490-a421-e3ffcaeffceb.json",
+    "version_id": ".Mr7DuNOx6.SXmSCAb6r9omFTxtXCLg",
+    "etag": "d24a46788266505751705c1851f569e7",
+    "size": 9946
+  },
+  {
+    "path": "spectra/d6ff9103-a1b4-4aca-9248-facbbe377293.json",
+    "version_id": "cS5AkfrOsxaWzhnih60glsFVVN7g.9F",
+    "etag": "c7472af44f8b3fc7240240004f07edec",
+    "size": 22042
+  },
+  {
+    "path": "spectra/d72a421e-13b0-4d4c-9753-94b4eca5fd3c.json",
+    "version_id": "tZCuaFKJt5MebIJ5aDsCJbR.h-DK6Eu",
+    "etag": "6ae2ae017cd46745d4658640a37add02",
+    "size": 21225
+  },
+  {
+    "path": "spectra/d732c85a-4e98-4bea-a3ca-2488e815fc21.json",
+    "version_id": "cmqHb2ePeElHm1m4H77ZkpT320mpeAA",
+    "etag": "fb0ef2c9e09af65af6611ad256f68917",
+    "size": 9822
+  },
+  {
+    "path": "spectra/d73fe398-c085-4064-898d-3788dc837985.json",
+    "version_id": "wGTvwqdp6DhE3PbD5TVp3BkoFKdWPcZ",
+    "etag": "42b4fc8ab128d2f15b11f3fe5dceaf5e",
+    "size": 26836
+  },
+  {
+    "path": "spectra/d7594edb-94b6-4b09-a46a-8165e5130411.json",
+    "version_id": "lY8U8w1BGiDFFy7BZVtcr3ocun-UOli",
+    "etag": "e1140bf48cbb14d9fc15cd9abec1d7c0",
+    "size": 9605
+  },
+  {
+    "path": "spectra/d77bc38d-5979-46bd-81b3-d7e876d51247.json",
+    "version_id": "nBZwKT76S8jmpEW1JJPbuD6QK8zY7mJ",
+    "etag": "01a64c75e5de1cdc84b0eb3c9f72ab2d",
+    "size": 9435
+  },
+  {
+    "path": "spectra/d8041dfb-bc4d-4bc3-8deb-0ee655832e26.json",
+    "version_id": "-q33LoC4BQC9RuM.NjA2EWS6CkcohAv",
+    "etag": "8016cf3559ff247b2a9c136cd711ab5a",
+    "size": 9591
+  },
+  {
+    "path": "spectra/d80d604f-adb5-496e-b24b-2e39558c875d.json",
+    "version_id": "kJs-E0CY.PE-nQGkebdssPMO5VgX2a.",
+    "etag": "ac066cab69ef72de1fc13dff77535e81",
+    "size": 9928
+  },
+  {
+    "path": "spectra/d872f930-51ba-4299-94b7-b2f3271d0ceb.json",
+    "version_id": "peiTNT0hvMZ5h0S1w-w.DgsyRUOLq-4",
+    "etag": "10a866ac7b9be59ba605c4e551ffcf1b",
+    "size": 9908
+  },
+  {
+    "path": "spectra/d88d12d6-c900-4079-a39d-0b8f2a998ee1.json",
+    "version_id": "oG6vp70A-YsbEUxVRoEViLcYd27SUtS",
+    "etag": "e6681db14f2584f8ae25805ed22a2ec1",
+    "size": 9554
+  },
+  {
+    "path": "spectra/d95ecf64-f475-44d2-942b-8bce983ea866.json",
+    "version_id": "LoBf8hNp-YQmrXg0fkVyWz8UwWqPWwp",
+    "etag": "754d01ee983cca10d987c90fbb6259bc",
+    "size": 26823
+  },
+  {
+    "path": "spectra/da29b6bd-9a40-4262-8dae-e09c36376c32.json",
+    "version_id": "vx9D0ib6rSF9LjQoNiwzBA-atbUke59",
+    "etag": "4b71433963a0d3cbc471afc45d46d38a",
+    "size": 9868
+  },
+  {
+    "path": "spectra/da54f5df-5bd0-47c1-a53f-37a054fd54f3.json",
+    "version_id": "4xSaCwfD4qNxRrB0c0iVoPcsHA.Uh4R",
+    "etag": "39a44f3ead24d6b7698980191932ebf0",
+    "size": 19659
+  },
+  {
+    "path": "spectra/da64329b-fe83-4174-9d01-5325568eccf5.json",
+    "version_id": "4Y3pB8IkPitOUY.F3yW9FNxTXugdGGw",
+    "etag": "d92fa063835946fb7d6ffdff6575ff6b",
+    "size": 9929
+  },
+  {
+    "path": "spectra/da845ec3-a3f3-4cc9-a353-ad4417eaa523.json",
+    "version_id": "CGXWMefmDETKwtVt3PnHZAxGELotI87",
+    "etag": "58ea3e2768d6dc9aedd14de4ee6f76e0",
+    "size": 64890
+  },
+  {
+    "path": "spectra/dab4e191-438f-4c5c-ae59-dd58def2ee72.json",
+    "version_id": "fU3NvGo622lmrSdg9siRC8.N0DgN14m",
+    "etag": "e071e3baac3eb4b855ba59bfc85ec566",
+    "size": 9506
+  },
+  {
+    "path": "spectra/dae0c3eb-6334-4192-bfc2-e6914e444ace.json",
+    "version_id": "AETLflrN6LqA7.mFFEhdhK09c82vjBY",
+    "etag": "257654e7680bd673ce425df2cfd3fe30",
+    "size": 26836
+  },
+  {
+    "path": "spectra/db2b35dd-4433-4c40-88e9-836275a6d978.json",
+    "version_id": ".bOjkFfhQh97vWSl9JzdYYahHjFFnyK",
+    "etag": "3a449200f20fb71521bb3875b565a219",
+    "size": 9446
+  },
+  {
+    "path": "spectra/db69fd56-c384-4256-b16f-e3ef2a53bf58.json",
+    "version_id": "IRPaxx5qcSyZtXiAtskBaHWH-jYlG.i",
+    "etag": "d692bf0a201a019e5433b1d6eef29e1a",
+    "size": 22042
+  },
+  {
+    "path": "spectra/dc3f0971-2e35-4807-ba3f-83f4f49906e1.json",
+    "version_id": "3YHjpKV4Pgl2PwFACmPN9hPqRjt4CWP",
+    "etag": "4530ddd3a64160be1bcd9e9ab6d9d569",
+    "size": 9908
+  },
+  {
+    "path": "spectra/dc65e6ea-57b1-4b22-a1b1-1af5d54c00a9.json",
+    "version_id": "5kCL5R6GopqZKqgQowOKmlbMuTAqGOL",
+    "etag": "6213fe9bc446a3d8087b2e0c7a9f6b68",
+    "size": 9928
+  },
+  {
+    "path": "spectra/dc6b0e6d-97d7-46f7-8375-e9adb14346a0.json",
+    "version_id": "7yhs35MS5Kc8bFMmOOJhh5iDNXsFU6t",
+    "etag": "80883e588b7e78c44cb98ddd889a10a5",
+    "size": 9897
+  },
+  {
+    "path": "spectra/dcd4c099-d47b-449f-bb05-47d4cbb91618.json",
+    "version_id": "pZ5NjwoD0KYi-JxzqRkDewXw-bx6y8Z",
+    "etag": "4f11cbc68b688dd1e1fb71a1f35165d0",
+    "size": 35184
+  },
+  {
+    "path": "spectra/dcf2153d-7503-44d9-8874-5b222551d176.json",
+    "version_id": "-LLAyRbKvXuRFlarpTJ2GtVEPGHcWrs",
+    "etag": "81c70da7e306328512d3ab1bf5ba9e35",
+    "size": 182289
+  },
+  {
+    "path": "spectra/dd520e28-2410-45a8-b09d-2affc1d83de2.json",
+    "version_id": "YVAyMLkTUvs0yS2kPivsieO49LhF.XQ",
+    "etag": "787ee6056321b1303a84e2e77f2e1c3a",
+    "size": 9901
+  },
+  {
+    "path": "spectra/df38aaff-156d-460e-aea0-b52821d72a27.json",
+    "version_id": "SuTjR3s6TL-.ybJaA.e7XvZGU3ESlBC",
+    "etag": "ec837090a63e7058898c790308d16574",
+    "size": 35184
+  },
+  {
+    "path": "spectra/df42593d-0311-4636-8f2e-a37ef7f9d494.json",
+    "version_id": "2e67ed-qZ6F-7HVf4zjDYA4dkuNYnmC",
+    "etag": "0b8f1f58938d982d41a91e4e0f09a2be",
+    "size": 9324
+  },
+  {
+    "path": "spectra/e051bc06-3f3b-46c6-9913-b771572bd13e.json",
+    "version_id": "4CBqiYijSmuLHVpQ2mFSwxz2GqQamBB",
+    "etag": "c68d564e309d7a22b4f3e2fc7aa655c7",
+    "size": 9489
+  },
+  {
+    "path": "spectra/e088b548-81b9-4c02-80c9-558f935e6b9f.json",
+    "version_id": "oT88I3O2WotiEX5E14odr9McCQsF1Fw",
+    "etag": "7832a536944fb9fc03a5c992a0c3d49e",
+    "size": 35340
+  },
+  {
+    "path": "spectra/e0c4ca29-f01c-4afc-a420-4e1849dd01c3.json",
+    "version_id": "AD-Lm326aIABTj0pmy.SG054U8vSB.j",
+    "etag": "1cd65c661a462b75911685323a2f6ca4",
+    "size": 20908
+  },
+  {
+    "path": "spectra/e0d1514f-5454-40ee-96ba-08c6b44c068d.json",
+    "version_id": "Qb8UKJ.bn-IYeFZrpb9f5.SQDEhTljc",
+    "etag": "05011532f06c135d7f6a15f7a1b66936",
+    "size": 35436
+  },
+  {
+    "path": "spectra/e10b3e9f-9e71-47d6-a22f-08a95e4f1e28.json",
+    "version_id": "7y6Xp.ssBKsh.zWiO2L95I0d1XX6y1g",
+    "etag": "8fefbf1b5515364333c086aa174974c4",
+    "size": 9973
+  },
+  {
+    "path": "spectra/e10da06d-8adf-4f3b-ab19-c14456120f62.json",
+    "version_id": "elMc6-5lm-OO.qj1z7TJjdTI-UF9H3h",
+    "etag": "34a0d1a9007656a1e401f04e2ddde4a1",
+    "size": 9389
+  },
+  {
+    "path": "spectra/e137a41e-b0a9-4ae2-bc6c-c3b16d028535.json",
+    "version_id": "mIlI7FgzbKAKOc7ekwah85mQIaK9moR",
+    "etag": "08aeefe44b8498f89eaa14a54fe0d8a7",
+    "size": 9877
+  },
+  {
+    "path": "spectra/e1fc8a4f-5f1c-43ba-ab1f-742a500f9b83.json",
+    "version_id": "aGAn5OC.o-OxxtgqfxUFGlbAe2xYv3H",
+    "etag": "5848537e7621ab3b6a789dbae9f6072b",
+    "size": 10519
+  },
+  {
+    "path": "spectra/e27c724b-52ca-4f6d-abb0-c49af7509843.json",
+    "version_id": "fEvL5EZ.kGPYBQFP83iboxwn-I6O5CF",
+    "etag": "99993060a7edb0477d83b01c897ef865",
+    "size": 9966
+  },
+  {
+    "path": "spectra/e2e9ab36-78ae-4dec-b962-eef1bb028501.json",
+    "version_id": "vJfbh6.HVcLY5l6bqbt6WnUElgSxYJQ",
+    "etag": "8c9a79506d6d9d2f159e2bb3d00ed076",
+    "size": 9966
+  },
+  {
+    "path": "spectra/e2f62639-e3b7-4ef5-9b44-5a09d38132f6.json",
+    "version_id": "JMdSAqdLzqbtxCmkY1eJx1D3RubQ97A",
+    "etag": "fa4200b849ff1d78235e5b77259ac1dd",
+    "size": 9929
+  },
+  {
+    "path": "spectra/e2faf247-97a2-416e-aca0-cf8c0522e02f.json",
+    "version_id": "uLcCLxrEyoRC8FuG3XEn48bzsIiA9-n",
+    "etag": "c90e0efafa436d39a472318b84fe6130",
+    "size": 64384
+  },
+  {
+    "path": "spectra/e300b98a-5d9e-4b61-8fa7-c008838454c0.json",
+    "version_id": "-JNDwYRVmQZgd7qxUL2hAZJWANwIFtn",
+    "etag": "99cb48b874b6fef6bb1c3997e0ee1104",
+    "size": 9886
+  },
+  {
+    "path": "spectra/e341601d-1766-425a-b3ff-91ea22ab3090.json",
+    "version_id": "4SLRtECZs3KFJDO8K6J.EE-egaQ57Tr",
+    "etag": "0b3a7483f414f813ad9cdbc49d3aa527",
+    "size": 35340
+  },
+  {
+    "path": "spectra/e35d8934-b682-4f36-97e6-bd104bd28333.json",
+    "version_id": "g6PlBMErzVRxPEPnYnfRaplJ2ftX4HA",
+    "etag": "4ee008cd3c52840661549282b1dde2e0",
+    "size": 21238
+  },
+  {
+    "path": "spectra/e414fe27-ccbf-497f-b567-30744e8ef98e.json",
+    "version_id": "3u9kA5KV3mpy86Zygpa.MTH1lxAHXXw",
+    "etag": "a481b31b9c6a8a73dd002d322ec4e88b",
+    "size": 10519
+  },
+  {
+    "path": "spectra/e4dc4991-1e65-4978-9635-1f0594d19199.json",
+    "version_id": "Nh-EVapRE84Ro33YWVk68e4MtFwruoc",
+    "etag": "32029c26944ef1e7d3ffe3139351ed86",
+    "size": 9697
+  },
+  {
+    "path": "spectra/e523f4e9-a57e-4954-93ba-00ffe536abee.json",
+    "version_id": "GqZ.yK5bQQpG8wzcYMakCXJUVgqt-fT",
+    "etag": "1b45a047a1ced5bc8d1fc6792c298d07",
+    "size": 35436
+  },
+  {
+    "path": "spectra/e55bdffc-755e-429b-a039-eb48e98849b2.json",
+    "version_id": "FEdKfmSJ2CBnhR0tdXs3-65NfHwBy67",
+    "etag": "c63a8ad75d9bf10e340dd0631f43c6cd",
+    "size": 9805
+  },
+  {
+    "path": "spectra/e5a09d53-dd5d-42a5-a4fa-9ea326a1ef73.json",
+    "version_id": "hO7xyxxHgXwTNQlbHpL9nz0.yCQ4845",
+    "etag": "a84f12470616a37d1d2f8306e06df84c",
+    "size": 9973
+  },
+  {
+    "path": "spectra/e6367b0a-fd1b-4fa5-924a-a207543b9ff8.json",
+    "version_id": "NKJZl7cfj-2Bf1kb4wgW8EbLle7xmgY",
+    "etag": "87450fd380aa0adbf2eaa15689c07c1f",
+    "size": 64896
+  },
+  {
+    "path": "spectra/e6465e3b-b124-46ae-b6d8-a2bce3e747d7.json",
+    "version_id": "Fo0SF5X7ADxp5UDP6bpnjeCUDua2ROI",
+    "etag": "ef2094bea9cb5cc37cbc5c16695e50b8",
+    "size": 9569
+  },
+  {
+    "path": "spectra/e66ff5cf-ff75-4ad5-af2e-a18110224b72.json",
+    "version_id": "MBY02qge9VswEqR6UT.n8y2l31Xqolw",
+    "etag": "c2961d16b70719bb343390085477f2ee",
+    "size": 9446
+  },
+  {
+    "path": "spectra/e6d88d5b-8247-414a-8c10-35878249e662.json",
+    "version_id": "6-UmiUiKwtIOy9CVlgpZgW5yLgdFN-y",
+    "etag": "2490999113af418d4e39fa62f4d89617",
+    "size": 9591
+  },
+  {
+    "path": "spectra/e710fdfc-0d47-4a48-98fa-3885b741a5e3.json",
+    "version_id": "u0uhdNc9sZjy1wDqQ3hyl7Bc8Vnr3lj",
+    "etag": "002b69f3162e865d67981da77838b978",
+    "size": 9506
+  },
+  {
+    "path": "spectra/e7369652-6f3e-4aa6-9111-3c773684e804.json",
+    "version_id": "wBJbzIxnXWu3T5pFhAedawNIkYUQaqc",
+    "etag": "cc91b39ce646c2e7b1bfc1ef3bdad1ca",
+    "size": 9929
+  },
+  {
+    "path": "spectra/e742a1c7-035d-4fb6-99ca-047dccd12fac.json",
+    "version_id": "WDqK5PVLNbtzaUIxGfHCFuqe5scMwKr",
+    "etag": "90f1ba8a2ec4829f3d05a261284cef0f",
+    "size": 9554
+  },
+  {
+    "path": "spectra/e744e124-f065-4304-ba3e-be59a1fd2d1b.json",
+    "version_id": "QCJwt6o3bAHU6VIaECKKUD2CTHrRyJf",
+    "etag": "09e13b0b37c267a4dc8d468495a82142",
+    "size": 9908
+  },
+  {
+    "path": "spectra/e7a96e69-6729-457f-a97d-d2bb855784bc.json",
+    "version_id": "mKRK9Rq5qo05hlzSTzggordKoNcNH0J",
+    "etag": "e74fa6f1e1dcd5b9292c5db2188f8df7",
+    "size": 9946
+  },
+  {
+    "path": "spectra/e7cadbd6-10a1-47ac-a4fb-7d6704ad1987.json",
+    "version_id": "BaUruzN8LqMvILhj3EIqCBOvujEyMKM",
+    "etag": "8b7069e2967e79166124675359ea3a44",
+    "size": 21225
+  },
+  {
+    "path": "spectra/e805c0e9-c2d7-4c02-b6e2-4d474bd00a12.json",
+    "version_id": "wLvuOOpnKFGfZu.ZSgA7N2Nke3yJpf7",
+    "etag": "4b26581517aef0aa910576e7d1e2ade8",
+    "size": 9502
+  },
+  {
+    "path": "spectra/e84ffc20-8df7-493f-9ecd-2b882fdee8dd.json",
+    "version_id": "79y1VyArMyfAmApuw8ysc4.bgQMucFn",
+    "etag": "fd2655f03362166f55ffc93afd04df90",
+    "size": 21225
+  },
+  {
+    "path": "spectra/e86ecfc8-fd2c-494b-b7ec-338684f416df.json",
+    "version_id": "5yDYDedlk9k6Qd0prYurBRwIReVT3um",
+    "etag": "a3debc5fb75b9423e5d168dc9fd18c73",
+    "size": 64384
+  },
+  {
+    "path": "spectra/e87dc497-430f-4581-8f24-3d177ff876dc.json",
+    "version_id": "i4LhpKliS75XZF5si2i5NADgyZBtVG9",
+    "etag": "56efa93b7769639cf252df68bf0831f1",
+    "size": 182898
+  },
+  {
+    "path": "spectra/e8ec1bc1-6187-4e83-aabc-2588ee08d7ce.json",
+    "version_id": "LOHU5uY7o8-L6rokm8aV4QRtT9J97YI",
+    "etag": "1d175dc1c43b469b92a816f4d16f3c3d",
+    "size": 9886
+  },
+  {
+    "path": "spectra/e907beb4-6e83-41b0-8a39-1b2b6bfca181.json",
+    "version_id": "xdmf5SZqGZeMNFBMXPez31UBFYA3NKJ",
+    "etag": "c7c2f62d886c35ed0cd42ffe76c651e9",
+    "size": 64896
+  },
+  {
+    "path": "spectra/e9536643-3ecc-4bee-83dc-5a69452534fe.json",
+    "version_id": "3qRSQ.7FH2bEeUP2ES-AnvVjULhlhKx",
+    "etag": "27a96b739ad885b9645c70338fe3654a",
+    "size": 9973
+  },
+  {
+    "path": "spectra/e98677aa-d803-4f8a-a292-78c7312e7795.json",
+    "version_id": "wtqOwxGQbnclmNfi8FSj0kcA1lNtDVh",
+    "etag": "80737acf234c4d88b822a81f58f89cc2",
+    "size": 9868
+  },
+  {
+    "path": "spectra/e9ef34b0-8cd5-4acd-8d7e-014295a37062.json",
+    "version_id": "3eITQ7XgzetFvLxpQ9LEaSqSTgx2GzT",
+    "etag": "2c623a24377f078bc96ae710e021e61c",
+    "size": 182898
+  },
+  {
+    "path": "spectra/e9fbebde-b6d3-4367-9ee7-ce0c5c708408.json",
+    "version_id": "QI8vbZPg9G0GuVGBKDtOB1ebXlFdmFf",
+    "etag": "30cacf432cec523531ad3c955cab49f1",
+    "size": 9467
+  },
+  {
+    "path": "spectra/eadb9f5e-3296-4bc9-909a-6a03d6991fdc.json",
+    "version_id": "qWBVyo82oRR432UlOTDLxeNZSmbObxs",
+    "etag": "6bd62aa69b95c944a5560272812cf8df",
+    "size": 9929
+  },
+  {
+    "path": "spectra/eb0de4e7-e4fa-4aa4-8081-031a3df626a7.json",
+    "version_id": "wZN1D8-pQKrmcDtCDFUXHC2cPQwshq2",
+    "etag": "a39d5ede7fd41277477ab315f9901f9d",
+    "size": 9868
+  },
+  {
+    "path": "spectra/eb8c4be3-d015-4137-bdd2-14ea4a226347.json",
+    "version_id": "P5zAc9SnSckxMbo9d2p7TxNKXq.FB8P",
+    "etag": "323325f3f6c112bfa6d2bacdf72d9dad",
+    "size": 64384
+  },
+  {
+    "path": "spectra/ebaba8cb-44b2-4188-afea-c2b162255e5b.json",
+    "version_id": "hp3b1VQI2K07OLccm-0COBQFbFHAWb3",
+    "etag": "b3169853aa6bc32d02548c17d1e09318",
+    "size": 9554
+  },
+  {
+    "path": "spectra/ec184fa7-338c-46db-bec3-1a6fe10fa3db.json",
+    "version_id": "yOOvoTbZXif0NW9FGp15YwyVPB-pTaY",
+    "etag": "ab6eaca1a30392b21d805b66625dd0fb",
+    "size": 9928
+  },
+  {
+    "path": "spectra/eccdd349-c65b-46ac-9e53-6fb23de80328.json",
+    "version_id": "Q-OaOuMyHDosyOuMcrEQEGmgEFuV5Bm",
+    "etag": "b4a0cedb2830722cc59b0813c9743506",
+    "size": 22960
+  },
+  {
+    "path": "spectra/ed841a9c-e072-45d9-914f-f2e807b0b11b.json",
+    "version_id": "4RaFLCKwy6bkw.pzWV3AZLLlX9Om0As",
+    "etag": "157d3687c0d5b63a78875f835b088e6d",
+    "size": 182898
+  },
+  {
+    "path": "spectra/ed9e3d2a-2c17-4f6c-9664-b619181a7412.json",
+    "version_id": "5eSVLbCsQRnwb.CU0hz4o8ExKe.A97x",
+    "etag": "6043c795b1eb2e5d34586049c336de5c",
+    "size": 21225
+  },
+  {
+    "path": "spectra/eda4ea5f-3137-4c1f-91ce-f7d97597e4f3.json",
+    "version_id": "5KjwI5x6Mb6H151btCVTr3aOIXFEblK",
+    "etag": "e8f55349692a95e6d395cda82aa99272",
+    "size": 9886
+  },
+  {
+    "path": "spectra/ee8d2911-bdbf-4487-9b75-a6ec91ed56bd.json",
+    "version_id": "h5KrkLfWZMIimtJgszdhCp7Ww3zr-Y8",
+    "etag": "dbf40c06f9dc84b97b4f7b7f04948ae6",
+    "size": 35436
+  },
+  {
+    "path": "spectra/ef075890-7617-4123-8ce6-b53c334b74f1.json",
+    "version_id": "8vI24xc4AwzZs7-.JYIv.Kjnqqvv25c",
+    "etag": "20dbb9f17119a9a06188f6eab4c862db",
+    "size": 182898
+  },
+  {
+    "path": "spectra/ef2637a2-d561-449b-900f-7a37aac4e1df.json",
+    "version_id": "MI9JCCr.CY4CBbh53lnCsT0yKZOPeYP",
+    "etag": "55377f1ef11c920bccca5c12fdf315a6",
+    "size": 22960
+  },
+  {
+    "path": "spectra/ef6eb820-1a62-41ca-b35a-098e88c4009c.json",
+    "version_id": "pQc3n8jRSjq86Ker8V4t-ZtuJIDJ9WT",
+    "etag": "ba1acbb225df73f359fae53f08d863c7",
+    "size": 182898
+  },
+  {
+    "path": "spectra/ef9c322a-813b-4e3e-be94-a51402886ace.json",
+    "version_id": "IL41KyaYpq0srMz62W8A0B5r8DRiOPT",
+    "etag": "5c86348a672088a7f3d5e36d7408f510",
+    "size": 22042
+  },
+  {
+    "path": "spectra/f023fc6f-4d0e-424a-add3-bf57c8f2f724.json",
+    "version_id": "9B43kI.8ARmWlfafl9e.QQsYSs8hHOv",
+    "etag": "fbf28a40ee08de88c440c576d740bb6e",
+    "size": 35184
+  },
+  {
+    "path": "spectra/f0a4de1a-3b81-4108-8c4b-6872951e0478.json",
+    "version_id": "knIo3Wu1OKBjTHVIWIiPh53zTO0Fcpt",
+    "etag": "0d351682085ea4da929e7cfdc8fa3132",
+    "size": 9522
+  },
+  {
+    "path": "spectra/f0ccad08-78a0-4391-a8d3-c1ca7d670051.json",
+    "version_id": "c-d71BVZna84BBOrH-pspM5at7V8I0M",
+    "etag": "44e568524b2adca1c89e448bdf79c324",
+    "size": 9389
+  },
+  {
+    "path": "spectra/f0d949e7-774d-4d85-8c07-834756a1e0bd.json",
+    "version_id": "z9dTN6vihI84SNuwqg3vc-7-khVTUbg",
+    "etag": "52d3847c3962d809f21edb82fbe988a9",
+    "size": 22042
+  },
+  {
+    "path": "spectra/f1e6a989-8a34-4b90-b981-07556d8699dc.json",
+    "version_id": "ZKGvtFDgM4CMYmdipk5DHZZikG1T6qy",
+    "etag": "6acd4d467e289faa7c834aa5f4e6d95a",
+    "size": 10519
+  },
+  {
+    "path": "spectra/f25e5cf9-0d58-41dd-9b54-06e94b24c51c.json",
+    "version_id": "lkqX-C5kELwCxksUpXv8BwkmOFYIC0A",
+    "etag": "5e662e9b44da6fddede507572d810c64",
+    "size": 22960
+  },
+  {
+    "path": "spectra/f3db46cb-3324-4319-9e27-764bdb9133c1.json",
+    "version_id": "YiN478t7A0ARznI-d2WMt7HbdDA2HQ5",
+    "etag": "0fb7dc4c557636fe830ac71b34351047",
+    "size": 9554
+  },
+  {
+    "path": "spectra/f3e1126e-3743-45bd-84ce-a989dbc3559e.json",
+    "version_id": "9r551yZoWp.tvgKseQTD9Wq6uoth2DS",
+    "etag": "05919749ae7416dc0def163ed6c5d780",
+    "size": 9155
+  },
+  {
+    "path": "spectra/f40f8d32-c18c-46ca-9c2e-7153dd4f5a11.json",
+    "version_id": "3LmnXkpSboIe-S--W8T6J6VLXNkpaww",
+    "etag": "cd48c377fca178979b8d43169c901219",
+    "size": 9504
+  },
+  {
+    "path": "spectra/f422a246-9ee9-48f7-9482-ae47c5cd4c7e.json",
+    "version_id": "Y9Uy0dQe.ngFpdDwTWNVZgjaaIZCVMn",
+    "etag": "7dac0327209dacc1922dfedb001c18ea",
+    "size": 22042
+  },
+  {
+    "path": "spectra/f43e2206-b753-4d96-ac85-a1a208f9b857.json",
+    "version_id": "ihGomMD2L-TEM6zimGzcjJR11M8ogIm",
+    "etag": "a3b4b20176c505c08ca551552c6779d7",
+    "size": 9591
+  },
+  {
+    "path": "spectra/f4f642a9-911a-46a5-917d-0d85930e7a71.json",
+    "version_id": "ja1vBUXbCWUJpy5rIm61I5nISe1z2rf",
+    "etag": "ef3679d6b6ee1ceb0a599bfd967c3ed0",
+    "size": 9435
+  },
+  {
+    "path": "spectra/f535a3b2-d6e9-48ca-a225-e3b5cfee6139.json",
+    "version_id": "CzB-wygK5.94WtNbTpwBWKyDAB0V6qG",
+    "etag": "f9f43902d37b972de1cccdcd4358119b",
+    "size": 9389
+  },
+  {
+    "path": "spectra/f5b7061d-de2d-4e3d-8cc6-06bc0e14b811.json",
+    "version_id": "0iEDbGTiFkRJVMW2yguYXdWLhJhVuK-",
+    "etag": "fa6034f705b3e5364e743ee730a997fb",
+    "size": 9946
+  },
+  {
+    "path": "spectra/f5ddcf2f-ece5-4e61-8726-a8c528134c43.json",
+    "version_id": "s6YG3YEbLHon5gGhaLR-Vbrpx1.yquE",
+    "etag": "ef27a1a9525139d0289aed88ec59604c",
+    "size": 9805
+  },
+  {
+    "path": "spectra/f615c2d6-fffe-42ed-9733-9830a6c77165.json",
+    "version_id": "gEoJwVqb8LWpQ3dW1TBUkQpiWADfvYH",
+    "etag": "4f27d7adabde913df1a4e59e600582e3",
+    "size": 9812
+  },
+  {
+    "path": "spectra/f672d185-73a6-47f0-8e2b-a5dc483c5738.json",
+    "version_id": "W05.pdTPwQXA4sKkiiAGdLIvP9a5Xdb",
+    "etag": "b7dad46c23e4b8134c556933d907d47f",
+    "size": 35184
+  },
+  {
+    "path": "spectra/f6a0561d-e536-480b-b868-68a56f20e933.json",
+    "version_id": "PMIWEj0ufzXumFnXJaplU-zI9YKse0i",
+    "etag": "f8dfa7ce3a03032b5f4c4cb4b1a19663",
+    "size": 182289
+  },
+  {
+    "path": "spectra/f7112324-a672-4c19-a458-330983eb73f8.json",
+    "version_id": "PP8bMFSoZGTJ0Oxe3BACGtfKPug3Gho",
+    "etag": "6c794e6dfcf3fa82f1d44e083f4503c7",
+    "size": 9506
+  },
+  {
+    "path": "spectra/f71eaa09-23a3-4319-96c9-06575abe83bc.json",
+    "version_id": "VBHfYBFryve.A.zFNx2Iy1b0YfPLV1h",
+    "etag": "966c698d6462894d9676ff50873b0d2d",
+    "size": 35436
+  },
+  {
+    "path": "spectra/f7507646-9862-4821-b302-66ee4a3a91b3.json",
+    "version_id": "vfQE-StSrOGKDKyFclysOiEqWj2cY14",
+    "etag": "daaabecbbc16917ead8d72a205b802c6",
+    "size": 9324
+  },
+  {
+    "path": "spectra/f7bf4a4a-0a49-4ea8-b101-e7be293ae2ed.json",
+    "version_id": "YGm2dHc5mu7g7yptF978UGFfAZpz0K8",
+    "etag": "5f05034cc036632d0b4f899d1374245a",
+    "size": 9928
+  },
+  {
+    "path": "spectra/f849a0c3-6104-475a-b204-6beab8d1d4c0.json",
+    "version_id": "Yc5fOdQfI2tnmFPpS34Diu.rFGKBxCk",
+    "etag": "17155aaa4c5eb04de349caaa52b32c9c",
+    "size": 35436
+  },
+  {
+    "path": "spectra/f907c366-ecd1-446f-b4fe-a7d36915f0d0.json",
+    "version_id": "yjsXnMa2.yIO1qQy6klojH.JuZEl3P9",
+    "etag": "8401ee4562397a4d44d1ec311a047623",
+    "size": 35340
+  },
+  {
+    "path": "spectra/f959d2b0-73e0-4ac3-b3c2-961672d430ec.json",
+    "version_id": "koUOsbGQpQ5XJR2X6iiR.rHeiqxJV-0",
+    "etag": "be7d2ad03d3e5d323d01dcac6a4e1a13",
+    "size": 35340
+  },
+  {
+    "path": "spectra/f98d321b-4dcf-4d24-9449-f559c0aac706.json",
+    "version_id": "UP7WN9F-R6pV8sEbcpfHKO6PSB2sYB2",
+    "etag": "57a32931cbb7f063cf1000c1ae5592fd",
+    "size": 9973
+  },
+  {
+    "path": "spectra/f99294e9-188c-4a46-a6f4-588414caa264.json",
+    "version_id": "26SxioSbCnMHk7fG6JRSM3oNdx8W5Kg",
+    "etag": "1e7ed346f7c59a5a27f8922fb7d1f4cf",
+    "size": 64384
+  },
+  {
+    "path": "spectra/f9945c25-a04f-4a37-bc35-e290b399fa44.json",
+    "version_id": "xgTgDSHsLsBzzOuigu1oFLczAS7Zv0L",
+    "etag": "d026acd44f2914aa3845cbeb393b502e",
+    "size": 9526
+  },
+  {
+    "path": "spectra/f9a44d35-d6b8-4dd2-a845-0bcaf73c20d4.json",
+    "version_id": "zQT0Yjz4.2KcLImW7IXQZA1sjuzNLRm",
+    "etag": "2027d12c9222631ee677def4c336a757",
+    "size": 9324
+  },
+  {
+    "path": "spectra/f9a92499-93ca-4817-89a9-4264c3243d15.json",
+    "version_id": "53JNJ80QN1mndIEyBzq89y3jnYuiAkc",
+    "etag": "6e860968c703ff7e61a335466885c404",
+    "size": 182898
+  },
+  {
+    "path": "spectra/fa7dbb69-5673-41ed-85f8-ee0a43857560.json",
+    "version_id": "trINuoFrCLXk5ZOpaVev39Z7yVJkXD.",
+    "etag": "e1568585c6b0cc740e449631836a9c5b",
+    "size": 35436
+  },
+  {
+    "path": "spectra/facd5b72-b81d-4e1e-95d3-07f18d7ac1ef.json",
+    "version_id": "bLruZTIlMoZMcl1SE1SqLAwtj36hHDK",
+    "etag": "fc95b402c2cdb478e0602c2e3154ce84",
+    "size": 19659
+  },
+  {
+    "path": "spectra/faf01c04-bfe7-4eec-857d-2bca415fa1ea.json",
+    "version_id": "dIBvGeydUj1D6Z.sL3aEFNB7aXnLDQa",
+    "etag": "d819d486650beee51d1365073c717d07",
+    "size": 9155
+  },
+  {
+    "path": "spectra/fb26158a-1852-452b-9785-d50081fdefd2.json",
+    "version_id": "-rY6byOtiFuteE7B56UZfSqPpxj.EaJ",
+    "etag": "debe1061c93eddd510e0593336609c5e",
+    "size": 9884
+  },
+  {
+    "path": "spectra/fb4b348a-f038-40e6-b084-ba390e0a26c2.json",
+    "version_id": "gyITNdKQ5sNgoJ.IEfdwOP09DF2I.Ir",
+    "etag": "49ca70fcdd234c37815b9ff197be096d",
+    "size": 9522
+  },
+  {
+    "path": "spectra/fb4d5663-9e83-46e9-88f9-9674887d48e3.json",
+    "version_id": "vh6SVZX3svK2NuGIisea6wOY6OxfL0m",
+    "etag": "616895141b9a558c880b99e4b0efa4fe",
+    "size": 35184
+  },
+  {
+    "path": "spectra/fbbcd00b-da55-4243-ae9d-884f0d5f13f2.json",
+    "version_id": "D4xHGbtoTgIslq7jJWRemMlfC6fxO6a",
+    "etag": "ce8fcfb4462dfce09fbb77f2a00aa7d4",
+    "size": 35340
+  },
+  {
+    "path": "spectra/fbdb2969-7d52-4477-b7bb-f09ea409fd1f.json",
+    "version_id": "yQPfbS14CkyEk5BsaPLcFgq2Y5wEEQf",
+    "etag": "e7aaedb920c7d1b3379655eee279ad7b",
+    "size": 9929
+  },
+  {
+    "path": "spectra/fc3a8d78-9912-4a39-ba1d-5b7e6f8c3b44.json",
+    "version_id": "ZcEqmgJYUQczjjhHzwh5bXYaJtNmL5W",
+    "etag": "08afa126bfba794ae52e736292e1c9f6",
+    "size": 9489
+  },
+  {
+    "path": "spectra/fc88c327-e0e4-40c4-aa4c-6496925947b4.json",
+    "version_id": "LKDnYFw7yWH2zddJD7hLVB0zsVRybGn",
+    "etag": "1412d8e948ed5ae818f9fa5c70549c2a",
+    "size": 9389
+  },
+  {
+    "path": "spectra/fcbbcda0-defd-45db-ae04-62f6265006b3.json",
+    "version_id": "1Zq5taenZrNrvWjSBF.d6.NqauT4D8p",
+    "etag": "5427c05451a7ba5e7c89676d421cb747",
+    "size": 64890
+  },
+  {
+    "path": "spectra/fccb8106-5085-4002-9db4-06cba90783de.json",
+    "version_id": "zoqHWsjrjcgtV.1GUY32DH4xF3e8h68",
+    "etag": "39dfbc6ee9dfb5cb4bd2e8e3b5c0d38b",
+    "size": 9522
+  },
+  {
+    "path": "spectra/fd41366c-e8cd-4c7c-bd62-0f15dcfe33fa.json",
+    "version_id": ".3ZkcZ0IaibOnfZy3a2Zkvi3Cwl2s1G",
+    "etag": "2e83563baacdee8a9ef8badf8064024d",
+    "size": 9504
+  },
+  {
+    "path": "spectra/fd45bacc-fcff-4537-910f-d96f25485d73.json",
+    "version_id": "hbDfjXygmevN1J4.M83u3L9zlgB1B.r",
+    "etag": "c4284b9d9df442f281f76dc527196b2a",
+    "size": 9886
+  },
+  {
+    "path": "spectra/fd52de46-8ebc-4d3a-88fb-0e999bf49f2a.json",
+    "version_id": "R4cZ.0fhtBI3yUfTSoqdmB-Nj0eCfbi",
+    "etag": "92afa64e19ced3f3a5140f26e7de5677",
+    "size": 9569
+  },
+  {
+    "path": "spectra/fd5b4bb7-f5dc-4001-9853-827f3aa094bb.json",
+    "version_id": "ecktIv8WeBKLFSJjoOLS1887l-euuSk",
+    "etag": "a5e0b75370aa6b6eb5de676beda336f9",
+    "size": 9929
+  },
+  {
+    "path": "spectra/fd68b0e7-0896-4533-8d4e-c87657de6016.json",
+    "version_id": "lGL2MWjGAQFGnwfx2CPqHLTE7fSn5q6",
+    "etag": "ef8abe61eae52008bed653f7551079c2",
+    "size": 9389
+  },
+  {
+    "path": "spectra/fe7f6a30-a2c5-41e9-83a3-2ecba8759fdd.json",
+    "version_id": "ZpAhWmd1CYC0MKCsXYwrK7MW3HaGC-q",
+    "etag": "345277a9996ce5991e0fa72c9cb2106c",
+    "size": 20908
+  },
+  {
+    "path": "spectra/febeffa1-3ebf-4ac4-809b-6af1ee1dd901.json",
+    "version_id": "RKauI4xLKgU-XMLa9Dnum404YHmxepw",
+    "etag": "a20bdd1e125da98e2eb9b293852319e0",
+    "size": 9929
+  },
+  {
+    "path": "spectra/fec5de37-e614-46cb-b3c1-50bd8d01e185.json",
+    "version_id": "sinwlhMdExtVRmizp4mF9Ilu2XyfyuL",
+    "etag": "d18b62bd1bf40ee6247a0b756cdc92f7",
+    "size": 22787
+  },
+  {
+    "path": "spectra/fef32539-22ce-442e-80aa-b7b494b31f8b.json",
+    "version_id": "D7Eq-dYV2UU.AkmJYg.gM5zn8otDxjs",
+    "etag": "596729d26339f4647bf939df9f9cde1e",
+    "size": 9522
+  },
+  {
+    "path": "spectra/ff7a0539-8da3-412d-9861-ec7cf1651d33.json",
+    "version_id": "W.9wrBf2ya2GNXX70Hy.pa0gdhMLX0P",
+    "etag": "eb375de763f7cb6a98b7289230222779",
+    "size": 9506
+  },
+  {
+    "path": "user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.classes.json",
+    "version_id": "-Yq5XSjL2YN-f3syHXUKxiJ1PpK8nNa",
+    "etag": "5efebf71a7904b3660f17338d8221ca8",
+    "size": 65
+  },
+  {
+    "path": "user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.input_shape.json",
+    "version_id": "TifXDicYFP5EtgwMSxHJErRW28xqlhL",
+    "etag": "a7795ba87e7bcd0183a88cc15a0edc64",
+    "size": 67
+  },
+  {
+    "path": "user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.metadata.json",
+    "version_id": "wE6RBthg5d3fjMSBUF9bLUkPWeVLSI2",
+    "etag": "fb9c4298fcf741822247ae0b1ffb0ea7",
+    "size": 387
+  },
+  {
+    "path": "user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.pth",
+    "version_id": "ufm7Kuq4ZtqNEgBHTSIUDRwSPI-FL11",
+    "etag": "3b1513598d8ec3a75ed634bb7d7d0c6d",
+    "size": 5495747
+  },
+  {
+    "path": "user_models/8982aa51-426b-49c1-85e7-d6965ad52571.classes.json",
+    "version_id": "M0bU2x0pXv1k7DN04l17ouf-K05qZ1E",
+    "etag": "4e3a8bccaf41c212c2a61a6b82b4aa3e",
+    "size": 53
+  },
+  {
+    "path": "user_models/8982aa51-426b-49c1-85e7-d6965ad52571.input_shape.json",
+    "version_id": "DyB3HE6lyGRz118vViYk4RvgZpCejyG",
+    "etag": "a2c869566c931cfa7b1bc6322a863788",
+    "size": 9
+  },
+  {
+    "path": "user_models/8982aa51-426b-49c1-85e7-d6965ad52571.pth",
+    "version_id": "MR9LI6n-VvRGo.iRjdUTggRhvhw6V-J",
+    "etag": "c29681509874bcdf162a23ba5b32385a",
+    "size": 5403913
+  },
+  {
+    "path": "user_models/932eed3d-4d0e-4594-a490-5fd4f5e7a344.classes.json",
+    "version_id": "hZBACxeLKKF8W2QVBYru-l09QI.7Q15",
+    "etag": "4e3a8bccaf41c212c2a61a6b82b4aa3e",
+    "size": 53
+  },
+  {
+    "path": "user_models/932eed3d-4d0e-4594-a490-5fd4f5e7a344.input_shape.json",
+    "version_id": ".afWSOrcwvQh82LmPr5IcjSZa9tsCFb",
+    "etag": "a2c869566c931cfa7b1bc6322a863788",
+    "size": 9
+  },
+  {
+    "path": "user_models/932eed3d-4d0e-4594-a490-5fd4f5e7a344.pth",
+    "version_id": "I4XkC0qbUuDKwMPzQ9-wc11lNCQRJX6",
+    "etag": "d2ab244763c4ee2622ba6135feb849bf",
+    "size": 5403913
+  },
+  {
+    "path": "user_models/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.classes.json",
+    "version_id": "EvLq1qzXiq.K49OaaUmQJNZGB3.-0Xb",
+    "etag": "5efebf71a7904b3660f17338d8221ca8",
+    "size": 65
+  },
+  {
+    "path": "user_models/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.input_shape.json",
+    "version_id": "se.EZwpHVkRS4eLLH50aqmOaeJWt2Sq",
+    "etag": "10405a42eb6386fa65ca0481b3f5575d",
+    "size": 74
+  },
+  {
+    "path": "user_models/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.metadata.json",
+    "version_id": "vUqZwf8zF-78oGeRW48kYsFq5ky66L4",
+    "etag": "f9da29908982ecfbcca8ea7191b798ca",
+    "size": 401
+  },
+  {
+    "path": "user_models/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.pth",
+    "version_id": "Hx.QKI7emK6Tr9qL8rf.ntpoIIo3VIy",
+    "etag": "d4274e5c7f5eacddbe4b54444a4a214e",
+    "size": 5403913
+  },
+  {
+    "path": "user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.classes.json",
+    "version_id": "-zhGAqGvulqOmE8b4doXMlTS7Uxf-1M",
+    "etag": "5efebf71a7904b3660f17338d8221ca8",
+    "size": 65
+  },
+  {
+    "path": "user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.input_shape.json",
+    "version_id": "vXVl0nyKm-yJlqacHuThSMZuqqOp464",
+    "etag": "a7795ba87e7bcd0183a88cc15a0edc64",
+    "size": 67
+  },
+  {
+    "path": "user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.metadata.json",
+    "version_id": "FSJf8lsnTYA-jG3vI.5XmQtdNJo5Xkr",
+    "etag": "fc25ac8b7b4f54ecb75b008efc03b45c",
+    "size": 387
+  },
+  {
+    "path": "user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.pth",
+    "version_id": "LyxvkFjJtE5J9xLgWzImiQsbO8e8c3Z",
+    "etag": "3b1513598d8ec3a75ed634bb7d7d0c6d",
+    "size": 5495747
+  }
+]

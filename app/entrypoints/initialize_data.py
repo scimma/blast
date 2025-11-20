@@ -23,7 +23,7 @@ DATA_INIT_S3_CONF = {
 }
 
 
-def generate_file_manifest():
+def generate_file_manifest(app_name='blast'):
     '''Collect metadata for the latest versions of the objects in a JSON file'''
     s3init = ObjectStore(conf=DATA_INIT_S3_CONF)
     root_path = 'init/data/'
@@ -40,17 +40,30 @@ def generate_file_manifest():
             file_info.append(info)
         else:
             logger.debug(info)
-    with open(os.path.join(Path(__file__).resolve().parent, 'blast-data.json'), 'w') as fh:
+    manifest_name = f'''{app_name}=data.json'''
+    with open(os.path.join(Path(__file__).resolve().parent, manifest_name), 'w') as fh:
         json.dump(file_info, fh, indent=2)
 
-
-def verify_data_integrity(download=False):
-    '''Verify integrity of initial data file set'''
-    s3_init = ObjectStore(conf=DATA_INIT_S3_CONF)
+def verify_data_integrity(download=False, app_name='blast'):
+    '''Verify integrity of initial data file set for the requested app, currently "blast" or "astrodash"'''
+    bucket = (
+        os.getenv("S3_BUCKET_INIT", 'blast-astro-data') if app_name == "blast" else
+        app_name
+        )
+    s3_conf = DATA_INIT_S3_CONF
+    s3_conf['bucket'] = bucket
+    s3_init = ObjectStore(conf=s3_conf)
     s3_data = ObjectStore()
-    data_root_dir = os.getenv('DATA_ROOT_DIR', '/mnt/data')
-    with open(os.path.join(Path(__file__).resolve().parent, 'blast-data.json'), 'r') as fh:
+
+    data_root_dir = (
+        os.getenv('DATA_ROOT_DIR', '/mnt/data') if app_name == 'blast' else
+        os.getenv(f'''{app_name.upper()}_DATA_DIR''', f'''/mnt/{app_name}-data''')
+        )
+
+    manifest_name = f'''{app_name}-data.json'''
+    with open(os.path.join(Path(__file__).resolve().parent, manifest_name), 'r') as fh:
         data_objects = json.load(fh)
+
     for data_object in data_objects:
         bucket_path = data_object['path']
         file_path = os.path.join(data_root_dir, bucket_path)
@@ -86,23 +99,26 @@ def verify_data_integrity(download=False):
                 sys.exit(1)
             else:
                 logger.info(f'''Downloaded file "{bucket_path}" passes integrity check.''')
-        logger.debug(f'''Checking if "{bucket_path}" needs to be uploaded to bucket...''')
-        for data_dir_name, data_root_path in [
-            ('cutout_cdn', CUTOUT_ROOT),
-            ('sed_output', SED_OUTPUT_ROOT)
-        ]:
-            if bucket_path.startswith(f'{data_dir_name}/'):
-                # Upload file to bucket and delete local copy
-                object_key = os.path.join(
-                    S3_BASE_PATH.strip('/'),
-                    data_root_path.strip('/'),
-                    bucket_path.replace(f'{data_dir_name}/', ''))
-                if not s3_data.object_exists(object_key):
-                    logger.info(f'''Uploading file "{bucket_path}" to "{object_key}"...''')
-                    s3_data.put_object(path=object_key, file_path=file_path)
-                else:
-                    logger.debug(f'''Object already in bucket: "{object_key}"''')
-                assert s3_data.object_exists(object_key)
+
+        # Only push to cutout/sed buckets for the original blast app
+        if app_name == "blast":
+            logger.debug(f'''Checking if "{bucket_path}" needs to be uploaded to bucket...''')
+            for data_dir_name, data_root_path in [
+                ('cutout_cdn', CUTOUT_ROOT),
+                ('sed_output', SED_OUTPUT_ROOT)
+            ]:
+                if bucket_path.startswith(f'{data_dir_name}/'):
+                    # Upload file to bucket and delete local copy
+                    object_key = os.path.join(
+                        S3_BASE_PATH.strip('/'),
+                        data_root_path.strip('/'),
+                        bucket_path.replace(f'{data_dir_name}/', ''))
+                    if not s3_data.object_exists(object_key):
+                        logger.info(f'''Uploading file "{bucket_path}" to "{object_key}"...''')
+                        s3_data.put_object(path=object_key, file_path=file_path)
+                    else:
+                        logger.debug(f'''Object already in bucket: "{object_key}"''')
+                    assert s3_data.object_exists(object_key)
 
 
 if __name__ == '__main__':
@@ -113,9 +129,11 @@ if __name__ == '__main__':
     logger.debug(f'initialize_data.py command: {cmd}')
     if cmd == 'verify':
         # Verify uploads against local files
-        verify_data_integrity(download=False)
+        verify_data_integrity(download=False, app_name='blast')
     if cmd == 'download':
         # Verify uploads against local files
-        verify_data_integrity(download=True)
+        verify_data_integrity(download=True, app_name='blast')
+        verify_data_integrity(download=True, app_name='astrodash')
     elif cmd == 'manifest':
-        generate_file_manifest()
+        generate_file_manifest(app_name='blast')
+        generate_file_manifest(app_name='astrodash')

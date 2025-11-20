@@ -17,6 +17,7 @@ django-revproxy==0.13.0
 django-silk==5.4.3
 django-tables2==2.7.5
 djangorestframework==3.16.1
+django-cors-headers==4.6.0
 dustmaps==1.0.14
 dynesty==2.1.5
 extinction==0.4.7
@@ -26,9 +27,13 @@ gunicorn==23.0.0
 minio==7.2.15
 mozilla-django-oidc==4.0.1
 mysqlclient==2.2.7  # TODO: This can be removed if using PostgreSQL
+pydantic==2.5.0
+pydantic-settings==2.1.0
 psycopg2-binary==2.9.11
 photutils==2.2.0
 redis==7.0.1
 sbi==0.22.0
 scikit-image==0.25.2
+torch==2.9.0
+torchvision==0.24.0
 watchdog==6.0.0
