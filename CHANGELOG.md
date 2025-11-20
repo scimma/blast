@@ -13,6 +13,15 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.7.2]
+
+### Changed
+
+- Improved detection of duplicate transients when users add transients by CSV-formatted definition. In addition to searching for
+  existing transients with the same names, the coordinates of submitted transients are also checked for proximity to existing
+  transients; those within 1 arcsecond of an existing transient are rejected.
+- Transients added by definition are no longer allowed to have names with prefixes "AT" or "SN".
+
 ## [1.7.1]
 
 ### Security
