@@ -51,7 +51,7 @@ import base64
 
 from host.log import get_logger
 logger = get_logger(__name__)
-import time
+
 
 
 def scale_image(image_data):
@@ -188,9 +188,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     if s3.object_exists(png_object_key) and display_png:
         # The png for the cutout exists, we can use that to save time
         # Download PNG file local file cache
-        starttime = time.time()
         image_data = s3.get_object(path=png_object_key)
-        logger.info(f"Downloading the image (png) took {time.time() - starttime}")
         image_script = """<script>
         document.getElementById('loading-indicator').style.display = \"none\";
         function cutoutImgClick(transient, cutout) {
@@ -200,8 +198,17 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 type : "GET",
                 data : { transient_name : transient,
                         cutout_name : cutout},
-                success : function() {
+                success : function(resp) {
                     console.log("Yippee");
+                    $("#cutout-img-div").replaceWith(resp.bokeh_cutout_div);
+                    var cutout_script = document.createElement("script");
+                    cutout_script.type = 'text/javascript';
+                    var raw_script = resp.bokeh_cutout_script;
+                    var raw_script_trimmed = raw_script.trim();
+                    console.log(raw_script_trimmed);
+                    var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr","").replace("ipt>","");
+                    cutout_script.text = script_trimmed;
+                    document.body.appendChild(cutout_script);
                 },
             });
         }
@@ -222,18 +229,21 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         # logger.info(f"Headers: {response.headers}")
         image_data_encoded = base64.b64encode(image_data).decode()
         display_tag = f"""
-        <button id="cutout-img-button" onclick="cutoutImgClick('{transient.name}', '{cutout.name}')">
-            <img id=\"cutout-img\" src=\"data:image/png;base64,{image_data_encoded}\"/>
-        </button>"""
+        <div id="cutout-img-div">
+            <button id="cutout-img-button" onclick="cutoutImgClick('{transient.name}', '{cutout.name}')">
+                <img id=\"cutout-img\" src=\"data:image/png;base64,{image_data_encoded}\"/>
+            </button>
+            <br>
+            <p>Click on the image to load the FITS file and zoom in.</p>
+        </div>
+        """
         context = {"bokeh_cutout_script": script_to_return, "bokeh_cutout_div": display_tag}
         return context
     if not os.path.isfile(local_fits_path):
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         if s3.object_exists(object_key):
             # Download FITS file local file cache
-            starttime = time.time()
             s3.download_object(path=object_key, file_path=local_fits_path)
-            logger.info(f"Downloading the image took {time.time() - starttime}")
         else:
             logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
     # If the file is missing for some reason, generate an empty plot with an error title
