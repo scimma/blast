@@ -178,8 +178,7 @@ def download_and_save_cutouts(
     for r in results:
         if r != "failed":
             return processed_value
-
-
+    return "failed"
 def panstarrs_image_filename(position, image_size=None, filter=None):
     """Query panstarrs service to get a list of image names
 
