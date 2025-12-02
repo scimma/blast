@@ -114,17 +114,23 @@ def download_and_save_cutouts(
         cutout_file_exists = s3.object_exists(object_key)
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
-        cutout_object = Cutout.objects.get_or_create(
+        cutout_object = Cutout.objects.filter(
             name=cutout_name, filter=filter, transient=transient
         )
+        #TODO replace w django get or create
+        # cutout_object_exists = cutout_object.exists()
+        # cutout_object = (cutout_object[0]
+        #                  if cutout_object_exists
+        #                  else Cutout(name=cutout_name, filter=filter, transient=transient))
+        cutout_object, created = Cutout.objects.get_or_create(name=cutout_name, filter=filter, transient=transient)
+
         # If we know there is no image to download, exit.
         if cutout_object.message == "No image found":
-            return True
-
+            return "failed"
         fits = None
         # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
         # file or the Cutout object are missing, redownload the data
-        if not overwrite == "False" or not cutout_file_exists or not cutout_object_exists:
+        if not overwrite == "False" or not cutout_file_exists or created:
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
             # If a download error occurred, try it again 
 
@@ -132,7 +138,7 @@ def download_and_save_cutouts(
                 cutout_object.message = "Download error"
                 logger.debug(err)
                 cutout_object.save()
-                return False
+                return "failed"
         if fits:
             # Write FITS file to local cache
             os.makedirs(save_dir, exist_ok=True)
@@ -145,11 +151,16 @@ def download_and_save_cutouts(
         # update the database object. Otherwise record that no image was found.
         if s3.object_exists(object_key):
             cutout_object.fits.name = local_fits_path
-        else:
-            cutout_object.message = "No image found"
-        cutout_object.save()
-        return True
+            cutout_object.save()
+            return "processed"
 
+        
+        cutout_object.message = "No image found"
+        cutout_object.save()
+        return "failed"
+
+    #OKAY SO REDO ALL THE LOGIC THIS THREADPOOL IS WHAT ACTUALLLY CALLS DOWNLOAD_FILTER_DATA 
+    results = []
     processed_value = "processed"
     if filter_set is None:
         filter_set = Filter.objects.all()
@@ -158,11 +169,15 @@ def download_and_save_cutouts(
         for future in as_completed(future_to_filter):
             filter = future_to_filter[future]
             try:
-                future.result()
+                result = future.result()
             except Exception as exc:
                 print('%r generated an exception: %s' % (filter, exc))
-
-    return processed_value
+                result = "failed"
+            results.append(result)
+    
+    for r in results:
+        if r != "failed":
+            return processed_value
 
 
 def panstarrs_image_filename(position, image_size=None, filter=None):
