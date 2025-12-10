@@ -30,6 +30,7 @@ from django.conf import settings
 from bokeh.io import curdoc, export_png
 from django.urls import reverse
 import base64
+from PIL import Image
 
 # import extinction
 # from bokeh.models import Circle
@@ -138,7 +139,7 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True):
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True, force_png = False):
     def generate_plot(fig, image_data, local_image_path:str):
         hide_loading_indicator = CustomJS(args=dict(), code="""
             document.getElementById('loading-indicator').style.display = "none";
@@ -147,9 +148,13 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         plot_image(image_data, fig)
         s3 = ObjectStore()
         png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
-        if local_image_path and not s3.object_exists(png_object_key):
+        if local_image_path and (not s3.object_exists(png_object_key) or force_png):
             # image path exists, so we can save the image
             export_png(fig, filename=local_image_path, width=800, height=800)
+            cutout_png = Image.open(local_image_path)
+            cutout_size = min(cutout_png.size[0], 800)
+            cutout_png = cutout_png.resize((cutout_size,cutout_size), Image.Resampling.LANCZOS)
+            cutout_png.save(local_image_path, optimize=True, quality=85)
             s3 = ObjectStore()
             png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
             logger.info(f"Putting {png_object_key} in bucket")
@@ -192,20 +197,19 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         image_script = """<script>
         document.getElementById('loading-indicator').style.display = \"none\";
         function cutoutImgClick(transient, cutout) {
-            console.log("Clicked");
+            document.getElementById('loading-indicator').style.display = \"block\";
+            document.getElementById('cutout-img').style.display = \"none\";
             $.ajax({
                 url : '""" + reverse("cutout_fits_plot") +"""',
                 type : "GET",
                 data : { transient_name : transient,
                         cutout_name : cutout},
                 success : function(resp) {
-                    console.log("Yippee");
                     $("#cutout-img-div").replaceWith(resp.bokeh_cutout_div);
                     var cutout_script = document.createElement("script");
                     cutout_script.type = 'text/javascript';
                     var raw_script = resp.bokeh_cutout_script;
                     var raw_script_trimmed = raw_script.trim();
-                    console.log(raw_script_trimmed);
                     var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr","").replace("ipt>","");
                     cutout_script.text = script_trimmed;
                     document.body.appendChild(cutout_script);
