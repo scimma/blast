@@ -119,6 +119,7 @@ services:
       - "full_prod"
       - "full_dev"
       - "batch"
+      - "ci"
 
   flower:
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
