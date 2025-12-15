@@ -139,28 +139,31 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True, force_png = False):
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True, force_thumbnail = False):
     def generate_plot(fig, image_data, local_image_path:str):
         hide_loading_indicator = CustomJS(args=dict(), code="""
             document.getElementById('loading-indicator').style.display = "none";
         """)
         fig.x_range.js_on_change('end', hide_loading_indicator)
         plot_image(image_data, fig)
+        local_image_path_jpeg = local_image_path.replace(".png", ".jpg")
         s3 = ObjectStore()
-        png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
-        if local_image_path and (not s3.object_exists(png_object_key) or force_png):
+        jpeg_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
+        if local_image_path and (not s3.object_exists(jpeg_object_key) or force_thumbnail):
             # image path exists, so we can save the image
             export_png(fig, filename=local_image_path, width=800, height=800)
             cutout_png = Image.open(local_image_path)
             cutout_size = min(cutout_png.size[0], 800)
             cutout_png = cutout_png.resize((cutout_size,cutout_size), Image.Resampling.LANCZOS)
-            cutout_png.save(local_image_path, optimize=True, quality=85)
+            cutout_jpg = cutout_png.convert("RGB")
+            cutout_jpg.save(local_image_path_jpeg, optimize=True, quality=85, format="JPEG")
             s3 = ObjectStore()
-            png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
-            logger.info(f"Putting {png_object_key} in bucket")
-            s3.put_object(path=png_object_key, file_path=local_image_path)
+            jpeg_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
+            logger.info(f"Putting {jpeg_object_key} in bucket")
+            s3.put_object(path=jpeg_object_key, file_path=local_image_path_jpeg)
             # Remove the image
             os.remove(local_image_path)
+            os.remove(local_image_path_jpeg)
 
         script, div = components(fig)
         return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
@@ -188,8 +191,9 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
     local_image_path = local_fits_path.replace(".fits", ".png")
+    local_image_path_jpeg = local_image_path.replace(".png", ".jpg")
     s3 = ObjectStore()
-    png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path.strip('/'))
+    png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
     if s3.object_exists(png_object_key) and display_png:
         # The png for the cutout exists, we can use that to save time
         # Download PNG file local file cache
