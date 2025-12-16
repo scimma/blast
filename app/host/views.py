@@ -255,15 +255,22 @@ def add_transient(request):
                 for transient_name in new_transient_names:
                     trans_info = [trans_info for trans_info in trans_info_set
                                   if trans_info['name'] == transient_name][0]
-                    if trans_info['name'].startswith("SN") or trans_info['name'].startswith("AT"):
-                        trans_name = trans_info["name"]
+                    trans_name = trans_info["name"]
+                    trans_name_max_length = Transient._meta.get_field('name').max_length
+                    if trans_name.startswith("SN") or trans_name.startswith("AT"):
                         err_msg = f'Error creating transient: {trans_name} starts with an illegal prefix (SN or AT)'
+                        logger.error(err_msg)
+                        errors.append(err_msg)
+                        continue
+                    elif len(trans_name) > trans_name_max_length:
+                        err_msg = (f'''Error creating transient: {trans_name} is longer than the max length '''
+                                   f'''of {trans_name_max_length} characters.''')
                         logger.error(err_msg)
                         errors.append(err_msg)
                         continue
                     try:
                         Transient.objects.create(**trans_info)
-                        defined_transient_names += [trans_info['name']]
+                        defined_transient_names += [trans_name]
                     except Exception as err:
                         err_msg = f'Error creating transient: {err}'
                         logger.error(err_msg)

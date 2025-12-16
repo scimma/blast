@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.7.3]
+
+### Changed
+
+- Increased transient name length limit from 20 to 64 characters
+- Updated to version `actions/checkout@v6` for GitHub CI/CD
+
 ## [1.7.2]
 
 ### Changed

@@ -77,7 +77,7 @@ class Host(SkyObject):
 
     Attributes:
         name (django.db.model.CharField): Name of the host galaxy, character
-            limit = 20.
+            limit = 100.
         ra_deg (django.db.model.FloatField): Right Ascension (ICRS) in decimal
             degrees of the host
         deg_deg (django.db.model.FloatField): Declination (ICRS) in decimal degrees
@@ -100,7 +100,7 @@ class Transient(SkyObject):
 
     Attributes:
         name (django.db.model.CharField): Transient Name
-            Server name of the transient, character limit = 20.
+            Server name of the transient, character limit = 64.
         tns_id (models.IntegerField): Transient Name Server ID.
         tns_prefix (models.CharField): Transient Name Server name
             prefix, character limit = 20.
@@ -115,7 +115,7 @@ class Transient(SkyObject):
             Delete is set to cascade.
     """
 
-    name = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=64, unique=True)
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
     public_timestamp = models.DateTimeField(null=True, blank=True)
@@ -177,7 +177,6 @@ class Transient(SkyObject):
             ("retrigger_transient", "Can retrigger a transient workflow"),
             ("reprocess_transient", "Can reprocess a transient workflow"),
         ]
-
 
 
 class Status(models.Model):
