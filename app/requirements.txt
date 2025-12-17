@@ -4,7 +4,6 @@ astro-prost==1.2.13
 astro-sedpy==0.4.0
 astroquery==0.4.7
 bokeh==3.7.3
-boto3==1.40.48
 coverage==7.9.0
 crispy-bootstrap4==2025.6
 Django==5.1.14
