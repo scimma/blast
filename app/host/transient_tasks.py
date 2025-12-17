@@ -52,7 +52,6 @@ logger = get_logger(__name__)
 def get_all_task_prerequisites(transient_name):
     return {
         ImageDownload(transient_name).task_name: ImageDownload(transient_name)._prerequisites(),
-        TransientInformation(transient_name).task_name: TransientInformation(transient_name)._prerequisites(),
         MWEBV_Transient(transient_name).task_name: MWEBV_Transient(transient_name)._prerequisites(),
         HostMatch(transient_name).task_name: HostMatch(transient_name)._prerequisites(),
         HostInformation(transient_name).task_name: HostInformation(transient_name)._prerequisites(),
@@ -986,32 +985,6 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         return "processed"
 
 
-class TransientInformation(TransientTaskRunner):
-    """Task Runner to gather information about the Transient"""
-
-    def _prerequisites(self):
-        return {
-            "Cutout download": "processed",
-            "Transient information": "not processed",
-        }
-
-    @property
-    def task_name(self):
-        return "Transient information"
-
-    def _failed_status_message(self):
-        """
-        Failed status if not aperture is found
-        """
-        return "failed"
-
-    def _run_process(self, transient):
-        """Code goes here"""
-
-        # get_dust_maps(10)
-        return "processed"
-
-
 class HostInformation(TransientTaskRunner):
     """Task Runner to gather host information from NED"""
 
@@ -1270,16 +1243,6 @@ class GlobalHostSEDFitting(HostSEDFitting):
         return status_message
 
 # Transient workflow tasks
-
-
-@shared_task(
-    name="Transient Information",
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def transient_information(transient_name):
-    TransientInformation(transient_name).run_process()
-
 
 @shared_task(
     name="Host Match", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit

@@ -15,7 +15,6 @@ from host.transient_tasks import mwebv_transient
 from host.transient_tasks import final_progress
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
-from host.transient_tasks import transient_information
 from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
 from django.urls import reverse_lazy
@@ -98,7 +97,6 @@ def transient_workflow(transient_name=None):
     workflow = chain(
         workflow_init.si(),
         image_download.si(transient_name),
-        transient_information.si(transient_name),
         mwebv_transient.si(transient_name),
         host_match.si(transient_name),
         host_information.si(transient_name),

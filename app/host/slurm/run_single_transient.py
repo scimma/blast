@@ -46,7 +46,6 @@ tasks_classes_in_order = [
     host.transient_tasks.MWEBV_Host(),
     host.transient_tasks.ImageDownload(),
     host.transient_tasks.HostInformation(),
-    host.transient_tasks.TransientInformation(),
     host.transient_tasks.GlobalApertureConstruction(),
     host.transient_tasks.GlobalAperturePhotometry(),
     host.transient_tasks.ValidateGlobalPhotometry(),

@@ -49,7 +49,6 @@ def rerun_failed_task(task_register):
         GlobalAperturePhotometry(task_register.transient.name),
         ValidateLocalPhotometry(task_register.transient.name),
         ValidateGlobalPhotometry(task_register.transient.name),
-        TransientInformation(task_register.transient.name),
         HostInformation(task_register.transient.name),
         GlobalHostSEDFitting(task_register.transient.name),
         LocalHostSEDFitting(task_register.transient.name),
