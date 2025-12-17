@@ -9,6 +9,7 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+    external: true
 
 services:
 

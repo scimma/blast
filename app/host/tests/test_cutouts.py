@@ -23,16 +23,22 @@ class CutoutDownloadTest(TestCase):
         """ "
         Test that cutout data can be downloaded.
         """
+        download_dir = '/tmp/'
+        os.makedirs(download_dir, exist_ok=True)
         for filter in Filter.objects.all():
+            print(f'''Processing filter "{filter.name}"...''')
             position = SkyCoord(
                 ra=self.transient_ra, dec=self.transient_dec, unit="deg"
             )
-            cutout_data = cutout(position, filter)[0]
-
-            if cutout_data:
-                save_dir = f"{self.transient_name}/{filter.name}/"
-                os.makedirs(save_dir, exist_ok=True)
-                path_to_fits = save_dir + f"{filter.name}.fits"
-                fits.writeto(path_to_fits, cutout_data[0].data, overwrite=True)
+            save_dir = os.path.join(download_dir, f"{self.transient_name}/{filter.name}/")
+            os.makedirs(save_dir, exist_ok=True)
+            path_to_fits = os.path.join(save_dir, f"{filter.name}.fits")
+            if os.path.exists(path_to_fits):
+                print(f'''Skipping file already downloaded: "{path_to_fits}"...''')
+                continue
+            else:
+                cutout_data = cutout(position, filter)[0]
+                if cutout_data:
+                    fits.writeto(path_to_fits, cutout_data[0].data, overwrite=True)
 
         self.assertTrue(1 == 1)
