@@ -10,26 +10,21 @@ import os
 
 from host.models import Cutout
 from host.models import Aperture
-from host.models import Transient
 from host.host_utils import get_local_aperture_size
 from host.cutouts import download_and_save_cutouts
 from host.object_store import ObjectStore
 from django.conf import settings
 
 
-def trim_images(transient):
+def crop_images(transient):
 
     cutouts = Cutout.objects.filter(transient=transient)  # ,filter__name='DES_r')
     for c in cutouts:
         if c.fits.name and os.path.exists(c.fits.name):
-            trim_image(c)
-
-    transient = Transient.objects.get(pk=transient.pk)
-    transient.image_trim_status = "processed"
-    transient.save()
+            crop_image(c)
 
 
-def trim_image(cutout):
+def crop_image(cutout):
     transient = cutout.transient
     # Download FITS file local file cache
     s3 = ObjectStore()

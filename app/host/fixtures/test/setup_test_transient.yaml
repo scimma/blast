@@ -6,7 +6,6 @@
     tns_prefix: AT
     ra_deg: 120.027325
     dec_deg: 2.1707639
-    image_trim_status: "not ready"
 - model: host.Transient
   fields:
     name: 2022testtwo
@@ -15,4 +14,3 @@
     tns_prefix: AT
     ra_deg: 123.027325
     dec_deg: 2.1707639
-    image_trim_status: "not ready"

@@ -35,9 +35,8 @@ from host.prospector import fit_model
 from host.prospector import prospector_result_to_blast
 from host.object_store import ObjectStore
 from host.base_tasks import TaskRunner
-from host.base_tasks import get_image_trim_status
+from host.crop_images import crop_images
 from django.conf import settings
-from pathlib import Path
 
 """This module contains all of the TransientTaskRunners in blast."""
 
@@ -63,6 +62,7 @@ def get_all_task_prerequisites(transient_name):
         GlobalAperturePhotometry(transient_name).task_name: GlobalAperturePhotometry(transient_name)._prerequisites(),
         ValidateGlobalPhotometry(transient_name).task_name: ValidateGlobalPhotometry(transient_name)._prerequisites(),
         GlobalHostSEDFitting(transient_name).task_name: GlobalHostSEDFitting(transient_name)._prerequisites(),
+        CropTransientImages(transient_name).task_name: CropTransientImages(transient_name)._prerequisites(),
     }
 
 
@@ -263,7 +263,6 @@ class TransientTaskRunner(TaskRunner):
                 task_register_item.save()
                 # The processing status should be calculated
                 transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
-                transient.image_trim_status = get_image_trim_status(transient)
                 transient.save()
             return transient.name
 
@@ -503,7 +502,10 @@ class ImageDownload(TransientTaskRunner):
         Download cutout images
         """
 
-        if transient.image_trim_status == "processed":
+        # If the downloaded images have already been cropped
+        task = Task.objects.get(name__exact="Crop transient images")
+        task_register = TaskRegister.objects.get(transient=transient, task=task)
+        if task_register.status.message == "processed":
             overwrite = "True"
         else:
             overwrite = "False"
@@ -1242,6 +1244,40 @@ class GlobalHostSEDFitting(HostSEDFitting):
 
         return status_message
 
+
+
+class CropTransientImages(TransientTaskRunner):
+    """
+    TaskRunner to crop cutout images to save disk space.
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Crop transient images": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Crop transient images"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient):
+        status_message = "processed"
+        crop_images(transient)
+        return status_message
+
+
 # Transient workflow tasks
 
 @shared_task(
@@ -1249,6 +1285,16 @@ class GlobalHostSEDFitting(HostSEDFitting):
 )
 def host_match(transient_name):
     HostMatch(transient_name).run_process()
+
+
+
+@shared_task(
+    name="Crop transient images",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def crop_transient_images(transient_name):
+    CropTransientImages(transient_name).run_process()
 
 
 @shared_task(

@@ -127,9 +127,6 @@ class Transient(SkyObject):
     photometric_class = models.CharField(max_length=20, null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     processing_status = models.CharField(max_length=20, default="processing")
-    # trim images to save disk space
-    # status options will be "not ready", "ready", and "processed"
-    image_trim_status = models.CharField(max_length=20, default="not ready")
     added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     progress = models.IntegerField(default=0)
     software_version = models.CharField(max_length=50, blank=True, null=True)
