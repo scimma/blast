@@ -324,7 +324,6 @@ class HostMatch(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "not processed",
         }
@@ -383,7 +382,6 @@ class MWEBV_Transient(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "not processed",
         }
 
@@ -431,7 +429,6 @@ class MWEBV_Host(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -527,7 +524,6 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -609,7 +605,6 @@ class LocalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -706,7 +701,6 @@ class GlobalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -841,7 +835,6 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -911,7 +904,6 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -996,7 +988,6 @@ class HostInformation(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "not processed"
@@ -1170,7 +1161,6 @@ class LocalHostSEDFitting(HostSEDFitting):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -1211,7 +1201,6 @@ class GlobalHostSEDFitting(HostSEDFitting):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
