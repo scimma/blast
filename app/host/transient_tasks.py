@@ -63,6 +63,8 @@ def get_all_task_prerequisites(transient_name):
         ValidateGlobalPhotometry(transient_name).task_name: ValidateGlobalPhotometry(transient_name)._prerequisites(),
         GlobalHostSEDFitting(transient_name).task_name: GlobalHostSEDFitting(transient_name)._prerequisites(),
         CropTransientImages(transient_name).task_name: CropTransientImages(transient_name)._prerequisites(),
+        GenerateThumbnails(transient_name).task_name: GenerateThumbnails(transient_name)._prerequisites(),
+        GenerateThumbnailsFinal(transient_name).task_name: GenerateThumbnailsFinal(transient_name)._prerequisites(),
     }
 
 
@@ -1234,6 +1236,55 @@ class GlobalHostSEDFitting(HostSEDFitting):
         return status_message
 
 
+class GenerateThumbnails(TransientTaskRunner):
+    """
+    TaskRunner to generate a static compressed thumbnails of the interactive data widgets.
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Generate thumbnails": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnails final"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient):
+        status_message = "processed"
+        # TODO : DO STUFF
+        return status_message
+
+
+class GenerateThumbnailsFinal(GenerateThumbnails):
+    """
+    Supports a second invocation of the thumbnail generation task
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Generate thumbnails": "processed",
+            "Crop transient images": "processed",
+            "Generate thumbnails final": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnails final"
+
 
 class CropTransientImages(TransientTaskRunner):
     """
@@ -1275,6 +1326,23 @@ class CropTransientImages(TransientTaskRunner):
 def host_match(transient_name):
     HostMatch(transient_name).run_process()
 
+
+@shared_task(
+    name="Generate thumbnails",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnails(transient_name):
+    GenerateThumbnails(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate thumbnails final",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnails_final(transient_name):
+    GenerateThumbnailsFinal(transient_name).run_process()
 
 
 @shared_task(
