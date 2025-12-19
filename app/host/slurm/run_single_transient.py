@@ -31,7 +31,6 @@ tasks_in_order = [
     "Host MWEBV",
     "Cutout download",
     "Host information",
-    "Transient information",
     "Global aperture construction",
     "Global aperture photometry",
     "Validate global photometry",

@@ -279,7 +279,6 @@ class HostMatchRunnerTest(TestCase):
             self.host_match_runner._prerequisites()
             == {
                 "Cutout download": "processed",
-                "Transient information": "processed",
                 "Transient MWEBV": "processed",
                 "Host match": "not processed",
             }
