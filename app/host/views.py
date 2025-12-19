@@ -13,7 +13,7 @@ from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
 from host.host_utils import select_aperture
-from host.host_utils import select_cutout_aperture
+from host.host_utils import select_best_cutout
 from host.models import Acknowledgement
 from host.models import Aperture
 from host.models import AperturePhotometry
@@ -39,12 +39,11 @@ from celery import shared_task
 from host.decorators import log_usage_metric
 import csv
 import io
+import base64
 from host.host_utils import ARCSEC_DEC_IN_DEG
 from host.host_utils import ARCSEC_RA_IN_DEG
 from host.log import get_logger
 logger = get_logger(__name__)
-
-
 
 
 def filter_transient_categories(qs, value, task_register=None):
@@ -53,7 +52,7 @@ def filter_transient_categories(qs, value, task_register=None):
     if value == "Transients with Basic Information":
         qs = qs.filter(
             pk__in=task_register.filter(
-                task__name="Transient information", status__message="processed"
+                task__name="Transient MWEBV", status__message="processed"
             ).values("transient")
         )
     elif value == "Transients with Matched Hosts":
@@ -317,41 +316,8 @@ def analytics(request):
 
 @log_usage_metric()
 @silk_profile(name="Transient result for some transient")
-def results(request, slug):
-    transients = Transient.objects.all()
-    try:
-        transient = transients.get(name__exact=slug)
-    except Transient.DoesNotExist:
-        return render(request, "transient_404.html", status=404)
-    global_aperture = select_aperture(transient)
-
-    local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
-    local_aperture_photometry = AperturePhotometry.objects.filter(
-        transient=transient,
-        aperture__type__exact="local",
-        flux__isnull=False,
-        is_validated="true",
-    ).order_by('filter__wavelength_eff_angstrom')
-    global_aperture_photometry = AperturePhotometry.objects.filter(
-        transient=transient, aperture__type__exact="global", flux__isnull=False
-    ).filter(
-        Q(is_validated="true") | Q(is_validated="contamination warning")
-    ).order_by('filter__wavelength_eff_angstrom')
-    contam_warning = (
-        True
-        if len(global_aperture_photometry.filter(is_validated="contamination warning"))
-        else False
-    )
-
-    local_sed_obj = SEDFittingResult.objects.filter(
-        transient=transient, aperture__type__exact="local"
-    )
-    global_sed_obj = SEDFittingResult.objects.filter(
-        transient=transient, aperture__type__exact="global"
-    )
-    # ugly, but effective?
-    local_sed_results, global_sed_results = (), ()
-    for param, var, ptype in zip(
+def results(request, transient_name):
+    param_var_ptype = zip(
         [
             "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
             "{\\rm log}_{10}({\\rm SFR})",  # noqa
@@ -399,221 +365,247 @@ def results(request, slug):
             "Dust",
             "AGN",
             "AGN"]
-    ):
-
-        if local_sed_obj.exists():
-            local_sed_results += (
-                (
-                    param,
-                    local_sed_obj[0].__dict__[f"{var}_16"],
-                    local_sed_obj[0].__dict__[f"{var}_50"],
-                    local_sed_obj[0].__dict__[f"{var}_84"],
-                    ptype,
-                ),
-            )
-        if global_sed_obj.exists():
-            global_sed_results += (
-                (
-                    param,
-                    global_sed_obj[0].__dict__[f"{var}_16"],
-                    global_sed_obj[0].__dict__[f"{var}_50"],
-                    global_sed_obj[0].__dict__[f"{var}_84"],
-                    ptype,
-                ),
-            )
-    local_sfh_results, global_sfh_results = (), ()
-    if local_sed_obj.exists():
-        for sh in local_sed_obj[0].logsfh.all():
-            local_sfh_results += (
-                (
-                    sh.logsfr_16,
-                    sh.logsfr_50,
-                    sh.logsfr_84,
-                    sh.logsfr_tmin,
-                    sh.logsfr_tmax
-                ),
-            )
-
-    if global_sed_obj.exists():
-        for sh in global_sed_obj[0].logsfh.all():
-            global_sfh_results += (
-                (
-                    sh.logsfr_16,
-                    sh.logsfr_50,
-                    sh.logsfr_84,
-                    sh.logsfr_tmin,
-                    sh.logsfr_tmax
-                ),
-            )
-
-    def delete_cached_file(file_path):
-        if not isinstance(file_path, str):
-            return
-        try:
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-        except Exception as err:
-            logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
-
-    def download_file_from_s3(file_path):
-        try:
-            # Download SED results files to local file cache
-            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
-            s3.download_object(path=object_key, file_path=file_path)
-            assert os.path.isfile(file_path)
-        except Exception as err:
-            logger.error(f'''Error downloading SED file "{file_path}": {err}''')
-
-    if local_sed_obj.exists() or global_sed_obj.exists():
-        s3 = ObjectStore()
-    if local_sed_obj.exists():
-        local_sed_file = local_sed_obj[0].posterior.name
-        local_sed_hdf5_filepath = local_sed_file
-        local_sed_modeldata_filepath = local_sed_file.replace(".h5", "_modeldata.npz")
-        download_file_from_s3(local_sed_hdf5_filepath)
-        download_file_from_s3(local_sed_modeldata_filepath)
-    else:
-        local_sed_file = None
-        local_sed_hdf5_filepath = None
-        local_sed_modeldata_filepath = None
-    if global_sed_obj.exists():
-        global_sed_file = global_sed_obj[0].posterior.name
-        global_sed_hdf5_filepath = global_sed_file
-        global_sed_modeldata_filepath = global_sed_file.replace(".h5", "_modeldata.npz")
-        download_file_from_s3(global_sed_hdf5_filepath)
-        download_file_from_s3(global_sed_modeldata_filepath)
-    else:
-        global_sed_file = None
-        global_sed_hdf5_filepath = None
-        global_sed_modeldata_filepath = None
-
-    all_cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(~Q(fits=""))
-    filters = [cutout.filter.name for cutout in all_cutouts]
-    all_filters = Filter.objects.all()
-
-    filter_status = {
-        filter_.name: ("yes" if filter_.name in filters else "no")
-        for filter_ in all_filters
-    }
-    if request.method == "POST":
-        form = ImageGetForm(request.POST, filter_choices=filters)
-        if form.is_valid():
-            filter = form.cleaned_data["filters"]
-            cutout = all_cutouts.filter(filter__name__exact=filter)[0]
-    else:
-        form = ImageGetForm(filter_choices=filters)
-
-        cutouts = Cutout.objects.filter(transient__name__exact=slug).filter(~Q(fits=""))
-        # choose a cutout, if possible
-        cutout = None
-        choice = 0
-        try:
-            while cutout is None and choice <= 8:
-                cutout = select_cutout_aperture(cutouts, choice=choice).filter(
-                    ~Q(fits="")
-                )
-            if not len(cutout):
-                cutout = None
-            else:
-                cutout = cutout[0]
-        except IndexError:
-            cutout = None
-    bokeh_context = plot_cutout_image(
-        cutout=cutout,
-        transient=transient,
-        global_aperture=global_aperture.prefetch_related(),
-        local_aperture=local_aperture.prefetch_related(),
-    )
-    bokeh_sed_local_context = plot_sed(
-        transient=transient,
-        type="local",
-        sed_results_file=local_sed_file,
-    )
-    bokeh_sed_global_context = plot_sed(
-        transient=transient,
-        type="global",
-        sed_results_file=global_sed_file,
     )
 
-    if local_aperture.exists():
-        local_aperture = local_aperture[0]
-    else:
-        local_aperture = None
+    def user_warning(transient):
+        # check for user warnings
+        is_warning = False
+        for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
+            is_warning |= u
+        return {'warning': is_warning}
 
-    if global_aperture.exists():
-        global_aperture = global_aperture[0]
-    else:
-        global_aperture = None
+    def compile_workflow_status(transient):
+        class workflow_diagram():
+            def __init__(self, name='', message='', badge='', fill_color=''):
+                self.name = name
+                self.message = message
+                self.badge = badge
+                self.fill_color = fill_color
+                self.fill_colors = {
+                    'success': '#d5e8d4',
+                    'error': '#f8cecc',
+                    'warning': '#fff2cc',
+                    'blank': '#aeb6bd',
+                }
 
-    # check for user warnings
-    is_warning = False
-    for u in transient.taskregister_set.all().values_list("user_warning", flat=True):
-        is_warning |= u
+        transient_taskregister_set = transient.taskregister_set.all()
+        workflow_diagrams = []
+        for item in transient_taskregister_set:
+            # Configure workflow diagram
+            diagram_settings = workflow_diagram(
+                name=item.task.name,
+                message=item.status.message,
+                badge=item.status.badge,
+                fill_color=workflow_diagram().fill_colors[item.status.type],
+            )
+            workflow_diagrams.append(diagram_settings)
 
-    class workflow_diagram():
-        def __init__(self, name='', message='', badge='', fill_color=''):
-            self.name = name
-            self.message = message
-            self.badge = badge
-            self.fill_color = fill_color
-            self.fill_colors = {
-                'success': '#d5e8d4',
-                'error': '#f8cecc',
-                'warning': '#fff2cc',
-                'blank': '#aeb6bd',
-            }
-
-    transient_taskregister_set = transient.taskregister_set.all()
-    workflow_diagrams = []
-    for item in transient_taskregister_set:
-        # Configure workflow diagram
-        diagram_settings = workflow_diagram(
-            name=item.task.name,
-            message=item.status.message,
-            badge=item.status.badge,
-            fill_color=workflow_diagram().fill_colors[item.status.type],
-        )
-        workflow_diagrams.append(diagram_settings)
-
-    # Determine CSS class for workflow processing status
-    if transient.processing_status == "blocked":
-        processing_status_badge_class = "badge bg-danger"
-    elif transient.processing_status == "processing":
-        processing_status_badge_class = "badge bg-warning"
-    elif transient.processing_status == "completed":
-        processing_status_badge_class = "badge bg-success"
-    else:
-        processing_status_badge_class = "badge bg-secondary"
-
-    context = {
-        **{
+        # Determine CSS class for workflow processing status
+        if transient.processing_status == "blocked":
+            processing_status_badge_class = "badge bg-danger"
+        elif transient.processing_status == "processing":
+            processing_status_badge_class = "badge bg-warning"
+        elif transient.processing_status == "completed":
+            processing_status_badge_class = "badge bg-success"
+        else:
+            processing_status_badge_class = "badge bg-secondary"
+        return {
             "transient": transient,
             "transient_taskregister_set": transient_taskregister_set,
             "workflow_diagrams": workflow_diagrams,
             "processing_status_badge_class": processing_status_badge_class,
-            "form": form,
-            "local_aperture_photometry": local_aperture_photometry.prefetch_related(),
-            "global_aperture_photometry": global_aperture_photometry.prefetch_related(),
-            "filter_status": filter_status,
-            "local_aperture": local_aperture,
-            "global_aperture": global_aperture,
-            "local_sed_results": local_sed_results,
-            "global_sed_results": global_sed_results,
-            "local_sfh_results": local_sfh_results,
-            "global_sfh_results": global_sfh_results,
-            "warning": is_warning,
-            "contam_warning": contam_warning,
-            "is_auth": request.user.is_authenticated,
-        },
-        **bokeh_context,
-        **bokeh_sed_local_context,
-        **bokeh_sed_global_context,
+        }
+
+    def compile_photometry_results(transient, scope):
+        '''Compile aperture photometry results'''
+        assert scope in ["local", "global"]
+        if scope == 'local':
+            aperture_photometry = AperturePhotometry.objects.filter(
+                transient=transient,
+                aperture__type__exact=scope,
+                flux__isnull=False,
+                is_validated="true",
+            ).order_by(
+                'filter__wavelength_eff_angstrom'
+            ).prefetch_related()
+            return {
+                "local_aperture_photometry": aperture_photometry,
+            }
+        elif scope == 'global':
+            aperture_photometry = AperturePhotometry.objects.filter(
+                transient=transient,
+                aperture__type__exact=scope,
+                flux__isnull=False,
+            ).filter(
+                Q(is_validated="true") | Q(is_validated="contamination warning")
+            ).order_by(
+                'filter__wavelength_eff_angstrom'
+            ).prefetch_related()
+            contam_warning = len(aperture_photometry.filter(is_validated="contamination warning")) > 0
+            return {
+                "global_aperture_photometry": aperture_photometry,
+                "contam_warning": contam_warning,
+            }
+
+    def render_sed_plot(transient, scope):
+        '''Generate a Bokeh plot of SED results'''
+        def download_file_from_s3(file_path):
+            try:
+                s3 = ObjectStore()
+                # Download SED results files to local file cache
+                object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+                s3.download_object(path=object_key, file_path=file_path)
+                assert os.path.isfile(file_path)
+            except Exception as err:
+                logger.error(f'''Error downloading SED file "{file_path}": {err}''')
+
+        def delete_cached_file(file_path):
+            if not isinstance(file_path, str):
+                return
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except Exception as err:
+                logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
+
+        assert scope in ["local", "global"]
+        # Download the data files if they exist
+        sed_filepath = None
+        sed_modeldata_filepath = None
+        sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+        if sed_obj.exists():
+            sed_filepath = sed_obj[0].posterior.name
+            sed_modeldata_filepath = sed_filepath.replace(".h5", "_modeldata.npz")
+            download_file_from_s3(sed_filepath)
+            download_file_from_s3(sed_modeldata_filepath)
+        # Generate a SED plot using Bokeh
+        plot = plot_sed(
+            transient=transient,
+            type=scope,
+            sed_results_file=sed_filepath,
+        )
+        # Purge temporary cached files
+        delete_cached_file(sed_filepath)
+        delete_cached_file(sed_modeldata_filepath)
+        return plot
+
+    def compile_sed_results(transient, category, scope):
+        '''Compile SED results for data tables'''
+        assert scope in ["local", "global"]
+        assert category in ["base", "sfh"]
+
+        sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+        results = ()
+        if category == 'base':
+            # Compile spectral energy distribution results
+            for param, var, ptype in param_var_ptype:
+                if sed_obj.exists():
+                    results += (
+                        (
+                            param,
+                            sed_obj[0].__dict__[f"{var}_16"],
+                            sed_obj[0].__dict__[f"{var}_50"],
+                            sed_obj[0].__dict__[f"{var}_84"],
+                            ptype,
+                        ),
+                    )
+        elif category == 'sfh':
+            # Compile star formation history results
+            if sed_obj.exists():
+                for sh in sed_obj[0].logsfh.all():
+                    results += (
+                        (
+                            sh.logsfr_16,
+                            sh.logsfr_50,
+                            sh.logsfr_84,
+                            sh.logsfr_tmin,
+                            sh.logsfr_tmax
+                        ),
+                    )
+        return results
+
+    # Acquire the transient object or return 404 not found
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return render(request, "transient_404.html", status=404)
+
+    # Collect all cutouts with FITS files
+    all_cutouts = Cutout.objects.filter(transient__name__exact=transient.name).filter(~Q(fits=""))
+    filters = [cutout.filter.name for cutout in all_cutouts]
+    filter_status = {
+        filter_.name: ("yes" if filter_.name in filters else "no")
+        for filter_ in Filter.objects.all()
     }
-    # Purge temporary cached files
-    delete_cached_file(local_sed_hdf5_filepath)
-    delete_cached_file(local_sed_modeldata_filepath)
-    delete_cached_file(global_sed_hdf5_filepath)
-    delete_cached_file(global_sed_modeldata_filepath)
+
+    # Compile aperture details
+    global_aperture = select_aperture(transient)
+    local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
+
+    image_data = b''
+    # Generate filter selection form and choose cutout to display
+    if request.method == "GET":
+        filter_select_form = ImageGetForm(filter_choices=filters)
+        # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
+        cutout = select_best_cutout(transient.name)
+        if cutout:
+            # Download thumbnail image from object store
+            # TODO: Replace this with something like Django's template fragment caching
+            #       or perhaps serve the thumbnails directly from the bucket using an S3-to-HTTP proxy.
+            s3 = ObjectStore()
+            thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
+            thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
+            try:
+                image_data = s3.get_object(path=thumbnail_object_key)
+            except Exception as err:
+                logger.info(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
+                image_data = b''
+            image_data_encoded = base64.b64encode(image_data).decode()
+            bokeh_cutout_context = {}
+
+    if request.method == "POST":
+        # Selecting a new filter from the dropdown menu of the interactive image plot
+        # triggers an HTTP POST request instead of a GET.
+        # TODO: Replace this with an AJAX call to replace the image plot without a full page reload.
+        filter_select_form = ImageGetForm(request.POST, filter_choices=filters)
+        if filter_select_form.is_valid():
+            filter = filter_select_form.cleaned_data["filters"]
+            cutout = all_cutouts.filter(filter__name__exact=filter)[0]
+
+    # If the thumbnail is not available, display the Bokeh cutout plot
+    if request.method == "POST" or image_data == b'':
+        bokeh_cutout_context = plot_cutout_image(
+            cutout=cutout,
+            transient=transient,
+            global_aperture=global_aperture.prefetch_related(),
+            local_aperture=local_aperture.prefetch_related(),
+        )
+        image_data = b''
+        image_data_encoded = base64.b64encode(image_data).decode()
+
+    # Construct the Django render() function context
+    context = {
+        **{
+            "transient": transient,
+            "filter_select_form": filter_select_form,
+            "filter_status": filter_status,
+            "local_aperture": local_aperture[0] if local_aperture.exists() else None,
+            "global_aperture": global_aperture[0] if global_aperture.exists() else None,
+            "local_sed_results": compile_sed_results(transient, 'base', 'local'),
+            "global_sed_results": compile_sed_results(transient, 'base', 'global'),
+            "local_sfh_results": compile_sed_results(transient, 'sfh', 'local'),
+            "global_sfh_results": compile_sed_results(transient, 'sfh', 'global'),
+            "is_auth": request.user.is_authenticated,
+            "image_data_encoded": image_data_encoded,
+        },
+        **bokeh_cutout_context,
+        **user_warning(transient),
+        **compile_photometry_results(transient, 'local'),
+        **compile_photometry_results(transient, 'global'),
+        **compile_workflow_status(transient),
+        **render_sed_plot(transient, "local"),
+        **render_sed_plot(transient, "global"),
+    }
     # Return rendered HTML content
     return render(request, "results.html", context)
 
@@ -793,25 +785,21 @@ def cutout_fits_plot(request):
         transient_name = request.GET.get('transient_name')
         cutout_name = request.GET.get('cutout_name')
         logger.info(f"{transient_name} and {cutout_name}")
-        transients = Transient.objects.all()
-        transient = transients.get(name__exact=transient_name)
+
+        # Acquire the transient object or return 404 not found
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(status=404, data={'message': 'Transient not found.'})
+
         global_aperture = select_aperture(transient)
         local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
-        cutout = Cutout.objects.filter(name__exact=cutout_name)[0]
+        cutout = select_best_cutout(transient.name)
 
         bokeh_context = plot_cutout_image(
             cutout=cutout,
             transient=transient,
             global_aperture=global_aperture.prefetch_related(),
             local_aperture=local_aperture.prefetch_related(),
-            display_png=False
         )
-
-        # response_data = 'successful!'
-
         return JsonResponse(bokeh_context)
-
-    else:
-        return JsonResponse(
-            {"nothing to see": "this isn't happening"}
-        )

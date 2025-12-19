@@ -61,7 +61,7 @@ def reprocess_transient(request=None, slug=''):
     except Transient.DoesNotExist:
         result = None
     if request:
-        return HttpResponseRedirect(reverse_lazy("results", kwargs={"slug": transient_name}))
+        return HttpResponseRedirect(reverse_lazy("results", kwargs={"transient_name": transient_name}))
     else:
         return result
 

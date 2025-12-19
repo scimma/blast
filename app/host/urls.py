@@ -21,7 +21,7 @@ urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
     path(f"""{base_path}analytics/""", views.analytics),
-    path(f"""{base_path}transients/<slug:slug>/""", views.results, name="results"),
+    path(f"""{base_path}transients/<transient_name>/""", views.results, name="results"),
     path(
         f"""{base_path}download_chains/<slug:slug>/<str:aperture_type>/""",
         views.download_chains,
