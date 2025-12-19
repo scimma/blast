@@ -7,8 +7,8 @@ def add_new_tasks(apps, schema_editor):
     Task = apps.get_model("host", "Task")
     for name in [
         'Crop transient images',
-        'Generate thumbnails',
-        'Generate thumbnails final',
+        'Generate thumbnail',
+        'Generate thumbnail final',
     ]:
         Task(name=name).save()
 

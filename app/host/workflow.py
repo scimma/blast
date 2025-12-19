@@ -2,8 +2,9 @@ from celery import chain
 from celery import chord
 from celery import group
 from celery import shared_task
-from host.transient_tasks import generate_thumbnails
 from host.transient_tasks import crop_transient_images
+from host.transient_tasks import generate_thumbnail
+from host.transient_tasks import generate_thumbnail_final
 from host.transient_tasks import global_aperture_construction
 from host.transient_tasks import global_aperture_photometry
 from host.transient_tasks import global_host_sed_fitting
@@ -100,7 +101,7 @@ def transient_workflow(transient_name=None):
         workflow_init.si(),
         image_download.si(transient_name),
         group(
-            generate_thumbnails.si(transient_name),
+            generate_thumbnail.si(transient_name),
             chain(
                 mwebv_transient.si(transient_name),
                 host_match.si(transient_name),
@@ -121,7 +122,7 @@ def transient_workflow(transient_name=None):
             ),
         ),
         group(
-            generate_thumbnails.si(transient_name),
+            generate_thumbnail_final.si(transient_name),
             global_host_sed_fitting.si(transient_name),
             local_host_sed_fitting.si(transient_name),
         ),

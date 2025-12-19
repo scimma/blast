@@ -364,12 +364,6 @@ def fits_file_path(instance):
     """
     return f"{instance.host}/{instance.filter.survey}/{instance.filter}.fits"
 
-def thumbnail_file_path(instance):
-    """
-    Constructs a file path for a fits image
-    """
-    return f"{instance.host}/{instance.filter.survey}/{instance.filter}.png"
-
 
 def hdf5_file_path(instance):
     """
@@ -410,7 +404,6 @@ class Cutout(models.Model):
         Transient, on_delete=models.CASCADE, null=True, blank=True
     )
     fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
-    # thumbnail = models.FileField(upload_to=thumbnail_file_path, null=True, blank=True)
     message = models.CharField(max_length=50, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)
 

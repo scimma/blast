@@ -27,10 +27,7 @@ from host.prospector import build_obs
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
-from bokeh.io import curdoc, export_png
-from django.urls import reverse
-import base64
-from PIL import Image
+from bokeh.io import curdoc
 
 # import extinction
 # from bokeh.models import Circle
@@ -52,7 +49,6 @@ from PIL import Image
 
 from host.log import get_logger
 logger = get_logger(__name__)
-
 
 
 def scale_image(image_data):
@@ -139,32 +135,13 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None, display_png=True, force_thumbnail = False):
-    def generate_plot(fig, image_data, local_image_path:str):
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None):
+    def generate_plot(fig, image_data):
         hide_loading_indicator = CustomJS(args=dict(), code="""
             document.getElementById('loading-indicator').style.display = "none";
         """)
         fig.x_range.js_on_change('end', hide_loading_indicator)
         plot_image(image_data, fig)
-        local_image_path_jpeg = local_image_path.replace(".png", ".jpg")
-        s3 = ObjectStore()
-        jpeg_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
-        if local_image_path and (not s3.object_exists(jpeg_object_key) or force_thumbnail):
-            # image path exists, so we can save the image
-            export_png(fig, filename=local_image_path, width=800, height=800)
-            cutout_png = Image.open(local_image_path)
-            cutout_size = min(cutout_png.size[0], 800)
-            cutout_png = cutout_png.resize((cutout_size,cutout_size), Image.Resampling.LANCZOS)
-            cutout_jpg = cutout_png.convert("RGB")
-            cutout_jpg.save(local_image_path_jpeg, optimize=True, quality=85, format="JPEG")
-            s3 = ObjectStore()
-            jpeg_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
-            logger.info(f"Putting {jpeg_object_key} in bucket")
-            s3.put_object(path=jpeg_object_key, file_path=local_image_path_jpeg)
-            # Remove the image
-            os.remove(local_image_path)
-            os.remove(local_image_path_jpeg)
-
         script, div = components(fig)
         return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
@@ -181,72 +158,15 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         fig.xgrid.visible = False
         fig.ygrid.visible = False
         image_data = np.zeros((500, 500))
-        return generate_plot(fig, image_data, "")
+        return generate_plot(fig, image_data)
 
     # If there is no cutout data, generate an empty plot
     if cutout is None:
         return generate_empty_plot(title="No cutout selected")
 
-    logger.info(f"S3 path is {settings.MEDIA_URL}")
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
-    local_image_path = local_fits_path.replace(".fits", ".png")
-    local_image_path_jpeg = local_image_path.replace(".png", ".jpg")
     s3 = ObjectStore()
-    png_object_key = os.path.join(settings.S3_BASE_PATH, local_image_path_jpeg.strip('/'))
-    if s3.object_exists(png_object_key) and display_png:
-        # The png for the cutout exists, we can use that to save time
-        # Download PNG file local file cache
-        image_data = s3.get_object(path=png_object_key)
-        image_script = """<script>
-        document.getElementById('loading-indicator').style.display = \"none\";
-        function cutoutImgClick(transient, cutout) {
-            document.getElementById('loading-indicator').style.display = \"block\";
-            document.getElementById('cutout-img').style.display = \"none\";
-            $.ajax({
-                url : '""" + reverse("cutout_fits_plot") +"""',
-                type : "GET",
-                data : { transient_name : transient,
-                        cutout_name : cutout},
-                success : function(resp) {
-                    $("#cutout-img-div").replaceWith(resp.bokeh_cutout_div);
-                    var cutout_script = document.createElement("script");
-                    cutout_script.type = 'text/javascript';
-                    var raw_script = resp.bokeh_cutout_script;
-                    var raw_script_trimmed = raw_script.trim();
-                    var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr","").replace("ipt>","");
-                    cutout_script.text = script_trimmed;
-                    document.body.appendChild(cutout_script);
-                },
-            });
-        }
-        </script>"""
-        image_css = """<style>
-            #cutout-img {
-                max-width:100%;
-                max-height:100%;
-            }
-            #cutout-img-button {
-                background: transparent;
-                border: none !important;
-            }
-        </style>"""
-        script_to_return = image_script+image_css
-        # img_filename = response.headers['Content-Disposition'].split('=')[1].strip('"')
-        # logger.info(f"Image name is {img_filename}")
-        # logger.info(f"Headers: {response.headers}")
-        image_data_encoded = base64.b64encode(image_data).decode()
-        display_tag = f"""
-        <div id="cutout-img-div">
-            <button id="cutout-img-button" onclick="cutoutImgClick('{transient.name}', '{cutout.name}')">
-                <img id=\"cutout-img\" src=\"data:image/png;base64,{image_data_encoded}\"/>
-            </button>
-            <br>
-            <p>Click on the image to load the FITS file and zoom in.</p>
-        </div>
-        """
-        context = {"bokeh_cutout_script": script_to_return, "bokeh_cutout_div": display_tag}
-        return context
     if not os.path.isfile(local_fits_path):
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         if s3.object_exists(object_key):
@@ -326,7 +246,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 "legend_label": "Local Aperture",
             },
         )
-    return generate_plot(fig, image_data=image_data, local_image_path=local_image_path)
+    return generate_plot(fig, image_data=image_data)
 
 
 def plot_sed(transient=None, sed_results_file=None, type=""):
