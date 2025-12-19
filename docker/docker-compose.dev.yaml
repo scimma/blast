@@ -9,6 +9,7 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+  astrodash-data: {}
 
 services:
 
@@ -36,6 +37,7 @@ services:
       - 127.0.0.1:8000:${WEB_APP_PORT}
     environment:
       - "DEV_MODE=1"
+      - "ASTRO_DASH_CORS_ALLOWED_ORIGINS=*"
     env_file:
       - ../env/.env.default
       - ../env/.env.dev
@@ -44,6 +46,7 @@ services:
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
       - ../app:/app
+      - astrodash-data:/mnt/astrodash-data
 
   database:
     extends:

@@ -34,7 +34,14 @@ SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
 
 HOSTNAMES = os.environ.get("DJANGO_HOSTNAMES", "localhost").split(",")
 ALLOWED_HOSTS = ["*"]
-CORS_ORIGIN_WHITELIST = ["*"]
+# CORS: allow configuring allowed origins via env (comma-separated) or accept all with "*"
+cors_env = os.environ.get("ASTRO_DASH_CORS_ALLOWED_ORIGINS", "*")
+if cors_env.strip() == "*":
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = []
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_env.split(",") if origin.strip()]
 CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://localhost:8000", "http://localhost:4000"]
 for hostname in HOSTNAMES:
     CSRF_TRUSTED_ORIGINS.append(f"""https://{hostname}""")
@@ -58,6 +65,8 @@ INSTALLED_APPS = [
     "revproxy",
     "rest_framework",
     "api",
+    "astrodash",
+    "corsheaders",
     "users",
     "django_cron",
     "django_filters",
@@ -69,6 +78,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

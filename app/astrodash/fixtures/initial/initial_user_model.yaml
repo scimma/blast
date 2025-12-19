@@ -1,0 +1,56 @@
+- model: astrodash.usermodelrecord
+  pk: 6b357cbc-0320-4515-b195-6abb4ad41cde
+  fields:
+    name: test2
+    description: transformer copy
+    owner: ''
+    model_path: /mnt/astrodash-data/user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.pth
+    class_mapping_path: /mnt/astrodash-data/user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.classes.json
+    input_shape_path: /mnt/astrodash-data/user_models/6b357cbc-0320-4515-b195-6abb4ad41cde/6b357cbc-0320-4515-b195-6abb4ad41cde.input_shape.json
+    meta: {}
+    created_at: 2025-08-28 16:37:39.875001+00:00
+- model: astrodash.usermodelrecord
+  pk: bc6acbe3-612a-42d5-ae5c-ab09e786e969
+  fields:
+    name: test1
+    description: testing a transformer
+    owner: ''
+    model_path: app/astrodash_models/user_uploaded/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.pth
+    class_mapping_path: app/astrodash_models/user_uploaded/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.classes.json
+    input_shape_path: app/astrodash_models/user_uploaded/bc6acbe3-612a-42d5-ae5c-ab09e786e969/bc6acbe3-612a-42d5-ae5c-ab09e786e969.input_shape.json
+    meta:
+      device: cpu
+      training: false
+      n_classes: 5
+      model_type: torchscript
+      input_shapes:
+      - - 1
+        - 1024
+      - - 1
+        - 1024
+      - - 1
+        - 1
+      output_shape:
+      - 1
+      - 5
+      total_parameters: 1326213
+      actual_input_shapes:
+      - - 1
+        - 1024
+      - - 1
+        - 1024
+      - - 1
+        - 1
+      trainable_parameters: 1326213
+    created_at: 2025-08-07 21:58:44.599461+00:00
+- model: astrodash.usermodelrecord
+  pk: e2942dcb-54c4-4e57-bab3-a20637fe4165
+  fields:
+    name: test2
+    description: transformer copy
+    owner: ''
+    model_path: /mnt/astrodash-data/user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.pth
+    class_mapping_path: /mnt/astrodash-data/user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.classes.json
+    input_shape_path: /mnt/astrodash-data/user_models/e2942dcb-54c4-4e57-bab3-a20637fe4165/e2942dcb-54c4-4e57-bab3-a20637fe4165.input_shape.json
+    meta: {}
+    created_at: 2025-08-28 17:09:25.314595+00:00
