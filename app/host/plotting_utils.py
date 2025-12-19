@@ -142,7 +142,6 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         """)
         fig.x_range.js_on_change('end', hide_loading_indicator)
         plot_image(image_data, fig)
-
         script, div = components(fig)
         return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
@@ -167,8 +166,8 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
 
     # Load image data from FITS file
     local_fits_path = cutout.fits.name
+    s3 = ObjectStore()
     if not os.path.isfile(local_fits_path):
-        s3 = ObjectStore()
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         if s3.object_exists(object_key):
             # Download FITS file local file cache

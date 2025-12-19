@@ -414,6 +414,16 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
     return is_contam
 
 
+def select_best_cutout(transient_name):
+    cutouts = Cutout.objects.filter(transient__name__exact=transient_name).filter(~Q(fits=""))
+    # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
+    cutout = None
+    cutout_set = select_cutout_aperture(cutouts).filter(~Q(fits=""))
+    if len(cutout_set):
+        cutout = cutout_set[0]
+    return cutout
+
+
 def select_cutout_aperture(cutouts, choice=0):
     """
     Select cutout for aperture by searching through the available filters.
@@ -444,17 +454,16 @@ def select_cutout_aperture(cutouts, choice=0):
 
 
 def select_aperture(transient):
+    '''Select the best Aperture object for the input transient.
+       Returns a QuerySet of Aperture objects.'''
+    # Find all cutouts that have an associated FITS image file
     cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
-    if len(cutouts):
-        cutout_for_aperture = select_cutout_aperture(cutouts)
-    if len(cutouts) and len(cutout_for_aperture):
-        global_aperture = Aperture.objects.filter(
-            type__exact="global", transient=transient, cutout=cutout_for_aperture[0]
-        )
-    else:
-        global_aperture = Aperture.objects.none()
-
-    return global_aperture
+    # If no cutout images are found, return an empty Aperture set
+    if not len(cutouts):
+        return Aperture.objects.none()
+    cutout_for_aperture = select_cutout_aperture(cutouts)
+    if len(cutout_for_aperture):
+        return Aperture.objects.filter(type__exact="global", transient=transient, cutout=cutout_for_aperture[0])
 
 
 def estimate_background(image, filter_name=None):

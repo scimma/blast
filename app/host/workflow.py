@@ -2,6 +2,9 @@ from celery import chain
 from celery import chord
 from celery import group
 from celery import shared_task
+from host.transient_tasks import crop_transient_images
+from host.transient_tasks import generate_thumbnail
+from host.transient_tasks import generate_thumbnail_final
 from host.transient_tasks import global_aperture_construction
 from host.transient_tasks import global_aperture_photometry
 from host.transient_tasks import global_host_sed_fitting
@@ -15,7 +18,6 @@ from host.transient_tasks import mwebv_transient
 from host.transient_tasks import final_progress
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
-from host.transient_tasks import transient_information
 from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
 from django.urls import reverse_lazy
@@ -59,7 +61,7 @@ def reprocess_transient(request=None, slug=''):
     except Transient.DoesNotExist:
         result = None
     if request:
-        return HttpResponseRedirect(reverse_lazy("results", kwargs={"slug": transient_name}))
+        return HttpResponseRedirect(reverse_lazy("results", kwargs={"transient_name": transient_name}))
     else:
         return result
 
@@ -98,27 +100,31 @@ def transient_workflow(transient_name=None):
     workflow = chain(
         workflow_init.si(),
         image_download.si(transient_name),
-        transient_information.si(transient_name),
-        mwebv_transient.si(transient_name),
-        host_match.si(transient_name),
-        host_information.si(transient_name),
         group(
+            generate_thumbnail.si(transient_name),
             chain(
-                local_aperture_photometry.si(transient_name),
-                validate_local_photometry.si(transient_name),
-                local_host_sed_fitting.si(transient_name),
-            ),
-            chord(
-                (
+                mwebv_transient.si(transient_name),
+                host_match.si(transient_name),
+                host_information.si(transient_name),
+                group(
                     mwebv_host.si(transient_name),
                     chain(
                         global_aperture_construction.si(transient_name),
                         global_aperture_photometry.si(transient_name),
                         validate_global_photometry.si(transient_name),
                     ),
+                    chain(
+                        local_aperture_photometry.si(transient_name),
+                        validate_local_photometry.si(transient_name),
+                    ),
                 ),
-                global_host_sed_fitting.si(transient_name),
+                crop_transient_images.si(transient_name),
             ),
+        ),
+        group(
+            generate_thumbnail_final.si(transient_name),
+            global_host_sed_fitting.si(transient_name),
+            local_host_sed_fitting.si(transient_name),
         ),
         final_progress.si(transient_name)
     )

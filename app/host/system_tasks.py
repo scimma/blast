@@ -11,7 +11,6 @@ from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.workflow import reprocess_transient
 from host.workflow import transient_workflow
-from host.trim_images import trim_images
 from host.host_utils import inspect_worker_tasks
 from host.host_utils import wait_for_free_space
 from host.host_utils import reset_workflow_if_not_processing
@@ -254,38 +253,6 @@ class RetriggerIncompleteWorkflows(SystemTaskRunner):
 )
 def retrigger_incomplete_workflows():
     RetriggerIncompleteWorkflows().run_process()
-
-
-class TrimTransientImages(SystemTaskRunner):
-    def run_process(self):
-        """
-        Updates the processing status for all transients.
-        """
-        transients = Transient.objects.filter(image_trim_status="ready")
-
-        for transient in transients:
-            trim_images(transient)
-
-    @property
-    def task_name(self):
-        return "Trim transient images"
-
-    @property
-    def task_frequency_seconds(self):
-        return 3600
-
-    @property
-    def task_initially_enabled(self):
-        return True
-
-
-# Periodic tasks
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def trim_transient_images():
-    TrimTransientImages().run_process()
 
 
 @shared_task(

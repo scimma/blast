@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from host.cutouts import download_and_save_cutouts
 from host.prost import run_prost
+from host.host_utils import select_aperture
 from host.host_utils import check_global_contamination
 from host.host_utils import check_local_radius
 from host.host_utils import construct_aperture
@@ -23,6 +24,10 @@ from host.host_utils import get_local_aperture_size
 from host.host_utils import query_ned
 from host.host_utils import query_sdss
 from host.host_utils import select_cutout_aperture
+from host.host_utils import select_best_cutout
+from host.plotting_utils import plot_position
+from host.plotting_utils import plot_aperture
+from host.plotting_utils import plot_image
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -35,9 +40,12 @@ from host.prospector import fit_model
 from host.prospector import prospector_result_to_blast
 from host.object_store import ObjectStore
 from host.base_tasks import TaskRunner
-from host.base_tasks import get_image_trim_status
+from host.crop_images import crop_images
+from bokeh.io import export_png
+from bokeh.plotting import figure
+from PIL import Image
+from astropy.wcs import WCS
 from django.conf import settings
-from pathlib import Path
 
 """This module contains all of the TransientTaskRunners in blast."""
 
@@ -52,7 +60,6 @@ logger = get_logger(__name__)
 def get_all_task_prerequisites(transient_name):
     return {
         ImageDownload(transient_name).task_name: ImageDownload(transient_name)._prerequisites(),
-        TransientInformation(transient_name).task_name: TransientInformation(transient_name)._prerequisites(),
         MWEBV_Transient(transient_name).task_name: MWEBV_Transient(transient_name)._prerequisites(),
         HostMatch(transient_name).task_name: HostMatch(transient_name)._prerequisites(),
         HostInformation(transient_name).task_name: HostInformation(transient_name)._prerequisites(),
@@ -64,6 +71,9 @@ def get_all_task_prerequisites(transient_name):
         GlobalAperturePhotometry(transient_name).task_name: GlobalAperturePhotometry(transient_name)._prerequisites(),
         ValidateGlobalPhotometry(transient_name).task_name: ValidateGlobalPhotometry(transient_name)._prerequisites(),
         GlobalHostSEDFitting(transient_name).task_name: GlobalHostSEDFitting(transient_name)._prerequisites(),
+        CropTransientImages(transient_name).task_name: CropTransientImages(transient_name)._prerequisites(),
+        GenerateThumbnail(transient_name).task_name: GenerateThumbnail(transient_name)._prerequisites(),
+        GenerateThumbnailFinal(transient_name).task_name: GenerateThumbnailFinal(transient_name)._prerequisites(),
     }
 
 
@@ -264,7 +274,6 @@ class TransientTaskRunner(TaskRunner):
                 task_register_item.save()
                 # The processing status should be calculated
                 transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
-                transient.image_trim_status = get_image_trim_status(transient)
                 transient.save()
             return transient.name
 
@@ -326,7 +335,6 @@ class HostMatch(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "not processed",
         }
@@ -385,7 +393,6 @@ class MWEBV_Transient(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "not processed",
         }
 
@@ -433,7 +440,6 @@ class MWEBV_Host(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -504,7 +510,10 @@ class ImageDownload(TransientTaskRunner):
         Download cutout images
         """
 
-        if transient.image_trim_status == "processed":
+        # If the downloaded images have already been cropped
+        task = Task.objects.get(name__exact="Crop transient images")
+        task_register = TaskRegister.objects.get(transient=transient, task=task)
+        if task_register.status.message == "processed":
             overwrite = "True"
         else:
             overwrite = "False"
@@ -526,7 +535,6 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -608,7 +616,6 @@ class LocalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -705,7 +712,6 @@ class GlobalAperturePhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -840,7 +846,6 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -910,7 +915,6 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -986,32 +990,6 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         return "processed"
 
 
-class TransientInformation(TransientTaskRunner):
-    """Task Runner to gather information about the Transient"""
-
-    def _prerequisites(self):
-        return {
-            "Cutout download": "processed",
-            "Transient information": "not processed",
-        }
-
-    @property
-    def task_name(self):
-        return "Transient information"
-
-    def _failed_status_message(self):
-        """
-        Failed status if not aperture is found
-        """
-        return "failed"
-
-    def _run_process(self, transient):
-        """Code goes here"""
-
-        # get_dust_maps(10)
-        return "processed"
-
-
 class HostInformation(TransientTaskRunner):
     """Task Runner to gather host information from NED"""
 
@@ -1021,7 +999,6 @@ class HostInformation(TransientTaskRunner):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "not processed"
@@ -1195,7 +1172,6 @@ class LocalHostSEDFitting(HostSEDFitting):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -1236,7 +1212,6 @@ class GlobalHostSEDFitting(HostSEDFitting):
         """
         return {
             "Cutout download": "processed",
-            "Transient information": "processed",
             "Transient MWEBV": "processed",
             "Host match": "processed",
             "Host information": "processed",
@@ -1269,23 +1244,228 @@ class GlobalHostSEDFitting(HostSEDFitting):
 
         return status_message
 
+
+class GenerateThumbnail(TransientTaskRunner):
+    """
+    TaskRunner to generate a static compressed thumbnail of the interactive data widgets.
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Generate thumbnail": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient):
+        status_message = "processed"
+        # Select the cutout image to export
+        cutout = select_best_cutout(transient.name)
+        if cutout is None:
+            return 'not enough filters'
+        # Download FITS file to local cache
+        local_fits_path = cutout.fits.name
+        s3 = ObjectStore()
+        if not os.path.isfile(local_fits_path):
+            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+            if s3.object_exists(object_key):
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+            else:
+                logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+        # If the file is missing for some reason, return failure
+        if not os.path.isfile(local_fits_path):
+            logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
+            return 'failed'
+        # Load image data into memory
+        with fits.open(local_fits_path) as fits_file:
+            image_data = fits_file[0].data
+            wcs = WCS(fits_file[0].header)
+        # Delete FITS file from local file cache
+        os.remove(local_fits_path)
+        # Construct the Bokeh figure to plot
+        # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
+        title = cutout.filter
+        fig = figure(
+            title=f"{title}",
+            x_axis_label="",
+            y_axis_label="",
+            sizing_mode="scale_both",
+        )
+        fig.axis.visible = False
+        fig.xgrid.visible = False
+        fig.ygrid.visible = False
+        transient_kwargs = {
+            "legend_label": f"{transient.name}",
+            "size": 30,
+            "line_width": 2,
+            "marker": "cross",
+        }
+        plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
+
+        if transient.host is not None:
+            host_kwargs = {
+                "legend_label": f"Host: {transient.host.name}",
+                "size": 25,
+                "line_width": 2,
+                "line_color": "red",
+                "marker": "x",
+            }
+            plot_position(
+                transient.host,
+                wcs,
+                plotting_kwargs=host_kwargs,
+                plotting_func=fig.scatter,
+            )
+
+        # Plot global aperture
+        global_aperture = select_aperture(transient).prefetch_related()
+        if global_aperture.exists():
+            plot_aperture(
+                fig,
+                global_aperture[0].sky_aperture,
+                wcs,
+                plotting_kwargs={
+                    "fill_alpha": 0.1,
+                    "line_color": "green",
+                    "legend_label": f"Global Aperture ({title})",
+                },
+            )
+
+        # Plot local aperture
+        local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
+        if local_aperture.exists():
+            plot_aperture(
+                fig,
+                local_aperture[0].sky_aperture,
+                wcs,
+                plotting_kwargs={
+                    "fill_alpha": 0.1,
+                    "line_color": "blue",
+                    "legend_label": "Local Aperture",
+                },
+            )
+        # Incorporate cutout image data into figure
+        plot_image(image_data, fig)
+        # Export plot to thumbnail
+        thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
+        thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
+        # Export to PNG
+        export_png(fig, filename=thumbnail_filepath_png, width=800, height=800)
+        cutout_png = Image.open(thumbnail_filepath_png)
+        # Resize PNG image to reduce file size
+        cutout_size = min(cutout_png.size[0], 800)
+        cutout_png = cutout_png.resize((cutout_size, cutout_size), Image.Resampling.LANCZOS)
+        # Export to JPG for final thumbnail file
+        cutout_jpg = cutout_png.convert("RGB")
+        cutout_jpg.save(thumbnail_filepath, optimize=True, quality=85, format="JPEG")
+        os.remove(thumbnail_filepath_png)
+        # Upload to the object store
+        thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
+        s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
+        os.remove(thumbnail_filepath)
+
+        return status_message
+
+
+class GenerateThumbnailFinal(GenerateThumbnail):
+    """
+    Supports a second invocation of the thumbnail generation task
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Generate thumbnail": "processed",
+            "Crop transient images": "processed",
+            "Generate thumbnail final": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail final"
+
+
+class CropTransientImages(TransientTaskRunner):
+    """
+    TaskRunner to crop cutout images to save disk space.
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Crop transient images": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Crop transient images"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient):
+        status_message = "processed"
+        crop_images(transient)
+        return status_message
+
+
 # Transient workflow tasks
-
-
-@shared_task(
-    name="Transient Information",
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def transient_information(transient_name):
-    TransientInformation(transient_name).run_process()
-
 
 @shared_task(
     name="Host Match", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
 )
 def host_match(transient_name):
     HostMatch(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail(transient_name):
+    GenerateThumbnail(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate thumbnail final",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_final(transient_name):
+    GenerateThumbnailFinal(transient_name).run_process()
+
+
+@shared_task(
+    name="Crop transient images",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def crop_transient_images(transient_name):
+    CropTransientImages(transient_name).run_process()
 
 
 @shared_task(

@@ -39,13 +39,6 @@ from .photometric_calibration import mJy_to_maggies  ##jansky_to_maggies
 from host.log import get_logger
 logger = get_logger(__name__)
 
-try:
-    all_filters = [filt for filt in Filter.objects.all().select_related()]
-    trans_curves = [f.transmission_curve() for f in all_filters]
-except (ProgrammingError, ValueError) as err:
-    logger.error(err)
-    pass
-
 
 # add redshift scaling to agebins, such that
 # t_max = t_univ
@@ -123,6 +116,13 @@ def build_obs(transient, aperture_type, use_mag_offset=True):
         mag_offset = 0
 
     filters, flux_maggies, flux_maggies_error = [], [], []
+
+    try:
+        all_filters = [filt for filt in Filter.objects.all().select_related()]
+        trans_curves = [f.transmission_curve() for f in all_filters]
+    except (ProgrammingError, ValueError) as err:
+        logger.error(err)
+        pass
 
     for filter, trans_curve in zip(all_filters, trans_curves):
         try:

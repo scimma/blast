@@ -161,7 +161,6 @@ STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
 MEDIA_URL = "/cutouts/"
 MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 

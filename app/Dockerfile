@@ -22,10 +22,16 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-
     libnetcdf-dev \
     jq \
     xxd \
+    firefox-esr \
     && rm -rf /var/lib/apt/list/*
 
-COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
+# Mozilla geckodriver is required for thumbnail generation
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz && \
+    tar -xvzf geckodriver-v0.36.0-linux64.tar.gz && \
+    chmod +x geckodriver && \
+    mv geckodriver /usr/local/bin/
 
+COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
 COPY --from=deps /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --from=deps /usr/local/bin/ /usr/local/bin/
 
