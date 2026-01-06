@@ -95,7 +95,7 @@ class TNSDataIngestion(SystemTaskRunner):
 
             # If the redshift value was updated, reprocess the entire workflow.
             if redshift_updated:
-                reprocess_transient(slug=saved_transient.name)
+                reprocess_transient(transient_name=saved_transient.name)
 
         print(f"Added {count} new transients")
         print("TNS UPLOADED")
