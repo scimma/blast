@@ -1,14 +1,13 @@
 {% extends "host/card_template.html" %}
 
 <!-- title -->
-{% block title %} <h4>Processing Status</h4> {% endblock %}
+{% block title %}
+<h4>Processing Status: <span class="badge {{ processing_status_badge_class }}">{{ transient.processing_status }}</span>
+</h4>
+{% endblock %}
 
 <!-- body -->
 {% block body %}
-
-<div style="margin-bottom: 2rem; margin-right: 1rem;">
-  {% include "host/workflow_diagram.svg" %}
-</div>
 
 <table class="table table-striped">
     <thead>
@@ -48,16 +47,6 @@
 	    </td>
         </tr>
        {% endfor %}
-       <tr>
-        <td>Processing status</td>
-        <td>
-          <span class="badge {{ processing_status_badge_class }}">
-            {{ transient.processing_status }}
-          </span>
-        </td>
-        <td>N/A</td>
-        <td>N/A</td>
-       </tr>
     </tbody>
 </table>
 

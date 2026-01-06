@@ -21,6 +21,8 @@ from host.models import Cutout
 from host.models import Filter
 from host.models import SEDFittingResult
 from host.models import TaskRegister
+from host.models import Task
+from host.models import Status
 from host.models import TaskRegisterSnapshot
 from host.models import Transient
 from host.plotting_utils import plot_bar_chart
@@ -388,7 +390,33 @@ def results(request, transient_name):
                     'blank': '#aeb6bd',
                 }
 
-        transient_taskregister_set = transient.taskregister_set.all()
+        # Compile a filtered and sorted TaskRegister object list for display.
+        # Omit some utility tasks like thumbnail generation and cutout crop.
+        transient_taskregister_set = []
+        unsorted_taskregs = transient.taskregister_set.all()
+        taskreg_order = [
+            'Cutout download',
+            'Transient MWEBV',
+            'Host match',
+            'Host information',
+            'Host MWEBV',
+            'Global aperture construction',
+            'Global aperture photometry',
+            'Validate global photometry',
+            'Global host SED inference',
+            'Local aperture photometry',
+            'Validate local photometry',
+            'Local host SED inference',
+        ]
+        for task_name in taskreg_order:
+            try:
+                transient_taskregister_set.append(
+                    [taskreg for taskreg in unsorted_taskregs if taskreg.task.name == task_name][0])
+            except IndexError:
+                missing_tr = TaskRegister()
+                missing_tr.task = Task(name=task_name)
+                missing_tr.status = Status.objects.get(message__exact="not processed")
+                transient_taskregister_set.append(missing_tr)
         workflow_diagrams = []
         for item in transient_taskregister_set:
             # Configure workflow diagram
