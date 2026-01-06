@@ -37,8 +37,8 @@ logger = get_logger(__name__)
 @login_required
 @permission_required("host.reprocess_transient", raise_exception=True)
 @log_usage_metric()
-def reprocess_transient_view(request=None, slug=''):
-    return reprocess_transient(request, slug)
+def reprocess_transient_view(request=None, transient_name=''):
+    return reprocess_transient(request, transient_name)
 
 
 @shared_task(
@@ -50,8 +50,7 @@ def workflow_init():
     wait_for_free_space()
 
 
-def reprocess_transient(request=None, slug=''):
-    transient_name = slug
+def reprocess_transient(request=None, transient_name=''):
     assert transient_name
     try:
         transient = Transient.objects.get(name__exact=transient_name)

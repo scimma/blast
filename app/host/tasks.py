@@ -37,12 +37,11 @@ periodic_tasks = [
 @login_required
 @permission_required("host.retrigger_transient", raise_exception=True)
 @log_usage_metric()
-def retrigger_transient_view(request=None, slug=''):
-    return retrigger_transient(request, slug)
+def retrigger_transient_view(request=None, transient_name=''):
+    return retrigger_transient(request, transient_name)
 
 
-def retrigger_transient(request=None, slug=''):
-    transient_name = slug
+def retrigger_transient(request=None, transient_name=''):
     assert transient_name
     result = None
     try:
@@ -69,7 +68,7 @@ def retrigger_transient(request=None, slug=''):
     except Transient.DoesNotExist:
         result = None
     if request:
-        return HttpResponseRedirect(reverse_lazy("results", kwargs={"slug": transient_name}))
+        return HttpResponseRedirect(reverse_lazy("results", kwargs={"transient_name": transient_name}))
     else:
         return result
 

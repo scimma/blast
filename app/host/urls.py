@@ -21,7 +21,7 @@ urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
     path(f"""{base_path}analytics/""", views.analytics),
-    path(f"""{base_path}transients/<transient_name>/""", views.results, name="results"),
+    path(f"""{base_path}transients/<slug:transient_name>/""", views.results, name="results"),
     path(
         f"""{base_path}download_chains/<slug:slug>/<str:aperture_type>/""",
         views.download_chains,
@@ -42,12 +42,12 @@ urlpatterns = [
     path(f"""{base_path}""", views.home),
     path(f"""{base_path}flower/""", views.flower_view),
     path(
-        f"""{base_path}reprocess_transient/<slug:slug>/""",
+        f"""{base_path}reprocess_transient/<slug:transient_name>/""",
         reprocess_transient_view,
         name="reprocess_transient",
     ),
     path(
-        f"""{base_path}retrigger_transient/<slug:slug>/""",
+        f"""{base_path}retrigger_transient/<slug:transient_name>/""",
         retrigger_transient_view,
         name="retrigger_transient",
     ),
