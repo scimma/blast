@@ -27,7 +27,7 @@ from host.models import TaskRegisterSnapshot
 from host.models import Transient
 from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
-from host.plotting_utils import plot_sed
+from host.plotting_utils import render_sed_plot
 from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
@@ -475,48 +475,6 @@ def results(request, transient_name):
                 "contam_warning": contam_warning,
             }
 
-    def render_sed_plot(transient, scope):
-        '''Generate a Bokeh plot of SED results'''
-        def download_file_from_s3(file_path):
-            try:
-                s3 = ObjectStore()
-                # Download SED results files to local file cache
-                object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
-                s3.download_object(path=object_key, file_path=file_path)
-                assert os.path.isfile(file_path)
-            except Exception as err:
-                logger.error(f'''Error downloading SED file "{file_path}": {err}''')
-
-        def delete_cached_file(file_path):
-            if not isinstance(file_path, str):
-                return
-            try:
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            except Exception as err:
-                logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
-
-        assert scope in ["local", "global"]
-        # Download the data files if they exist
-        sed_filepath = None
-        sed_modeldata_filepath = None
-        sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
-        if sed_obj.exists():
-            sed_filepath = sed_obj[0].posterior.name
-            sed_modeldata_filepath = sed_filepath.replace(".h5", "_modeldata.npz")
-            download_file_from_s3(sed_filepath)
-            download_file_from_s3(sed_modeldata_filepath)
-        # Generate a SED plot using Bokeh
-        plot = plot_sed(
-            transient=transient,
-            type=scope,
-            sed_results_file=sed_filepath,
-        )
-        # Purge temporary cached files
-        delete_cached_file(sed_filepath)
-        delete_cached_file(sed_modeldata_filepath)
-        return plot
-
     def compile_sed_results(transient, category, scope):
         '''Compile SED results for data tables'''
         assert scope in ["local", "global"]
@@ -611,6 +569,30 @@ def results(request, transient_name):
         image_data = b''
         image_data_encoded = base64.b64encode(image_data).decode()
 
+    # Download the SED thumbnails if they exist
+    s3 = ObjectStore()
+    interactive_sed_plot = {}
+    image_data_encoded_sed = {}
+    for scope in ['local', 'global']:
+        image_data = b''
+        interactive_sed_plot[scope] = {}
+        image_data_encoded_sed[scope] = {}
+        sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+        if sed_obj.exists():
+            sed_filepath = sed_obj[0].posterior.name
+            thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
+            thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
+            try:
+                image_data = s3.get_object(path=thumbnail_object_key)
+            except Exception as err:
+                logger.info(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
+                image_data = b''
+            image_data_encoded_sed[scope] = base64.b64encode(image_data).decode()
+            interactive_sed_plot[scope] = {}
+        # If there are no SED plot thumbnails, render the interactive plots
+        if image_data_encoded_sed[scope] == {}:
+            interactive_sed_plot[scope] = render_sed_plot(transient, scope)
+
     # Construct the Django render() function context
     context = {
         **{
@@ -625,14 +607,16 @@ def results(request, transient_name):
             "global_sfh_results": compile_sed_results(transient, 'sfh', 'global'),
             "is_auth": request.user.is_authenticated,
             "image_data_encoded": image_data_encoded,
+            "image_data_encoded_sed_local": image_data_encoded_sed['local'],
+            "image_data_encoded_sed_global": image_data_encoded_sed['global'],
         },
         **bokeh_cutout_context,
         **user_warning(transient),
         **compile_photometry_results(transient, 'local'),
         **compile_photometry_results(transient, 'global'),
         **compile_workflow_status(transient),
-        **render_sed_plot(transient, "local"),
-        **render_sed_plot(transient, "global"),
+        **interactive_sed_plot['local'],
+        **interactive_sed_plot['global'],
     }
     # Return rendered HTML content
     return render(request, "results.html", context)
@@ -806,9 +790,25 @@ def healthz(request):
     return HttpResponse()
 
 
+# Function for getting the SED data plot
+def fetch_sed_plot(request):
+    transient_name = request.GET.get('transient_name')
+    # Acquire the transient object or return 404 not found
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return JsonResponse(status=404, data={'message': 'Transient not found.'})
+    scope = request.GET.get('scope')
+    context = render_sed_plot(transient, scope)
+    data = {
+        f'bokeh_sed_{scope}_div': context[f'bokeh_sed_{scope}_div'],
+        f'bokeh_sed_{scope}_script': context[f'bokeh_sed_{scope}_script'],
+    }
+    return JsonResponse(data)
+
+
 # Function for getting the cutout FITS plot
 def cutout_fits_plot(request):
-    logger.info("Called the cutout plotting function")
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')
         cutout_name = request.GET.get('cutout_name')

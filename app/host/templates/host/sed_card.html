@@ -26,7 +26,45 @@
             <span>Download Best-Fit Model</span>
             </button>
             <div id="loading-indicator-sed-local" class="loader"></div>
+            {% if bokeh_sed_local_div %}
             {{ bokeh_sed_local_div | safe }}
+            {% else %}
+            <div id="sed-local-div">
+                {% if image_data_encoded_sed_local %}
+                <p style="text-align: center;">Click the image to load the interactive plot.</p>
+                <button id="sed-local-button" onclick="sedLocalImgClick('{{ transient.name }}', 'local')">
+                    <img id="sed-local" src="data:image/png;base64,{{ image_data_encoded_sed_local }}" style="width: 100%;"/>
+                </button>
+                {% endif %}
+                <br>
+            </div>
+
+            <script>
+                document.getElementById('loading-indicator-sed-local').style.display = "none";
+                function sedLocalImgClick(transient, scope) {
+                    document.getElementById('loading-indicator-sed-local').style.display = "block";
+                    document.getElementById('sed-local-div').style.display = "none";
+                    $.ajax({
+                        url: "{% url 'fetch_sed_plot' %}",
+                        type: "GET",
+                        data: {
+                            transient_name: transient,
+                            scope: scope
+                        },
+                        success: function (resp) {
+                            $("#sed-local-div").replaceWith(resp.bokeh_sed_local_div);
+                            var sed_local_script = document.createElement("script");
+                            sed_local_script.type = 'text/javascript';
+                            var raw_script = resp.bokeh_sed_local_script;
+                            var raw_script_trimmed = raw_script.trim();
+                            var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
+                            sed_local_script.text = script_trimmed;
+                            document.body.appendChild(sed_local_script);
+                        },
+                    });
+                }
+            </script>
+            {% endif %}
         </div>
     </div>
     <div class="tab-pane active" id="global-sed" role="tabpanel" aria-labelledby="global-sed-tab">
@@ -40,7 +78,45 @@
             </button>
             <div>&nbsp;</div>
             <div id="loading-indicator-sed-global" class="loader"></div>
+            {% if bokeh_sed_global_div %}
             {{ bokeh_sed_global_div | safe }}
+            {% else %}
+            <div id="sed-global-div">
+                {% if image_data_encoded_sed_local %}
+                <p style="text-align: center;">Click the image to load the interactive plot.</p>
+                <button id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
+                    <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
+                </button>
+                {% endif %}
+                <br>
+            </div>
+
+            <script>
+                document.getElementById('loading-indicator-sed-global').style.display = "none";
+                function sedGlobalImgClick(transient, scope) {
+                    document.getElementById('loading-indicator-sed-global').style.display = "block";
+                    document.getElementById('sed-global-div').style.display = "none";
+                    $.ajax({
+                        url: "{% url 'fetch_sed_plot' %}",
+                        type: "GET",
+                        data: {
+                            transient_name: transient,
+                            scope: scope
+                        },
+                        success: function (resp) {
+                            $("#sed-global-div").replaceWith(resp.bokeh_sed_global_div);
+                            var sed_global_script = document.createElement("script");
+                            sed_global_script.type = 'text/javascript';
+                            var raw_script = resp.bokeh_sed_global_script;
+                            var raw_script_trimmed = raw_script.trim();
+                            var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
+                            sed_global_script.text = script_trimmed;
+                            document.body.appendChild(sed_global_script);
+                        },
+                    });
+                }
+            </script>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -24,6 +24,7 @@ from bokeh.transform import cumsum
 from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
 from host.prospector import build_obs
+from host.models import SEDFittingResult
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
@@ -415,7 +416,7 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
     fig.legend.location = "top_left"
 
     script, div = components(fig)
-    return {f"bokeh_sed_{type}_script": script, f"bokeh_sed_{type}_div": div}
+    return {f"bokeh_sed_{type}_script": script, f"bokeh_sed_{type}_div": div, "fig": fig}
 
 
 def plot_errorbar(
@@ -553,4 +554,50 @@ def plot_timeseries():
     return {
         "bokeh_processing_trends_script": script,
         "bokeh_processing_trends_div": div,
+    }
+
+
+def render_sed_plot(transient, scope):
+    '''Generate a Bokeh plot of SED results'''
+    def download_file_from_s3(file_path):
+        try:
+            s3 = ObjectStore()
+            # Download SED results files to local file cache
+            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+            s3.download_object(path=object_key, file_path=file_path)
+            assert os.path.isfile(file_path)
+        except Exception as err:
+            logger.error(f'''Error downloading SED file "{file_path}": {err}''')
+
+    def delete_cached_file(file_path):
+        if not isinstance(file_path, str):
+            return
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as err:
+            logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
+
+    assert scope in ["local", "global"]
+    # Download the data files if they exist
+    sed_filepath = None
+    sed_modeldata_filepath = None
+    sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+    if sed_obj.exists():
+        sed_filepath = sed_obj[0].posterior.name
+        sed_modeldata_filepath = sed_filepath.replace(".h5", "_modeldata.npz")
+        download_file_from_s3(sed_filepath)
+        download_file_from_s3(sed_modeldata_filepath)
+    # Generate a SED plot using Bokeh
+    plot = plot_sed(
+        transient=transient,
+        type=scope,
+        sed_results_file=sed_filepath,
+    )
+    # Purge temporary cached files
+    delete_cached_file(sed_filepath)
+    delete_cached_file(sed_modeldata_filepath)
+    return {
+        **plot,
+        'sed_filepath': sed_filepath,
     }

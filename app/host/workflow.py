@@ -20,6 +20,8 @@ from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
+from host.transient_tasks import generate_thumbnail_sed_local
+from host.transient_tasks import generate_thumbnail_sed_global
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 
@@ -122,8 +124,14 @@ def transient_workflow(transient_name=None):
         ),
         group(
             generate_thumbnail_final.si(transient_name),
-            global_host_sed_fitting.si(transient_name),
-            local_host_sed_fitting.si(transient_name),
+            chain(
+                global_host_sed_fitting.si(transient_name),
+                generate_thumbnail_sed_global.si(transient_name),
+            ),
+            chain(
+                local_host_sed_fitting.si(transient_name),
+                generate_thumbnail_sed_local.si(transient_name),
+            ),
         ),
         final_progress.si(transient_name)
     )

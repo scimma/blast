@@ -28,6 +28,7 @@ from host.host_utils import select_best_cutout
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
+from host.plotting_utils import render_sed_plot
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -74,6 +75,8 @@ def get_all_task_prerequisites(transient_name):
         CropTransientImages(transient_name).task_name: CropTransientImages(transient_name)._prerequisites(),
         GenerateThumbnail(transient_name).task_name: GenerateThumbnail(transient_name)._prerequisites(),
         GenerateThumbnailFinal(transient_name).task_name: GenerateThumbnailFinal(transient_name)._prerequisites(),
+        GenerateThumbnailSEDLocal(transient_name).task_name: GenerateThumbnailSEDLocal(transient_name)._prerequisites(),
+        GenerateThumbnailSEDGlobal(transient_name).task_name: GenerateThumbnailSEDGlobal(transient_name)._prerequisites(),  # noqa
     }
 
 
@@ -1263,113 +1266,136 @@ class GenerateThumbnail(TransientTaskRunner):
     def _failed_status_message(self):
         return "failed"
 
-    def _run_process(self, transient):
-        status_message = "processed"
-        # Select the cutout image to export
-        cutout = select_best_cutout(transient.name)
-        if cutout is None:
-            return 'not enough filters'
-        # Download FITS file to local cache
-        local_fits_path = cutout.fits.name
+    def _run_process(self, transient, widget='cutout'):
+
         s3 = ObjectStore()
-        if not os.path.isfile(local_fits_path):
-            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-            if s3.object_exists(object_key):
-                # Download FITS file local file cache
-                s3.download_object(path=object_key, file_path=local_fits_path)
-            else:
-                logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
-        # If the file is missing for some reason, return failure
-        if not os.path.isfile(local_fits_path):
-            logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
-            return 'failed'
-        # Load image data into memory
-        with fits.open(local_fits_path) as fits_file:
-            image_data = fits_file[0].data
-            wcs = WCS(fits_file[0].header)
-        # Delete FITS file from local file cache
-        os.remove(local_fits_path)
-        # Construct the Bokeh figure to plot
-        # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
-        title = cutout.filter
-        fig = figure(
-            title=f"{title}",
-            x_axis_label="",
-            y_axis_label="",
-            sizing_mode="scale_both",
-        )
-        fig.axis.visible = False
-        fig.xgrid.visible = False
-        fig.ygrid.visible = False
-        transient_kwargs = {
-            "legend_label": f"{transient.name}",
-            "size": 30,
-            "line_width": 2,
-            "marker": "cross",
-        }
-        plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
 
-        if transient.host is not None:
-            host_kwargs = {
-                "legend_label": f"Host: {transient.host.name}",
-                "size": 25,
+        def generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, width, height):
+            export_png(fig, filename=thumbnail_filepath_png, width=width, height=height)
+            png_image = Image.open(thumbnail_filepath_png)
+            # Resize PNG image to reduce file size.
+            png_width, png_height = png_image.size
+            # Take the smaller of the actual and input width values.
+            png_resized_width = min(png_width, width)
+            # Maintain the aspect ratio when resizing.
+            png_resized_height = int(png_height * (png_resized_width / png_width))
+            png_image = png_image.resize((png_resized_width, png_resized_height), Image.Resampling.LANCZOS)
+            # Export to JPG for final thumbnail file
+            cutout_jpg = png_image.convert("RGB")
+            cutout_jpg.save(thumbnail_filepath, optimize=True, quality=85, format="JPEG")
+            os.remove(thumbnail_filepath_png)
+            # Upload to the object store
+            thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
+            s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
+            os.remove(thumbnail_filepath)
+
+        assert widget in ['cutout', 'local', 'global']
+
+        status_message = "processed"
+        # Generate a thumbnail for a SED plot
+        if widget in ['local', 'global']:
+            render = render_sed_plot(transient, scope=widget)
+            sed_filepath = render['sed_filepath']
+            fig = render['fig']
+            # Export plot to thumbnail
+            thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
+            thumbnail_filepath_png = sed_filepath.replace(".h5", ".png")
+            # Export to PNG
+            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, None)
+        # Generate a thumbnail for a cutout plot
+        elif widget == 'cutout':
+            # Select the cutout image to export
+            cutout = select_best_cutout(transient.name)
+            if cutout is None:
+                return 'not enough filters'
+            # Download FITS file to local cache
+            local_fits_path = cutout.fits.name
+            if not os.path.isfile(local_fits_path):
+                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                if s3.object_exists(object_key):
+                    # Download FITS file local file cache
+                    s3.download_object(path=object_key, file_path=local_fits_path)
+                else:
+                    logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+            # If the file is missing for some reason, return failure
+            if not os.path.isfile(local_fits_path):
+                logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
+                return 'failed'
+            # Load image data into memory
+            with fits.open(local_fits_path) as fits_file:
+                image_data = fits_file[0].data
+                wcs = WCS(fits_file[0].header)
+            # Delete FITS file from local file cache
+            os.remove(local_fits_path)
+            # Construct the Bokeh figure to plot
+            # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
+            title = cutout.filter
+            fig = figure(
+                title=f"{title}",
+                x_axis_label="",
+                y_axis_label="",
+                sizing_mode="scale_both",
+            )
+            fig.axis.visible = False
+            fig.xgrid.visible = False
+            fig.ygrid.visible = False
+            transient_kwargs = {
+                "legend_label": f"{transient.name}",
+                "size": 30,
                 "line_width": 2,
-                "line_color": "red",
-                "marker": "x",
+                "marker": "cross",
             }
-            plot_position(
-                transient.host,
-                wcs,
-                plotting_kwargs=host_kwargs,
-                plotting_func=fig.scatter,
-            )
+            plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
 
-        # Plot global aperture
-        global_aperture = select_aperture(transient).prefetch_related()
-        if global_aperture.exists():
-            plot_aperture(
-                fig,
-                global_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "green",
-                    "legend_label": f"Global Aperture ({title})",
-                },
-            )
+            if transient.host is not None:
+                host_kwargs = {
+                    "legend_label": f"Host: {transient.host.name}",
+                    "size": 25,
+                    "line_width": 2,
+                    "line_color": "red",
+                    "marker": "x",
+                }
+                plot_position(
+                    transient.host,
+                    wcs,
+                    plotting_kwargs=host_kwargs,
+                    plotting_func=fig.scatter,
+                )
 
-        # Plot local aperture
-        local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
-        if local_aperture.exists():
-            plot_aperture(
-                fig,
-                local_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "blue",
-                    "legend_label": "Local Aperture",
-                },
-            )
-        # Incorporate cutout image data into figure
-        plot_image(image_data, fig)
-        # Export plot to thumbnail
-        thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
-        thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
-        # Export to PNG
-        export_png(fig, filename=thumbnail_filepath_png, width=800, height=800)
-        cutout_png = Image.open(thumbnail_filepath_png)
-        # Resize PNG image to reduce file size
-        cutout_size = min(cutout_png.size[0], 800)
-        cutout_png = cutout_png.resize((cutout_size, cutout_size), Image.Resampling.LANCZOS)
-        # Export to JPG for final thumbnail file
-        cutout_jpg = cutout_png.convert("RGB")
-        cutout_jpg.save(thumbnail_filepath, optimize=True, quality=85, format="JPEG")
-        os.remove(thumbnail_filepath_png)
-        # Upload to the object store
-        thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
-        s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
-        os.remove(thumbnail_filepath)
+            # Plot global aperture
+            global_aperture = select_aperture(transient).prefetch_related()
+            if global_aperture.exists():
+                plot_aperture(
+                    fig,
+                    global_aperture[0].sky_aperture,
+                    wcs,
+                    plotting_kwargs={
+                        "fill_alpha": 0.1,
+                        "line_color": "green",
+                        "legend_label": f"Global Aperture ({title})",
+                    },
+                )
+
+            # Plot local aperture
+            local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
+            if local_aperture.exists():
+                plot_aperture(
+                    fig,
+                    local_aperture[0].sky_aperture,
+                    wcs,
+                    plotting_kwargs={
+                        "fill_alpha": 0.1,
+                        "line_color": "blue",
+                        "legend_label": "Local Aperture",
+                    },
+                )
+            # Incorporate cutout image data into figure
+            plot_image(image_data, fig)
+            # Export plot to thumbnail
+            thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
+            thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
+            # Export to PNG
+            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800)
 
         return status_message
 
@@ -1398,6 +1424,62 @@ class GenerateThumbnailFinal(GenerateThumbnail):
     @property
     def task_name(self):
         return "Generate thumbnail final"
+
+
+class GenerateThumbnailSEDLocal(GenerateThumbnail):
+    """
+    Generate a thumbnail of the local SED fit
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Local host SED inference": "processed",
+            "Generate thumbnail SED local": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail SED local"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='local')
+
+
+class GenerateThumbnailSEDGlobal(GenerateThumbnail):
+    """
+    Generate a thumbnail of the global SED fit
+    """
+
+    def _prerequisites(self):
+        return {
+            "Cutout download": "processed",
+            "Transient MWEBV": "processed",
+            "Host match": "processed",
+            "Host information": "processed",
+            "Global aperture construction": "processed",
+            "Global aperture photometry": "processed",
+            "Validate global photometry": "processed",
+            "Local aperture photometry": "processed",
+            "Validate local photometry": "processed",
+            "Global host SED inference": "processed",
+            "Generate thumbnail SED global": "not processed",
+        }
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail SED global"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='global')
 
 
 class CropTransientImages(TransientTaskRunner):
@@ -1439,6 +1521,24 @@ class CropTransientImages(TransientTaskRunner):
 )
 def host_match(transient_name):
     HostMatch(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate SED local thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_sed_local(transient_name):
+    GenerateThumbnailSEDLocal(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate SED global thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_sed_global(transient_name):
+    GenerateThumbnailSEDGlobal(transient_name).run_process()
 
 
 @shared_task(
@@ -1532,14 +1632,14 @@ def local_host_sed_fitting(transient_name):
 
 
 @shared_task(
-    name="MWEBV Host", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
+    name="Host MWEBV", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
 )
 def mwebv_host(transient_name):
     MWEBV_Host(transient_name).run_process()
 
 
 @shared_task(
-    name="MWEBV Transient",
+    name="Transient MWEBV",
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )

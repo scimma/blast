@@ -12,11 +12,11 @@
 {{ bokeh_cutout_div | safe }}
 {% else %}
 <div id="cutout-img-div">
+    <p style="text-align: center;">Click the image to load the interactive plot.</p>
     <button id="cutout-img-button" onclick="cutoutImgClick('{{ transient.name }}', '{{ cutout.name }}')">
         <img id="cutout-img" src="data:image/png;base64,{{ image_data_encoded }}" style="width: 100%;"/>
     </button>
     <br>
-    <p>Click on the image to load the FITS file and zoom in.</p>
 </div>
 {% endif %}
 <form class="form" , method="POST">
@@ -35,7 +35,7 @@
     document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, cutout) {
         document.getElementById('loading-indicator').style.display = "block";
-        document.getElementById('cutout-img').style.display = "none";
+        document.getElementById('cutout-img-div').style.display = "none";
         $.ajax({
             url: "{% url 'cutout_fits_plot' %}",
             type: "GET",
