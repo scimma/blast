@@ -146,7 +146,7 @@ def update_status(task_status, updated_status):
     task_status.save()
 
 
-def initialise_all_tasks_status(transient):
+def initialize_all_tasks_status(transient):
     """
     Set all available tasks for a transient to not processed.
 

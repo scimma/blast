@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ..base_tasks import initialise_all_tasks_status
+from ..base_tasks import initialize_all_tasks_status
 from ..transient_tasks import TransientTaskRunner
 from ..base_tasks import update_status
 from ..models import Cutout
@@ -299,7 +299,7 @@ class InitializeTaskRegisterTest(TestCase):
         # should be no tasks register first
         registered_tasks = TaskRegister.objects.filter(transient__name__exact=transient_name)
         self.assertTrue(not registered_tasks)
-        initialise_all_tasks_status(transient)
+        initialize_all_tasks_status(transient)
         registered_tasks = TaskRegister.objects.filter(transient__name__exact=transient_name)
         self.assertTrue(registered_tasks)
 

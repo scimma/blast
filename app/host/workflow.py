@@ -25,7 +25,7 @@ from host.transient_tasks import generate_thumbnail_sed_global
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 
-from .base_tasks import initialise_all_tasks_status
+from .base_tasks import initialize_all_tasks_status
 from .models import Transient
 from .transient_name_server import get_transients_from_tns_by_name
 from django.contrib.auth.decorators import login_required, permission_required
@@ -57,7 +57,7 @@ def reprocess_transient(request=None, transient_name=''):
     try:
         transient = Transient.objects.get(name__exact=transient_name)
         # TODO: This could be smarter. We don't *always* need to re-process every stage.
-        initialise_all_tasks_status(transient)
+        initialize_all_tasks_status(transient)
         result = transient_workflow.delay(transient_name)
     except Transient.DoesNotExist:
         result = None
@@ -94,7 +94,7 @@ def transient_workflow(transient_name=None):
     )
     for transient in uninitialized_transients:
         if transient.name == transient_name:
-            initialise_all_tasks_status(transient)
+            initialize_all_tasks_status(transient)
             transient.tasks_initialized = "True"
             transient.save()
     # Execute the workflow

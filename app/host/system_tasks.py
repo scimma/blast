@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core import serializers
 from django.db.models import Q
 from datetime import datetime, timedelta, timezone
-from host.base_tasks import initialise_all_tasks_status
+from host.base_tasks import initialize_all_tasks_status
 from host.base_tasks import SystemTaskRunner
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
@@ -123,7 +123,7 @@ class InitializeTransientTasks(SystemTaskRunner):
             tasks_initialized__exact="False"
         )
         for transient in uninitialized_transients:
-            initialise_all_tasks_status(transient)
+            initialize_all_tasks_status(transient)
             transient.tasks_initialized = "True"
             transient.save()
             transient_workflow.delay(transient.name)
