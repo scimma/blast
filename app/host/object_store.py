@@ -88,15 +88,18 @@ class ObjectStore:
             self.client.fput_object(bucket_name=self.bucket, object_name=path, file_path=file_path)
 
     def get_object(self, path=""):
+        response = None
         try:
             key = path.strip('/')
             response = self.client.get_object(
                 bucket_name=self.bucket,
                 object_name=key)
-        finally:
+            logger.debug(response.status)
             obj = response.data
-            response.close()
-            response.release_conn()
+        finally:
+            if response and not response.isclosed():
+                response.close()
+                response.release_conn()
         return obj
 
     def stream_object(self, path=""):
