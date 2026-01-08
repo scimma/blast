@@ -13,6 +13,34 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.8.0]
+
+### Added
+
+- Added new workflow tasks to generate thumbnail images (JPEG format) of the interactive Bokeh
+  plots for the data image cutout display and both SED fit plots.
+- Added a new workflow task that crops the data image cutouts. Replaces the previous "trim" mechanism.
+
+### Changed
+
+- Changed the result pages to display the lightweight thumbnails instead of downloading the 
+  files and rendering the Bokeh plots. Clicking on a thumbnail triggers the Bokeh render via an AJAX
+  request and replaces the thumbnail with the interactive plot. This will reduce the page load
+  time and reduce system load on the API server replicas.
+- Ensured that the task status table on the result pages orders the tasks by order of execution.
+- The workflow structure was altered to incorporate the new tasks, and due to a shortcoming of the
+  Celery Canvas system (see https://github.com/celery/celery/issues/893 and 
+  https://github.com/celery/celery/issues/4562), the new structure will not in general run as fast as its
+  optimal DAG.
+- The results page rendering function was refactored to organize logically independent code into
+  reusable functions.
+
+### Removed
+
+- Removed the unnecessary "Transient information" workflow task.
+- Hid the workflow diagram from the result pages until a more automated method is devised 
+  to generate it when the workflow structure changes.
+
 ## [1.7.3]
 
 ### Changed
