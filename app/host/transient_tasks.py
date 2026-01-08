@@ -1297,11 +1297,20 @@ class GenerateThumbnail(TransientTaskRunner):
             render = render_sed_plot(transient, scope=widget)
             sed_filepath = render['sed_filepath']
             fig = render['fig']
+            # Modify Bokeh figure options to improve similarity to rendered interactive plot
+            fig.sizing_mode = "fixed"
+            fig.title.text_font_size = "16px"
+            fig.title.text_font = "sans serif"
+            fig.title.text_font_style = "bold"
+            fig.axis.axis_label_text_font_size = "16px"
+            fig.legend.label_text_font_size = "16px"
+            fig.legend.label_text_font = "sans serif"
+            fig.legend.label_text_font_style = "normal"
             # Export plot to thumbnail
             thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
             thumbnail_filepath_png = sed_filepath.replace(".h5", ".png")
             # Export to PNG
-            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, None)
+            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400)
         # Generate a thumbnail for a cutout plot
         elif widget == 'cutout':
             # Select the cutout image to export
@@ -1329,16 +1338,22 @@ class GenerateThumbnail(TransientTaskRunner):
             os.remove(local_fits_path)
             # Construct the Bokeh figure to plot
             # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
+            #       Some of the formatting options have been modified to make the exported thumbnail
+            #       look more like the rendered interactive plot.
             title = cutout.filter
             fig = figure(
                 title=f"{title}",
                 x_axis_label="",
                 y_axis_label="",
-                sizing_mode="scale_both",
+                sizing_mode="fixed",
             )
             fig.axis.visible = False
             fig.xgrid.visible = False
             fig.ygrid.visible = False
+            fig.title.text_font_size = "16px"
+            fig.title.text_font = "sans serif"
+            fig.title.text_font_style = "bold"
+            fig.axis.axis_label_text_font_size = "16px"
             transient_kwargs = {
                 "legend_label": f"{transient.name}",
                 "size": 30,
@@ -1346,11 +1361,14 @@ class GenerateThumbnail(TransientTaskRunner):
                 "marker": "cross",
             }
             plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
+            fig.legend.label_text_font_size = "16px"
+            fig.legend.label_text_font = "sans serif"
+            fig.legend.label_text_font_style = "normal"
 
             if transient.host is not None:
                 host_kwargs = {
                     "legend_label": f"Host: {transient.host.name}",
-                    "size": 25,
+                    "size": 30,
                     "line_width": 2,
                     "line_color": "red",
                     "marker": "x",
@@ -1373,6 +1391,7 @@ class GenerateThumbnail(TransientTaskRunner):
                         "fill_alpha": 0.1,
                         "line_color": "green",
                         "legend_label": f"Global Aperture ({title})",
+                        "line_width": 4,
                     },
                 )
 
@@ -1387,6 +1406,7 @@ class GenerateThumbnail(TransientTaskRunner):
                         "fill_alpha": 0.1,
                         "line_color": "blue",
                         "legend_label": "Local Aperture",
+                        "line_width": 4,
                     },
                 )
             # Incorporate cutout image data into figure
