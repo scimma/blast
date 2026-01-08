@@ -20,11 +20,7 @@
 {% block body %}
 <div class="tab-content" id="myTabContent-sed">
     <div class="tab-pane" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
-        <div>&nbsp;</div>
         <div class="">
-	  <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'local' %}','_self')">
-            <span>Download Best-Fit Model</span>
-            </button>
             <div id="loading-indicator-sed-local" class="loader"></div>
             {% if bokeh_sed_local_div %}
             {{ bokeh_sed_local_div | safe }}
@@ -65,18 +61,17 @@
                 }
             </script>
             {% endif %}
+            <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'local' %}','_self')">
+                <span>Download Best-Fit Model</span>
+            </button>
         </div>
     </div>
+
     <div class="tab-pane active" id="global-sed" role="tabpanel" aria-labelledby="global-sed-tab">
-       	<div>&nbsp;</div>
-        {% if contam_warning %}
-          <b style="color:red">Warning:</b> possible contaminating objects in the global aperture<br>
-	{% endif %}
-          <div class="">
-	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'global' %}','_self')">
-            <span>Download Best-Fit Model</span>
-            </button>
-            <div>&nbsp;</div>
+        <div class="">
+            {% if contam_warning %}
+            <b style="color:red">Warning:</b> possible contaminating objects in the global aperture<br>
+            {% endif %}
             <div id="loading-indicator-sed-global" class="loader"></div>
             {% if bokeh_sed_global_div %}
             {{ bokeh_sed_global_div | safe }}
@@ -117,6 +112,9 @@
                 }
             </script>
             {% endif %}
+            <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_modelfit' transient.name 'global' %}','_self')">
+                <span>Download Best-Fit Model</span>
+            </button>
         </div>
     </div>
 </div>
