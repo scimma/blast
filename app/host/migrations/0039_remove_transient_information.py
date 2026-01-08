@@ -15,7 +15,7 @@ def remove_task(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0039_remove_transient_image_trim_status'),
+        ('host', '0038_alter_transient_name'),
     ]
 
     operations = [
