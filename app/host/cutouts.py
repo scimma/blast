@@ -103,11 +103,12 @@ def download_and_save_cutouts(
     """
 
     s3 = ObjectStore()
+    trans_root_path = os.path.join(cutout_base_path, transient.name)
 
     def download_filter_data(filter):
         # Does cutout file exist on the local disk?
-        save_dir = f"{cutout_base_path}/{transient.name}/{filter.survey.name}/"
-        local_fits_path = save_dir + f"{filter.name}.fits"
+        save_dir = os.path.join(trans_root_path, filter.survey.name)
+        local_fits_path = os.path.join(save_dir, f"{filter.name}.fits")
         object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
         # Does cutout file exist in the S3 bucket?
