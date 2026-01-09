@@ -1267,8 +1267,11 @@ class GenerateThumbnail(TransientTaskRunner):
         return "failed"
 
     def _run_process(self, transient, widget='cutout'):
-
         s3 = ObjectStore()
+
+        def upload_and_verify_object(thumbnail_object_key, thumbnail_filepath):
+            s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
+            assert s3.object_exists(thumbnail_object_key)
 
         def generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, width, height):
             export_png(fig, filename=thumbnail_filepath_png, width=width, height=height)
@@ -1286,137 +1289,146 @@ class GenerateThumbnail(TransientTaskRunner):
             os.remove(thumbnail_filepath_png)
             # Upload to the object store
             thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
-            s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
-            os.remove(thumbnail_filepath)
+            # Try uploading the thumbail one more if there is a failure.
+            try:
+                upload_and_verify_object(thumbnail_object_key, thumbnail_filepath)
+            except AssertionError as err:
+                logger.error(f'Error uploading thumbnail (retrying once more): {err}')
+                upload_and_verify_object(thumbnail_object_key, thumbnail_filepath)
+            finally:
+                os.remove(thumbnail_filepath)
 
-        assert widget in ['cutout', 'local', 'global']
-
-        status_message = "processed"
-        # Generate a thumbnail for a SED plot
-        if widget in ['local', 'global']:
-            render = render_sed_plot(transient, scope=widget)
-            sed_filepath = render['sed_filepath']
-            fig = render['fig']
-            # Modify Bokeh figure options to improve similarity to rendered interactive plot
-            fig.sizing_mode = "fixed"
-            fig.title.text_font_size = "16px"
-            fig.title.text_font = "sans serif"
-            fig.title.text_font_style = "bold"
-            fig.axis.axis_label_text_font_size = "16px"
-            fig.legend.label_text_font_size = "16px"
-            fig.legend.label_text_font = "sans serif"
-            fig.legend.label_text_font_style = "normal"
-            # Export plot to thumbnail
-            thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
-            thumbnail_filepath_png = sed_filepath.replace(".h5", ".png")
-            # Export to PNG
-            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400)
-        # Generate a thumbnail for a cutout plot
-        elif widget == 'cutout':
-            # Select the cutout image to export
-            cutout = select_best_cutout(transient.name)
-            if cutout is None:
-                return 'not enough filters'
-            # Download FITS file to local cache
-            local_fits_path = cutout.fits.name
-            if not os.path.isfile(local_fits_path):
-                object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-                if s3.object_exists(object_key):
-                    # Download FITS file local file cache
-                    s3.download_object(path=object_key, file_path=local_fits_path)
-                else:
-                    logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
-            # If the file is missing for some reason, return failure
-            if not os.path.isfile(local_fits_path):
-                logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
-                return 'failed'
-            # Load image data into memory
-            with fits.open(local_fits_path) as fits_file:
-                image_data = fits_file[0].data
-                wcs = WCS(fits_file[0].header)
-            # Delete FITS file from local file cache
-            os.remove(local_fits_path)
-            # Construct the Bokeh figure to plot
-            # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
-            #       Some of the formatting options have been modified to make the exported thumbnail
-            #       look more like the rendered interactive plot.
-            title = cutout.filter
-            fig = figure(
-                title=f"{title}",
-                x_axis_label="",
-                y_axis_label="",
-                sizing_mode="fixed",
-            )
-            fig.axis.visible = False
-            fig.xgrid.visible = False
-            fig.ygrid.visible = False
-            fig.title.text_font_size = "16px"
-            fig.title.text_font = "sans serif"
-            fig.title.text_font_style = "bold"
-            fig.axis.axis_label_text_font_size = "16px"
-            transient_kwargs = {
-                "legend_label": f"{transient.name}",
-                "size": 30,
-                "line_width": 2,
-                "marker": "cross",
-            }
-            plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
-            fig.legend.label_text_font_size = "16px"
-            fig.legend.label_text_font = "sans serif"
-            fig.legend.label_text_font_style = "normal"
-
-            if transient.host is not None:
-                host_kwargs = {
-                    "legend_label": f"Host: {transient.host.name}",
+        try:
+            status_message = "processed"
+            assert widget in ['cutout', 'local', 'global']
+            # Generate a thumbnail for a SED plot
+            if widget in ['local', 'global']:
+                render = render_sed_plot(transient, scope=widget)
+                sed_filepath = render['sed_filepath']
+                fig = render['fig']
+                # Modify Bokeh figure options to improve similarity to rendered interactive plot
+                fig.sizing_mode = "fixed"
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                fig.legend.label_text_font_size = "16px"
+                fig.legend.label_text_font = "sans serif"
+                fig.legend.label_text_font_style = "normal"
+                # Export plot to thumbnail
+                thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
+                thumbnail_filepath_png = sed_filepath.replace(".h5", ".png")
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400)
+            # Generate a thumbnail for a cutout plot
+            elif widget == 'cutout':
+                # Select the cutout image to export
+                cutout = select_best_cutout(transient.name)
+                if cutout is None:
+                    return 'not enough filters'
+                # Download FITS file to local cache
+                local_fits_path = cutout.fits.name
+                if not os.path.isfile(local_fits_path):
+                    object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+                    if s3.object_exists(object_key):
+                        # Download FITS file local file cache
+                        s3.download_object(path=object_key, file_path=local_fits_path)
+                    else:
+                        logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+                # If the file is missing for some reason, return failure
+                if not os.path.isfile(local_fits_path):
+                    logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
+                    return 'failed'
+                # Load image data into memory
+                with fits.open(local_fits_path) as fits_file:
+                    image_data = fits_file[0].data
+                    wcs = WCS(fits_file[0].header)
+                # Delete FITS file from local file cache
+                os.remove(local_fits_path)
+                # Construct the Bokeh figure to plot
+                # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
+                #       Some of the formatting options have been modified to make the exported thumbnail
+                #       look more like the rendered interactive plot.
+                title = cutout.filter
+                fig = figure(
+                    title=f"{title}",
+                    x_axis_label="",
+                    y_axis_label="",
+                    sizing_mode="fixed",
+                )
+                fig.axis.visible = False
+                fig.xgrid.visible = False
+                fig.ygrid.visible = False
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                transient_kwargs = {
+                    "legend_label": f"{transient.name}",
                     "size": 30,
                     "line_width": 2,
-                    "line_color": "red",
-                    "marker": "x",
+                    "marker": "cross",
                 }
-                plot_position(
-                    transient.host,
-                    wcs,
-                    plotting_kwargs=host_kwargs,
-                    plotting_func=fig.scatter,
-                )
+                plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
+                fig.legend.label_text_font_size = "16px"
+                fig.legend.label_text_font = "sans serif"
+                fig.legend.label_text_font_style = "normal"
 
-            # Plot global aperture
-            global_aperture = select_aperture(transient).prefetch_related()
-            if global_aperture.exists():
-                plot_aperture(
-                    fig,
-                    global_aperture[0].sky_aperture,
-                    wcs,
-                    plotting_kwargs={
-                        "fill_alpha": 0.1,
-                        "line_color": "green",
-                        "legend_label": f"Global Aperture ({title})",
-                        "line_width": 4,
-                    },
-                )
+                if transient.host is not None:
+                    host_kwargs = {
+                        "legend_label": f"Host: {transient.host.name}",
+                        "size": 30,
+                        "line_width": 2,
+                        "line_color": "red",
+                        "marker": "x",
+                    }
+                    plot_position(
+                        transient.host,
+                        wcs,
+                        plotting_kwargs=host_kwargs,
+                        plotting_func=fig.scatter,
+                    )
 
-            # Plot local aperture
-            local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
-            if local_aperture.exists():
-                plot_aperture(
-                    fig,
-                    local_aperture[0].sky_aperture,
-                    wcs,
-                    plotting_kwargs={
-                        "fill_alpha": 0.1,
-                        "line_color": "blue",
-                        "legend_label": "Local Aperture",
-                        "line_width": 4,
-                    },
-                )
-            # Incorporate cutout image data into figure
-            plot_image(image_data, fig)
-            # Export plot to thumbnail
-            thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
-            thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
-            # Export to PNG
-            generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800)
+                # Plot global aperture
+                global_aperture = select_aperture(transient).prefetch_related()
+                if global_aperture.exists():
+                    plot_aperture(
+                        fig,
+                        global_aperture[0].sky_aperture,
+                        wcs,
+                        plotting_kwargs={
+                            "fill_alpha": 0.1,
+                            "line_color": "green",
+                            "legend_label": f"Global Aperture ({title})",
+                            "line_width": 4,
+                        },
+                    )
 
+                # Plot local aperture
+                local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
+                if local_aperture.exists():
+                    plot_aperture(
+                        fig,
+                        local_aperture[0].sky_aperture,
+                        wcs,
+                        plotting_kwargs={
+                            "fill_alpha": 0.1,
+                            "line_color": "blue",
+                            "legend_label": "Local Aperture",
+                            "line_width": 4,
+                        },
+                    )
+                # Incorporate cutout image data into figure
+                plot_image(image_data, fig)
+                # Export plot to thumbnail
+                thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
+                thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800)
+
+        except Exception as err:
+            logger.error(f'Error generating thumbnail: {err}')
+            status_message = "failed"
         return status_message
 
 
