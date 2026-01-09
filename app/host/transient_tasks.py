@@ -1,5 +1,6 @@
 import math
 import os
+from shutil import rmtree
 
 import numpy as np
 from astropy.io import fits
@@ -1707,3 +1708,9 @@ def final_progress(transient_name):
     transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
     logger.debug(f'''Final progress: {(transient.progress, transient.processing_status)}''')
     transient.save()
+    # Clean up scratch directories
+    for base_path in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
+        try:
+            rmtree(os.path.join(base_path, transient.name))
+        except FileNotFoundError:
+            pass
