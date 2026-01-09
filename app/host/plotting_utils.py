@@ -166,25 +166,26 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         return generate_empty_plot(title="No cutout selected")
 
     # Load image data from FITS file
-    local_fits_path = cutout.fits.name
+    cutout_fits_path = cutout.fits.name
+    local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
     s3 = ObjectStore()
-    if not os.path.isfile(local_fits_path):
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+    if not os.path.isfile(local_tmp_path):
+        object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
         if s3.object_exists(object_key):
             # Download FITS file local file cache
-            s3.download_object(path=object_key, file_path=local_fits_path)
+            s3.download_object(path=object_key, file_path=local_tmp_path)
         else:
-            logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+            logger.error(f'''Data object "{object_key}" not found for missing data file "{cutout_fits_path}".''')
     # If the file is missing for some reason, generate an empty plot with an error title
-    if not os.path.isfile(local_fits_path):
-        title = f'''Missing data file: "{os.path.basename(local_fits_path)}". '''
+    if not os.path.isfile(local_tmp_path):
+        title = f'''Missing data file: "{os.path.basename(cutout_fits_path)}". '''
         title += '''Reprocess transient to regenerate missing data.'''
         return generate_empty_plot(title=title)
-    with fits.open(local_fits_path) as fits_file:
+    with fits.open(local_tmp_path) as fits_file:
         image_data = fits_file[0].data
         wcs = WCS(fits_file[0].header)
     # Delete FITS file from local file cache
-    os.remove(local_fits_path)
+    os.remove(local_tmp_path)
 
     title = cutout.filter
     fig = figure(
@@ -250,7 +251,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     return generate_plot(fig, image_data=image_data)
 
 
-def plot_sed(transient=None, sed_results_file=None, type=""):
+def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None):
     """
     Plot SED from aperture photometry.
     """
@@ -342,13 +343,9 @@ def plot_sed(transient=None, sed_results_file=None, type=""):
 
     # second check on SED file
     # long-term shouldn't be necessary, just a result of debugging
-    if sed_results_file is not None and os.path.exists(
-        sed_results_file.replace(".h5", "_modeldata.npz")
-    ):
+    if sed_results_file is not None and os.path.exists(sed_modeldata_file):
         result, obs, _ = reader.results_from(sed_results_file, dangerous=False)
-        model_data = np.load(
-            sed_results_file.replace(".h5", "_modeldata.npz"), allow_pickle=True
-        )
+        model_data = np.load(sed_modeldata_file, allow_pickle=True)
 
         # best = result["bestfit"]
         if transient.best_redshift < 0.015:
@@ -559,11 +556,11 @@ def plot_timeseries():
 
 def render_sed_plot(transient, scope):
     '''Generate a Bokeh plot of SED results'''
-    def download_file_from_s3(file_path):
+    s3 = ObjectStore()
+
+    def download_file_from_s3(file_path, object_key):
         try:
-            s3 = ObjectStore()
             # Download SED results files to local file cache
-            object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
             s3.download_object(path=object_key, file_path=file_path)
             assert os.path.isfile(file_path)
         except Exception as err:
@@ -580,24 +577,33 @@ def render_sed_plot(transient, scope):
 
     assert scope in ["local", "global"]
     # Download the data files if they exist
-    sed_filepath = None
-    sed_modeldata_filepath = None
+    canonical_path = None
+    sed_results_tmp_filepath = None
+    sed_modeldata_tmp_filepath = None
     sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
     if sed_obj.exists():
-        sed_filepath = sed_obj[0].posterior.name
-        sed_modeldata_filepath = sed_filepath.replace(".h5", "_modeldata.npz")
-        download_file_from_s3(sed_filepath)
-        download_file_from_s3(sed_modeldata_filepath)
+        canonical_path = sed_obj[0].posterior.name
+        sed_results_tmp_filepath = os.path.join(
+            '/tmp', canonical_path.strip('/').replace('/', '__'))
+        sed_modeldata_tmp_filepath = os.path.join(
+            '/tmp', canonical_path.replace(".h5", "_modeldata.npz").strip('/').replace('/', '__'))
+        sed_results_object_key = os.path.join(
+            settings.S3_BASE_PATH, canonical_path.strip('/'))
+        sed_modeldata_object_key = os.path.join(
+            settings.S3_BASE_PATH, canonical_path.replace(".h5", "_modeldata.npz").strip('/'))
+        download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
+        download_file_from_s3(sed_modeldata_tmp_filepath, sed_modeldata_object_key)
     # Generate a SED plot using Bokeh
     plot = plot_sed(
         transient=transient,
         type=scope,
-        sed_results_file=sed_filepath,
+        sed_results_file=sed_results_tmp_filepath,
+        sed_modeldata_file=sed_modeldata_tmp_filepath,
     )
     # Purge temporary cached files
-    delete_cached_file(sed_filepath)
-    delete_cached_file(sed_modeldata_filepath)
+    delete_cached_file(sed_results_tmp_filepath)
+    delete_cached_file(sed_modeldata_tmp_filepath)
     return {
         **plot,
-        'sed_filepath': sed_filepath,
+        'sed_filepath': canonical_path,
     }
