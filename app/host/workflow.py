@@ -48,7 +48,7 @@ def reprocess_transient_view(request=None, transient_name=''):
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
-def workflow_init():
+def workflow_init(transient_name=None):
     wait_for_free_space()
 
 
@@ -99,7 +99,7 @@ def transient_workflow(transient_name=None):
             transient.save()
     # Execute the workflow
     workflow = chain(
-        workflow_init.si(),
+        workflow_init.si(transient_name),
         image_download.si(transient_name),
         group(
             generate_thumbnail.si(transient_name),
