@@ -207,7 +207,7 @@ class GarbageCollector(SystemTaskRunner):
         that occurs at the beginning of each transient workflow, and may no longer be
         necessary.
         """
-        wait_for_free_space()
+        wait_for_free_space(force_prune=True)
 
     @property
     def task_name(self):

@@ -711,33 +711,34 @@ def calculate_units(size):
     return units, size_in_units
 
 
-def wait_for_free_space():
+def wait_for_free_space(force_prune=False):
     # Wait until enough scratch space is available before launching the workflow tasks.
     for scratch_root in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
         while True:
-            # Calculate size of /scratch to determine free space. If JOB_SCRATCH_MAX_SIZE is finite, calculate free
-            # space using the supplied value; otherwise, attempt to calculate using statvfs.
-            scratch_total = settings.JOB_SCRATCH_MAX_SIZE
-            if scratch_total:
-                scratch_used = get_directory_size(scratch_root)
-                scratch_free = scratch_total - scratch_used
-            else:
-                # See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/statvfs.h.html
-                # and https://docs.python.org/3/library/os.html#os.statvfs
-                statvfs = os.statvfs(scratch_root)
-                # Capacity of filesystem in bytes
-                scratch_total = statvfs.f_frsize * statvfs.f_blocks
-                # Number of free bytes available to non-privileged process.
-                scratch_free = statvfs.f_frsize * statvfs.f_bavail
-            free_percentage = round(100.0 * scratch_free / scratch_total)
-            logger.debug(f'''Job scratch free space is {scratch_free} bytes ({free_percentage}%) '''
-                         f'''for a scratch volume capacity of {scratch_total} bytes.''')
-            # If there is sufficient free scratch space, stop waiting
-            if scratch_free > settings.JOB_SCRATCH_FREE_SPACE:
-                return
-            # If there is insufficient free space, attempt to delete orphaned data
-            logger.info(f'''Insufficient free scratch space {round(scratch_free / 1024**2)} MiB '''
-                        f'''({free_percentage}%). Pruning scratch files...''')
+            if not force_prune:
+                # Calculate size of /scratch to determine free space. If JOB_SCRATCH_MAX_SIZE is finite, calculate free
+                # space using the supplied value; otherwise, attempt to calculate using statvfs.
+                scratch_total = settings.JOB_SCRATCH_MAX_SIZE
+                if scratch_total:
+                    scratch_used = get_directory_size(scratch_root)
+                    scratch_free = scratch_total - scratch_used
+                else:
+                    # See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/statvfs.h.html
+                    # and https://docs.python.org/3/library/os.html#os.statvfs
+                    statvfs = os.statvfs(scratch_root)
+                    # Capacity of filesystem in bytes
+                    scratch_total = statvfs.f_frsize * statvfs.f_blocks
+                    # Number of free bytes available to non-privileged process.
+                    scratch_free = statvfs.f_frsize * statvfs.f_bavail
+                free_percentage = round(100.0 * scratch_free / scratch_total)
+                logger.debug(f'''Job scratch free space is {scratch_free} bytes ({free_percentage}%) '''
+                             f'''for a scratch volume capacity of {scratch_total} bytes.''')
+                # If there is sufficient free scratch space, stop waiting
+                if scratch_free > settings.JOB_SCRATCH_FREE_SPACE:
+                    return
+                # If there is insufficient free space, attempt to delete orphaned data
+                logger.info(f'''Insufficient free scratch space {round(scratch_free / 1024**2)} MiB '''
+                            f'''({free_percentage}%). Pruning scratch files...''')
             lock_id = get_job_scratch_prune_lock_id(scratch_root)
             if TaskLock.objects.request_lock(lock_id):
                 prune_workflow_scratch_dirs(scratch_root)
