@@ -530,10 +530,10 @@ def results(request, transient_name):
 
     image_data = b''
     # Generate filter selection form and choose cutout to display
+    cutout = select_best_cutout(transient.name)
     if request.method == "GET":
         filter_select_form = ImageGetForm(filter_choices=filters)
         # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
-        cutout = select_best_cutout(transient.name)
         if cutout:
             # Download thumbnail image from object store
             # TODO: Replace this with something like Django's template fragment caching
