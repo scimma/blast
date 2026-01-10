@@ -19,21 +19,25 @@ Types of changes:
 
 - Added new workflow tasks to generate thumbnail images (JPEG format) of the interactive Bokeh
   plots for the data image cutout display and both SED fit plots.
-- Added a new workflow task that crops the data image cutouts. Replaces the previous "trim" mechanism.
+- Added a new workflow task that crops the data image cutouts. Replaces the previous "trimming" mechanism.
 
 ### Changed
 
-- Changed the result pages to display the lightweight thumbnails instead of downloading the 
+- Changed the result pages to display lightweight "thumbnail" images instead of downloading the 
   files and rendering the Bokeh plots. Clicking on a thumbnail triggers the Bokeh render via an AJAX
   request and replaces the thumbnail with the interactive plot. This will reduce the page load
   time and reduce system load on the API server replicas.
-- Ensured that the task status table on the result pages orders the tasks by order of execution.
+- The results page rendering function was refactored to organize logically independent code into
+  reusable functions.
+- The task status table on the result pages now orders tasks by order of their execution.
 - The workflow structure was altered to incorporate the new tasks, and due to a shortcoming of the
   Celery Canvas system (see https://github.com/celery/celery/issues/893 and 
   https://github.com/celery/celery/issues/4562), the new structure will not in general run as fast as its
   optimal DAG.
-- The results page rendering function was refactored to organize logically independent code into
-  reusable functions.
+- Improved temporary file handling and cleanup:
+  - Temporary server-side downloads from the object store use ephemeral `tmp` directories in the 
+    responding API server replica container instead of in the shared data volume.
+  - The periodic garbage collection task now removes unneeded files regardless of free space.
 
 ### Removed
 
@@ -43,7 +47,7 @@ Types of changes:
 
 ## [1.7.3]
 
-### Changed
+### Changedeven if there is sufficient 
 
 - Increased transient name length limit from 20 to 64 characters
 - Updated to version `actions/checkout@v6` for GitHub CI/CD
