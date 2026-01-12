@@ -37,10 +37,11 @@ def add_workflow_taskregisters(apps, schema_editor):
         print(f'[{idx}/{num_transients}] Processing transient "{transient.name}"...')
         for task in NEW_TASKS:
             if not all_trs.filter(transient=transient, task=task):
+                set_to_processed = task.name == 'Crop transient images' and transient.image_trim_status == "processed"
                 task_register = TaskRegister.objects.create(
                     transient=transient,
                     task=task,
-                    status=processed_status if transient.image_trim_status == "processed" else not_processed_status,
+                    status=processed_status if set_to_processed else not_processed_status,
                 )
             # print(f'Created TaskRegister object "{task.name}"...')
             else:
