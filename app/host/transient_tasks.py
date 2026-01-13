@@ -30,6 +30,8 @@ from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
 from host.plotting_utils import render_sed_plot
+from host.plotting_utils import temp_results_paths_from_canonical_path
+from host.plotting_utils import download_file_from_s3
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -570,19 +572,20 @@ class GlobalApertureConstruction(TransientTaskRunner):
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         choice = 0
         aperture = None
+        s3 = ObjectStore()
         while aperture is None and choice <= 8:
             aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
             # Download FITS file local file cache
-            fits_basepath = aperture_cutout[0].fits.name
-            local_fits_path = f'''{fits_basepath}.GlobalApertureConstruction'''
-            if not os.path.isfile(local_fits_path):
-                s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, fits_basepath.strip('/'))
-                s3.download_object(path=object_key, file_path=local_fits_path)
-            assert os.path.isfile(local_fits_path)
-            # Construct aperture
-            image = fits.open(local_fits_path)
+            canonical_fits_basepath = aperture_cutout[0].fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+            local_fits_path = f'''{tmp_fits_basepath}.GlobalApertureConstruction'''
             try:
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                # Construct aperture
+                image = fits.open(local_fits_path)
                 aperture = construct_aperture(image, transient.host.sky_coord)
             finally:
                 try:
@@ -664,17 +667,17 @@ class LocalAperturePhotometry(TransientTaskRunner):
         print(aperture)
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
+        s3 = ObjectStore()
         for cutout in cutouts:
-            fits_basepath = cutout.fits.name
-            local_fits_path = f'''{fits_basepath}.LocalAperturePhotometry'''
-            if not os.path.isfile(local_fits_path):
-                # Download FITS file local file cache
-                s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, fits_basepath.strip('/'))
-                s3.download_object(path=object_key, file_path=local_fits_path)
-            assert os.path.isfile(local_fits_path)
-            image = fits.open(local_fits_path)
+            canonical_fits_basepath = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+            local_fits_path = f'''{tmp_fits_basepath}.LocalAperturePhotometry'''
             try:
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                image = fits.open(local_fits_path)
                 photometry = do_aperture_photometry(
                     image, aperture.sky_aperture, cutout.filter
                 )
@@ -751,16 +754,23 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 aperture = aperture[0]
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
+        s3 = ObjectStore()
         for cutout in cutouts:
-            fits_basepath = cutout.fits.name
-            local_fits_path = f'''{fits_basepath}.GlobalAperturePhotometry'''
-            if not os.path.isfile(local_fits_path):
+            canonical_fits_basepath = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+            local_fits_path = f'''{tmp_fits_basepath}.GlobalAperturePhotometry'''
+            try:
                 # Download FITS file local file cache
-                s3 = ObjectStore()
-                object_key = os.path.join(settings.S3_BASE_PATH, fits_basepath.strip('/'))
                 s3.download_object(path=object_key, file_path=local_fits_path)
-            assert os.path.isfile(local_fits_path)
-            image = fits.open(local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                image = fits.open(local_fits_path)
+            finally:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
             # make new aperture
             # adjust semi-major/minor axes for size
             if f"{cutout.name}_global" != aperture.name:
@@ -1274,7 +1284,13 @@ class GenerateThumbnail(TransientTaskRunner):
             s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
             assert s3.object_exists(thumbnail_object_key)
 
-        def generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, width, height):
+        def generate_and_store_thumbnail(
+                fig,
+                thumbnail_filepath,
+                thumbnail_filepath_png,
+                width,
+                height,
+                thumbnail_object_key):
             export_png(fig, filename=thumbnail_filepath_png, width=width, height=height)
             png_image = Image.open(thumbnail_filepath_png)
             # Resize PNG image to reduce file size.
@@ -1289,8 +1305,7 @@ class GenerateThumbnail(TransientTaskRunner):
             cutout_jpg.save(thumbnail_filepath, optimize=True, quality=85, format="JPEG")
             os.remove(thumbnail_filepath_png)
             # Upload to the object store
-            thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
-            # Try uploading the thumbail one more if there is a failure.
+            # Try uploading the thumbail once more if there is a failure.
             try:
                 upload_and_verify_object(thumbnail_object_key, thumbnail_filepath)
             except AssertionError as err:
@@ -1305,7 +1320,6 @@ class GenerateThumbnail(TransientTaskRunner):
             # Generate a thumbnail for a SED plot
             if widget in ['local', 'global']:
                 render = render_sed_plot(transient, scope=widget)
-                sed_filepath = render['sed_filepath']
                 fig = render['fig']
                 # Modify Bokeh figure options to improve similarity to rendered interactive plot
                 fig.sizing_mode = "fixed"
@@ -1317,10 +1331,14 @@ class GenerateThumbnail(TransientTaskRunner):
                 fig.legend.label_text_font = "sans serif"
                 fig.legend.label_text_font_style = "normal"
                 # Export plot to thumbnail
-                thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
-                thumbnail_filepath_png = sed_filepath.replace(".h5", ".png")
+                canonical_path = render['canonical_path']
+                sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)  # noqa
+                download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
+                thumbnail_filepath = sed_results_tmp_filepath.replace(".h5", ".jpg")
+                thumbnail_filepath_png = sed_results_tmp_filepath.replace(".h5", ".png")
                 # Export to PNG
-                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400)
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400,
+                                             sed_results_object_key)
             # Generate a thumbnail for a cutout plot
             elif widget == 'cutout':
                 # Select the cutout image to export
@@ -1422,10 +1440,16 @@ class GenerateThumbnail(TransientTaskRunner):
                 # Incorporate cutout image data into figure
                 plot_image(image_data, fig)
                 # Export plot to thumbnail
-                thumbnail_filepath = cutout.fits.name.replace(".fits", ".jpg")
-                thumbnail_filepath_png = cutout.fits.name.replace(".fits", ".png")
+                canonical_path = cutout.fits.name
+                thumbnail_object_key = os.path.join(
+                    settings.S3_BASE_PATH, canonical_path.replace(".fits", ".jpg").strip('/'))
+                thumbnail_filepath = os.path.join(
+                    '/tmp', canonical_path.replace(".fits", ".jpg").strip('/').replace('/', '__'))
+                thumbnail_filepath_png = os.path.join(
+                    '/tmp', canonical_path.replace(".fits", ".png").strip('/').replace('/', '__'))
                 # Export to PNG
-                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800)
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800,
+                                             thumbnail_object_key)
 
         except Exception as err:
             logger.error(f'Error generating thumbnail: {err}')

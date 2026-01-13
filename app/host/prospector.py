@@ -779,20 +779,26 @@ def prospector_result_to_blast(
     sbipp=False,
 ):
     # write the results
-    parent_dir = os.path.join(sed_output_root, transient.name)
-    base_file_path = os.path.join(parent_dir, f'''{transient.name}_{aperture.type}''')
-    hdf5_file_path = f'''{base_file_path}.h5'''
-    chain_file_path = f'''{base_file_path}_chain.npz'''
-    perc_file_path = f'''{base_file_path}_perc.npz'''
-    modeldata_file_path = f'''{base_file_path}_modeldata.npz'''
-    if not os.path.isdir(parent_dir):
-        os.makedirs(parent_dir)
-    if os.path.exists(hdf5_file_path):
+    canonical_parent_dir = os.path.join(sed_output_root, transient.name)
+    canonical_base_file_path = os.path.join(canonical_parent_dir, f'''{transient.name}_{aperture.type}''')
+    temp_parent_dir = os.path.join('/tmp', transient.name)
+    temp_base_file_path = os.path.join(temp_parent_dir, f'''{transient.name}_{aperture.type}''')
+    canonical_hdf5_file_path = f'''{canonical_base_file_path}.h5'''
+    canonical_chain_file_path = f'''{canonical_base_file_path}_chain.npz'''
+    canonical_perc_file_path = f'''{canonical_base_file_path}_perc.npz'''
+    canonical_modeldata_file_path = f'''{canonical_base_file_path}_modeldata.npz'''
+    temp_hdf5_file_path = f'''{temp_base_file_path}.h5'''
+    temp_chain_file_path = f'''{temp_base_file_path}_chain.npz'''
+    temp_perc_file_path = f'''{temp_base_file_path}_perc.npz'''
+    temp_modeldata_file_path = f'''{temp_base_file_path}_modeldata.npz'''
+    if not os.path.isdir(temp_parent_dir):
+        os.makedirs(temp_parent_dir)
+    if os.path.exists(temp_hdf5_file_path):
         # prospector won't overwrite, which causes problems
-        os.remove(hdf5_file_path)
+        os.remove(temp_hdf5_file_path)
 
     if sbipp:
-        hf = h5py.File(hdf5_file_path, "w")
+        hf = h5py.File(temp_hdf5_file_path, "w")
 
         sdat = hf.create_group("sampling")
         sdat.create_dataset("chain", data=prospector_output["sampling"][0]["samples"])
@@ -809,7 +815,7 @@ def prospector_result_to_blast(
         hf.flush()
     else:
         writer.write_hdf5(
-            hdf5_file_path,
+            temp_hdf5_file_path,
             {},
             model_components["model"],
             observations,
@@ -821,12 +827,12 @@ def prospector_result_to_blast(
         )
 
     # load up the hdf5 file to get the results
-    resultpars, obs, _ = reader.results_from(hdf5_file_path, dangerous=False)
+    resultpars, obs, _ = reader.results_from(temp_hdf5_file_path, dangerous=False)
 
 
     model_init = copy.deepcopy(model_components["model"])
     tstart = time.time()
-    ### take the mean of 50 random samples to get the "best fit" model
+    # take the mean of 50 random samples to get the "best fit" model
     # best_phot_store = np.array([])
     for i in range(50):
         theta = resultpars["chain"][
@@ -862,9 +868,9 @@ def prospector_result_to_blast(
         use_weights = not sbipp
 
         pp.run_all(
-            hdf5_file_path,
-            chain_file_path,
-            perc_file_path,
+            temp_hdf5_file_path,
+            temp_chain_file_path,
+            temp_perc_file_path,
             model_components["model"]._zred[0],
             prior="p-alpha",
             mod_fsps=model_components["model"],
@@ -876,7 +882,7 @@ def prospector_result_to_blast(
         )
 
         percentiles = np.load(
-            perc_file_path, allow_pickle=True
+            temp_perc_file_path, allow_pickle=True
         )
         perc = np.atleast_1d(percentiles["percentiles"])[0]
 
@@ -902,7 +908,7 @@ def prospector_result_to_blast(
     # and then we don't have to be quite so annoying about what's what
     agebins = pp.z_to_agebins(observations["redshift"])
     agebins_ago = 10**agebins / 1e9
-    
+
     sfh_results = []
     unique_sfh = np.unique(perc['sfh'][:, 1])
     for a, s in zip(agebins_ago, perc['sfh_binned']):
@@ -926,10 +932,10 @@ def prospector_result_to_blast(
     prosp_results = {
         "transient": transient,
         "aperture": aperture,
-        "posterior": hdf5_file_path,
-        "chains_file": chain_file_path,
-        "percentiles_file": perc_file_path,
-        "model_file": modeldata_file_path,
+        "posterior": canonical_hdf5_file_path,
+        "chains_file": canonical_chain_file_path,
+        "percentiles_file": canonical_perc_file_path,
+        "model_file": canonical_modeldata_file_path,
         "log_mass_16": logmass16,
         "log_mass_50": logmass50,
         "log_mass_84": logmass84,
@@ -980,7 +986,7 @@ def prospector_result_to_blast(
         prosp_results["log_tau_84"] = (tau84,)
 
     np.savez(
-        modeldata_file_path,
+        temp_modeldata_file_path,
         rest_wavelength=model_components["sps"].wavelengths,
         spec=best_spec,
         phot=best_phot,
@@ -991,8 +997,9 @@ def prospector_result_to_blast(
     )
     # Upload data files to S3 bucket (HDF5, chain, perc, modeldata) and delete local copies.
     s3 = ObjectStore()
-    for file_path in [hdf5_file_path, chain_file_path, perc_file_path, modeldata_file_path]:
-        object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+    for file_path in [temp_hdf5_file_path, temp_chain_file_path, temp_perc_file_path, temp_modeldata_file_path]:
+        # Use "canonical" SED output base path for consistency with existing datasets prior to v1.8.0
+        object_key = os.path.join(settings.S3_BASE_PATH, file_path.replace('/tmp', sed_output_root).strip('/'))
         s3.put_object(path=object_key, file_path=file_path)
         assert s3.object_exists(object_key)
         os.remove(file_path)

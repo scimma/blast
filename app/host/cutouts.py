@@ -103,16 +103,19 @@ def download_and_save_cutouts(
     """
 
     s3 = ObjectStore()
-    trans_root_path = os.path.join(cutout_base_path, transient.name)
 
     def download_filter_data(filter):
-        # Does cutout file exist on the local disk?
-        save_dir = os.path.join(trans_root_path, filter.survey.name)
-        local_fits_path = os.path.join(save_dir, f"{filter.name}.fits")
-        object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
+        # TODO: The "canonical" base path "/data/cutout_cdn" is now hard-coded in the object keys
+        #       of 50,000+ transient datasets in the production instance of Blast as of 2026/01/13.
+        #       For consistency we need to keep that object key base path for new transients, but
+        #       the local temporary base file path can be different.
+        trans_root_path = os.path.join('/tmp', transient.name)
+        temp_save_dir = os.path.join(trans_root_path, filter.survey.name)
+        temp_fits_path = os.path.join(temp_save_dir, f"{filter.name}.fits")
+        logger.debug(f'''FITS file temp local path: {temp_fits_path}''')
+        canonical_fits_path = temp_fits_path.replace('/tmp', cutout_base_path)
+        object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_path.strip('/'))
         logger.debug(f'''FITS file object_key: {object_key}''')
-        # Does cutout file exist in the S3 bucket?
-        cutout_file_exists = s3.object_exists(object_key)
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
         cutout_object = Cutout.objects.filter(
@@ -127,6 +130,8 @@ def download_and_save_cutouts(
         if cutout_object.message == "No image found":
             return processed_value
 
+        # Does cutout file exist in the S3 bucket?
+        cutout_file_exists = s3.object_exists(object_key)
         fits = None
         # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
         # file or the Cutout object are missing, redownload the data
@@ -139,16 +144,20 @@ def download_and_save_cutouts(
                 return processed_value
         if fits:
             # Write FITS file to local cache
-            os.makedirs(save_dir, exist_ok=True)
-            fits.writeto(local_fits_path, overwrite=True)
+            os.makedirs(temp_save_dir, exist_ok=True)
+            fits.writeto(temp_fits_path, overwrite=True)
             # Upload file to bucket and delete local copy
-            s3.put_object(path=object_key, file_path=local_fits_path)
-            assert s3.object_exists(object_key)
-            os.remove(local_fits_path)
+            upload_succeeded = False
+            try:
+                s3.put_object(path=object_key, file_path=temp_fits_path)
+                upload_succeeded = s3.object_exists(object_key)
+                assert upload_succeeded
+            finally:
+                os.remove(temp_fits_path)
         # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
         # update the database object. Otherwise record that no image was found.
-        if s3.object_exists(object_key):
-            cutout_object.fits.name = local_fits_path
+        if upload_succeeded:
+            cutout_object.fits.name = canonical_fits_path
         else:
             cutout_object.message = "No image found"
         cutout_object.save()

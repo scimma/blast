@@ -168,24 +168,25 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     # Load image data from FITS file
     cutout_fits_path = cutout.fits.name
     local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
+    object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
     s3 = ObjectStore()
-    if not os.path.isfile(local_tmp_path):
-        object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
-        if s3.object_exists(object_key):
-            # Download FITS file local file cache
-            s3.download_object(path=object_key, file_path=local_tmp_path)
-        else:
-            logger.error(f'''Data object "{object_key}" not found for missing data file "{cutout_fits_path}".''')
+    if s3.object_exists(object_key):
+        # Download FITS file local file cache
+        s3.download_object(path=object_key, file_path=local_tmp_path)
+    else:
+        logger.error(f'''Data object "{object_key}" not found for missing data file "{cutout_fits_path}".''')
     # If the file is missing for some reason, generate an empty plot with an error title
     if not os.path.isfile(local_tmp_path):
         title = f'''Missing data file: "{os.path.basename(cutout_fits_path)}". '''
         title += '''Reprocess transient to regenerate missing data.'''
         return generate_empty_plot(title=title)
-    with fits.open(local_tmp_path) as fits_file:
-        image_data = fits_file[0].data
-        wcs = WCS(fits_file[0].header)
-    # Delete FITS file from local file cache
-    os.remove(local_tmp_path)
+    try:
+        with fits.open(local_tmp_path) as fits_file:
+            image_data = fits_file[0].data
+            wcs = WCS(fits_file[0].header)
+    finally:
+        # Delete FITS file from local file cache
+        os.remove(local_tmp_path)
 
     title = cutout.filter
     fig = figure(
@@ -554,26 +555,34 @@ def plot_timeseries():
     }
 
 
+def download_file_from_s3(file_path, object_key):
+    s3 = ObjectStore()
+    try:
+        # Download SED results files to local file cache
+        s3.download_object(path=object_key, file_path=file_path)
+        assert os.path.isfile(file_path)
+    except Exception as err:
+        logger.error(f'''Error downloading SED file "{file_path}": {err}''')
+
+
+def delete_cached_file(file_path):
+    if not isinstance(file_path, str):
+        return
+    try:
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+    except Exception as err:
+        logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
+
+
+def temp_results_paths_from_canonical_path(canonical_path):
+    sed_results_tmp_filepath = os.path.join('/tmp', canonical_path.strip('/').replace('/', '__'))
+    sed_results_object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+    return sed_results_tmp_filepath, sed_results_object_key
+
+
 def render_sed_plot(transient, scope):
     '''Generate a Bokeh plot of SED results'''
-    s3 = ObjectStore()
-
-    def download_file_from_s3(file_path, object_key):
-        try:
-            # Download SED results files to local file cache
-            s3.download_object(path=object_key, file_path=file_path)
-            assert os.path.isfile(file_path)
-        except Exception as err:
-            logger.error(f'''Error downloading SED file "{file_path}": {err}''')
-
-    def delete_cached_file(file_path):
-        if not isinstance(file_path, str):
-            return
-        try:
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-        except Exception as err:
-            logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
 
     assert scope in ["local", "global"]
     # Download the data files if they exist
@@ -583,12 +592,9 @@ def render_sed_plot(transient, scope):
     sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
     if sed_obj.exists():
         canonical_path = sed_obj[0].posterior.name
-        sed_results_tmp_filepath = os.path.join(
-            '/tmp', canonical_path.strip('/').replace('/', '__'))
+        sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)
         sed_modeldata_tmp_filepath = os.path.join(
             '/tmp', canonical_path.replace(".h5", "_modeldata.npz").strip('/').replace('/', '__'))
-        sed_results_object_key = os.path.join(
-            settings.S3_BASE_PATH, canonical_path.strip('/'))
         sed_modeldata_object_key = os.path.join(
             settings.S3_BASE_PATH, canonical_path.replace(".h5", "_modeldata.npz").strip('/'))
         download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
@@ -605,5 +611,5 @@ def render_sed_plot(transient, scope):
     delete_cached_file(sed_modeldata_tmp_filepath)
     return {
         **plot,
-        'sed_filepath': canonical_path,
+        'canonical_path': canonical_path,
     }
