@@ -99,7 +99,7 @@ def transient_workflow(transient_name=None):
             transient.save()
     # Execute the workflow
     workflow = chain(
-        workflow_init.si(transient_name),
+        # workflow_init.si(transient_name),
         image_download.si(transient_name),
         group(
             generate_thumbnail.si(transient_name),
