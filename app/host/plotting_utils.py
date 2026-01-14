@@ -264,16 +264,16 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
     except AssertionError:
         obs = {"filters": [], "maggies": [], "maggies_unc": []}
 
-    def maggies_to_asinh(x):
-        """asinh magnitudes"""
-        a = 2.50 * np.log10(np.e)
-        mu = 35.0
-        return -a * math.asinh((x / 2.0) * np.exp(mu / a)) + mu
+    # def maggies_to_asinh(x):
+    #     """asinh magnitudes"""
+    #     a = 2.50 * np.log10(np.e)
+    #     mu = 35.0
+    #     return -a * math.asinh((x / 2.0) * np.exp(mu / a)) + mu
 
-    def asinh_to_maggies(x):
-        mu = 35.0
-        a = 2.50 * np.log10(np.e)
-        return np.array([2 * math.sinh((mu - x1) / a) * np.exp(-mu / a) for x1 in x])
+    # def asinh_to_maggies(x):
+    #     mu = 35.0
+    #     a = 2.50 * np.log10(np.e)
+    #     return np.array([2 * math.sinh((mu - x1) / a) * np.exp(-mu / a) for x1 in x])
 
     flux, flux_error, wavelength, filters, mag, mag_error = [], [], [], [], [], []
     for fl, f, fe in zip(obs["filters"], obs["maggies"], obs["maggies_unc"]):
