@@ -774,19 +774,23 @@ def prospector_result_to_blast(
     prospector_output,
     model_components,
     observations,
-    sed_output_root=settings.SED_OUTPUT_ROOT,
+    sed_output_root='/tmp',
     parametric_sfh=False,
     sbipp=False,
 ):
-    # write the results
-    canonical_parent_dir = os.path.join(sed_output_root, transient.name)
+    # TODO: The "canonical" base path "/data/cutout_cdn" is now hard-coded in the object keys
+    #       of 50,000+ transient datasets in the production instance of Blast as of 2026/01/13.
+    #       For consistency we need to keep that object key base path for new transients, but
+    #       the local temporary base file path can be different.
+    canonical_parent_dir = os.path.join(settings.SED_OUTPUT_ROOT, transient.name)
     canonical_base_file_path = os.path.join(canonical_parent_dir, f'''{transient.name}_{aperture.type}''')
-    temp_parent_dir = os.path.join('/tmp', transient.name)
-    temp_base_file_path = os.path.join(temp_parent_dir, f'''{transient.name}_{aperture.type}''')
     canonical_hdf5_file_path = f'''{canonical_base_file_path}.h5'''
     canonical_chain_file_path = f'''{canonical_base_file_path}_chain.npz'''
     canonical_perc_file_path = f'''{canonical_base_file_path}_perc.npz'''
     canonical_modeldata_file_path = f'''{canonical_base_file_path}_modeldata.npz'''
+    # Write the results to scratch space prior to uploading to object storage.
+    temp_parent_dir = os.path.join(sed_output_root, transient.name)
+    temp_base_file_path = os.path.join(temp_parent_dir, f'''{transient.name}_{aperture.type}''')
     temp_hdf5_file_path = f'''{temp_base_file_path}.h5'''
     temp_chain_file_path = f'''{temp_base_file_path}_chain.npz'''
     temp_perc_file_path = f'''{temp_base_file_path}_perc.npz'''
@@ -999,7 +1003,7 @@ def prospector_result_to_blast(
     s3 = ObjectStore()
     for file_path in [temp_hdf5_file_path, temp_chain_file_path, temp_perc_file_path, temp_modeldata_file_path]:
         # Use "canonical" SED output base path for consistency with existing datasets prior to v1.8.0
-        object_key = os.path.join(settings.S3_BASE_PATH, file_path.replace('/tmp', sed_output_root).strip('/'))
+        object_key = os.path.join(settings.S3_BASE_PATH, file_path.replace('/tmp', settings.SED_OUTPUT_ROOT).strip('/'))
         s3.put_object(path=object_key, file_path=file_path)
         assert s3.object_exists(object_key)
         os.remove(file_path)
