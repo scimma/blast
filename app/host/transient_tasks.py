@@ -564,10 +564,10 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """Code goes here"""
 
         if not transient.host:
-            print(f"""No host associated with "{transient.name}".""")
+            logger.info(f"""No host associated with "{transient.name}".""")
             return self. _failed_status_message()
         if not transient.host.sky_coord:
-            print(f"""No sky_coord associated with "{transient.name}" host.""")
+            logger.info(f"""No sky_coord associated with "{transient.name}" host.""")
             return self. _failed_status_message()
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         choice = 0
@@ -664,7 +664,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
 
         self._overwrite_or_create_object(Aperture, query, data)
         aperture = Aperture.objects.get(**query)
-        print(aperture)
+        logger.debug(aperture)
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
         s3 = ObjectStore()
@@ -1094,7 +1094,7 @@ class HostSEDFitting(TransientTaskRunner):
 
         if mode == "test" and not sbipp:
             # garbage results but the test runs
-            print("running in test mode")
+            logger.warning("running in test mode")
             fitting_settings = dict(
                 nlive_init=1,
                 nested_method="rwalk",
@@ -1107,7 +1107,7 @@ class HostSEDFitting(TransientTaskRunner):
             )
         elif mode == "fast" and not sbipp:
             # 3000 - "reasonable but approximate posteriors"
-            print("running in fast mode")
+            logger.info("running in fast mode")
             fitting_settings = dict(
                 nlive_init=400,
                 nested_method="rwalk",
@@ -1121,7 +1121,7 @@ class HostSEDFitting(TransientTaskRunner):
                 nested_target_n_effective=10000,
             )
 
-        print("starting model fit")
+        logger.info("starting model fit")
         posterior, errflag = fit_model(
             observations,
             model_components,
@@ -1172,8 +1172,8 @@ class HostSEDFitting(TransientTaskRunner):
                     ps = StarFormationHistoryResult.objects.create(**sfh_r)
                     pr.logsfh.add(ps)
         else:
-            print("printing results")
-            print(prosp_results)
+            logger.info("printing results")
+            logger.info(prosp_results)
         return "processed"
 
 
