@@ -104,6 +104,9 @@ def download_and_save_cutouts(
 
     s3 = ObjectStore()
 
+    status_failed = "failed"
+    status_succeeded = "processed"
+
     def download_filter_data(filter):
         # TODO: The "canonical" base path "/data/cutout_cdn" is now hard-coded in the object keys
         #       of 50,000+ transient datasets in the production instance of Blast as of 2026/01/13.
@@ -118,63 +121,90 @@ def download_and_save_cutouts(
         logger.debug(f'''FITS file object_key: {object_key}''')
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
-        cutout_object = Cutout.objects.filter(
-            name=cutout_name, filter=filter, transient=transient
-        )
-        cutout_object_exists = cutout_object.exists()
-        cutout_object = (cutout_object[0]
-                         if cutout_object_exists
-                         else Cutout(name=cutout_name, filter=filter, transient=transient))
+        cutout_object, created = Cutout.objects.get_or_create(name=cutout_name, filter=filter, transient=transient)
 
         # If we know there is no image to download, exit.
         if cutout_object.message == "No image found":
-            return processed_value
+            return status_succeeded
 
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
         fits = None
         # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
         # file or the Cutout object are missing, redownload the data
-        if not overwrite == "False" or not cutout_file_exists or not cutout_object_exists:
-            fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
+        if not overwrite == "False" or not cutout_file_exists or created:
+            logger.debug(f'Downloading cutout "{cutout_name}"...')
+            fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
+                                       download_sleep_time=5)
             # If a download error occurred, report it and exit.
             if status == 1:
+                logger.error(f'Download error for "{cutout_name}": {err}')
                 cutout_object.message = "Download error"
+                cutout_object.fits = ""
                 cutout_object.save()
-                return processed_value
+                return status_failed
         if fits:
+            upload_succeeded = False
             # Write FITS file to local cache
             os.makedirs(temp_save_dir, exist_ok=True)
             fits.writeto(temp_fits_path, overwrite=True)
+            assert os.path.isfile(temp_fits_path)
             # Upload file to bucket and delete local copy
-            upload_succeeded = False
             try:
                 s3.put_object(path=object_key, file_path=temp_fits_path)
                 upload_succeeded = s3.object_exists(object_key)
                 assert upload_succeeded
+            except AssertionError as err:
+                logger.error(f'Error uploading cutout download: {err}')
             finally:
                 os.remove(temp_fits_path)
+            if upload_succeeded:
+                cutout_object.fits.name = canonical_fits_path
+                cutout_object.save()
+                return status_succeeded
+            else:
+                cutout_object.message = "Upload failed"
+                cutout_object.fits.name = ""
+                cutout_object.save()
+                return status_failed
         # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
         # update the database object. Otherwise record that no image was found.
-        if upload_succeeded:
+        # This supports manually uploaded data files.
+        if s3.object_exists(object_key):
             cutout_object.fits.name = canonical_fits_path
+            cutout_object.message = ""
+            cutout_object.save()
         else:
+            # There is no image available.
             cutout_object.message = "No image found"
-        cutout_object.save()
+            cutout_object.fits.name = ""
+            cutout_object.save()
+        return status_succeeded
 
-    processed_value = "processed"
-    if filter_set is None:
-        filter_set = Filter.objects.all()
-    with ThreadPoolExecutor(max_workers=len(filter_set)) as executor:
-        future_to_filter = {executor.submit(download_filter_data, filter): filter for filter in filter_set}
-        for future in as_completed(future_to_filter):
-            filter = future_to_filter[future]
-            try:
-                future.result()
-            except Exception as exc:
-                print('%r generated an exception: %s' % (filter, exc))
+    try:
+        results = []
+        if filter_set is None:
+            filter_set = Filter.objects.all()
+        with ThreadPoolExecutor(max_workers=len(filter_set)) as executor:
+            future_to_filter = {executor.submit(download_filter_data, filter): filter for filter in filter_set}
+            for future in as_completed(future_to_filter):
+                filter = future_to_filter[future]
+                try:
+                    result = future.result()
+                except Exception as exc:
+                    print('%r generated an exception: %s' % (filter, exc))
+                    result = status_failed
+                logger.debug(f'''"{filter}" result: "{result}"''')
+                results.append(result)
 
-    return processed_value
+        # If any of the cutout downloads failed, mark the entire task as failed
+        if not results or [result for result in results if result != status_succeeded]:
+            return status_failed
+        else:
+            return status_succeeded
+    except Exception as err:
+        logger.error(err)
+        return status_failed
 
 
 def panstarrs_image_filename(position, image_size=None, filter=None):
@@ -422,6 +452,7 @@ def DES_cutout(position, image_size=None, filter=None):
     for img in imgTable:
         if "-depth-" in img["access_url"] and img["obs_bandpass"].startswith(filter):
             valid_urls += [img["access_url"]]
+            logger.debug(f'''DES image URL: {valid_urls[-1]}''')
 
     if len(valid_urls):
         # we need both the depth and the image
@@ -436,7 +467,7 @@ def DES_cutout(position, image_size=None, filter=None):
         if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
             # no idea what's happening here but this is a mess
             return None
-
+        logger.debug(f'''DES image URL: {valid_urls[0]}''')
         try:
             depth_image = fits.open(valid_urls[0])
         except Exception as e:
@@ -582,7 +613,8 @@ download_function_dict = {
 }
 
 
-def cutout(transient, survey, fov=Quantity(0.1, unit="deg")):
+def cutout(transient, survey, fov=Quantity(0.1, unit="deg"), download_max_tries=DOWNLOAD_MAX_TRIES,
+           download_sleep_time=DOWNLOAD_SLEEP_TIME):
     """
     Download image cutout data from a survey.
     Parameters
@@ -609,17 +641,21 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg")):
 
     status = 1
     n_iter = 0
-    while status == 1 and n_iter < DOWNLOAD_MAX_TRIES:
+    error = None
+    assert download_max_tries > 0
+    assert download_sleep_time >= 0
+    while status == 1 and n_iter < download_max_tries:
+        if n_iter > 0:
+            logger.info(f'Retrying download ({n_iter}/{download_max_tries}) "{survey}"...')
         if survey.image_download_method == "hips":
             try:
                 fits = hips_cutout(transient, survey, image_size=num_pixels)
                 status = 0
-                err = e
-            except Exception as e:
+            except Exception as err:
                 print(f"Conection timed out, could not download {survey.name} data")
                 fits = None
                 status = 1
-                err = e
+                error = err
         else:
             survey_name, filter = survey.name.split("_")
             try:
@@ -627,15 +663,14 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg")):
                     transient, filter=filter, image_size=num_pixels
                 )
                 status = 0
-                err = None
-            except Exception as e:
+            except Exception as err:
                 print(f"Could not download {survey.name} data")
-                print(f"exception: {e}")
+                print(f"exception: {err}")
                 fits = None
                 status = 1
-                err = e
+                error = err
         n_iter += 1
         if status == 1:
-            time.sleep(DOWNLOAD_SLEEP_TIME)
+            time.sleep(download_sleep_time)
 
-    return fits, status, err
+    return fits, status, error
