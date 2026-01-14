@@ -596,12 +596,16 @@ def results(request, transient_name):
                 interactive_sed_plot[scope] = render_sed_plot(transient, scope)
             except Exception as err:
                 logger.error(f'''Error rendering SED plot: {err}''')
-                interactive_sed_plot[scope] = plot_sed(
-                    transient=transient,
-                    type=scope,
-                    sed_results_file=None,
-                    sed_modeldata_file=None,
-                )
+                try:
+                    interactive_sed_plot[scope] = plot_sed(
+                        transient=transient,
+                        type=scope,
+                        sed_results_file=None,
+                        sed_modeldata_file=None,
+                    )
+                except Exception as err2:
+                    logger.error(f'''Error rendering SED plot: {err2}''')
+                    interactive_sed_plot[scope] = {}
 
     # Construct the Django render() function context
     context = {
