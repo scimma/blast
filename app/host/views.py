@@ -28,6 +28,7 @@ from host.models import Transient
 from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
 from host.plotting_utils import render_sed_plot
+from host.plotting_utils import plot_sed
 from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
@@ -590,8 +591,17 @@ def results(request, transient_name):
             image_data_encoded_sed[scope] = base64.b64encode(image_data).decode()
             interactive_sed_plot[scope] = {}
         # If there are no SED plot thumbnails, render the interactive plots
-        if image_data_encoded_sed[scope] == {}:
-            interactive_sed_plot[scope] = render_sed_plot(transient, scope)
+        if image_data == b'':
+            try:
+                interactive_sed_plot[scope] = render_sed_plot(transient, scope)
+            except Exception as err:
+                logger.error(f'''Error rendering SED plot: {err}''')
+                interactive_sed_plot[scope] = plot_sed(
+                    transient=transient,
+                    type=scope,
+                    sed_results_file=None,
+                    sed_modeldata_file=None,
+                )
 
     # Construct the Django render() function context
     context = {
