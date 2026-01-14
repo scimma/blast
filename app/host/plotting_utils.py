@@ -593,10 +593,8 @@ def render_sed_plot(transient, scope):
     if sed_obj.exists():
         canonical_path = sed_obj[0].posterior.name
         sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)
-        sed_modeldata_tmp_filepath = os.path.join(
-            '/tmp', canonical_path.replace(".h5", "_modeldata.npz").strip('/').replace('/', '__'))
-        sed_modeldata_object_key = os.path.join(
-            settings.S3_BASE_PATH, canonical_path.replace(".h5", "_modeldata.npz").strip('/'))
+        sed_modeldata_tmp_filepath = sed_results_tmp_filepath.replace(".h5", "_modeldata.npz")
+        sed_modeldata_object_key = sed_results_object_key.replace(".h5", "_modeldata.npz")
         download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
         download_file_from_s3(sed_modeldata_tmp_filepath, sed_modeldata_object_key)
     # Generate a SED plot using Bokeh
