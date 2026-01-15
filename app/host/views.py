@@ -561,12 +561,15 @@ def results(request, transient_name):
 
     # If the thumbnail is not available, display the Bokeh cutout plot
     if request.method == "POST" or image_data == b'':
-        bokeh_cutout_context = plot_cutout_image(
-            cutout=cutout,
-            transient=transient,
-            global_aperture=global_aperture.prefetch_related(),
-            local_aperture=local_aperture.prefetch_related(),
-        )
+        try:
+            bokeh_cutout_context = plot_cutout_image(
+                cutout=cutout,
+                transient=transient,
+                global_aperture=global_aperture.prefetch_related(),
+                local_aperture=local_aperture.prefetch_related(),
+            )
+        except Exception as err:
+            logger.error(f'''Error rendering cutout plot: {err}''')
         image_data = b''
         image_data_encoded = base64.b64encode(image_data).decode()
 
