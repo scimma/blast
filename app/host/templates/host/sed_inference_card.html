@@ -26,7 +26,6 @@
             <h4>Local parameter details</h4>
 	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
 	    {% if local_sed_results %}
-        <div id="loading-indicator-sed-inf-local" class="loader"></div>
 	    <div>
 	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'local' %}','_self')">
               <span>Download Chains</span>
@@ -109,7 +108,6 @@
             <h4>Global parameter details</h4>
 	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
 	    {% if global_sed_results %}
-        <div id="loading-indicator-sed-inf-global" class="loader"></div>
 	    <div>
 	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'global' %}','_self')">
               <span>Download Chains</span>

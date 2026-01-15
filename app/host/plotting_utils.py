@@ -338,7 +338,6 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
     # remove the loading spinner
     hide_loading_indicator = CustomJS(args=dict(), code=f"""
             document.getElementById('loading-indicator-sed-{type}').style.display = "none";
-            document.getElementById('loading-indicator-sed-inf-{type}').style.display = "none";
         """)
     curdoc().js_on_event("document_ready", hide_loading_indicator)
 
