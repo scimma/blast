@@ -77,7 +77,7 @@
             {{ bokeh_sed_global_div | safe }}
             {% else %}
             <div id="sed-global-div">
-                {% if image_data_encoded_sed_local %}
+                {% if image_data_encoded_sed_global %}
                 <p style="text-align: center;">Click the image to load the interactive plot.</p>
                 <button id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
                     <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>

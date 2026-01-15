@@ -255,7 +255,7 @@ class TransientTaskRunner(TaskRunner):
             task_register_item = self.select_register_item()
 
         if task_register_item is not None:
-            logger.debug(f'''task_register_item: {task_register_item}''')
+            logger.debug(f'''{task_register_item.task.name}: {task_register_item.status.message}''')
             self._update_status(task_register_item, Status.objects.get(message__exact="processing"))
             transient = task_register_item.transient
 
@@ -1081,6 +1081,25 @@ class HostSEDFitting(TransientTaskRunner):
             "type__exact": aperture_type,
         }
 
+        # # If all output files already exist, consider the task complete.
+        # object_key_base_path = os.path.join(settings.S3_BASE_PATH, settings.SED_OUTPUT_ROOT.strip('/'),
+        #                                     transient.name,, f'''{transient.name}_{aperture_type}''')
+        # object_key_hdf5_file = f'''{object_key_base_path}.h5'''
+        # object_key_chain_file = f'''{object_key_base_path}_chain.npz'''
+        # object_key_perc_file = f'''{object_key_base_path}_perc.npz'''
+        # object_key_modeldata_file = f'''{object_key_base_path}_modeldata.npz'''
+        # s3 = ObjectStore()
+        # all_outputs_exist = True
+        # for obj_key in [object_key_hdf5_file, object_key_chain_file, object_key_perc_file, object_key_modeldata_file]:
+        #     logger.debug(f'Checking if output file exists: "{obj_key}"...')
+        #     all_outputs_exist = all_outputs_exist & s3.object_exists(obj_key)
+        #     if not all_outputs_exist:
+        #         logger.debug(f'Output file missing: "{obj_key}".')
+        #         break
+        # if all_outputs_exist:
+        #     logger.warning('All SED output files exist. Skipping SED fitting calculation...')
+        #     return "processed"
+
         if transient.best_redshift is None or transient.best_redshift > 0.2:
             # training sample doesn't work here
             return "redshift too high"
@@ -1335,10 +1354,11 @@ class GenerateThumbnail(TransientTaskRunner):
                 sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)  # noqa
                 download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
                 thumbnail_filepath = sed_results_tmp_filepath.replace(".h5", ".jpg")
+                thumbnail_object_key = sed_results_object_key.replace(".h5", ".jpg")
                 thumbnail_filepath_png = sed_results_tmp_filepath.replace(".h5", ".png")
                 # Export to PNG
                 generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400,
-                                             sed_results_object_key)
+                                             thumbnail_object_key)
             # Generate a thumbnail for a cutout plot
             elif widget == 'cutout':
                 # Select the cutout image to export
@@ -1346,18 +1366,20 @@ class GenerateThumbnail(TransientTaskRunner):
                 if cutout is None:
                     return 'not enough filters'
                 # Download FITS file to local cache
-                local_fits_path = cutout.fits.name
-                if not os.path.isfile(local_fits_path):
-                    object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-                    if s3.object_exists(object_key):
-                        # Download FITS file local file cache
-                        s3.download_object(path=object_key, file_path=local_fits_path)
-                    else:
-                        logger.error(f'''Data object "{object_key}" not found for missing data file "{local_fits_path}".''')
+                if not cutout.fits.name:
+                    logger.error(f'''No FITS file for cutout "{cutout}".''')
+                    return "failed"
+                local_fits_path = os.path.join('/tmp', cutout.fits.name.strip('/').replace('/', '__'))
+                object_key = os.path.join(settings.S3_BASE_PATH, cutout.fits.name.strip('/'))
+                if s3.object_exists(object_key):
+                    # Download FITS file local file cache
+                    s3.download_object(path=object_key, file_path=local_fits_path)
+                else:
+                    logger.error(f'''Missing data file: "{object_key}".''')
                 # If the file is missing for some reason, return failure
                 if not os.path.isfile(local_fits_path):
-                    logger.error(f'''Error saving FITS image to local cache: "{local_fits_path}".''')
-                    return 'failed'
+                    logger.error(f'''Error saving FITS image to local cache: "{cutout.fits.name}".''')
+                    return "failed"
                 # Load image data into memory
                 with fits.open(local_fits_path) as fits_file:
                     image_data = fits_file[0].data

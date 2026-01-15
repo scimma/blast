@@ -344,8 +344,10 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
 
     # second check on SED file
     # long-term shouldn't be necessary, just a result of debugging
-    if sed_results_file is not None and os.path.exists(sed_modeldata_file):
+    if sed_results_file is not None and os.path.exists(sed_results_file) and os.path.exists(sed_modeldata_file):
+        logger.debug(f'''Loading results file "{sed_results_file}"...''')
         result, obs, _ = reader.results_from(sed_results_file, dangerous=False)
+        logger.debug(f'''Loading model data file "{sed_modeldata_file}"...''')
         model_data = np.load(sed_modeldata_file, allow_pickle=True)
 
         # best = result["bestfit"]

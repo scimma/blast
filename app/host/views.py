@@ -577,13 +577,14 @@ def results(request, transient_name):
     for scope in ['local', 'global']:
         image_data = b''
         interactive_sed_plot[scope] = {}
-        image_data_encoded_sed[scope] = {}
+        image_data_encoded_sed[scope] = ''
         sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
         if sed_obj.exists():
             sed_filepath = sed_obj[0].posterior.name
             thumbnail_filepath = sed_filepath.replace(".h5", ".jpg")
             thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
             try:
+                logger.debug(f'''Downloading thumbnail object: "{thumbnail_object_key}"...''')
                 image_data = s3.get_object(path=thumbnail_object_key)
             except Exception as err:
                 logger.info(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
