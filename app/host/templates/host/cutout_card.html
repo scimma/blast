@@ -8,17 +8,17 @@
 <!-- body -->
 {% block body %}
 <div id="loading-indicator" class="loader"></div>
-{% if bokeh_cutout_div %}
-{{ bokeh_cutout_div | safe }}
-{% else %}
 <div id="cutout-img-div">
+    {% if bokeh_cutout_div %}
+    {{ bokeh_cutout_div | safe }}
+    {% else %}
     <p style="text-align: center;">Click the image to load the interactive plot.</p>
     <button id="cutout-img-button" onclick="cutoutImgClick('{{ transient.name }}', '{{ cutout.name }}')">
         <img id="cutout-img" src="data:image/png;base64,{{ image_data_encoded }}" style="width: 100%;"/>
     </button>
     <br>
+    {% endif %}
 </div>
-{% endif %}
 <form class="form" , method="POST">
     {% csrf_token %}
     <div class="input-group mb-10">
@@ -31,7 +31,7 @@
 </form>
 {% if bokeh_cutout_div %}
 {{ bokeh_cutout_div | safe }}
-{% else %}
+{% endif %}
 <script>
     document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, filter) {
@@ -72,5 +72,4 @@
     }
 </style>
 <div id="bokeh-cutout-script-wrapper"></div>
-{% endif %}
 {% endblock %}

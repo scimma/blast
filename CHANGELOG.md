@@ -27,6 +27,7 @@ Types of changes:
   files and rendering the Bokeh plots. Clicking on a thumbnail triggers the Bokeh render via an AJAX
   request and replaces the thumbnail with the interactive plot. This will reduce the page load
   time and reduce system load on the API server replicas.
+- User-selected cutout filters are now loaded via AJAX instead of reloading the entire page.
 - The results page rendering function was refactored to organize logically independent code into
   reusable functions.
 - The task status table on the result pages now orders tasks by order of their execution.
