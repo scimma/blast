@@ -28,11 +28,12 @@ def crop_image(cutout):
     transient = cutout.transient
     # Download FITS file local file cache
     s3 = ObjectStore()
-    local_fits_path = cutout.fits.name
-    object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-    s3.download_object(path=object_key, file_path=local_fits_path)
-    assert os.path.isfile(local_fits_path)
-    hdu = fits.open(local_fits_path)
+    cutout_fits_path = cutout.fits.name
+    local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
+    object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
+    s3.download_object(path=object_key, file_path=local_tmp_path)
+    assert os.path.isfile(local_tmp_path)
+    hdu = fits.open(local_tmp_path)
     wcs = WCS(hdu[0].header)
     center_x, center_y = wcs.wcs_world2pix(transient.ra_deg, transient.dec_deg, 0)
     offset_ra, offset_dec = wcs.wcs_pix2world(center_x + 10, center_y, 0)
@@ -86,12 +87,14 @@ def crop_image(cutout):
         )
         hdu[0].data = cutout_new.data
         hdu[0].header.update(cutout_new.wcs.to_header())
-        hdu.writeto(local_fits_path, overwrite=True)
+        hdu.writeto(local_tmp_path, overwrite=True)
         # Upload file to bucket and delete local copy
-        s3.put_object(path=object_key, file_path=local_fits_path)
-        assert s3.object_exists(object_key)
-        # Delete FITS file from local file cache
-        os.remove(local_fits_path)
+        try:
+            s3.put_object(path=object_key, file_path=local_tmp_path)
+            assert s3.object_exists(object_key)
+        finally:
+            # Delete FITS file from local file cache
+            os.remove(local_tmp_path)
 
     except NoOverlapError:
         pass
@@ -108,12 +111,14 @@ def crop_image(cutout):
             )
             hdu[0].data = cutout_new.data
             hdu[0].header.update(cutout_new.wcs.to_header())
-            hdu.writeto(local_fits_path, overwrite=True)
+            hdu.writeto(local_tmp_path, overwrite=True)
             # Upload file to bucket and delete local copy
-            s3.put_object(path=object_key, file_path=local_fits_path)
-            assert s3.object_exists(object_key)
-            # Delete FITS file from local file cache
-            os.remove(local_fits_path)
+            try:
+                s3.put_object(path=object_key, file_path=local_tmp_path)
+                assert s3.object_exists(object_key)
+            finally:
+                # Delete FITS file from local file cache
+                os.remove(local_tmp_path)
         except NoOverlapError:
             pass
 
