@@ -467,7 +467,6 @@ def DES_cutout(position, image_size=None, filter=None):
         if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
             # no idea what's happening here but this is a mess
             return None
-        logger.debug(f'''DES image URL: {valid_urls[0]}''')
         try:
             depth_image = fits.open(valid_urls[0])
         except Exception as e:

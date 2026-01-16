@@ -1126,7 +1126,7 @@ class HostSEDFitting(TransientTaskRunner):
             )
         elif mode == "fast" and not sbipp:
             # 3000 - "reasonable but approximate posteriors"
-            logger.info("running in fast mode")
+            logger.warning("running in fast mode")
             fitting_settings = dict(
                 nlive_init=400,
                 nested_method="rwalk",
