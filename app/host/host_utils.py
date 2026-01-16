@@ -349,30 +349,28 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
     aperture = global_aperture_phot.aperture
     # check both the image used to generate aperture
     # and the image used to measure photometry
-    for local_fits_path in [
+    for cutout_fits_path in [
         global_aperture_phot.aperture.cutout.fits.name,
         aperture_primary.cutout.fits.name,
     ]:
         # UV photons are too sparse, segmentation map
         # builder cannot easily handle these
-        if "/GALEX/" in local_fits_path:
+        if "/GALEX/" in cutout_fits_path:
             continue
 
-        # Download FITS file local file cache
-        if not os.path.isfile(local_fits_path):
-            s3 = ObjectStore()
-            object_key = os.path.join(settings.S3_BASE_PATH, local_fits_path.strip('/'))
-            s3.download_object(path=object_key, file_path=local_fits_path)
-        assert os.path.isfile(local_fits_path)
-        # Create a lock file to prevent concurrent processes from deleting the data file prematurely
-        lock_path = f'''{local_fits_path}.check_global_contamination.lock'''
-        Path(lock_path).touch(exist_ok=True)
-        assert os.path.isfile(lock_path)
+        # Download FITS file to local scratch space
+        s3 = ObjectStore()
+        local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
+        if os.path.exists(local_tmp_path):
+            # Use a unique name to avoid collisions with concurrent processes
+            local_tmp_path = f'''{local_tmp_path}.{str(uuid4())}'''
+        object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
+        s3.download_object(path=object_key, file_path=local_tmp_path)
+        assert os.path.isfile(local_tmp_path)
 
-        err_to_raise = None
         try:
             # copy the steps to build segmentation map
-            image = fits.open(local_fits_path)
+            image = fits.open(local_tmp_path)
             wcs = WCS(image[0].header)
             background = estimate_background(image)
             catalog = build_source_catalog(
@@ -398,19 +396,12 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
             unq_obj_ids = np.unique(obj_ids)
             if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
                 is_contam = True
-        except Exception as err:
-            err_to_raise = err
-            pass
         finally:
-            os.remove(lock_path)
-            if not [Path(local_fits_path).parent.glob('*.lock')]:
-                try:
-                    # Delete FITS file from local file cache
-                    os.remove(local_fits_path)
-                except FileNotFoundError:
-                    pass
-            if err_to_raise:
-                raise err_to_raise
+            try:
+                # Delete FITS file from local file cache
+                os.remove(local_tmp_path)
+            except FileNotFoundError:
+                pass
     return is_contam
 
 
