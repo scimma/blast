@@ -829,8 +829,8 @@ def fetch_sed_plot(request):
 def cutout_fits_plot(request):
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')
-        cutout_name = request.GET.get('cutout_name')
-        logger.info(f"{transient_name} and {cutout_name}")
+        filter = request.GET.get('filter')
+        logger.info(f"{transient_name} and {filter}")
 
         # Acquire the transient object or return 404 not found
         try:
@@ -840,8 +840,13 @@ def cutout_fits_plot(request):
 
         global_aperture = select_aperture(transient)
         local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
-        cutout = select_best_cutout(transient.name)
-
+        if filter == '':
+            cutout = select_best_cutout(transient.name)
+        else:
+            cutout_name = f"{transient.name}_{filter}"
+            logger.debug(cutout_name)
+            cutout = Cutout.objects.get(name__exact=cutout_name)
+            logger.info(cutout)
         bokeh_context = plot_cutout_image(
             cutout=cutout,
             transient=transient,

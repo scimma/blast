@@ -24,7 +24,8 @@
     <div class="input-group mb-10">
         {{ filter_select_form.filters }}
         <div class="input-group-append">
-            <button type="submit" ,class="btn btn-outline-success" ,type="button">Get Cutout</button>
+            <button class="btn btn-outline-success" type="button"
+                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
         </div>
     </div>
 </form>
@@ -33,7 +34,7 @@
 {% else %}
 <script>
     document.getElementById('loading-indicator').style.display = "none";
-    function cutoutImgClick(transient, cutout) {
+    function cutoutImgClick(transient, filter) {
         document.getElementById('loading-indicator').style.display = "block";
         document.getElementById('cutout-img-div').style.display = "none";
         $.ajax({
@@ -41,17 +42,20 @@
             type: "GET",
             data: {
                 transient_name: transient,
-                cutout_name: cutout
+                filter: filter
             },
             success: function (resp) {
-                $("#cutout-img-div").replaceWith(resp.bokeh_cutout_div);
+                document.getElementById("cutout-img-div").innerHTML = resp.bokeh_cutout_div;
+                document.getElementById("bokeh-cutout-script-wrapper").innerHTML = ''
                 var cutout_script = document.createElement("script");
                 cutout_script.type = 'text/javascript';
                 var raw_script = resp.bokeh_cutout_script;
                 var raw_script_trimmed = raw_script.trim();
                 var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
                 cutout_script.text = script_trimmed;
-                document.body.appendChild(cutout_script);
+                document.getElementById("bokeh-cutout-script-wrapper").appendChild(cutout_script);
+                document.getElementById('cutout-img-div').style.display = "block";
+                document.getElementById('loading-indicator').style.display = "none";
             },
         });
     }
@@ -67,5 +71,6 @@
         border: none !important;
     }
 </style>
+<div id="bokeh-cutout-script-wrapper"></div>
 {% endif %}
 {% endblock %}
