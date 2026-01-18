@@ -320,7 +320,7 @@ def analytics(request):
 @log_usage_metric()
 @silk_profile(name="Transient result for some transient")
 def results(request, transient_name):
-    param_var_ptype = zip(
+    param_var_ptype = (
         [
             "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
             "{\\rm log}_{10}({\\rm SFR})",  # noqa
@@ -485,7 +485,7 @@ def results(request, transient_name):
         results = ()
         if category == 'base':
             # Compile spectral energy distribution results
-            for param, var, ptype in param_var_ptype:
+            for param, var, ptype in zip(*param_var_ptype):
                 if sed_obj.exists():
                     results += (
                         (
