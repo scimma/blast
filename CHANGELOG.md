@@ -19,6 +19,8 @@ Types of changes:
 
 - Fixed regression that broke SED fitting result display
 - Fixed variable initialization bug in `host.prospector.build_obs()`
+- Fixed bug where result page renders can fail due to `None` type for `global_aperture` 
+  because of an unhandled possibility in the `select_aperture()` function.
 
 ## [1.8.0]
 
