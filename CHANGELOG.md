@@ -18,6 +18,7 @@ Types of changes:
 ### Fixed
 
 - Fixed regression that broke SED fitting result display
+- Fixed variable initialization bug in `host.prospector.build_obs()`
 
 ## [1.8.0]
 

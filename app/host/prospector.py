@@ -122,6 +122,7 @@ def build_obs(transient, aperture_type, use_mag_offset=True):
         trans_curves = [f.transmission_curve() for f in all_filters]
     except (ProgrammingError, ValueError) as err:
         logger.error(err)
+        all_filters, trans_curves = [], []
         pass
 
     for filter, trans_curve in zip(all_filters, trans_curves):
