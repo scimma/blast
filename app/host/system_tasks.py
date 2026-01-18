@@ -266,9 +266,10 @@ def tns_data_ingestion(self):
         inspect = app.control.inspect()
         active_task_info = inspect.active(safe=True)
         all_active_tasks = []
-        for worker, worker_active_tasks in active_task_info.items():
-            logger.debug(f'''{worker}: {worker_active_tasks}''')
-            all_active_tasks.extend(worker_active_tasks)
+        if active_task_info:
+            for worker, worker_active_tasks in active_task_info.items():
+                logger.debug(f'''{worker}: {worker_active_tasks}''')
+                all_active_tasks.extend(worker_active_tasks)
         logger.debug(f'''active tasks: {len(all_active_tasks)}''')
         return all_active_tasks
     # Ensure that there are no concurrent executions of the TNS ingestion to avoid exceeding the TNS API rate limits.

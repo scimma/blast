@@ -21,6 +21,7 @@ Types of changes:
 - Fixed variable initialization bug in `host.prospector.build_obs()`
 - Fixed bug where result page renders can fail due to `None` type for `global_aperture` 
   because of an unhandled possibility in the `select_aperture()` function.
+- Fixed bug in `tns_data_ingestion()` that caused the task to fail if there are no active tasks.
 
 ## [1.8.0]
 
