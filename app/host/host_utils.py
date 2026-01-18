@@ -455,6 +455,7 @@ def select_aperture(transient):
     cutout_for_aperture = select_cutout_aperture(cutouts)
     if len(cutout_for_aperture):
         return Aperture.objects.filter(type__exact="global", transient=transient, cutout=cutout_for_aperture[0])
+    return Aperture.objects.none()
 
 
 def estimate_background(image, filter_name=None):
