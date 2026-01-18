@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.8.1]
+
+### Fixed
+
+- Fixed regression that broke SED fitting result display
+
 ## [1.8.0]
 
 ### Added
