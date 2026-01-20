@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.8.2]
+
+### Changed
+
+- Added a custom sorting function for the transient table "discovery date" column that 
+  always sorts transients lacking discovery dates last whether ascending or descending.
+
 ## [1.8.1]
 
 ### Fixed

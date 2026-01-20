@@ -1,6 +1,6 @@
 import django_tables2 as tables
 from django.db.models.functions import Coalesce
-from django.db.models.functions import Greatest
+from django.db.models import F
 
 from .models import Transient
 
@@ -23,6 +23,14 @@ class TransientTable(tables.Table):
         orderable=True,
         order_by="public_timestamp",
     )
+
+    def order_disc_date(self, queryset, is_descending):
+        # This solution was adapted from https://bleepingcoder.com/django-tables2/346842660/allow-descending-sort-columns-to-place-empty-values-at  # noqa
+        if is_descending:
+            queryset = queryset.order_by(F('public_timestamp').desc(nulls_last=True))
+        else:
+            queryset = queryset.order_by(F('public_timestamp').asc(nulls_last=True))
+        return (queryset, True)
 
     ra_string = tables.Column(
         accessor="ra", verbose_name="Right Ascension", orderable=True, order_by="ra_deg"
