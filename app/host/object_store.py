@@ -53,7 +53,7 @@ class ObjectStore:
             secure=secure,
         )
         self.initialize_bucket()
-        self.part_size = 10 * 1024 * 1024
+        self.part_size = 16 * 1024 * 1024
 
     def initialize_bucket(self):
         bucket_name = self.bucket
@@ -85,7 +85,11 @@ class ObjectStore:
                 part_size=self.part_size)
         elif file_path:
             logger.debug(f'''Uploading file to object store: "{path}"''')
-            self.client.fput_object(bucket_name=self.bucket, object_name=path, file_path=file_path)
+            self.client.fput_object(
+                bucket_name=self.bucket,
+                object_name=path,
+                file_path=file_path,
+                part_size=self.part_size)
 
     def get_object(self, path=""):
         response = None
