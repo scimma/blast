@@ -34,7 +34,7 @@ then
   sleep 10
   exit 1
 else
-  echo "\"${INIT_STARTED_DATA}\" not found. Running initialization script..."
+  echo "\"${INIT_STARTED_DATA}\" not found. Running astro data initialization script..."
   touch "${INIT_STARTED_DATA}"
 
   # Create data folders on persistent volume and symlink to expected paths
@@ -61,7 +61,7 @@ then
   sleep 10
   exit 1
 else
-  echo "\"${INIT_STARTED_DB}\" not found. Running initialization script..."
+  echo "\"${INIT_STARTED_DB}\" not found. Running database initialization script..."
   touch "${INIT_STARTED_DB}"
 
   python init_app.py
