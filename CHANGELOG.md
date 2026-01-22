@@ -78,6 +78,7 @@ Types of changes:
 - Removed the unnecessary "Transient information" workflow task.
 - Hid the workflow diagram from the result pages until a more automated method is devised 
   to generate it when the workflow structure changes.
+- Removed "Transient information" task from `app/host/fixtures/test/test_2010H_onefilter.yaml` so unit tests pass.
 
 ## [1.7.3]
 
