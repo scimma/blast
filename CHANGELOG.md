@@ -19,6 +19,13 @@ Types of changes:
 
 - Added a custom sorting function for the transient table "discovery date" column that 
   always sorts transients lacking discovery dates last whether ascending or descending.
+- Revised the data initialization routine to compare test transient dataset files (e.g. 2010H)
+  without downloading them by S3 etag checksum, and, if a file needs to be installed, only
+  download to local scratch space temporarily in order to upload to the Blast dataset S3 bucket.
+
+### Removed
+
+- The local `/data/cutout_cdn` and `/data/sed_output` directories are no longer provisioned.
 
 ### Fixed
 
