@@ -7,6 +7,7 @@ from astropy.nddata.utils import NoOverlapError
 import astropy.units as u
 import numpy as np
 import os
+from uuid import uuid4
 
 from host.models import Cutout
 from host.models import Aperture
@@ -15,25 +16,40 @@ from host.cutouts import download_and_save_cutouts
 from host.object_store import ObjectStore
 from django.conf import settings
 
+from host.log import get_logger
+logger = get_logger(__name__)
+
 
 def crop_images(transient):
 
-    cutouts = Cutout.objects.filter(transient=transient)  # ,filter__name='DES_r')
-    for c in cutouts:
-        if c.fits.name and os.path.exists(c.fits.name):
-            crop_image(c)
-
-
-def crop_image(cutout):
-    transient = cutout.transient
-    # Download FITS file local file cache
     s3 = ObjectStore()
-    cutout_fits_path = cutout.fits.name
-    local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
-    object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
-    s3.download_object(path=object_key, file_path=local_tmp_path)
-    assert os.path.isfile(local_tmp_path)
-    hdu = fits.open(local_tmp_path)
+    cutouts = Cutout.objects.filter(transient=transient)
+    for cutout in cutouts:
+        if not cutout.fits.name:
+            logger.info(f'''Cutout "{cutout.name}" does not have an image to crop.''')
+            continue
+        try:
+            # Download FITS file to local scratch space
+            local_tmp_path = os.path.join('/tmp', cutout.fits.name.strip('/').replace('/', '__'))
+            if os.path.exists(local_tmp_path):
+                # Use a unique name to avoid collisions with concurrent processes
+                local_tmp_path = f'''{local_tmp_path}.{str(uuid4())}'''
+            object_key = os.path.join(settings.S3_BASE_PATH, cutout.fits.name.strip('/'))
+            s3.download_object(path=object_key, file_path=local_tmp_path)
+            assert os.path.isfile(local_tmp_path)
+            # Crop the image and overwrite the local file
+            crop_image(cutout, local_tmp_path)
+            # Upload file to bucket and delete local copy
+            s3.put_object(path=object_key, file_path=local_tmp_path)
+            assert s3.object_exists(object_key)
+        finally:
+            # Delete FITS file from local file cache
+            os.remove(local_tmp_path)
+
+
+def crop_image(cutout, file_path):
+    transient = cutout.transient
+    hdu = fits.open(file_path)
     wcs = WCS(hdu[0].header)
     center_x, center_y = wcs.wcs_world2pix(transient.ra_deg, transient.dec_deg, 0)
     offset_ra, offset_dec = wcs.wcs_pix2world(center_x + 10, center_y, 0)
@@ -87,14 +103,7 @@ def crop_image(cutout):
         )
         hdu[0].data = cutout_new.data
         hdu[0].header.update(cutout_new.wcs.to_header())
-        hdu.writeto(local_tmp_path, overwrite=True)
-        # Upload file to bucket and delete local copy
-        try:
-            s3.put_object(path=object_key, file_path=local_tmp_path)
-            assert s3.object_exists(object_key)
-        finally:
-            # Delete FITS file from local file cache
-            os.remove(local_tmp_path)
+        hdu.writeto(file_path, overwrite=True)
 
     except NoOverlapError:
         pass
@@ -111,14 +120,6 @@ def crop_image(cutout):
             )
             hdu[0].data = cutout_new.data
             hdu[0].header.update(cutout_new.wcs.to_header())
-            hdu.writeto(local_tmp_path, overwrite=True)
-            # Upload file to bucket and delete local copy
-            try:
-                s3.put_object(path=object_key, file_path=local_tmp_path)
-                assert s3.object_exists(object_key)
-            finally:
-                # Delete FITS file from local file cache
-                os.remove(local_tmp_path)
+            hdu.writeto(file_path, overwrite=True)
         except NoOverlapError:
             pass
-
