@@ -20,6 +20,15 @@ Types of changes:
 - Added a custom sorting function for the transient table "discovery date" column that 
   always sorts transients lacking discovery dates last whether ascending or descending.
 
+### Fixed
+
+- Fixed bug in the image cropping task introduced by the transition to using local scratch space
+  instead of a shared persistent volume for generated transient data files.
+- Since the switch to PostgreSQL, there have been failures when rerunning aperture tasks due to
+  foreign key constraint violations. The `_overwrite_or_create_object(Aperture, query, data)`
+  calls have been replaced by a more deliberate algorithm for updating associated objects if they
+  exist.
+
 ## [1.8.1]
 
 ### Fixed
