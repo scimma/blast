@@ -26,6 +26,7 @@ from host.host_utils import query_ned
 from host.host_utils import query_sdss
 from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
+from host.host_utils import create_or_update_aperture
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
@@ -649,10 +650,10 @@ class LocalAperturePhotometry(TransientTaskRunner):
             return "failed"
 
         aperture_size = get_local_aperture_size(transient.best_redshift)
-
-        query = {"name__exact": f"{transient.name}_local"}
+        aperture_name = f"{transient.name}_local"
+        query = {"name__exact": aperture_name}
         data = {
-            "name": f"{transient.name}_local",
+            "name": aperture_name,
             "orientation_deg": 0.0,
             "ra_deg": transient.sky_coord.ra.degree,
             "dec_deg": transient.sky_coord.dec.degree,
@@ -662,8 +663,8 @@ class LocalAperturePhotometry(TransientTaskRunner):
             "type": "local",
         }
 
-        self._overwrite_or_create_object(Aperture, query, data)
-        aperture = Aperture.objects.get(**query)
+        aperture = create_or_update_aperture(query, data)
+
         logger.debug(aperture)
         cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
 
@@ -773,10 +774,11 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                     pass
             # make new aperture
             # adjust semi-major/minor axes for size
-            if f"{cutout.name}_global" != aperture.name:
+            aperture_name = f"{cutout.name}_global"
+            if aperture_name != aperture.name:
 
                 if not len(
-                    Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
+                    Aperture.objects.filter(cutout__name=aperture_name)
                 ):
                     # quadrature differences in resolution
                     semi_major_axis = (
@@ -793,10 +795,9 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                             + cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
                         )
                     )
-
-                    query = {"name": f"{cutout.name}_global"}
+                    query = {"name": aperture_name}
                     data = {
-                        "name": f"{cutout.name}_global",
+                        "name": aperture_name,
                         "cutout": cutout,
                         "orientation_deg": aperture.orientation_deg,
                         "ra_deg": aperture.ra_deg,
@@ -807,10 +808,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                         "type": "global",
                     }
 
-                    self._overwrite_or_create_object(Aperture, query, data)
-                    aperture = Aperture.objects.get(
-                        transient=transient, name=f"{cutout.name}_global"
-                    )
+                    aperture = create_or_update_aperture(query, data)
 
             try:
                 photometry = do_aperture_photometry(

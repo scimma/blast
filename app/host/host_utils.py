@@ -42,6 +42,9 @@ from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
 from .models import Cutout
 from .models import Aperture
+from .models import SEDFittingResult
+from .models import AperturePhotometry
+from .models import StarFormationHistoryResult
 from .object_store import ObjectStore
 from pathlib import Path
 from .models import TaskLock
@@ -801,3 +804,21 @@ def reset_workflow_if_not_processing(transient, worker_tasks, reset_failed=False
         task.status = not_processed_status
         task.save()
     return True
+
+
+def create_or_update_aperture(query, data):
+    aperture_name = data['name']
+    aperture_query = Aperture.objects.filter(**query)
+    if aperture_query:
+        logger.debug(f'''Aperture object "{data['name']}" exists. Updating with new data...''')
+        Aperture.objects.filter(name__exact=aperture_name).update(**data)
+        aperture = Aperture.objects.get(**query)
+    else:
+        logger.debug(f'''Aperture object "{data['name']}" does not exist. Creating it and '''
+                     '''manually associating it with related objects...''')
+        aperture, created = Aperture.objects.get_or_create(**data)
+        assert created
+        SEDFittingResult.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+        AperturePhotometry.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+        StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+    return aperture
