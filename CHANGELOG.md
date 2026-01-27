@@ -13,8 +13,18 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [1.8.2]
+## [1.8.3]
 
+### Changed
+
+- Temporarily running a fork of Prost that supports a custom PanSTARRS catalog API timeout value
+
+### Fixed
+
+- Better error handling in the Global Aperture Construction task
+
+## [1.8.2]
+  
 ### Changed
 
 - Added a custom sorting function for the transient table "discovery date" column that 
