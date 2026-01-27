@@ -19,6 +19,7 @@ from host.host_utils import select_aperture
 from host.host_utils import check_global_contamination
 from host.host_utils import check_local_radius
 from host.host_utils import construct_aperture
+from host.host_utils import FILTER_NAMES
 from host.host_utils import do_aperture_photometry
 from host.host_utils import get_dust_maps
 from host.host_utils import get_local_aperture_size
@@ -575,19 +576,22 @@ class GlobalApertureConstruction(TransientTaskRunner):
         aperture = None
         s3 = ObjectStore()
         while aperture is None and choice <= 8:
-            aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
-            # Download FITS file local file cache
-            canonical_fits_basepath = aperture_cutout[0].fits.name
-            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
-            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
-            local_fits_path = f'''{tmp_fits_basepath}.GlobalApertureConstruction'''
             try:
+                aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
+                # Download FITS file local file cache
+                canonical_fits_basepath = aperture_cutout[0].fits.name
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+                tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+                local_fits_path = f'''{tmp_fits_basepath}.GlobalApertureConstruction'''
                 # Download FITS file local file cache
                 s3.download_object(path=object_key, file_path=local_fits_path)
                 assert os.path.isfile(local_fits_path)
                 # Construct aperture
                 image = fits.open(local_fits_path)
                 aperture = construct_aperture(image, transient.host.sky_coord)
+            except Exception as err:
+                logger.warning(f'Unable to construct aperture "{FILTER_NAMES[choice]}" using {err}')
+                local_fits_path = ''
             finally:
                 try:
                     # Delete FITS file from local file cache

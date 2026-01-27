@@ -60,7 +60,18 @@ logger = get_logger(__name__)
 uuid_regex = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
 ARCSEC_DEC_IN_DEG = 0.0002778  # 1 arcsecond declination in degrees
 ARCSEC_RA_IN_DEG = 0.004167  # 1 arcsecond right ascension in degrees
-
+FILTER_NAMES = [
+    "PanSTARRS_g",
+    "PanSTARRS_r",
+    "PanSTARRS_i",
+    "SDSS_r",
+    "SDSS_i",
+    "SDSS_g",
+    "DES_r",
+    "DES_i",
+    "DES_g",
+    "2MASS_H",
+]
 
 def survey_list(survey_metadata_path):
     """
@@ -422,22 +433,9 @@ def select_cutout_aperture(cutouts, choice=0):
     """
     Select cutout for aperture by searching through the available filters.
     """
-    filter_names = [
-        "PanSTARRS_g",
-        "PanSTARRS_r",
-        "PanSTARRS_i",
-        "SDSS_r",
-        "SDSS_i",
-        "SDSS_g",
-        "DES_r",
-        "DES_i",
-        "DES_g",
-        "2MASS_H",
-    ]
-
     # Start iterating through the subset of filters in the list staring at the index specified by "choice".
-    filter_choice = filter_names[choice:]
-    for filter_name in filter_names[choice:]:
+    filter_choice = FILTER_NAMES[choice:]
+    for filter_name in FILTER_NAMES[choice:]:
         cutout_qs = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
         if cutout_qs.exists():
             logger.debug(f'''Cutouts for filter "{filter_name}": {[str(cutout) for cutout in cutout_qs]}''')
