@@ -522,9 +522,9 @@ class ImageDownload(TransientTaskRunner):
         task = Task.objects.get(name__exact="Crop transient images")
         task_register = TaskRegister.objects.get(transient=transient, task=task)
         if task_register.status.message == "processed":
-            overwrite = "True"
+            overwrite = True
         else:
-            overwrite = "False"
+            overwrite = False
 
         message = download_and_save_cutouts(
             transient,

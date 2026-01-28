@@ -107,6 +107,8 @@ def download_and_save_cutouts(
     status_failed = "failed"
     status_succeeded = "processed"
 
+    assert isinstance(overwrite, bool)
+
     def download_filter_data(filter):
         # TODO: The "canonical" base path "/data/cutout_cdn" is now hard-coded in the object keys
         #       of 50,000+ transient datasets in the production instance of Blast as of 2026/01/13.
@@ -130,9 +132,7 @@ def download_and_save_cutouts(
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
         fits = None
-        # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
-        # file or the Cutout object are missing, redownload the data
-        if not overwrite == "False" or not cutout_file_exists or created:
+        if overwrite or not cutout_file_exists or created:
             logger.debug(f'Downloading cutout "{cutout_name}"...')
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
                                        download_sleep_time=5)
