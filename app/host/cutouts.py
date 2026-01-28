@@ -132,7 +132,12 @@ def download_and_save_cutouts(
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
         fits = None
-        if overwrite or not cutout_file_exists or created:
+        # Re-download data if:
+        #     (1) an overwrite is explicitly requested, or
+        #     (2) the data file does not exist, or
+        #     (3) the data file has been cropped, or
+        #     (4) the Cutout object did not already exist.
+        if overwrite or not cutout_file_exists or cutout_object.cropped or created:
             logger.debug(f'Downloading cutout "{cutout_name}"...')
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
                                        download_sleep_time=5)
