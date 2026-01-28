@@ -54,6 +54,11 @@ class ApertureManager(models.Manager):
         return self.get(name=name)
 
 
+class AliasManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
 class TaskLockManager(models.Manager):
     '''This mutex logic assumes cooperation between the processes using the lock.
     There is no access control to prevent concurrent processes from releasing an
