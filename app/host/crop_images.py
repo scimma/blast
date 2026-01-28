@@ -42,6 +42,8 @@ def crop_images(transient):
             # Upload file to bucket and delete local copy
             s3.put_object(path=object_key, file_path=local_tmp_path)
             assert s3.object_exists(object_key)
+            cutout.cropped = True
+            cutout.save()
         finally:
             # Delete FITS file from local file cache
             os.remove(local_tmp_path)
