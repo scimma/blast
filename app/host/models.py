@@ -117,6 +117,7 @@ class Transient(SkyObject):
     """
 
     name = models.CharField(max_length=64, unique=True)
+    display_name = models.CharField(null=True, blank=True)
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
     public_timestamp = models.DateTimeField(null=True, blank=True)
@@ -168,6 +169,11 @@ class Transient(SkyObject):
         else:
             z = None
         return z
+    
+    def get_display_name(self):
+        if self.display_name is not None:
+            return self.display_name
+        return self.name
 
     class Meta:
         permissions = [
@@ -597,23 +603,6 @@ class SEDFittingResult(models.Model):
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION
         super(SEDFittingResult, self).save(*args, **kwargs)
-
-
-class Alias(models.Model):
-    """
-    Model to keep track of all the possible names for a transient
-    """
-    name = models.CharField(unique=True)
-    display_name = models.CharField(null=True, blank=True)
-    description = models.CharField(null=True, blank=True)
-    transient = models.ForeignKey(Transient, on_delete=models.CASCADE)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
-    
-    objects = AliasManager()
-
-    def save(self, *args, **kwargs):
-        self.software_version = settings.APP_VERSION
-        super(Alias, self).save(*args, *kwargs)
 
 
 class TaskRegisterSnapshot(models.Model):

@@ -37,6 +37,7 @@ from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
 import os
+import re
 from django.conf import settings
 from celery import shared_task
 from host.decorators import log_usage_metric
@@ -267,6 +268,12 @@ def add_transient(request):
                     elif len(trans_name) > trans_name_max_length:
                         err_msg = (f'''Error creating transient: {trans_name} is longer than the max length '''
                                    f'''of {trans_name_max_length} characters.''')
+                        logger.error(err_msg)
+                        errors.append(err_msg)
+                        continue
+                    elif not bool(re.match(r"[-a-zA-Z0-9_[]+\Z", trans_name)):
+                        err_msg = (f'''Error creating transient: {trans_name} must only contain alphanumeric '''
+                                   f'''characters, underscores, or spaces. Spaces are not allowed.''')
                         logger.error(err_msg)
                         errors.append(err_msg)
                         continue
