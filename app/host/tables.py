@@ -7,7 +7,7 @@ from .models import Transient
 
 class TransientTable(tables.Table):
     name = tables.TemplateColumn(
-        "<a href=\"{% url 'results' record.name %}\">{{ record.name }}</a>",
+        "<a href=\"{% url 'results' record.name %}\">{{ record.get_display_name }}</a>",
         verbose_name="Name",
         orderable=True,
         order_by="name",
