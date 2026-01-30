@@ -4,7 +4,7 @@ import re
 from django.db import migrations, models
 
 def rename_bad_transients(apps, schema_editor):
-    '''Rename the offending transients to use a plus in their ID instead of a space'''
+    '''Rename the offending transients to use an underscore in their ID instead of a space'''
     Transient = apps.get_model("host", "Transient")
     all_transients = Transient.objects.all()
     bad_transients = []
