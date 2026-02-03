@@ -209,7 +209,7 @@ def add_transient(request):
             err_msg = (f'''Error creating transient: {trans_name} is longer than the max length '''
                         f'''of {trans_name_max_length} characters.''')
             return (-1, err_msg)
-        if not bool(re.match(r"[-a-zA-Z0-9_]+", trans_name)):
+        if not bool(re.match(r"[-a-zA-Z0-9_]+\Z", trans_name)):
             err_msg = (f'''Error creating transient: {trans_name} must only contain alphanumeric '''
                         f'''characters, underscores, or spaces. Spaces are not allowed.''')
             return (-1, err_msg)
