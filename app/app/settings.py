@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-APP_VERSION = '1.8.3'
+APP_VERSION = '1.8.4'
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -177,7 +177,7 @@ SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
 SBIPP_PHOT_ROOT = os.environ.get("SBIPP_PHOT_ROOT", "/data/sbipp_phot")
 TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/transmission")
 
-CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False")
+CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False").lower() in ["true", "t", "1"]
 
 # Set JOB_SCRATCH_MAX_SIZE to 0 to determine scratch volume capacity using os.statvfs
 JOB_SCRATCH_MAX_SIZE = int(float(os.getenv('JOB_SCRATCH_MAX_SIZE', str(20 * 1024**3))))  # 20 GiB

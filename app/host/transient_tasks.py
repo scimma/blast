@@ -522,9 +522,9 @@ class ImageDownload(TransientTaskRunner):
         task = Task.objects.get(name__exact="Crop transient images")
         task_register = TaskRegister.objects.get(transient=transient, task=task)
         if task_register.status.message == "processed":
-            overwrite = "True"
+            overwrite = True
         else:
-            overwrite = "False"
+            overwrite = False
 
         message = download_and_save_cutouts(
             transient,
@@ -980,6 +980,18 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
             # AND
             # if there are contaminating objects detected in
             # the cutout image used for the photometry
+
+            for aperture in [
+                global_aperture_phot.aperture,
+                aperture_primary,
+            ]:
+                try:
+                    # Ensure that the path is not empty
+                    assert aperture.cutout.fits.name
+                except AssertionError:
+                    logger.error(f'Missing cutout FITS path value for aperture "{aperture.name}".')
+                    return self._failed_status_message()
+
             is_contam = check_global_contamination(
                 global_aperture_phot, aperture_primary
             )

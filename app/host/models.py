@@ -413,6 +413,7 @@ class Cutout(models.Model):
     fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
     message = models.CharField(max_length=50, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    cropped = models.BooleanField(default=False, blank=True, null=False)
 
     # used if some downloads fail
     # warning = models.BooleanField(default=False)

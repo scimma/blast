@@ -17,11 +17,11 @@ from astropy.wcs import WCS
 from astroquery.hips2fits import hips2fits
 from astroquery.mast import Observations
 from astroquery.sdss import SDSS
-from astroquery.skyview import SkyView
+# from astroquery.skyview import SkyView
 from django.conf import settings
-from dl import authClient as ac
-from dl import queryClient as qc
-from dl import storeClient as sc
+# from dl import authClient as ac
+# from dl import queryClient as qc
+# from dl import storeClient as sc
 from pyvo.dal import sia
 from host.object_store import ObjectStore
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -107,12 +107,14 @@ def download_and_save_cutouts(
     status_failed = "failed"
     status_succeeded = "processed"
 
+    assert isinstance(overwrite, bool)
+    trans_root_path = os.path.join('/tmp', transient.name)
+
     def download_filter_data(filter):
         # TODO: The "canonical" base path "/data/cutout_cdn" is now hard-coded in the object keys
         #       of 50,000+ transient datasets in the production instance of Blast as of 2026/01/13.
         #       For consistency we need to keep that object key base path for new transients, but
         #       the local temporary base file path can be different.
-        trans_root_path = os.path.join('/tmp', transient.name)
         temp_save_dir = os.path.join(trans_root_path, filter.survey.name)
         temp_fits_path = os.path.join(temp_save_dir, f"{filter.name}.fits")
         logger.debug(f'''FITS file temp local path: {temp_fits_path}''')
@@ -121,18 +123,31 @@ def download_and_save_cutouts(
         logger.debug(f'''FITS file object_key: {object_key}''')
         cutout_name = f"{transient.name}_{filter.name}"
         # Fetch or create the associated cutout object in the database.
-        cutout_object, created = Cutout.objects.get_or_create(name=cutout_name, filter=filter, transient=transient)
-
+        cutout_object, new_cutout_object = Cutout.objects.get_or_create(name=cutout_name, filter=filter,
+                                                                        transient=transient)
         # If we know there is no image to download, exit.
         if cutout_object.message == "No image found":
             return status_succeeded
-
+        # If the cutout is in an error state, force an overwrite.
+        if cutout_object.message != "":
+            overwrite = True
         # Does cutout file exist in the S3 bucket?
         cutout_file_exists = s3.object_exists(object_key)
-        fits = None
-        # If we are not explicitly preventing overwriting existing downloads, or if either the FITS
-        # file or the Cutout object are missing, redownload the data
-        if not overwrite == "False" or not cutout_file_exists or created:
+        # If the FITS file already exists and it is uncropped, update the Cutout object and exit. This
+        # supports bypassing source data downloads by detecting files manually uploaded to the local object store.
+        # In this case, we must assume that the images are the desired uncropped initial data.
+        if not overwrite and cutout_file_exists and not cutout_object.cropped:
+            cutout_object.fits.name = canonical_fits_path
+            cutout_object.message = ""
+            cutout_object.cropped = False
+            cutout_object.save()
+            return status_succeeded
+        # Download data from source catalogs if:
+        #   (1) an overwrite is explicitly requested, or
+        #   (2) the image file does not exist, or
+        #   (3) the image file has been cropped, or
+        #   (4) the Cutout object did not already exist.
+        if overwrite or not cutout_file_exists or cutout_object.cropped or new_cutout_object:
             logger.debug(f'Downloading cutout "{cutout_name}"...')
             fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
                                        download_sleep_time=5)
@@ -143,42 +158,42 @@ def download_and_save_cutouts(
                 cutout_object.fits = ""
                 cutout_object.save()
                 return status_failed
-        if fits:
-            upload_succeeded = False
-            # Write FITS file to local cache
-            os.makedirs(temp_save_dir, exist_ok=True)
-            fits.writeto(temp_fits_path, overwrite=True)
-            assert os.path.isfile(temp_fits_path)
-            # Upload file to bucket and delete local copy
-            try:
-                s3.put_object(path=object_key, file_path=temp_fits_path)
-                upload_succeeded = s3.object_exists(object_key)
-                assert upload_succeeded
-            except AssertionError as err:
-                logger.error(f'Error uploading cutout download: {err}')
-            finally:
-                os.remove(temp_fits_path)
-            if upload_succeeded:
-                cutout_object.fits.name = canonical_fits_path
+            # If the download was error-free but there is no image data, record and exit.
+            if not fits:
+                cutout_object.message = "No image found"
+                cutout_object.fits.name = ""
+                cutout_object.cropped = False
                 cutout_object.save()
                 return status_succeeded
+            # Otherwise the download succeeded, so upload the downloaded data file to object store.
             else:
-                cutout_object.message = "Upload failed"
-                cutout_object.fits.name = ""
-                cutout_object.save()
-                return status_failed
-        # If the FITS file exists now (whether it was (re)downloaded a moment ago or not),
-        # update the database object. Otherwise record that no image was found.
-        # This supports manually uploaded data files.
-        if s3.object_exists(object_key):
-            cutout_object.fits.name = canonical_fits_path
-            cutout_object.message = ""
-            cutout_object.save()
-        else:
-            # There is no image available.
-            cutout_object.message = "No image found"
-            cutout_object.fits.name = ""
-            cutout_object.save()
+                upload_succeeded = False
+                try:
+                    # Write FITS file to local cache
+                    os.makedirs(temp_save_dir, exist_ok=True)
+                    fits.writeto(temp_fits_path, overwrite=True)
+                    assert os.path.isfile(temp_fits_path)
+                    # Upload file to bucket and delete local copy
+                    s3.put_object(path=object_key, file_path=temp_fits_path)
+                    upload_succeeded = s3.object_exists(object_key)
+                    assert upload_succeeded
+                except AssertionError as err:
+                    logger.error(f'Error uploading cutout download: {err}')
+                finally:
+                    os.remove(temp_fits_path)
+                if upload_succeeded:
+                    cutout_object.fits.name = canonical_fits_path
+                    # Since the file was downloaded from the source data catalog, mark it as uncropped.
+                    cutout_object.cropped = False
+                    cutout_object.save()
+                    return status_succeeded
+                else:
+                    cutout_object.message = "Upload failed"
+                    cutout_object.fits.name = ""
+                    cutout_object.save()
+                    return status_failed
+        # This point is only reached if both the Cutout object and the uncropped image file already existed; in this
+        # case, no action is needed to return successfully.
         return status_succeeded
 
     try:

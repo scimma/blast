@@ -13,6 +13,18 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.8.4]
+
+### Added
+
+- Added a `cropped` field to the `Cutout` model to record whether the image has been cropped
+
+### Fixed
+
+- Fixed a bug in photometry caused by previously cropped images being used instead of downloading 
+  original data again from source catalogs when reprocessing a transient. Improved the cutout download
+  function logic.
+
 ## [1.8.3]
 
 ### Changed
