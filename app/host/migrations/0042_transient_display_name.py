@@ -20,7 +20,7 @@ def rename_bad_transients(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0040_add_new_workflow_tasks'),
+        ('host', '0041_cutout_cropped'),
     ]
 
     operations = [

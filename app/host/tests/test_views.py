@@ -48,6 +48,7 @@ class AddTransientTest(TestCase):
                 new_lo,255.96138000000002,31.49158,None,None
                 65_character_long_transient_name_00000000000000000000000000000000,256.00,31.7,None,None
                 64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None
+                spaced name,254.97138,32.50172,None,None
             ''')})
         self.assertEqual(response.status_code, 200)
         # Check that three transients were added
@@ -59,5 +60,7 @@ class AddTransientTest(TestCase):
         self.assertContains(response, text='<li>Error creating transient: SN_2010ag starts with an illegal prefix (SN or AT)</li>')  # noqa
         self.assertContains(response, text='<li>Error creating transient: AT_2010ag starts with an illegal prefix (SN or AT)</li>')  # noqa
         self.assertContains(response, text='<li>Error creating transient: 65_character_long_transient_name_00000000000000000000000000000000 is longer than the max length of 64 characters.</li>')  # noqa
+        self.assertContains(response, text='<li>Error creating transient: spaced name must only contain alphanumeric characters, underscores, or spaces. Spaces are not allowed.</li>')  # noqa
+
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')

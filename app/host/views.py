@@ -195,6 +195,25 @@ def add_transient(request):
         new_transient_names = [tr['name'] for tr in new_transients]
         logger.info(f'''Existing transients detected: {','.join(existing_transient_names)}''')
         return existing_transient_names, new_transient_names, errors
+    
+    def validate_transient_name(trans_name, trans_name_max_length):
+        """Input the transient name and the max transient length. 
+        Validate if the transient name follows the submission guidelines. 
+        Returns a tuple with the status (-1 for bad transients, 0 for good ones) 
+        and the error message (if applicable)"""
+        if trans_name.startswith("SN") or trans_name.startswith("AT"):
+            err_msg = (f'''Error creating transient: {trans_name} starts with an'''
+                       f''' illegal prefix (SN or AT)''')
+            return (-1, err_msg)
+        if len(trans_name) > trans_name_max_length:
+            err_msg = (f'''Error creating transient: {trans_name} is longer than the max length '''
+                        f'''of {trans_name_max_length} characters.''')
+            return (-1, err_msg)
+        if not bool(re.match(r"[-a-zA-Z0-9_]+", trans_name)):
+            err_msg = (f'''Error creating transient: {trans_name} must only contain alphanumeric '''
+                        f'''characters, underscores, or spaces. Spaces are not allowed.''')
+            return (-1, err_msg)
+        return (0, "Passed")
 
     errors = []
     defined_transient_names = []
@@ -260,20 +279,9 @@ def add_transient(request):
                                   if trans_info['name'] == transient_name][0]
                     trans_name = trans_info["name"]
                     trans_name_max_length = Transient._meta.get_field('name').max_length
-                    if trans_name.startswith("SN") or trans_name.startswith("AT"):
-                        err_msg = f'Error creating transient: {trans_name} starts with an illegal prefix (SN or AT)'
-                        logger.error(err_msg)
-                        errors.append(err_msg)
-                        continue
-                    elif len(trans_name) > trans_name_max_length:
-                        err_msg = (f'''Error creating transient: {trans_name} is longer than the max length '''
-                                   f'''of {trans_name_max_length} characters.''')
-                        logger.error(err_msg)
-                        errors.append(err_msg)
-                        continue
-                    elif not bool(re.match(r"[-a-zA-Z0-9_[]+\Z", trans_name)):
-                        err_msg = (f'''Error creating transient: {trans_name} must only contain alphanumeric '''
-                                   f'''characters, underscores, or spaces. Spaces are not allowed.''')
+                    validation = validate_transient_name(trans_name, trans_name_max_length)
+                    if validation[0] == -1:
+                        err_msg = validation[1]
                         logger.error(err_msg)
                         errors.append(err_msg)
                         continue
