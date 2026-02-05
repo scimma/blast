@@ -10,9 +10,9 @@
 <div class="container-lg">
     <div class="p-5 text-left bg-light">
     {% if warning %}
-        <h1 class="mb-3">{{transient.get_display_name}} <b style="color:red">(warnings)</b></h1> <h6>(ID: {{transient.name}})</h6>
+        <h1 class="mb-3">{{transient.get_display_name}} <b style="color:red">(warnings)</b></h1>
     {% else %}
-        <h1 class="mb-3">{{transient.get_display_name}} </h1> <h6>(ID: {{transient.name}})</h6>
+        <h1 class="mb-3">{{transient.get_display_name}} </h1>
     {% endif %}
         <a href="/api/transient/get/{{transient.name}}" role="button" class="btn btn-success">Download data <i class="bi bi-box-arrow-in-down"></i></button></a>
     {% if is_auth %}
