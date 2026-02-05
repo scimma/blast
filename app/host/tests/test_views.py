@@ -38,29 +38,57 @@ class AddTransientTest(TestCase):
         # TODO: This test is fragile due to the explicit HTML string search.
         response = self.client.post("/add/", data={
             'full_info': dedent('''
+                new_hi,255.98554,31.511860000000002,None,None
+                new_lo,255.96138000000002,31.49158,None,None
+                64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None
+                abcdefg1234567,254.97138,32.50172,None,None
+                a-cdefg12345_7,254.97138,32.50172,None,None
                 2010ag,255.97346,31.50172,None,None
                 2010H,255.97346,31.50172,None,None
                 SN_2010ag,255.98554,31.511860000000002,None,None
                 AT_2010ag,255.98554,31.511860000000002,None,None
                 2010ag_foo,255.97138,31.50172,None,None
                 2010ag_bar,255.97346,31.50186,None,None
-                new_hi,255.98554,31.511860000000002,None,None
-                new_lo,255.96138000000002,31.49158,None,None
                 65_character_long_transient_name_00000000000000000000000000000000,256.00,31.7,None,None
-                64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None
                 spaced name,254.97138,32.50172,None,None
+                -abcdefg1234567,254.97138,32.50172,None,None
+                abcdefg1234567_,254.97138,32.50172,None,None
+                abcdefg1234__7,254.97138,32.50172,None,None
+                abcde--1234567,254.97138,32.50172,None,None
             ''')})
         self.assertEqual(response.status_code, 200)
         # Check that three transients were added
-        self.assertContains(response, text='<p>The following transients were successfully added to the Blast database:</p>\n  <ul>\n    \n    <li><a href="/transients/new_hi">new_hi</a></li>\n    \n    <li><a href="/transients/new_lo">new_lo</a></li>\n    \n    <li><a href="/transients/64_character_long_transient_name_0000000000000000000000000000000">64_character_long_transient_name_0000000000000000000000000000000</a></li>\n    \n  </ul>')  # noqa
+        self.assertContains(
+            response,
+            text=('<p>The following transients were successfully added to the Blast database:</p>\n  <ul>\n    \n    '''
+                  '''<li><a href="/transients/new_hi">new_hi</a></li>\n    \n    '''
+                  '''<li><a href="/transients/new_lo">new_lo</a></li>\n    \n    '''
+                  '''<li><a href="/transients/64_character_long_transient_name_0000000000000000000000000000000">'''
+                  '''64_character_long_transient_name_0000000000000000000000000000000</a></li>\n    \n    '''
+                  '''<li><a href="/transients/abcdefg1234567">abcdefg1234567</a></li>\n    \n    '''
+                  '''<li><a href="/transients/a-cdefg12345_7">a-cdefg12345_7</a></li>\n    \n  </ul>'''))
         # Check that cone search discarded two transients
-        self.assertContains(response, text='<li>Transient &quot;2010ag_foo&quot; is within 1 arcsec of existing transient(s) 2010ag. Discarding.</li>')  # noqa
-        self.assertContains(response, text='<li>Transient &quot;2010ag_bar&quot; is within 1 arcsec of existing transient(s) 2010ag. Discarding.</li>')  # noqa
+        for name in ['2010ag_foo', '2010ag_bar']:
+            self.assertContains(
+                response,
+                text=f'Transient &quot;{name}&quot; is within 1 arcsec of existing transient(s) 2010ag. Discarding.')
         # Check that naming conventions are enforced
-        self.assertContains(response, text='<li>Error creating transient: SN_2010ag starts with an illegal prefix (SN or AT)</li>')  # noqa
-        self.assertContains(response, text='<li>Error creating transient: AT_2010ag starts with an illegal prefix (SN or AT)</li>')  # noqa
-        self.assertContains(response, text='<li>Error creating transient: 65_character_long_transient_name_00000000000000000000000000000000 is longer than the max length of 64 characters.</li>')  # noqa
-        self.assertContains(response, text='<li>Error creating transient: spaced name must only contain alphanumeric characters, underscores, or spaces. Spaces are not allowed.</li>')  # noqa
+        for name in ['SN_2010ag', 'AT_2010ag']:
+            self.assertContains(response,
+                                text=f'&quot;{name}&quot; may not start with &quot;SN&quot; or &quot;AT&quot;')
+        self.assertContains(
+            response,
+            text=('''&quot;65_character_long_transient_name_00000000000000000000000000000000&quot; '''
+                  '''is longer than the max length of 64 characters.'''))
+        for name in ['spaced name', '-abcdefg1234567', 'abcdefg1234567_']:
+            self.assertContains(
+                response,
+                text=(f'&quot;{name}&quot; must begin and end with alphanumeric characters,'''
+                      ''' and may include underscores and hyphens. Spaces are not allowed.'''))
+        for name in ['abcdefg1234__7', 'abcde--1234567']:
+            self.assertContains(
+                response,
+                text=f'&quot;{name}&quot; may not contain consecutive underscores or hyphens')
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
