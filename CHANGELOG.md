@@ -13,23 +13,25 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [1.8.4]
-
-### Added
-
-- Added a `cropped` field to the `Cutout` model to record whether the image has been cropped
+## [1.8.5]
 
 ### Fixed
 
-- Fixed a bug in photometry caused by previously cropped images being used instead of downloading 
-  original data again from source catalogs when reprocessing a transient. Improved the cutout download
-  function logic.
+- Fixed a bug caused by searching for transients whose name included space characters.
+
+### Changed
+
+- Defined rules for transient names, allowing only alphanumeric values, underscores, hyphens,
+  and plus signs. Existing invalid transient names are renamed via a migration script, and the
+  original invalid names are set as the new `display_name` field value. This display name is
+  shown in the transient table and as the header of the result pages. The actual `name` value,
+  which is the unique identifier for the transient in the database, is still shown in the transient
+  information panel.
 
 ## [1.8.3]
 
 ### Changed
 
-- Temporarily running a fork of Prost that supports a custom PanSTARRS catalog API timeout value
 
 ### Fixed
 
