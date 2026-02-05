@@ -134,7 +134,6 @@ class Transient(SkyObject):
         if len(name) > trans_name_max_length:
             raise ValidationError(f'''Invalid transient identifier: "{name}" is longer than the max length '''
                                   f'''of {trans_name_max_length} characters.''')
-        print(Transient.name_regex)
         if not bool(re.match(Transient.name_regex(), name)):
             raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
                                   '''characters, and may include underscores and hyphens. Spaces are not allowed.''')
