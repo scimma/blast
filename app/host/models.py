@@ -119,7 +119,7 @@ class Transient(SkyObject):
 
     def name_regex():
         '''Central location for transient identifier naming regex. Combine with rules defined in validate_name().'''
-        return r"[a-zA-Z0-9]+[a-zA-Z0-9_-]*[a-zA-Z0-9]+\Z"
+        return r"[a-zA-Z0-9]+[+a-zA-Z0-9_-]*[a-zA-Z0-9]+\Z"
 
     def validate_name(name):
         '''
@@ -136,10 +136,11 @@ class Transient(SkyObject):
                                   f'''of {trans_name_max_length} characters.''')
         if not bool(re.match(Transient.name_regex(), name)):
             raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
-                                  '''characters, and may include underscores and hyphens. Spaces are not allowed.''')
-        if name.find('--') > -1 or name.find('__') > -1:
+                                  '''characters, and may include underscores, hyphens, and plusses. '''
+                                  '''Spaces are not allowed.''')
+        if name.find('--') > -1 or name.find('__') > -1 or name.find('++') > -1:
             raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
-                                  '''underscores or hyphens.''')
+                                  '''underscores, hyphens, or plusses.''')
 
     name = models.CharField(max_length=64, unique=True, validators=[validate_name])
     display_name = models.CharField(null=True, blank=True)

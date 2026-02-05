@@ -12,19 +12,13 @@
     tns_id: 1
 - model: host.Transient
   fields:
-    name: " name with spaces "
-    ra_deg: 0.002
-    dec_deg: 0.002
-    tns_id: 1
-- model: host.Transient
-  fields:
     name: name	with	tabs
     ra_deg: 0.003
     dec_deg: 0.003
     tns_id: 2
 - model: host.Transient
   fields:
-    name: name_+_inv@lid_chars
+    name: name_$_inv@lid_chars
     ra_deg: 0.004
     dec_deg: 0.004
     tns_id: 3
@@ -54,31 +48,55 @@
     tns_id: 7
 - model: host.Transient
   fields:
-    name: consecutive__under___scores
+    name: +leading-plus
     ra_deg: 0.009
     dec_deg: 0.009
+    tns_id: 6
+- model: host.Transient
+  fields:
+    name: trailing-plus+
+    ra_deg: 0.010
+    dec_deg: 0.010
+    tns_id: 7
+- model: host.Transient
+  fields:
+    name: consecutive__under___scores
+    ra_deg: 0.011
+    dec_deg: 0.011
     tns_id: 8
 - model: host.Transient
   fields:
     name: consecutive--hyph----ens
-    ra_deg: 0.010
-    dec_deg: 0.010
+    ra_deg: 0.012
+    dec_deg: 0.012
     tns_id: 9
 - model: host.Transient
   fields:
-    name: name__collision__
-    ra_deg: 0.011
-    dec_deg: 0.011
+    name: consecutive++plus++++es
+    ra_deg: 0.013
+    dec_deg: 0.013
     tns_id: 10
 - model: host.Transient
   fields:
-    name: name____collision
-    ra_deg: 0.012
-    dec_deg: 0.012
+    name: name__collision__
+    ra_deg: 0.014
+    dec_deg: 0.014
     tns_id: 11
 - model: host.Transient
   fields:
-    name: name_++_collision
-    ra_deg: 0.013
-    dec_deg: 0.013
+    name: name____collision
+    ra_deg: 0.015
+    dec_deg: 0.015
     tns_id: 12
+- model: host.Transient
+  fields:
+    name: name_$$_collision
+    ra_deg: 0.016
+    dec_deg: 0.016
+    tns_id: 13
+- model: host.Transient
+  fields:
+    name: " name with spaces "
+    ra_deg: 0.017
+    dec_deg: 0.017
+    tns_id: 14

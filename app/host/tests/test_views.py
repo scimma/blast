@@ -42,7 +42,7 @@ class AddTransientTest(TestCase):
                 new_lo,255.96138000000002,31.49158,None,None
                 64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None
                 abcdefg1234567,254.97138,32.50172,None,None
-                a-cdefg12345_7,254.97138,32.50172,None,None
+                a-cdef+12345_7,254.97138,32.50172,None,None
                 2010ag,255.97346,31.50172,None,None
                 2010H,255.97346,31.50172,None,None
                 SN_2010ag,255.98554,31.511860000000002,None,None
@@ -55,6 +55,7 @@ class AddTransientTest(TestCase):
                 abcdefg1234567_,254.97138,32.50172,None,None
                 abcdefg1234__7,254.97138,32.50172,None,None
                 abcde--1234567,254.97138,32.50172,None,None
+                abcde++1234567,254.97138,32.50172,None,None
             ''')})
         self.assertEqual(response.status_code, 200)
         # Check that three transients were added
@@ -66,7 +67,7 @@ class AddTransientTest(TestCase):
                   '''<li><a href="/transients/64_character_long_transient_name_0000000000000000000000000000000">'''
                   '''64_character_long_transient_name_0000000000000000000000000000000</a></li>\n    \n    '''
                   '''<li><a href="/transients/abcdefg1234567">abcdefg1234567</a></li>\n    \n    '''
-                  '''<li><a href="/transients/a-cdefg12345_7">a-cdefg12345_7</a></li>\n    \n  </ul>'''))
+                  '''<li><a href="/transients/a-cdef+12345_7">a-cdef+12345_7</a></li>\n    \n  </ul>'''))
         # Check that cone search discarded two transients
         for name in ['2010ag_foo', '2010ag_bar']:
             self.assertContains(
@@ -84,11 +85,11 @@ class AddTransientTest(TestCase):
             self.assertContains(
                 response,
                 text=(f'&quot;{name}&quot; must begin and end with alphanumeric characters,'''
-                      ''' and may include underscores and hyphens. Spaces are not allowed.'''))
-        for name in ['abcdefg1234__7', 'abcde--1234567']:
+                      ''' and may include underscores, hyphens, and plusses. Spaces are not allowed.'''))
+        for name in ['abcdefg1234__7', 'abcde--1234567', 'abcde++1234567']:
             self.assertContains(
                 response,
-                text=f'&quot;{name}&quot; may not contain consecutive underscores or hyphens')
+                text=f'&quot;{name}&quot; may not contain consecutive underscores, hyphens, or plusses')
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
