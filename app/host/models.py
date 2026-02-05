@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from photutils.aperture import SkyEllipticalAperture
 from sedpy import observate
+from django.core.exceptions import ValidationError
+import re
 
 from .managers import ApertureManager
 from .managers import CatalogManager
@@ -23,7 +25,6 @@ from .managers import SurveyManager
 from .managers import TaskManager
 from .managers import TransientManager
 from .managers import TaskLockManager
-from .managers import AliasManager
 
 # from django_celery_beat.models import PeriodicTask
 
@@ -116,7 +117,32 @@ class Transient(SkyObject):
             Delete is set to cascade.
     """
 
-    name = models.CharField(max_length=64, unique=True)
+    def name_regex():
+        '''Central location for transient identifier naming regex. Combine with rules defined in validate_name().'''
+        return r"[a-zA-Z0-9]+[a-zA-Z0-9_-]*[a-zA-Z0-9]+\Z"
+
+    def validate_name(name):
+        '''
+        Transient name/identifier validation. Central definition of naming rules that complements
+        regular expression from name_regex(). See https://docs.djangoproject.com/en/5.2/ref/validators/
+
+        :param name: Transient identifier
+        '''
+        trans_name_max_length = Transient._meta.get_field('name').max_length
+        if name.upper().startswith("SN") or name.upper().startswith("AT"):
+            raise ValidationError(f'''Invalid transient identifier: "{name}" may not start with "SN" or "AT"''')
+        if len(name) > trans_name_max_length:
+            raise ValidationError(f'''Invalid transient identifier: "{name}" is longer than the max length '''
+                                  f'''of {trans_name_max_length} characters.''')
+        print(Transient.name_regex)
+        if not bool(re.match(Transient.name_regex(), name)):
+            raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
+                                  '''characters, and may include underscores and hyphens. Spaces are not allowed.''')
+        if name.find('--') > -1 or name.find('__') > -1:
+            raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
+                                  '''underscores or hyphens.''')
+
+    name = models.CharField(max_length=64, unique=True, validators=[validate_name])
     display_name = models.CharField(null=True, blank=True)
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
@@ -169,7 +195,7 @@ class Transient(SkyObject):
         else:
             z = None
         return z
-    
+
     def get_display_name(self):
         if self.display_name is not None:
             return self.display_name
