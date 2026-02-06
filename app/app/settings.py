@@ -57,7 +57,6 @@ INSTALLED_APPS = [
     "bootstrap4",
     "crispy_bootstrap4",
     "django_celery_beat",
-    "revproxy",
     "api",
     "users",
     "django_cron",

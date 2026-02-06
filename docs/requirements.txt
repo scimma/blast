@@ -6,7 +6,6 @@ django-bootstrap4==25.2
 django-celery-beat==2.8.1
 django-filter==25.1
 django-latexify==0.3
-django-revproxy==0.13.0
 django-silk==5.4.3
 django-tables2==2.7.5
 Django==5.1.14

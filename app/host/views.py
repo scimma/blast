@@ -34,7 +34,6 @@ from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
 from host.object_store import ObjectStore
-from revproxy.views import ProxyView
 from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
 import os
@@ -781,20 +780,6 @@ def resolve_issue(request, item_id):
     return HttpResponseRedirect(
         reverse_lazy("results", kwargs={"slug": item.transient.name})
     )
-
-
-class FlowerProxyView(UserPassesTestMixin, ProxyView):
-    # `flower` is Docker container, you can use `localhost` instead
-    upstream = "http://{}:{}".format("0.0.0.0", 8888)
-    url_prefix = "flower"
-    rewrite = ((r"^/{}$".format(url_prefix), r"/{}/".format(url_prefix)),)
-
-    def test_func(self):
-        return self.request.user.is_superuser
-
-    @classmethod
-    def as_url(cls):
-        return re_path(r"^(?P<path>{}.*)$".format(cls.url_prefix), cls.as_view())
 
 
 # Handler for 403 errors
