@@ -38,22 +38,22 @@ class AddTransientTest(TestCase):
         # TODO: This test is fragile due to the explicit HTML string search.
         response = self.client.post("/add/", data={
             'full_info': dedent('''
-                new_hi,255.98554,31.511860000000002,None,None
-                new_lo,255.96138000000002,31.49158,None,None
-                64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None
-                abcdefg1234567,254.97138,32.50172,None,None
-                2010ag,255.97346,31.50172,None,None
-                2010H,255.97346,31.50172,None,None
-                SN_2010ag,255.98554,31.511860000000002,None,None
-                AT_2010ag,255.98554,31.511860000000002,None,None
-                2010ag_foo,255.97138,31.50172,None,None
-                2010ag_bar,255.97346,31.50186,None,None
-                65_character_long_transient_name_00000000000000000000000000000000,256.00,31.7,None,None
-                spaced name,254.97138,32.50172,None,None
-                -abcdefg1234567,254.97138,32.50172,None,None
-                abcdefg1234567_,254.97138,32.50172,None,None
-                abcdefg1234__7,254.97138,32.50172,None,None
-                abcde--1234567,254.97138,32.50172,None,None
+                new_hi,255.98554,31.511860000000002,None,None,new_hi
+                new_lo,255.96138000000002,31.49158,None,None,new_lo
+                64_character_long_transient_name_0000000000000000000000000000000,255.99,31.6,None,None,64_character_long_transient_name_0000000000000000000000000000000
+                abcdefg1234567,254.97138,32.50172,None,None,abcdefg1234567
+                2010ag,255.97346,31.50172,None,None,2010ag
+                2010H,255.97346,31.50172,None,None,2010H
+                SN_2010ag,255.98554,31.511860000000002,None,None,SN_2010ag
+                AT_2010ag,255.98554,31.511860000000002,None,None,AT_2010ag
+                2010ag_foo,255.97138,31.50172,None,None,2010ag_foo
+                2010ag_bar,255.97346,31.50186,None,None,2010ag_bar
+                65_character_long_transient_name_00000000000000000000000000000000,256.00,31.7,None,None,65_character_long_transient_name_00000000000000000000000000000000
+                spaced name,254.97138,32.50172,None,None,spaced name
+                -abcdefg1234567,254.97138,32.50172,None,None,-abcdefg1234567
+                abcdefg1234567_,254.97138,32.50172,None,None,abcdefg1234567_
+                abcdefg1234__7,254.97138,32.50172,None,None,abcdefg1234__7
+                abcde--1234567,254.97138,32.50172,None,None,abcde--1234567
             ''')})
         self.assertEqual(response.status_code, 200)
         # Check that three transients were added
