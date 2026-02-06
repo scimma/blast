@@ -11,10 +11,10 @@ def validate_name_with_options(name):
     if len(name) > trans_name_max_length:
         raise ValidationError(f'''Invalid transient identifier: "{name}" is longer than the max length '''
                               f'''of {trans_name_max_length} characters.''')
-    if not bool(re.match(r"[a-zA-Z0-9]+[+a-zA-Z0-9_-]*[a-zA-Z0-9]+\Z", name)):
+    if not bool(re.match(r"[a-zA-Z0-9]+[a-zA-Z0-9_-]*[a-zA-Z0-9]+\Z", name)):
         raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
                               '''characters, and may include underscores and hyphens. Spaces are not allowed.''')
-    if name.find('--') > -1 or name.find('__') > -1 or name.find('++') > -1:
+    if name.find('--') > -1 or name.find('__') > -1:
         raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
                               '''underscores or hyphens.''')
 
@@ -36,16 +36,16 @@ def rename_invalid_transients(apps, schema_editor):
             # collapsing consecutive underscores.
             replace_invalid_chars = ''
             for char in transient.name:
-                if re.search(r'[+a-zA-Z0-9_-]', char):
+                if re.search(r'[a-zA-Z0-9_-]', char):
                     replace_invalid_chars += char
                 else:
                     replace_invalid_chars += '_'
             transient.name = replace_invalid_chars
             # Collapse consecutive hyphens and underscores
-            while transient.name.find('--') > -1 or transient.name.find('__') > -1 or transient.name.find('++') > -1:
-                transient.name = transient.name.replace('--', '-').replace('__', '_').replace('++', '+')
+            while transient.name.find('--') > -1 or transient.name.find('__') > -1:
+                transient.name = transient.name.replace('--', '-').replace('__', '_')
             # Strip leading/trailing hyphens and underscores
-            transient.name = transient.name.strip('-_+')
+            transient.name = transient.name.strip('-_')
             # Ensure that new name is unique.
             transient_names.remove(original_name)
             idx = 1

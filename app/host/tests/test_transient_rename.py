@@ -20,16 +20,16 @@ class RenameTransientTest(TestCase):
                 # collapsing consecutive underscores.
                 replace_invalid_chars = ''
                 for char in transient.name:
-                    if re.search(r'[+a-zA-Z0-9_-]', char):
+                    if re.search(r'[a-zA-Z0-9_-]', char):
                         replace_invalid_chars += char
                     else:
                         replace_invalid_chars += '_'
                 transient.name = replace_invalid_chars
                 # Collapse consecutive hyphens and underscores
-                while transient.name.find('--') > -1 or transient.name.find('__') > -1 or transient.name.find('++') > -1:  # noqa
-                    transient.name = transient.name.replace('--', '-').replace('__', '_').replace('++', '+')
+                while transient.name.find('--') > -1 or transient.name.find('__') > -1:
+                    transient.name = transient.name.replace('--', '-').replace('__', '_')
                 # Strip leading/trailing hyphens and underscores
-                transient.name = transient.name.strip('-_+')
+                transient.name = transient.name.strip('-_')
 
                 # Ensure that new name is unique.
                 transient_names.remove(original_name)

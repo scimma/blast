@@ -48,18 +48,6 @@
     tns_id: 7
 - model: host.Transient
   fields:
-    name: +leading-plus
-    ra_deg: 0.009
-    dec_deg: 0.009
-    tns_id: 6
-- model: host.Transient
-  fields:
-    name: trailing-plus+
-    ra_deg: 0.010
-    dec_deg: 0.010
-    tns_id: 7
-- model: host.Transient
-  fields:
     name: consecutive__under___scores
     ra_deg: 0.011
     dec_deg: 0.011
@@ -70,12 +58,6 @@
     ra_deg: 0.012
     dec_deg: 0.012
     tns_id: 9
-- model: host.Transient
-  fields:
-    name: consecutive++plus++++es
-    ra_deg: 0.013
-    dec_deg: 0.013
-    tns_id: 10
 - model: host.Transient
   fields:
     name: name__collision__
