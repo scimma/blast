@@ -27,11 +27,29 @@ Types of changes:
   shown in the transient table and as the header of the result pages. The actual `name` value,
   which is the unique identifier for the transient in the database, is still shown in the transient
   information panel.
+- Reorganized `settings.py` to consolidate configuration into modular blocks to aid development.
 
+### Removed
+
+- Removed `revproxy` Django app and the obsolete `FlowerProxyView` class.
+
+## [1.8.4]
+
+### Added
+
+- Added a `cropped` field to the `Cutout` model to record whether the image has been cropped
+
+### Fixed
+
+- Fixed a bug in photometry caused by previously cropped images being used instead of downloading 
+  original data again from source catalogs when reprocessing a transient. Improved the cutout download
+  function logic.
+  
 ## [1.8.3]
 
 ### Changed
 
+- Temporarily running a fork of Prost that supports a custom PanSTARRS catalog API timeout value
 
 ### Fixed
 
