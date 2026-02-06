@@ -221,9 +221,20 @@ def add_transient(request):
             info = form.cleaned_data["full_info"]
             if info:
                 trans_info_set = []
-                reader = csv.DictReader(io.StringIO(info), fieldnames=['name', 'ra', 'dec', 'redshift', 'specclass'])
+                reader = csv.DictReader(io.StringIO(info), fieldnames=[
+                    'name',
+                    'ra',
+                    'dec',
+                    'redshift',
+                    'specclass',
+                    'display_name',
+                ])
                 for transient in reader:
                     try:
+                        if transient['display_name'].lower().strip() == "none":
+                            display_name = None
+                        else:
+                            display_name = transient['display_name'].strip()
                         if transient['specclass'].lower().strip() == "none":
                             spectroscopic_class = None
                         else:
@@ -241,6 +252,7 @@ def add_transient(request):
                             "tns_id": 0,
                             "tns_prefix": "",
                             "added_by": request.user,
+                            "display_name": display_name,
                         }
                     except Exception as err:
                         err_msg = f'''Error parsing line "{transient}": {err}'''

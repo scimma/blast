@@ -30,7 +30,7 @@ class ImageGetForm(forms.Form):
 class TransientUploadForm(forms.Form):
     tns_names = forms.CharField(
         widget=forms.Textarea(attrs={
-            'style': 'width: 30rem;',
+            'style': 'min-width: 30rem;',
             'cols': 100,
             'placeholder': '2024abc\n2025xyz'
         }),
@@ -39,9 +39,9 @@ class TransientUploadForm(forms.Form):
     )
     full_info = forms.CharField(
         widget=forms.Textarea(attrs={
-            'style': 'width: 30rem;',
+            'style': 'min-width: 30rem;',
             'cols': 100,
-            'placeholder': 'Name, RA, Dec, Redshift, Classification'
+            'placeholder': 'Identifier, RA, Dec, Redshift, Classification, Display Name'
         }),
         label='Transient definition table',
         required=False,

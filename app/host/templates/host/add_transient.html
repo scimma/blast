@@ -19,7 +19,8 @@
     font-size: larger;
   }
   .input-group-text {
-    max-width: 32rem;
+    max-width: 100%;
+    min-width: 30rem;
   }
   .list-group {
     max-width: max-content;
@@ -129,25 +130,28 @@
           </div>
           <div id="define-form" class="transient-form">
             <p>Create transients by supplying a comma-separated value (CSV) table,
-              where each row defines a transient with five columns of information:
-              <code>Name, RA, Dec, Redshift, Classification</code>
+              where each row defines a transient with the following columns of information:<br>
+              <code>Identifier, RA, Dec, Redshift, Classification, Display Name</code>
               <ul>
-                
-                <li>Name cannot start with <code>SN</code> or <code>AT</code></li>
+                <li>The identifier is a unique, machine-friendly transient name. It must conform to the following rules: 
+                <ul>
+                  <li>cannot start with <code>SN</code> or <code>AT</code></li>
+                  <li>may comprise only alphanumeric characters, hypens, and underscores; no spaces</li>
+                  <li>length cannot exceed 64 characters</li>
+                </ul>
                 <li>RA/Dec must be decimal degrees.</li>
                 <li>Use "None" to indicate missing redshift or classification.</li>
-                <li>A transient will not be added if the name already exists in the database or if the coordinates are within one arcsecond of an existing transient.</li>
-                <li>Name cannot exceed 65 characters</li>
-                <li>Name must only contain alphanumeric characters, hypens, and underscores. Name cannot contain spaces.</li>
+                <li>The display name is a human-friendly name that may contain a broad range of characters. Use "None" to omit the display name.</li>
               </ul>
+              <p>A transient will not be added if the name already exists in the database or if the coordinates are within one arcsecond of an existing transient.</p>
             </p>
             <div class="input-group-text">
               {{ form.full_info | as_crispy_field }}
             </div>
           </div>
         </div>
-        <div class="input-group">
-          <button type="submit" id="submit-btn" class="btn btn-primary" type="button">Submit</button>
+        <div class="input-group" style="justify-content: center; margin-bottom: 5rem;">
+          <button type="submit" id="submit-btn" class="btn btn-primary" type="button" style="min-width: 10rem; width: 20rem;">Submit</button>
       </div>
     </div>
   </form>
