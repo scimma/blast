@@ -8,7 +8,6 @@ from host.workflow import transient_workflow
 from host.models import Transient
 from host.system_tasks import IngestMissedTNSTransients
 from host.system_tasks import InitializeTransientTasks
-from host.system_tasks import SnapshotTaskRegister
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import RetriggerIncompleteWorkflows
 from host.system_tasks import UsageLogRoller
@@ -26,7 +25,6 @@ logger = get_logger(__name__)
 periodic_tasks = [
     TNSDataIngestion(),
     InitializeTransientTasks(),
-    SnapshotTaskRegister(),
     IngestMissedTNSTransients(),
     RetriggerIncompleteWorkflows(),
     GarbageCollector(),

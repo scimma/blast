@@ -18,7 +18,6 @@ from app.celery import app
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 import gzip
 
-from .models import TaskRegisterSnapshot
 from .models import Transient
 from .models import UsageMetricsLog
 from .object_store import ObjectStore
@@ -168,38 +167,6 @@ class IngestMissedTNSTransients(SystemTaskRunner):
         return False
 
 
-class SnapshotTaskRegister(SystemTaskRunner):
-    def run_process(self, interval_minutes=100):
-        """
-        Takes snapshot of task register for diagnostic purposes.
-        """
-        transients = Transient.objects.all()
-        total, completed, waiting, not_completed = 0, 0, 0, 0
-
-        for transient in transients:
-            total += 1
-            if transient.progress == 100:
-                completed += 1
-            if transient.progress == 0:
-                waiting += 1
-            if transient.progress < 100 and transient.progress > 0:
-                not_completed += 1
-
-        now = datetime.now(timezone.utc)
-
-        for aggregate, label in zip(
-            [not_completed, total, completed, waiting],
-            ["not completed", "total", "completed", "waiting"],
-        ):
-            TaskRegisterSnapshot.objects.create(
-                time=now, number_of_transients=aggregate, aggregate_type=label
-            )
-
-    @property
-    def task_name(self):
-        return "Snapshot task register"
-
-
 class GarbageCollector(SystemTaskRunner):
     def run_process(self):
         """
@@ -308,14 +275,6 @@ def tns_data_ingestion(self):
 )
 def initialize_transient_task():
     InitializeTransientTasks().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def snapshot_task_register():
-    SnapshotTaskRegister().run_process()
 
 
 @shared_task(

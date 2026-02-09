@@ -632,16 +632,6 @@ class SEDFittingResult(models.Model):
         super(SEDFittingResult, self).save(*args, **kwargs)
 
 
-class TaskRegisterSnapshot(models.Model):
-    """
-    Model to keep track of how many unprocessed transients exist
-    """
-
-    time = models.DateTimeField()
-    number_of_transients = models.IntegerField()
-    aggregate_type = models.CharField(max_length=100)
-
-
 class Acknowledgement(models.Model):
     """
     Model to keep track of other work Blast uses and relies on.
