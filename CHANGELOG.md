@@ -13,6 +13,15 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.0]
+
+### Changed
+
+- Removed obsolete analytics webpage
+- Removed obsolete Celery Flower webpage. Flower is deployed as a separate Docker Compose service with
+  routing handled by the NGINX web proxy that is also deployed independently via Compose.
+- Deleted TaskRegisterSnapshot model and associated periodic task.
+
 ## [1.8.5]
 
 ### Fixed
