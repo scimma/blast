@@ -750,16 +750,6 @@ def update_home_page_statistics():
         fp.write(html_body)
 
 
-# @user_passes_test(lambda u: u.is_staff and u.is_superuser)
-def flower_view(request):
-    """passes the request back up to nginx for internal routing"""
-    response = HttpResponse()
-    path = request.get_full_path()
-    path = path.replace("flower", "flower-internal", 1)
-    response["X-Accel-Redirect"] = path
-    return response
-
-
 @login_required
 @log_usage_metric()
 def report_issue(request, item_id):

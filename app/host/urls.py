@@ -40,7 +40,6 @@ urlpatterns = [
     path(f"""{base_path}acknowledgements/""", views.acknowledgements, name="acknowledgements"),
     path(f"""{base_path}team/""", views.team, name="team"),
     path(f"""{base_path}""", views.home),
-    path(f"""{base_path}flower/""", views.flower_view),
     path(
         f"""{base_path}reprocess_transient/<slug:transient_name>/""",
         reprocess_transient_view,
