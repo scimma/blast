@@ -24,7 +24,6 @@ from host.models import SEDFittingResult
 from host.models import TaskRegister
 from host.models import Task
 from host.models import Status
-from host.models import TaskRegisterSnapshot
 from host.models import Transient
 from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
@@ -299,30 +298,6 @@ def add_transient(request):
         "existing_transient_names": existing_transient_names,
     }
     return render(request, "add_transient.html", context)
-
-
-def analytics(request):
-    analytics_results = {}
-
-    for aggregate in ["total", "not completed", "completed", "waiting"]:
-        transients = TaskRegisterSnapshot.objects.filter(
-            aggregate_type__exact=aggregate
-        )
-        transients_ordered = transients.order_by("-time")
-
-        if transients_ordered.exists():
-            transients_current = transients_ordered[0]
-        else:
-            transients_current = None
-
-        analytics_results[f"{aggregate}_transients_current".replace(" ", "_")] = (
-            transients_current
-        )
-        bokeh_processing_context = plot_timeseries()
-
-    return render(
-        request, "analytics.html", {**analytics_results, **bokeh_processing_context}
-    )
 
 
 @log_usage_metric()
