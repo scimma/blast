@@ -58,3 +58,6 @@ please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
    * - SBI++
      - `<https://github.com/wangbingjie/sbi_pp>`_
      - `<https://doi.org/10.3847/2041-8213/ace361>`_
+   * - Prost
+     - `<https://github.com/alexandergagliano/Prost>_`
+     - `<https://astro-prost.readthedocs.io/>_`
