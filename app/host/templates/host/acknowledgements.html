@@ -76,16 +76,122 @@
     </tr>
   </thead>
   <tbody>
-    {% for acknowledgement in acknowledgements %}
     <tr>
-      <td>{{acknowledgement.name}}</td>
-      <td>{{acknowledgement.description}}</td>
-      <td><a class="nav-link" href="{{acknowledgement.repository_url}}">{{acknowledgement.repository_url}}</a></td>
-      <td><a class="nav-link" href="{{acknowledgement.paper_url}}">ADS</a></td>
-      <td><a class="nav-link" href="https://www.doi.org/{{acknowledgement.doi}}">{{acknowledgement.doi}}</a></td>
-      <td><a class="nav-link" href="{{acknowledgement.website_url}}">{{acknowledgement.website_url}}</a></td>
+      <td>Astropy</td>
+      <td>Used in almost all aspects of the project</td>
+      <td><a class="nav-link" href="https://github.com/astropy/astropy">https://github.com/astropy/astropy</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2018AJ....156..123A/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.3847/1538-3881/aabc4f">10.3847/1538-3881/aabc4f</a></td>
+      <td><a class="nav-link" href="https://www.astropy.org">https://www.astropy.org</a></td>
     </tr>
-   {% endfor %}
+   
+    <tr>
+      <td>NumPy</td>
+      <td>Used in almost all aspects of the project</td>
+      <td><a class="nav-link" href="https://github.com/numpy/numpy">https://github.com/numpy/numpy</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020Natur.585..357H/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.1038/s41586-020-2649-2">10.1038/s41586-020-2649-2</a></td>
+      <td><a class="nav-link" href="https://numpy.org">https://numpy.org</a></td>
+    </tr>
+   
+    <tr>
+      <td>photutils</td>
+      <td>Used for the host aperture photometry</td>
+      <td><a class="nav-link" href="https://github.com/astropy/photutils">https://github.com/astropy/photutils</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2022zndo....596036B/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.6385735">10.5281/zenodo.6385735</a></td>
+      <td><a class="nav-link" href="https://photutils.readthedocs.io/en/stable/">https://photutils.readthedocs.io/en/stable/</a></td>
+    </tr>
+   
+    <tr>
+      <td>Astroquery</td>
+      <td>Used for gathering external data for transients</td>
+      <td><a class="nav-link" href="https://github.com/astropy/astroquery">https://github.com/astropy/astroquery</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2019AJ....157...98G/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.3847/1538-3881/aafc33">10.3847/1538-3881/aafc33</a></td>
+      <td><a class="nav-link" href="https://astroquery.readthedocs.io/en/latest/">https://astroquery.readthedocs.io/en/latest/</a></td>
+    </tr>
+   
+    <tr>
+      <td>HiPS</td>
+      <td>Used in the cutout generation</td>
+      <td><a class="nav-link" href="https://github.com/hipspy/hips">https://github.com/hipspy/hips</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2015A%26A...578A.114F/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.1051/0004-6361/201526075">10.1051/0004-6361/201526075</a></td>
+      <td><a class="nav-link" href="https://hips.readthedocs.io">https://hips.readthedocs.io</a></td>
+    </tr>
+   
+    <tr>
+      <td>dynesty</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/joshspeagle/dynesty">https://github.com/joshspeagle/dynesty</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020MNRAS.493.3132S/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.1093/mnras/staa278">10.1093/mnras/staa278</a></td>
+      <td><a class="nav-link" href="https://dynesty.readthedocs.io/en/latest/">https://dynesty.readthedocs.io/en/latest/</a></td>
+    </tr>
+   
+    <tr>
+      <td>Prospector</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/bd-j/prospector">https://github.com/bd-j/prospector</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2021ApJS..254...22J/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.3847/1538-4365/abef67">10.3847/1538-4365/abef67</a></td>
+      <td><a class="nav-link" href="https://prospect.readthedocs.io/en/latest/">https://prospect.readthedocs.io/en/latest/</a></td>
+    </tr>
+   
+    <tr>
+      <td>sedpy</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/bd-j/sedpy">https://github.com/bd-j/sedpy</a></td>
+      <td><a class="nav-link" href="https://pypi.org/project/sedpy/">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.4582723">10.5281/zenodo.4582723</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2019ascl.soft05026J/abstract">https://ui.adsabs.harvard.edu/abs/2019ascl.soft05026J/abstract</a></td>
+    </tr>
+   
+    <tr>
+      <td>SVO Filter Profile Service</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/hover2pi/svo_filters">https://github.com/hover2pi/svo_filters</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020sea..confE.182R/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.5479/ADS/bib/2012ivoa.rept.1015R">10.5479/ADS/bib/2012ivoa.rept.1015R</a></td>
+      <td><a class="nav-link" href="https://svo.cab.inta-csic.es/main/index.php">https://svo.cab.inta-csic.es/main/index.php</a></td>
+    </tr>
+   
+    <tr>
+      <td>Python FSPS</td>
+      <td>Used to generate spectra and magnitude for arbitrary stellar populations</td>
+      <td><a class="nav-link" href="https://github.com/dfm/python-fsps/tree/v0.4.1rc1">https://github.com/dfm/python-fsps/tree/v0.4.1rc1</a></td>
+      <td><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2014zndo.....12157F/abstract">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.4737461">10.5281/zenodo.4737461</a></td>
+      <td><a class="nav-link" href="https://dfm.io/python-fsps/current/">https://dfm.io/python-fsps/current/</a></td>
+    </tr>
+   
+    <tr>
+      <td>SBI</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/sbi-dev/sbi">https://github.com/sbi-dev/sbi</a></td>
+      <td><a class="nav-link" href="https://joss.theoj.org/papers/10.21105/joss.02505">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.21105/joss.02505">10.21105/joss.02505</a></td>
+      <td><a class="nav-link" href="https://sbi-dev.github.io/sbi/latest/">https://sbi-dev.github.io/sbi/latest/</a></td>
+    </tr>
+   
+    <tr>
+      <td>SBI++</td>
+      <td>Used in the inference of host galaxy parameters</td>
+      <td><a class="nav-link" href="https://github.com/wangbingjie/sbi_pp">https://github.com/wangbingjie/sbi_pp</a></td>
+      <td><a class="nav-link" href="https://iopscience.iop.org/article/10.3847/2041-8213/ace361">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/10.3847/2041-8213/ace361">10.3847/2041-8213/ace361</a></td>
+      <td><a class="nav-link" href="https://github.com/wangbingjie/sbi_pp">https://github.com/wangbingjie/sbi_pp</a></td>
+    </tr>
+   
+    <tr>
+      <td>Prost</td>
+      <td>Used to match transients to host galaxies</td>
+      <td><a class="nav-link" href="https://github.com/alexandergagliano/Prost">https://github.com/alexandergagliano/Prost</a></td>
+      <td><a class="nav-link" href="">ADS</a></td>
+      <td><a class="nav-link" href="https://www.doi.org/"></a></td>
+      <td><a class="nav-link" href="https://astro-prost.readthedocs.io/">https://astro-prost.readthedocs.io/</a></td>
+    </tr>
   </tbody>
 </table>
 

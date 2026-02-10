@@ -15,7 +15,6 @@ from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
-from host.models import Acknowledgement
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -656,7 +655,7 @@ def download_percentiles(request, slug, aperture_type):
 
 
 def acknowledgements(request):
-    context = {"acknowledgements": Acknowledgement.objects.all()}
+    context = {}
     return render(request, "acknowledgements.html", context)
 
 

@@ -632,20 +632,6 @@ class SEDFittingResult(models.Model):
         super(SEDFittingResult, self).save(*args, **kwargs)
 
 
-class Acknowledgement(models.Model):
-    """
-    Model to keep track of other work Blast uses and relies on.
-    """
-
-    name = models.CharField(max_length=100)
-    description = models.CharField(max_length=1000, null=True, blank=True)
-    repository_url = models.CharField(max_length=100, null=True, blank=True)
-    website_url = models.CharField(max_length=100, null=True, blank=True)
-    paper_url = models.CharField(max_length=100, null=True, blank=True)
-    doi = models.CharField(max_length=1000, null=True, blank=True)
-    acknowledgement_text = models.CharField(max_length=1000, null=True, blank=True)
-
-
 class TaskLock(models.Model):
     """
     Model to provide a global locking mechanism (mutex) to prevent concurrent execution of serial operations.
