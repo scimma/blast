@@ -38,6 +38,9 @@ def get_failed_tasks(transient_name=None):
 
 
 def rerun_failed_task(task_register):
+    # TODO: This function logic is outdated. The periodic tasks list below includes tasks that are not
+    #       executed periodically. The workflow should be retriggered using the host.tasks.retrigger_transient()
+    #       function.
 
     periodic_tasks = [
         MWEBV_Transient(task_register.transient.name),
