@@ -4,7 +4,7 @@ from pathlib import Path
 ######################################################################
 # Blast application config
 #
-APP_VERSION = '1.9.0'
+APP_VERSION = '1.8.6'
 # Data paths
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")

@@ -13,7 +13,7 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [1.9.0]
+## [1.8.6]
 
 ### Removed
 
