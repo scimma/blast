@@ -368,29 +368,6 @@ class Filter(models.Model):
         return app_radius, error_adjust
 
 
-class Catalog(models.Model):
-    """
-    Model to represent a photometric catalog
-    """
-
-    name = models.CharField(max_length=100, unique=True)
-    survey = models.ForeignKey(Survey, on_delete=models.CASCADE)
-    vizier_id = models.CharField(max_length=20)
-    id_column = models.CharField(max_length=20)
-    ra_column = models.CharField(max_length=20)
-    dec_column = models.CharField(max_length=20)
-
-    objects = CatalogManager()
-
-
-class CatalogPhotometry(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    mag_column = models.CharField(max_length=20)
-    mag_error_column = models.CharField(max_length=20)
-    filter = models.ForeignKey(Filter, on_delete=models.CASCADE)
-    catalog = models.ForeignKey(Catalog, on_delete=models.CASCADE)
-
-
 def fits_file_path(instance):
     """
     Constructs a file path for a fits image
