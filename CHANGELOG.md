@@ -15,12 +15,18 @@ Types of changes:
 
 ## [1.9.0]
 
-### Changed
+### Removed
 
-- Removed obsolete analytics webpage
+- Removed unused Catalog and CatalogPhotometry models
+- Removed Acknowledgement model and copied content statically into HTML template.
+- Removed obsolete analytics webpage.
 - Removed obsolete Celery Flower webpage. Flower is deployed as a separate Docker Compose service with
   routing handled by the NGINX web proxy that is also deployed independently via Compose.
 - Deleted TaskRegisterSnapshot model and associated periodic task.
+
+### Added
+
+- Added migration script that adds the `Transient.name` validation function
 
 ## [1.8.5]
 
