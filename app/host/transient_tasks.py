@@ -615,7 +615,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             "type": "global",
         }
 
-        self._overwrite_or_create_object(Aperture, query, data)
+        create_or_update_aperture(query, data)
         return "processed"
 
 
