@@ -1526,15 +1526,6 @@ class GenerateThumbnailSEDLocal(GenerateThumbnail):
 
     def _prerequisites(self):
         return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
             "Local host SED inference": "processed",
             "Generate thumbnail SED local": "not processed",
         }
@@ -1554,15 +1545,6 @@ class GenerateThumbnailSEDGlobal(GenerateThumbnail):
 
     def _prerequisites(self):
         return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
             "Global host SED inference": "processed",
             "Generate thumbnail SED global": "not processed",
         }
