@@ -33,7 +33,7 @@ logger = get_logger(__name__)
 
 class TNSDataIngestion(SystemTaskRunner):
     def run_process(self, interval_minutes=200):
-        print("TNS STARTED")
+        logger.info("Querying TNS...")
         # # When testing periodic task management and behavior, use this short-circuit to avoid contacting TNS.
         # # START TESTING SHORT CIRCUIT
         # import random
@@ -49,11 +49,11 @@ class TNSDataIngestion(SystemTaskRunner):
         transients_from_tns = get_transients_from_tns(
             now - time_delta, tns_credentials=tns_credentials
         )
-        print("TNS DONE")
+        logger.info("TNS query complete.")
         saved_transients = Transient.objects.all()
         count = 0
+        logger.info(f'Processing transient imported from TNS: "{[tr.name for tr in transients_from_tns]}"')
         for transient_from_tns in transients_from_tns:
-            print(transient_from_tns.name)
 
             # If the transient has not already been ingested, save the TNS
             # data and proceed to the next transient
@@ -96,8 +96,8 @@ class TNSDataIngestion(SystemTaskRunner):
             if redshift_updated:
                 reprocess_transient(transient_name=saved_transient.name)
 
-        print(f"Added {count} new transients")
-        print("TNS UPLOADED")
+        if count:
+            logger.info(f"Added {count} new transients from TNS.")
 
     @property
     def task_name(self):
