@@ -13,6 +13,16 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.8.7]
+
+### Fixed
+
+- Reduced the prerequisites for the `GenerateThumbnailSEDLocal` and `GenerateThumbnailSEDGlobal` tasks
+  that were inadvertently preventing SED fit thumbnails from being generated.
+- Fixed a database foreign key constraint violation triggered by the `GlobalApertureConstruction` task
+  that sometimes deleted `Aperture` objects with associated `SEDFittingResult`, `AperturePhotometry`, and/or
+  `StarFormationHistoryResult` objects.
+
 ## [1.8.6]
 
 ### Removed
