@@ -13,6 +13,14 @@ urlpatterns = [
         f"""{base_path}transient/get/<str:transient_name>""",
         views.get_transient_science_payload,
     ),
+    path(
+        f"""{base_path}transient/delete/<str:transient_name>/""",
+        views.delete_transient_view,
+    ),
+    path(
+        f"""{base_path}transient/export/<str:transient_name>/""",
+        views.export_transient_view,
+    ),
     # TO DO: Secure this endpoint with Django REST Framework permission_classes
     # path(
     #     f"""{base_path}workflow/<str:transient_name>""",

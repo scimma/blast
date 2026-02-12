@@ -1,13 +1,15 @@
 import django_filters
+import os
+import csv
+import io
+import base64
 from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
-from django.urls import re_path
 from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
@@ -28,21 +30,17 @@ from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
 from host.plotting_utils import render_sed_plot
 from host.plotting_utils import plot_sed
-from host.plotting_utils import plot_timeseries
 from host.tables import TransientTable
 from host.tasks import import_transient_list
 from host.object_store import ObjectStore
 from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
-import os
 from django.conf import settings
 from celery import shared_task
 from host.decorators import log_usage_metric
-import csv
-import io
-import base64
 from host.host_utils import ARCSEC_DEC_IN_DEG
 from host.host_utils import ARCSEC_RA_IN_DEG
+
 from host.log import get_logger
 logger = get_logger(__name__)
 

@@ -1,22 +1,30 @@
-import itertools
-
+from django.core import serializers
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
+from django.urls import reverse_lazy
+from django.shortcuts import render
 import django_filters
 from astropy.coordinates import SkyCoord
 from django_filters.rest_framework import DjangoFilterBackend
-from host.models import *
-from host.models import Transient
-from rest_framework import generics
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.views import APIView
-
+from host.models import Aperture
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import Filter
+from host.models import SEDFittingResult
+from host.models import TaskRegister
+from host.models import Task
+from host.models import Transient
+from host.models import Host
 from . import datamodel
 from . import serializers
 from .components import data_model_components
 from host.decorators import log_usage_metric
-
+from host.host_utils import export_transient_info
+from host.host_utils import delete_transient
+from django.contrib.auth.decorators import login_required, permission_required
 
 ### Filter Sets ###
 
@@ -256,3 +264,25 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
 #     print(f'Launching transient workflow for "{transient_name}"...')
 #     result = transient_workflow.delay(transient_name)
 #     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'}, status=status.HTTP_200_OK)
+
+
+@log_usage_metric()
+def export_transient_view(request=None, transient_name=''):
+    transient_info = export_transient_info(transient_name)
+    return JsonResponse(transient_info)
+
+
+@login_required
+@permission_required("host.delete_transient", raise_exception=True)
+@log_usage_metric()
+def delete_transient_view(request=None, transient_name=''):
+    # Acquire the transient object or return 404 not found
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return render(request, "transient_404.html", status=404)
+    err_msg = delete_transient(transient=transient)
+    if err_msg:
+        return HttpResponse(status=500, content=err_msg)
+    else:
+        return HttpResponseRedirect(reverse_lazy("transient_list"))

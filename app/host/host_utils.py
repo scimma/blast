@@ -1,3 +1,7 @@
+import json
+from datetime import datetime, timezone
+from django.core import serializers
+
 import os
 import math
 import time
@@ -40,11 +44,16 @@ from .photometric_calibration import flux_to_mJy_flux
 from .photometric_calibration import fluxerr_to_magerr
 from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
-from .models import Cutout
-from .models import Aperture
-from .models import SEDFittingResult
-from .models import AperturePhotometry
-from .models import StarFormationHistoryResult
+from host.models import Aperture
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import Filter
+from host.models import SEDFittingResult
+from host.models import TaskRegister
+from host.models import Transient
+from host.models import Survey
+from host.models import StarFormationHistoryResult
+
 from .object_store import ObjectStore
 from pathlib import Path
 from .models import TaskLock
@@ -820,3 +829,89 @@ def create_or_update_aperture(query, data):
         AperturePhotometry.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
         StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
     return aperture
+
+
+def delete_transient(transient_name='', transient=None):
+    err_msg = ''
+    if not transient:
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            err_msg = 'Transient does not exist in the database.'
+            return err_msg
+    try:
+        for aperture in Aperture.objects.filter(transient=transient):
+            # Delete SEDFittingResult objects but not their associated data files
+            SEDFittingResult.objects.filter(aperture__name__exact=aperture.name).delete()
+            AperturePhotometry.objects.filter(aperture__name__exact=aperture.name).delete()
+            StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture.name).delete()
+            aperture.delete()
+        # Delete Cutout objects but not their associated data files
+        for cutout in Cutout.objects.filter(transient=transient):
+            cutout.delete()
+        transient.delete()
+    except Exception as err:
+        err_msg = str(err)
+    return err_msg
+
+
+def export_transient_info(transient_name=''):
+    '''Export all data associated with a transient sufficient to import into another Blast instance.'''
+    def prune_fields(data_object, model_name):
+        if model_name == 'transient':
+            data_object['fields'].pop('tasks_initialized')
+            data_object['fields'].pop('progress')
+            data_object['fields'].pop('added_by')
+        return data_object
+
+    transient_data = {
+        'metadata': {
+            'app_version': f'v{settings.APP_VERSION}',
+            'export_time': datetime.now(timezone.utc).isoformat(),
+        },
+        'transient': {},
+        'host': None,
+        'apertures': [],
+        'cutouts': [],
+        'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
+        'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
+    }
+    try:
+        transient_obj = Transient.objects.filter(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return {}
+    transient_obj = Transient.objects.filter(name__exact=transient_name)
+    transient = json.loads(serializers.serialize("json", transient_obj))
+    if not transient_obj:
+        return {}
+    transient_obj = transient_obj[0]
+    transient = transient[0]
+    assert isinstance(transient, dict)
+    # Export intrinsic transient data
+    transient_data['transient'] = prune_fields(transient, 'transient')
+    # Export host information
+    if transient_obj.host:
+        transient_data['host'] = json.loads(serializers.serialize("json", [transient_obj.host]))[0]
+    # Export cutout image data
+    cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
+    assert isinstance(cutouts, list)
+    transient_data['cutouts'] = cutouts
+    # Export aperture-related data
+    apertures = json.loads(serializers.serialize(
+        "json", Aperture.objects.filter(transient__name__exact=transient_name)))
+    assert isinstance(apertures, list)
+    transient_data['apertures'] = apertures
+    for aperture in transient_data['apertures']:
+        aperture['sedfittingresults'] = json.loads(serializers.serialize(
+            "json", SEDFittingResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+        if len(aperture['sedfittingresults']) == 1 and isinstance(aperture['sedfittingresults'][0], list):
+            aperture['sedfittingresults'] = aperture['sedfittingresults'][0]
+        aperture['aperturephotometry'] = json.loads(serializers.serialize(
+            "json", AperturePhotometry.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+        if len(aperture['aperturephotometry']) == 1 and isinstance(aperture['aperturephotometry'][0], list):
+            aperture['aperturephotometry'] = aperture['aperturephotometry'][0]
+        aperture['starformationhistoryresult'] = json.loads(serializers.serialize(
+            "json", StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+        if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
+            aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
+    return transient_data
