@@ -153,9 +153,10 @@ def import_transient_view(request=None):
         logger.debug(request)
         logger.debug(request.FILES)
         if form.is_valid():
-            imported_transient_names, err_msg = import_transient_info(request.FILES["file"])
-            if err_msg:
-                errors.append(err_msg)
+            imported_transient_names, import_failures = import_transient_info(request.FILES["file"])
+            for import_failure in import_failures:
+                errors.append(f'''Failed to import "{import_failure['transient_name']}": '''
+                              f'''"{import_failure['err_msg']}"''')
     else:
         form = TransientImportForm()
 

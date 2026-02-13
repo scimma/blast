@@ -61,6 +61,7 @@ from uuid import uuid4
 from shutil import rmtree
 from app.celery import app
 from .models import Status
+from .base_tasks import initialize_all_tasks_status
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -878,6 +879,7 @@ def export_transient_info(transient_name=''):
         'cutouts': [],
         'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
         'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
+        'workflow_tasks': [],
     }
     try:
         transient_obj = Transient.objects.filter(name__exact=transient_name)
@@ -917,6 +919,17 @@ def export_transient_info(transient_name=''):
             "json", StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
         if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
             aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
+    for tr in TaskRegister.objects.filter(transient__name=transient_name):
+        transient_data['workflow_tasks'].append({
+            'task_name': tr.task.name,
+            'status': {
+                'type': tr.status.type,
+                'message': tr.status.message,
+            },
+            'user_warning': tr.user_warning,
+            'last_modified': tr.last_modified,
+            'last_processing_time_seconds': tr.last_processing_time_seconds,
+        })
     return transient_data
 
 
@@ -930,27 +943,39 @@ def import_transient_info(transient_data_json):
     elif isinstance(transient_data, list):
         datasets_to_import = transient_data
     assert isinstance(datasets_to_import, list)
+
     imported_transient_names = []
-    # Construct the database objects
-    for dataset in datasets_to_import:
+    import_failures = []
+
+    def record_import_error(transient_name, err_msg=''):
+        import_failures.append({
+            'transient_name': transient_name,
+            'err_msg': err_msg,
+        })
+
+    def process_transient_dataset(dataset):
         # Verify that the transient is not already present (by name)
         transient_name = dataset['transient']['fields']['name']
         if Transient.objects.filter(name__exact=transient_name):
-            return imported_transient_names, f'Transient "{transient_name}" already exists'
+            record_import_error(transient_name, f'Transient "{transient_name}" already exists')
+            return
         # Verify that Survey objects exist and are identical.
         for survey in dataset['surveys']:
             survey_name = survey['fields']['name']
             try:
                 Survey.objects.get(name__exact=survey_name)
             except Survey.DoesNotExist:
-                return imported_transient_names, f'[{transient_name}] Survey "{survey_name}" does not exist.'
+                record_import_error(transient_name, f'[{transient_name}] Survey "{survey_name}" does not exist.')
+                return
         # Verify that Filter objects exist and are identical.
         for filter in dataset['filters']:
             filter_name = filter['fields']['name']
             try:
                 filter_obj = Filter.objects.get(name__exact=filter_name)
             except Filter.DoesNotExist:
-                return imported_transient_names, f'[{transient_name}] Filter "{filter_name}" does not exist.'
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Filter "{filter_name}" does not exist.')
+                return
             try:
                 logger.debug(f'''Importing filter:\n{json.dumps(filter['fields'], indent=2)}''')
                 debug_filter_obj_dict = {
@@ -991,7 +1016,9 @@ def import_transient_info(transient_data_json):
                 assert filter_obj.magnitude_zero_point_keyword == filter['fields']['magnitude_zero_point_keyword']
                 assert filter_obj.image_pixel_units == filter['fields']['image_pixel_units']
             except AssertionError as err:
-                return imported_transient_names, f'[{transient_name}] Filter named "{filter_obj.name}" exists but is not identical to the import: {err}'
+                record_import_error(transient_name, f'[{transient_name}] Filter named '
+                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+                return
         # Verify that if the Host exists (by name), that it is identical.
         # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
         #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
@@ -1019,8 +1046,10 @@ def import_transient_info(transient_data_json):
                 proximity_search = host_search.filter(cone_search)
                 # Consider the import a failure if there is an inconsistent host definition
                 if not proximity_search:
-                    return imported_transient_names, (f'[{transient_name}] Host with matching name "{host_name}" '
-                                                      f'exists, but it is in a different location.')
+                    record_import_error(transient_name,
+                                        f'[{transient_name}] Host with matching name "{host_name}" '
+                                        f'exists, but it is in a different location.')
+                    return
                 # If the name and location match, claim this is the same host
                 host = proximity_search[0]
         # If no host match was found, create a new Host object
@@ -1040,12 +1069,16 @@ def import_transient_info(transient_data_json):
         for cutout in dataset['cutouts']:
             cutout_name = cutout['fields']['name']
             if Cutout.objects.filter(name__exact=cutout_name).exists():
-                return imported_transient_names, f'[{transient_name}] Cutout "{cutout_name}" exists.'
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Cutout "{cutout_name}" exists.')
+                return
         # Verify that each Aperture object does not exist.
         for aperture in dataset['apertures']:
             aperture_name = aperture['fields']['name']
             if Aperture.objects.filter(name__exact=aperture_name).exists():
-                return imported_transient_names, f'[{transient_name}] Aperture "{aperture_name}" exists.'
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Aperture "{aperture_name}" exists.')
+                return
             # Ignore any orphaned StarFormationHistoryResult objects that may exist because they will not interfere.
             # Ignore any orphaned AperturePhotometry objects that may exist because they will not interfere.
             # Ignore any orphaned SEDFittingResult objects that may exist because they will not interfere.
@@ -1197,8 +1230,31 @@ def import_transient_info(transient_data_json):
                 # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
                 sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
                                              for sfh_pk in sedfittingresults['fields']['logsfh']])
-        imported_transient_names.append(transient.name)
+        initialize_all_tasks_status(transient)
+        all_trs = TaskRegister.objects.filter(transient__name=transient_name)
+        for tr in dataset['workflow_tasks']:
+            task_name = tr['task_name']
+            try:
+                tr_obj = all_trs.get(task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Workflow task "{task_name}" does not exist.')
+                return
+            tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
+            tr_obj.user_warning = tr['user_warning']
+            tr_obj.last_modified = tr['last_modified']
+            tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
+            tr_obj.save()
         # TODO: Install data files.
-        # TODO: Create TaskRegister objects with statuses based on imported data.
-    # logger.debug(json.dumps(datasets_to_import, indent=2))
-    return imported_transient_names, ''
+        imported_transient_names.append(transient.name)
+
+    # Construct the database objects for each transient.
+    for dataset in datasets_to_import:
+        # Use a nested function to support aborting upon error within nested for loops.
+        process_transient_dataset(dataset)
+
+    # Delete database objects associated with failed imports
+    for import_failure in import_failures:
+        delete_transient(transient_name=import_failure['transient_name'])
+
+    return imported_transient_names, import_failures
