@@ -45,6 +45,7 @@ from .photometric_calibration import fluxerr_to_magerr
 from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
 from host.models import Aperture
+from host.models import Host
 from host.models import AperturePhotometry
 from host.models import Cutout
 from host.models import Filter
@@ -55,13 +56,11 @@ from host.models import Survey
 from host.models import StarFormationHistoryResult
 
 from .object_store import ObjectStore
-from pathlib import Path
 from .models import TaskLock
 from uuid import uuid4
 from shutil import rmtree
 from app.celery import app
 from .models import Status
-from .models import TaskRegister
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -81,6 +80,7 @@ FILTER_NAMES = [
     "DES_g",
     "2MASS_H",
 ]
+
 
 def survey_list(survey_metadata_path):
     """
@@ -681,7 +681,7 @@ def get_directory_size(directory):
 
 def get_job_scratch_prune_lock_id(scratch_root):
     '''Create or parse a lock file containing a unique ID for the scratch root directory.
-       In conjunction with the TaskLock global mutex, this lock file prevents more than 
+       In conjunction with the TaskLock global mutex, this lock file prevents more than
        a single process from attempting to prune scratch files therein.'''
     # Determine worker ID from "prune_lock.yaml" file
     semaphore_path = os.path.join(scratch_root, 'prune_lock.yaml')
@@ -840,6 +840,9 @@ def delete_transient(transient_name='', transient=None):
             err_msg = 'Transient does not exist in the database.'
             return err_msg
     try:
+        # TODO: This manual deletion of associated objects should not be necessary, due to the use of
+        #       "models.ForeignKey(X, on_delete=models.CASCADE)" in the model definitions. However, without
+        #       this logic, there are foriegn key constraint violations in the database transactions.
         for aperture in Aperture.objects.filter(transient=transient):
             # Delete SEDFittingResult objects but not their associated data files
             SEDFittingResult.objects.filter(aperture__name__exact=aperture.name).delete()
@@ -915,3 +918,287 @@ def export_transient_info(transient_name=''):
         if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
             aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
     return transient_data
+
+
+def import_transient_info(transient_data_json):
+    '''Import all data associated with a transient from a Blast export file.'''
+    logger.debug(transient_data_json)
+    transient_data = json.load(transient_data_json)
+    # Construct the import list
+    if isinstance(transient_data, dict):
+        datasets_to_import = [transient_data]
+    elif isinstance(transient_data, list):
+        datasets_to_import = transient_data
+    assert isinstance(datasets_to_import, list)
+    imported_transient_names = []
+    # Construct the database objects
+    for dataset in datasets_to_import:
+        # Verify that the transient is not already present (by name)
+        transient_name = dataset['transient']['fields']['name']
+        if Transient.objects.filter(name__exact=transient_name):
+            return imported_transient_names, f'Transient "{transient_name}" already exists'
+        # Verify that Survey objects exist and are identical.
+        for survey in dataset['surveys']:
+            survey_name = survey['fields']['name']
+            try:
+                Survey.objects.get(name__exact=survey_name)
+            except Survey.DoesNotExist:
+                return imported_transient_names, f'[{transient_name}] Survey "{survey_name}" does not exist.'
+        # Verify that Filter objects exist and are identical.
+        for filter in dataset['filters']:
+            filter_name = filter['fields']['name']
+            try:
+                filter_obj = Filter.objects.get(name__exact=filter_name)
+            except Filter.DoesNotExist:
+                return imported_transient_names, f'[{transient_name}] Filter "{filter_name}" does not exist.'
+            try:
+                logger.debug(f'''Importing filter:\n{json.dumps(filter['fields'], indent=2)}''')
+                debug_filter_obj_dict = {
+                    'survey': filter_obj.survey.name,
+                    'kcorrect_name': filter_obj.kcorrect_name,
+                    'sedpy_id': filter_obj.sedpy_id,
+                    'hips_id': filter_obj.hips_id,
+                    'vosa_id': filter_obj.vosa_id,
+                    'image_download_method': filter_obj.image_download_method,
+                    'pixel_size_arcsec': filter_obj.pixel_size_arcsec,
+                    'image_fwhm_arcsec': filter_obj.image_fwhm_arcsec,
+                    'wavelength_eff_angstrom': filter_obj.wavelength_eff_angstrom,
+                    'wavelength_min_angstrom': filter_obj.wavelength_min_angstrom,
+                    'wavelength_max_angstrom': filter_obj.wavelength_max_angstrom,
+                    'vega_zero_point_jansky': filter_obj.vega_zero_point_jansky,
+                    'magnitude_zero_point': filter_obj.magnitude_zero_point,
+                    'ab_offset': filter_obj.ab_offset,
+                    'magnitude_zero_point_keyword': filter_obj.magnitude_zero_point_keyword,
+                    'image_pixel_units': filter_obj.image_pixel_units,
+                }
+                logger.debug(f'''Existing filter:\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
+                # The survey names associated with the existing and importing filter should match
+                assert filter_obj.survey.name == [survey['fields']['name'] for survey in dataset['surveys']
+                                                  if survey['pk'] == filter['fields']['survey']][0]
+                assert filter_obj.kcorrect_name == filter['fields']['kcorrect_name']
+                assert filter_obj.sedpy_id == filter['fields']['sedpy_id']
+                assert filter_obj.hips_id == filter['fields']['hips_id']
+                assert filter_obj.vosa_id == filter['fields']['vosa_id']
+                assert filter_obj.image_download_method == filter['fields']['image_download_method']
+                assert filter_obj.pixel_size_arcsec == filter['fields']['pixel_size_arcsec']
+                assert filter_obj.image_fwhm_arcsec == filter['fields']['image_fwhm_arcsec']
+                assert filter_obj.wavelength_eff_angstrom == filter['fields']['wavelength_eff_angstrom']
+                assert filter_obj.wavelength_min_angstrom == filter['fields']['wavelength_min_angstrom']
+                assert filter_obj.wavelength_max_angstrom == filter['fields']['wavelength_max_angstrom']
+                assert filter_obj.vega_zero_point_jansky == filter['fields']['vega_zero_point_jansky']
+                assert filter_obj.magnitude_zero_point == filter['fields']['magnitude_zero_point']
+                assert filter_obj.ab_offset == filter['fields']['ab_offset']
+                assert filter_obj.magnitude_zero_point_keyword == filter['fields']['magnitude_zero_point_keyword']
+                assert filter_obj.image_pixel_units == filter['fields']['image_pixel_units']
+            except AssertionError as err:
+                return imported_transient_names, f'[{transient_name}] Filter named "{filter_obj.name}" exists but is not identical to the import: {err}'
+        # Verify that if the Host exists (by name), that it is identical.
+        # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
+        #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
+        #       missing?
+        host_name = dataset['host']['fields']['name']
+        ra_deg = dataset['host']['fields']['ra_deg']
+        dec_deg = dataset['host']['fields']['dec_deg']
+        cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
+                       & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
+                       & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
+                       & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
+        proximate_hosts = Host.objects.filter(cone_search)
+        if proximate_hosts:
+            logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
+                        f'''importing host "{host_name}".''')
+        host = None
+        # If there is an existing proximate host for an unnamed host, claim this is the same host
+        if not host_name and proximate_hosts:
+            host = proximate_hosts[0]
+        elif host_name:
+            # Find existing hosts with the same name
+            host_search = Host.objects.filter(name__exact=host_name)
+            if host_search:
+                # If the host name matches, require that the position overlaps
+                proximity_search = host_search.filter(cone_search)
+                # Consider the import a failure if there is an inconsistent host definition
+                if not proximity_search:
+                    return imported_transient_names, (f'[{transient_name}] Host with matching name "{host_name}" '
+                                                      f'exists, but it is in a different location.')
+                # If the name and location match, claim this is the same host
+                host = proximity_search[0]
+        # If no host match was found, create a new Host object
+        if not host:
+            host = Host.objects.create(
+                ra_deg=dataset['host']['fields']['ra_deg'],
+                dec_deg=dataset['host']['fields']['dec_deg'],
+                name=dataset['host']['fields']['name'],
+                redshift=dataset['host']['fields']['redshift'],
+                redshift_err=dataset['host']['fields']['redshift_err'],
+                photometric_redshift=dataset['host']['fields']['photometric_redshift'],
+                photometric_redshift_err=dataset['host']['fields']['photometric_redshift_err'],
+                milkyway_dust_reddening=dataset['host']['fields']['milkyway_dust_reddening'],
+                software_version=dataset['host']['fields']['software_version'],
+            )
+        # Verify that the Cutout objects do not exist (by name).
+        for cutout in dataset['cutouts']:
+            cutout_name = cutout['fields']['name']
+            if Cutout.objects.filter(name__exact=cutout_name).exists():
+                return imported_transient_names, f'[{transient_name}] Cutout "{cutout_name}" exists.'
+        # Verify that each Aperture object does not exist.
+        for aperture in dataset['apertures']:
+            aperture_name = aperture['fields']['name']
+            if Aperture.objects.filter(name__exact=aperture_name).exists():
+                return imported_transient_names, f'[{transient_name}] Aperture "{aperture_name}" exists.'
+            # Ignore any orphaned StarFormationHistoryResult objects that may exist because they will not interfere.
+            # Ignore any orphaned AperturePhotometry objects that may exist because they will not interfere.
+            # Ignore any orphaned SEDFittingResult objects that may exist because they will not interfere.
+
+        # Create Transient object
+        transient = Transient.objects.create(
+            ra_deg=dataset['transient']['fields']['ra_deg'],
+            dec_deg=dataset['transient']['fields']['dec_deg'],
+            name=dataset['transient']['fields']['name'],
+            display_name=dataset['transient']['fields']['display_name'],
+            tns_id=dataset['transient']['fields']['tns_id'],
+            tns_prefix=dataset['transient']['fields']['tns_prefix'],
+            public_timestamp=dataset['transient']['fields']['public_timestamp'],
+            host=host,
+            redshift=dataset['transient']['fields']['redshift'],
+            spectroscopic_class=dataset['transient']['fields']['spectroscopic_class'],
+            photometric_class=dataset['transient']['fields']['photometric_class'],
+            milkyway_dust_reddening=dataset['transient']['fields']['milkyway_dust_reddening'],
+            processing_status=dataset['transient']['fields']['processing_status'],
+            software_version=dataset['transient']['fields']['software_version'],
+        )
+        # Create Cutout objects
+        for cutout in dataset['cutouts']:
+            filter_name = [filter['fields']['name'] for filter in dataset['filters']
+                           if filter['pk'] == cutout['fields']['filter']][0]
+            Cutout.objects.create(
+                name=cutout['fields']['name'],
+                filter=Filter.objects.get(name__exact=filter_name),
+                transient=transient,
+                fits=cutout['fields']['fits'],
+                message=cutout['fields']['message'],
+                software_version=cutout['fields']['software_version'],
+                cropped=cutout['fields']['cropped'],
+            )
+        # For each Aperture object,
+            # Create Aperture object
+            # Create StarFormationHistoryResult objects
+            # Create AperturePhotometry objects
+            # Create SEDFittingResult objects
+        for aperture in dataset['apertures']:
+            logger.debug(f'''Aperture cutout pk: {aperture['fields']['cutout']}''')
+            cutout_name_search = [cutout['fields']['name'] for cutout in dataset['cutouts']
+                                  if cutout['pk'] == aperture['fields']['cutout']]
+            if cutout_name_search:
+                cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
+            else:
+                cutout_obj = None
+            aperture_obj = Aperture.objects.create(
+                ra_deg=aperture['fields']['ra_deg'],
+                dec_deg=aperture['fields']['dec_deg'],
+                name=aperture['fields']['name'],
+                cutout=cutout_obj,
+                transient=transient,
+                orientation_deg=aperture['fields']['orientation_deg'],
+                semi_major_axis_arcsec=aperture['fields']['semi_major_axis_arcsec'],
+                semi_minor_axis_arcsec=aperture['fields']['semi_minor_axis_arcsec'],
+                type=aperture['fields']['type'],
+                software_version=aperture['fields']['software_version'],
+            )
+            for aperturephotometry in aperture['aperturephotometry']:
+                filter_name = [filter['fields']['name'] for filter in dataset['filters']
+                               if filter['pk'] == aperturephotometry['fields']['filter']][0]
+                AperturePhotometry.objects.create(
+                    aperture=aperture_obj,
+                    filter=Filter.objects.get(name__exact=filter_name),
+                    transient=transient,
+                    flux=aperturephotometry['fields']['flux'],
+                    flux_error=aperturephotometry['fields']['flux_error'],
+                    magnitude=aperturephotometry['fields']['magnitude'],
+                    magnitude_error=aperturephotometry['fields']['magnitude_error'],
+                    is_validated=aperturephotometry['fields']['is_validated'],
+                    software_version=aperturephotometry['fields']['software_version'],
+                )
+            # Compile a dictionary of StarFormationHistoryResult objects indexed by their primary key values for
+            # subsequent association with SEDFittingResult objects.
+            sfh_objs = {}
+            for starformationhistoryresult in aperture['starformationhistoryresult']:
+                sfh_objs[starformationhistoryresult['pk']] = StarFormationHistoryResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    logsfr_16=starformationhistoryresult['fields']['logsfr_16'],
+                    logsfr_50=starformationhistoryresult['fields']['logsfr_50'],
+                    logsfr_84=starformationhistoryresult['fields']['logsfr_84'],
+                    logsfr_tmin=starformationhistoryresult['fields']['logsfr_tmin'],
+                    logsfr_tmax=starformationhistoryresult['fields']['logsfr_tmax'],
+                    software_version=starformationhistoryresult['fields']['software_version'],
+                )
+            for sedfittingresults in aperture['sedfittingresults']:
+                # logsfh = []
+                # for sfh_pk in sedfittingresults['fields']['logsfh']:
+                #     logsfh.append([sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0])
+                # logsfh = [[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                #           for sfh_pk in sedfittingresults['fields']['logsfh']]
+                sedfittingresult = SEDFittingResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    posterior=sedfittingresults['fields']['posterior'],
+                    log_mass_16=sedfittingresults['fields']['log_mass_16'],
+                    log_mass_50=sedfittingresults['fields']['log_mass_50'],
+                    log_mass_84=sedfittingresults['fields']['log_mass_84'],
+                    mass_surviving_ratio=sedfittingresults['fields']['mass_surviving_ratio'],
+                    log_sfr_16=sedfittingresults['fields']['log_sfr_16'],
+                    log_sfr_50=sedfittingresults['fields']['log_sfr_50'],
+                    log_sfr_84=sedfittingresults['fields']['log_sfr_84'],
+                    log_ssfr_16=sedfittingresults['fields']['log_ssfr_16'],
+                    log_ssfr_50=sedfittingresults['fields']['log_ssfr_50'],
+                    log_ssfr_84=sedfittingresults['fields']['log_ssfr_84'],
+                    log_age_16=sedfittingresults['fields']['log_age_16'],
+                    log_age_50=sedfittingresults['fields']['log_age_50'],
+                    log_age_84=sedfittingresults['fields']['log_age_84'],
+                    log_tau_16=sedfittingresults['fields']['log_tau_16'],
+                    log_tau_50=sedfittingresults['fields']['log_tau_50'],
+                    log_tau_84=sedfittingresults['fields']['log_tau_84'],
+                    logzsol_16=sedfittingresults['fields']['logzsol_16'],
+                    logzsol_50=sedfittingresults['fields']['logzsol_50'],
+                    logzsol_84=sedfittingresults['fields']['logzsol_84'],
+                    dust2_16=sedfittingresults['fields']['dust2_16'],
+                    dust2_50=sedfittingresults['fields']['dust2_50'],
+                    dust2_84=sedfittingresults['fields']['dust2_84'],
+                    dust_index_16=sedfittingresults['fields']['dust_index_16'],
+                    dust_index_50=sedfittingresults['fields']['dust_index_50'],
+                    dust_index_84=sedfittingresults['fields']['dust_index_84'],
+                    dust1_fraction_16=sedfittingresults['fields']['dust1_fraction_16'],
+                    dust1_fraction_50=sedfittingresults['fields']['dust1_fraction_50'],
+                    dust1_fraction_84=sedfittingresults['fields']['dust1_fraction_84'],
+                    log_fagn_16=sedfittingresults['fields']['log_fagn_16'],
+                    log_fagn_50=sedfittingresults['fields']['log_fagn_50'],
+                    log_fagn_84=sedfittingresults['fields']['log_fagn_84'],
+                    log_agn_tau_16=sedfittingresults['fields']['log_agn_tau_16'],
+                    log_agn_tau_50=sedfittingresults['fields']['log_agn_tau_50'],
+                    log_agn_tau_84=sedfittingresults['fields']['log_agn_tau_84'],
+                    gas_logz_16=sedfittingresults['fields']['gas_logz_16'],
+                    gas_logz_50=sedfittingresults['fields']['gas_logz_50'],
+                    gas_logz_84=sedfittingresults['fields']['gas_logz_84'],
+                    duste_qpah_16=sedfittingresults['fields']['duste_qpah_16'],
+                    duste_qpah_50=sedfittingresults['fields']['duste_qpah_50'],
+                    duste_qpah_84=sedfittingresults['fields']['duste_qpah_84'],
+                    duste_umin_16=sedfittingresults['fields']['duste_umin_16'],
+                    duste_umin_50=sedfittingresults['fields']['duste_umin_50'],
+                    duste_umin_84=sedfittingresults['fields']['duste_umin_84'],
+                    log_duste_gamma_16=sedfittingresults['fields']['log_duste_gamma_16'],
+                    log_duste_gamma_50=sedfittingresults['fields']['log_duste_gamma_50'],
+                    log_duste_gamma_84=sedfittingresults['fields']['log_duste_gamma_84'],
+                    chains_file=sedfittingresults['fields']['chains_file'],
+                    percentiles_file=sedfittingresults['fields']['percentiles_file'],
+                    model_file=sedfittingresults['fields']['model_file'],
+                    software_version=sedfittingresults['fields']['software_version'],
+                )
+                # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
+                sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                                             for sfh_pk in sedfittingresults['fields']['logsfh']])
+        imported_transient_names.append(transient.name)
+        # TODO: Install data files.
+        # TODO: Create TaskRegister objects with statuses based on imported data.
+    # logger.debug(json.dumps(datasets_to_import, indent=2))
+    return imported_transient_names, ''

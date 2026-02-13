@@ -15,6 +15,8 @@ from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
+from host.forms import TransientImportForm
+from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
 from host.models import Aperture
@@ -138,6 +140,31 @@ def transient_list(request):
 
     context = {"transients": transients, "table": table, "filter": transientfilter}
     return render(request, "transient_list.html", context)
+
+
+@login_required
+@permission_required("host.upload_transient", raise_exception=True)
+@log_usage_metric()
+def import_transient_view(request=None):
+    errors = []
+    imported_transient_names = []
+    if request.method == "POST":
+        form = TransientImportForm(request.POST, request.FILES)
+        logger.debug(request)
+        logger.debug(request.FILES)
+        if form.is_valid():
+            imported_transient_names, err_msg = import_transient_info(request.FILES["file"])
+            if err_msg:
+                errors.append(err_msg)
+    else:
+        form = TransientImportForm()
+
+    context = {
+        "form": form,
+        "errors": errors,
+        "imported_transient_names": imported_transient_names,
+    }
+    return render(request, "import_transient.html", context)
 
 
 @login_required

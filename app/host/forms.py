@@ -27,6 +27,10 @@ class ImageGetForm(forms.Form):
         )
 
 
+class TransientImportForm(forms.Form):
+    file = forms.FileField()
+
+
 class TransientUploadForm(forms.Form):
     tns_names = forms.CharField(
         widget=forms.Textarea(attrs={

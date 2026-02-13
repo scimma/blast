@@ -1,0 +1,53 @@
+{% extends 'host/base.html' %}
+{% load host_tags %}
+
+{% block title %} Import Transients {% endblock %}
+
+{% block body %}
+
+{% load bootstrap4 %}
+
+<div class="container">
+
+  <div class="pt-5">
+    <h1 class="mb-3"><i class="bi bi-database-add"></i> Import Transients</h1>
+  </div>
+
+  <form class="form pt-5 px-5" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="input-group">
+      <div id="import-form" class="transient-form">
+        <p>Import transients by uploading a Blast dataset export file.
+        <div class="input-group-text" id="import-form">
+          <button type="submit" id="submit-btn" class="btn btn-primary" type="button"
+                  style="min-width: 8rem; width: 10rem; margin-right: 3rem;">Submit</button>
+          {{ form.file }}
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if errors|length %}
+  <div class="py-3">
+  <p><font color="#ff0000">There were errors:</font></p>
+  <ul>
+    {% for error in errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+  
+  {% if imported_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients imported:</p>
+  <ul>
+    {% for transient_name in imported_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -86,7 +86,7 @@ class Host(SkyObject):
             of the host
     """
 
-    name = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=100, blank=True, null=True, unique=True)
     redshift = models.FloatField(null=True, blank=True)
     redshift_err = models.FloatField(null=True, blank=True)
     photometric_redshift = models.FloatField(null=True, blank=True)

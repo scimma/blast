@@ -20,6 +20,7 @@ if base_path != "":
 urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
+    path(f"""{base_path}import/""", views.import_transient_view, name="import_transient"),
     path(f"""{base_path}transients/<slug:transient_name>/""", views.results, name="results"),
     path(
         f"""{base_path}download_chains/<slug:slug>/<str:aperture_type>/""",
