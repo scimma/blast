@@ -920,6 +920,10 @@ def export_transient_info(transient_name=''):
         if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
             aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
     for tr in TaskRegister.objects.filter(transient__name=transient_name):
+        try:
+            last_modified = tr.last_modified.isoformat()
+        except AttributeError:
+            last_modified = ''
         transient_data['workflow_tasks'].append({
             'task_name': tr.task.name,
             'status': {
@@ -927,7 +931,7 @@ def export_transient_info(transient_name=''):
                 'message': tr.status.message,
             },
             'user_warning': tr.user_warning,
-            'last_modified': tr.last_modified,
+            'last_modified': last_modified,
             'last_processing_time_seconds': tr.last_processing_time_seconds,
         })
     return transient_data

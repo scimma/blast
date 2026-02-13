@@ -1,3 +1,11 @@
+import os
+import json
+from host.object_store import ObjectStore
+from django.http import StreamingHttpResponse
+from django.conf import settings
+from shutil import rmtree
+from io import StringIO, BytesIO
+import tarfile
 from django.core import serializers
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
@@ -267,9 +275,42 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
 
 
 @log_usage_metric()
-def export_transient_view(request=None, transient_name=''):
-    transient_info = export_transient_info(transient_name)
-    return JsonResponse(transient_info)
+def export_transient_view(request=None, transient_name='', all=''):
+    if all:
+        print(f'Exporting all data for "{transient_name}", including files.')
+        # Generate compressed archive file of all data
+
+        s3 = ObjectStore()
+        tar_bytes_io = BytesIO()
+        with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
+            transient_info = export_transient_info(transient_name)
+            transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
+            transient_info_fileobj.seek(0)
+            tarinfo = tarfile.TarInfo(name=f'{transient_name}.json')
+            tarinfo.size = transient_info_fileobj.getbuffer().nbytes
+            tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
+
+            # Download cutout FITS image files
+            for cutout in transient_info['cutouts']:
+                canonical_path = cutout['fields']['fits']
+                if not canonical_path:
+                    continue
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                cutout_fileobj = BytesIO(s3.get_object(path=object_key))
+                tarinfo = tarfile.TarInfo(
+                    name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
+                tarinfo.size = cutout_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
+
+        tar_bytes_io.seek(0)
+        archive_filename = f'{transient_name}.tar.gz'
+        response = StreamingHttpResponse(streaming_content=tar_bytes_io)
+        response["Content-Disposition"] = f"attachment; filename={archive_filename}"
+        return response
+    else:
+        print(f'Exporting only database objects for "{transient_name}", no data files.')
+        transient_info = export_transient_info(transient_name)
+        return JsonResponse(transient_info)
 
 
 @login_required

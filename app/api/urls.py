@@ -1,6 +1,6 @@
 import os
 
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -17,15 +17,10 @@ urlpatterns = [
         f"""{base_path}transient/delete/<str:transient_name>/""",
         views.delete_transient_view,
     ),
-    path(
-        f"""{base_path}transient/export/<str:transient_name>/""",
+    re_path(
+        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.export_transient_view,
     ),
-    # TO DO: Secure this endpoint with Django REST Framework permission_classes
-    # path(
-    #     f"""{base_path}workflow/<str:transient_name>""",
-    #     views.launch_workflow,
-    # ),
 ]
 
 if os.environ.get("ALLOW_API_POST") == "YES":
