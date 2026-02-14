@@ -276,14 +276,15 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
 
 @log_usage_metric()
 def export_transient_view(request=None, transient_name='', all=''):
+    transient_info = export_transient_info(transient_name)
+    if not transient_info:
+        return render(request, "transient_404.html", status=404)
     if all:
         print(f'Exporting all data for "{transient_name}", including files.')
-        # Generate compressed archive file of all data
-
         s3 = ObjectStore()
         tar_bytes_io = BytesIO()
+        # Generate compressed archive file object of all data to stream
         with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
-            transient_info = export_transient_info(transient_name)
             transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
             transient_info_fileobj.seek(0)
             tarinfo = tarfile.TarInfo(name=f'{transient_name}.json')
@@ -291,21 +292,36 @@ def export_transient_view(request=None, transient_name='', all=''):
             tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
 
             # Download cutout FITS image files
+            print(json.dumps(transient_info, indent=2))
             for cutout in transient_info['cutouts']:
                 canonical_path = cutout['fields']['fits']
                 if not canonical_path:
                     continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
                 cutout_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each cutout file are unique
                 tarinfo = tarfile.TarInfo(
                     name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
                 tarinfo.size = cutout_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
-
+            # Collect SED fit files.
+            sedfittingresults = []
+            for aperture in transient_info['apertures']:
+                if aperture['sedfittingresults']:
+                    sedfittingresults.extend(aperture['sedfittingresults'])
+            for sedfittingresult in sedfittingresults:
+                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                    canonical_path = sedfittingresult['fields'][sed_file]
+                    object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                    sed_fileobj = BytesIO(s3.get_object(path=object_key))
+                    # This assumes that the canonical paths for each sed file are unique
+                    tarinfo = tarfile.TarInfo(
+                        name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
+                    tarinfo.size = sed_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
         tar_bytes_io.seek(0)
-        archive_filename = f'{transient_name}.tar.gz'
         response = StreamingHttpResponse(streaming_content=tar_bytes_io)
-        response["Content-Disposition"] = f"attachment; filename={archive_filename}"
+        response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
         return response
     else:
         print(f'Exporting only database objects for "{transient_name}", no data files.')

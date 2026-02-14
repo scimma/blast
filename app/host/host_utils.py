@@ -881,16 +881,11 @@ def export_transient_info(transient_name=''):
         'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
         'workflow_tasks': [],
     }
-    try:
-        transient_obj = Transient.objects.filter(name__exact=transient_name)
-    except Transient.DoesNotExist:
+    transient_search = Transient.objects.filter(name__exact=transient_name)
+    if not transient_search:
         return {}
-    transient_obj = Transient.objects.filter(name__exact=transient_name)
-    transient = json.loads(serializers.serialize("json", transient_obj))
-    if not transient_obj:
-        return {}
-    transient_obj = transient_obj[0]
-    transient = transient[0]
+    transient_obj = transient_search[0]
+    transient = json.loads(serializers.serialize("json", transient_search))[0]
     assert isinstance(transient, dict)
     # Export intrinsic transient data
     transient_data['transient'] = prune_fields(transient, 'transient')
