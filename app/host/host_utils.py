@@ -1,4 +1,5 @@
 import json
+from tarfile import open as tar_open
 from datetime import datetime, timezone
 from django.core import serializers
 
@@ -932,10 +933,29 @@ def export_transient_info(transient_name=''):
     return transient_data
 
 
-def import_transient_info(transient_data_json):
+def import_transient_info(transient_data_archive):
     '''Import all data associated with a transient from a Blast export file.'''
-    logger.debug(transient_data_json)
-    transient_data = json.load(transient_data_json)
+    logger.debug(transient_data_archive)
+
+    with tar_open(fileobj=transient_data_archive, mode="r:gz") as tar_fp:
+        for tarinfo in tar_fp:
+            print(tarinfo.name, "is", tarinfo.size, "bytes in size and is ", end="")
+            if tarinfo.isreg():
+                print("a regular file.")
+            elif tarinfo.isdir():
+                print("a directory.")
+            else:
+                print("something else.")
+        try:
+            metadata_tarinfo = [tarinfo for tarinfo in tar_fp if tarinfo.name == 'transient.json'][0]
+        except IndexError:
+            logger.error('Error importing transient dataset: No "transient.json" file found.')
+            return [], []
+        transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
+        logger.debug(transient_info['metadata'])
+    
+    return [], []  # TODO: remove this
+
     # Construct the import list
     if isinstance(transient_data, dict):
         datasets_to_import = [transient_data]

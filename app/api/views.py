@@ -307,7 +307,8 @@ def export_transient_view(request=None, transient_name='', all=''):
             # Add transient dataset document to archive
             transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
             transient_info_fileobj.seek(0)
-            tarinfo = tarfile.TarInfo(name=f'{transient_name}.json')
+            # Assign standard generic filename to ease parsing of metadata upon import
+            tarinfo = tarfile.TarInfo(name='transient.json')
             tarinfo.size = transient_info_fileobj.getbuffer().nbytes
             tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
             # Download cutout FITS image files into memory
