@@ -1,22 +1,23 @@
 import os
 import json
-from host.object_store import ObjectStore
-from django.http import StreamingHttpResponse
-from django.conf import settings
-from shutil import rmtree
-from io import StringIO, BytesIO
 import tarfile
-from django.core import serializers
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
-from django.urls import reverse_lazy
-from django.shortcuts import render
-import django_filters
+from io import BytesIO
 from astropy.coordinates import SkyCoord
+import django_filters
+from django.conf import settings
+from django.urls import reverse_lazy
+from django.http import StreamingHttpResponse
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
+from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from host.object_store import ObjectStore
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -26,16 +27,28 @@ from host.models import TaskRegister
 from host.models import Task
 from host.models import Transient
 from host.models import Host
-from . import datamodel
-from . import serializers
-from .components import data_model_components
 from host.decorators import log_usage_metric
 from host.host_utils import export_transient_info
 from host.host_utils import delete_transient
-from django.contrib.auth.decorators import login_required, permission_required
+from api.serializers import TransientSerializer
+from api.serializers import ApertureSerializer
+from api.serializers import CutoutSerializer
+from api.serializers import FilterSerializer
+from api.serializers import AperturePhotometrySerializer
+from api.serializers import SEDFittingResultSerializer
+from api.serializers import TaskRegisterSerializer
+from api.serializers import TaskSerializer
+from api.serializers import HostSerializer
+from api.datamodel import unpack_component_groups
+from api.datamodel import serialize_blast_science_data
+from api.components import data_model_components
 
-### Filter Sets ###
+from host.log import get_logger
+logger = get_logger(__name__)
 
+
+############################################################
+# Filter Sets
 class TransientFilter(django_filters.FilterSet):
     redshift_lte = django_filters.NumberFilter(
         field_name="redshift", lookup_expr="lte")
@@ -55,7 +68,6 @@ class TransientFilter(django_filters.FilterSet):
         fields = ("name",)
 
 
-### Filter Sets ###
 class HostFilter(django_filters.FilterSet):
     redshift_lte = django_filters.NumberFilter(
         field_name="redshift", lookup_expr="lte")
@@ -124,63 +136,65 @@ class SEDFittingResultFilter(django_filters.FilterSet):
         fields = ()
 
 
-### ViewSets ###
+############################################################
+# ViewSets
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transient.objects.all()
-    serializer_class = serializers.TransientSerializer
+    serializer_class = TransientSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TransientFilter
 
+
 class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Aperture.objects.all()
-    serializer_class = serializers.ApertureSerializer
+    serializer_class = ApertureSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = ApertureFilter
 
 
 class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Cutout.objects.all()
-    serializer_class = serializers.CutoutSerializer
+    serializer_class = CutoutSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = CutoutFilter
 
 
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Filter.objects.all()
-    serializer_class = serializers.FilterSerializer
+    serializer_class = FilterSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterFilter
 
 
 class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AperturePhotometry.objects.all()
-    serializer_class = serializers.AperturePhotometrySerializer
+    serializer_class = AperturePhotometrySerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = AperturePhotometryFilter
 
 
 class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SEDFittingResult.objects.all()
-    serializer_class = serializers.SEDFittingResultSerializer
+    serializer_class = SEDFittingResultSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = SEDFittingResultFilter
 
 
 class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TaskRegister.objects.all()
-    serializer_class = serializers.TaskRegisterSerializer
+    serializer_class = TaskRegisterSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TaskRegisterFilter
 
 
 class TaskViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Task.objects.all()
-    serializer_class = serializers.TaskSerializer
+    serializer_class = TaskSerializer
 
 
 class HostViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Host.objects.all()
-    serializer_class = serializers.HostSerializer
+    serializer_class = HostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = HostFilter
 
@@ -211,9 +225,10 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
     """
     try:
         ra, dec = float(ra), float(dec)
-        coord = SkyCoord(ra=ra, dec=dec, unit="deg")
+        SkyCoord(ra=ra, dec=dec, unit="deg")
         valid = True
-    except:
+    except Exception as err:
+        logger.warning(f'Coordinates {(ra, dec)} are invalid: {err}')
         valid = False
     return valid
 
@@ -230,8 +245,8 @@ def get_transient_science_payload(request, transient_name):
     component_groups = [
         component_group(transient_name) for component_group in data_model_components
     ]
-    components = datamodel.unpack_component_groups(component_groups)
-    data = datamodel.serialize_blast_science_data(components)
+    components = unpack_component_groups(component_groups)
+    data = serialize_blast_science_data(components)
 
     return Response(data, status=status.HTTP_200_OK)
 
@@ -265,13 +280,13 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
     )
 
 
-# TO DO: Secure this endpoint with Django REST Framework permission_classes
+# TODO: Secure this endpoint with Django REST Framework permission_classes
 # @api_view(["PUT"])
 # @permission_classes([IsAuthenticated])
 # def launch_workflow(request, transient_name):
 #     print(f'Launching transient workflow for "{transient_name}"...')
 #     result = transient_workflow.delay(transient_name)
-#     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'}, status=status.HTTP_200_OK)
+#     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'})
 
 
 @log_usage_metric()
@@ -279,20 +294,23 @@ def export_transient_view(request=None, transient_name='', all=''):
     transient_info = export_transient_info(transient_name)
     if not transient_info:
         return render(request, "transient_404.html", status=404)
-    if all:
-        print(f'Exporting all data for "{transient_name}", including files.')
+    logger.debug(f'''Exported transient dataset object:\n{json.dumps(transient_info, indent=2)}''')
+    if not all:
+        logger.info(f'Exporting only database objects for "{transient_name}", no data files.')
+        return JsonResponse(transient_info)
+    else:
+        logger.info(f'Exporting all data for "{transient_name}", including files.')
         s3 = ObjectStore()
         tar_bytes_io = BytesIO()
-        # Generate compressed archive file object of all data to stream
+        # Generate in-memory compressed archive file object of all data to stream
         with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
+            # Add transient dataset document to archive
             transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
             transient_info_fileobj.seek(0)
             tarinfo = tarfile.TarInfo(name=f'{transient_name}.json')
             tarinfo.size = transient_info_fileobj.getbuffer().nbytes
             tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
-
-            # Download cutout FITS image files
-            print(json.dumps(transient_info, indent=2))
+            # Download cutout FITS image files into memory
             for cutout in transient_info['cutouts']:
                 canonical_path = cutout['fields']['fits']
                 if not canonical_path:
@@ -304,7 +322,7 @@ def export_transient_view(request=None, transient_name='', all=''):
                     name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
                 tarinfo.size = cutout_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
-            # Collect SED fit files.
+            # Collect SED fit files into memory
             sedfittingresults = []
             for aperture in transient_info['apertures']:
                 if aperture['sedfittingresults']:
@@ -323,10 +341,6 @@ def export_transient_view(request=None, transient_name='', all=''):
         response = StreamingHttpResponse(streaming_content=tar_bytes_io)
         response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
         return response
-    else:
-        print(f'Exporting only database objects for "{transient_name}", no data files.')
-        transient_info = export_transient_info(transient_name)
-        return JsonResponse(transient_info)
 
 
 @login_required

@@ -98,7 +98,7 @@ class ObjectStore:
             response = self.client.get_object(
                 bucket_name=self.bucket,
                 object_name=key)
-            logger.debug(response.status)
+            logger.debug(f'''[HTTP {response.status}] Fetching object "{key}"''')
             obj = response.data
         finally:
             if response and not response.isclosed():
