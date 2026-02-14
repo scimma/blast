@@ -69,18 +69,21 @@ class ObjectStore:
                     file_path=os.path.join(dirpath, filename),
                 )
 
-    def put_object(self, path="", data="", file_path="", json_output=True):
+    def put_object(self, path="", data="", file_path="", json_output=True, data_bytes_obj=None):
         path = path.strip('/')
-        if data:
+        if data or data_bytes_obj:
             logger.debug(f'''Uploading data object to object store: "{path}"''')
-            if json_output:
-                body = json.dumps(data, indent=2)
+            if data_bytes_obj:
+                payload = io.BytesIO(data_bytes_obj)
+            elif json_output:
+                payload = io.BytesIO(json.dumps(data, indent=2).encode('utf-8'))
             else:
-                body = data
+                payload = io.BytesIO(data.encode('utf-8'))
+
             self.client.put_object(
                 bucket_name=self.bucket,
                 object_name=path,
-                data=io.BytesIO(body.encode('utf-8')),
+                data=payload,
                 length=-1,
                 part_size=self.part_size)
         elif file_path:
