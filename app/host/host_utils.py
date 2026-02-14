@@ -946,14 +946,33 @@ def import_transient_info(transient_data_archive):
                 print("a directory.")
             else:
                 print("something else.")
+        # Import metadata and dataset objects
         try:
             metadata_tarinfo = [tarinfo for tarinfo in tar_fp if tarinfo.name == 'transient.json'][0]
         except IndexError:
             logger.error('Error importing transient dataset: No "transient.json" file found.')
             return [], []
         transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
+        transient_name = transient_info['transient']['fields']['name']
         logger.debug(transient_info['metadata'])
-    
+        # Import cutout image files
+        s3 = ObjectStore()
+        cutout_canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+        logger.debug(f'All cutouts canonical paths: {cutout_canonical_paths}')
+        for cutout_tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith('cutouts')]:
+            if not cutout_tarinfo.isreg():
+                logger.debug(f'"{cutout_tarinfo.name}" is not a file. Skipping.')
+                continue
+            # Verify that the cutout image file is listed in the transient metadata
+            expected_canonical_path = cutout_tarinfo.name.replace('cutouts/', f'{os.path.join(settings.CUTOUT_ROOT, transient_name)}/')
+            logger.debug(f'Archive file canonical path: {expected_canonical_path}')
+            if not [cutout_canonical_path for cutout_canonical_path in cutout_canonical_paths if cutout_canonical_path == expected_canonical_path]:
+                logger.warning(f'Skipping orphaned data file "{cutout_tarinfo.name}"')
+                continue
+            object_key = os.path.join(settings.S3_BASE_PATH, expected_canonical_path.strip('/'))
+            cutout_fileobj = tar_fp.extractfile(cutout_tarinfo)
+            s3.put_object(path=object_key, data_bytes_obj=cutout_fileobj.read())
+            assert s3.object_exists(object_key)
     return [], []  # TODO: remove this
 
     # Construct the import list
