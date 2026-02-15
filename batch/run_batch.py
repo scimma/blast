@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 
 def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
     """
-    Post transients from csv file to blast for processing.
+    Post transients from csv file to Blast for processing.
 
     Parameters
         path_to_input_csv (str): path to input transient csv file.
@@ -26,7 +26,7 @@ def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
             try:
                 response = urlopen(Request(post_url, method="POST"))
                 data = json.loads(response.read())
-                post_message = data.get("message", "no message returned by blast")
+                post_message = data.get("message", "no message returned by Blast")
                 print(f"{post_message}")
             except HTTPError as e:
                 print(e.code)

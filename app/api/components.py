@@ -1,6 +1,6 @@
 """
 This module contains definitions of the science payload components. Functions
-that turn blast database scheme into a flat science payload to be served through
+that turn Blast database scheme into a flat science payload to be served through
 the API.
 """
 from typing import List
@@ -20,7 +20,7 @@ def transient_component(transient_name) -> List[DataModelComponent]:
         transient_name (str): name of the transient.
     returns:
         component (List[DataModelComponent]): data model component to be added
-            to the blast science payload.
+            to the Blast science payload.
 
     """
     component = DataModelComponent(
@@ -41,7 +41,7 @@ def host_component(transient_name) -> List[DataModelComponent]:
         transient_name (str): name of the transient.
     returns:
         component (List[DataModelComponent]): data model component to be added
-            to the blast science payload.
+            to the Blast science payload.
     """
     component = DataModelComponent(
         prefix="host_",
@@ -61,7 +61,7 @@ def aperture_component(transient_name) -> List[DataModelComponent]:
         transient_name (str): name of the transient.
     returns:
         component (List[DataModelComponent]): data model component to be added
-            to the blast science payload.
+            to the Blast science payload.
     """
     components = []
     for aperture_type in ["local", "global"]:
@@ -89,7 +89,7 @@ def photometry_component(transient_name) -> List[DataModelComponent]:
         transient_name (str): name of the transient.
     returns:
         component (List[DataModelComponent]): data model component to be added
-            to the blast science payload.
+            to the Blast science payload.
     """
     components = []
     filters = models.Filter.objects.all()
@@ -113,13 +113,13 @@ def photometry_component(transient_name) -> List[DataModelComponent]:
 
 def sed_fit_component(transient_name: str) -> List[DataModelComponent]:
     """
-    SED fit component which defines what is in the blast science payload.
+    SED fit component which defines what is in the Blast science payload.
 
     parameters:
         transient_name (str): name of the transient.
     returns:
         component (List[DataModelComponent]): data model component to be added
-            to the blast science payload.
+            to the Blast science payload.
     """
     components = []
     for aperture_type in ["local", "global"]:

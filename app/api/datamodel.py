@@ -1,6 +1,6 @@
 """
-This module contains helper functions to serialize blast data into a flat
-science payload to be delivered by the blast web API.
+This module contains helper functions to serialize Blast data into a flat
+science payload to be delivered by the Blast web API.
 """
 import itertools
 from dataclasses import dataclass
@@ -15,14 +15,14 @@ from rest_framework import serializers
 class DataModelComponent:
     """
     A dataclass to store all information on how to
-    serialise a blast model into the blast science payload.
+    serialise a Blast model into the Blast science payload.
 
     Attributes:
-        prefix (str): What will be appended to the column name in the blast
+        prefix (str): What will be appended to the column name in the Blast
             science payload
         query (dict): A django query that will uniquely identify the data for
-            the blast science payload
-        model (django.db.models.Model): The blast model that the query will be
+            the Blast science payload
+        model (django.db.models.Model): The Blast model that the query will be
             passed to
         serializer (rest_framework.serializers.Serializer) The serializer
             associated with the model

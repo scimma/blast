@@ -41,10 +41,10 @@ class TaskRunner(ABC):
 
     def _overwrite_or_create_object(self, model, unique_object_query, object_data):
         """
-        Overwrites or creates new objects in the blast database.
+        Overwrites or creates new objects in the Blast database.
 
         Parameters
-            model (dango.model): blast model of the object that needs to be updated
+            model (dango.model): Blast model of the object that needs to be updated
             unique_object_query (dict): query to be passed to model.objects.get that will
                 uniquely identify the object of interest
             object_data (dict): data to be saved or overwritten for the object.
@@ -67,7 +67,7 @@ class TaskRunner(ABC):
     @property
     def task_initially_enabled(self):
         """
-        Defines if the task should be run on blast startup.
+        Defines if the task should be run on Blast startup.
         """
         return True
 

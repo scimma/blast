@@ -8,10 +8,10 @@ import numpy as np
 
 def _overwrite_or_create_object(model, unique_object_query, object_data):
     """
-    Overwrites or creates new objects in the blast database.
+    Overwrites or creates new objects in the Blast database.
 
     Parameters
-        model (dango.model): blast model of the object that needs to be updated
+        model (dango.model): Blast model of the object that needs to be updated
         unique_object_query (dict): query to be passed to model.objects.get that will
             uniquely identify the object of interest
         object_data (dict): data to be saved or overwritten for the object.

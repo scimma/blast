@@ -201,7 +201,7 @@ def get_transients_from_tns_by_name(
 
 
 def tns_to_blast_transient(tns_transient):
-    """Convert transient name server transient into blast transient data model.
+    """Convert transient name server transient into Blast transient data model.
 
     Args:
         tns_transient (Dict): Dictionary containing transient name server
@@ -224,7 +224,7 @@ def tns_to_blast_transient(tns_transient):
 
 
 def tns_staging_blast_transient(tns_transient):
-    """Convert transient name server staging transient into blast transient
+    """Convert transient name server staging transient into Blast transient
     data model.
 
     Args:
@@ -258,7 +258,7 @@ def tns_staging_blast_transient(tns_transient):
 
 def update_blast_transient(blast_transient, tns_staging_transient):
     """
-    Updates blast transient with information from the tns_csv staging
+    Updates Blast transient with information from the tns_csv staging
     """
     mapping = {
         "ra_deg": "ra",

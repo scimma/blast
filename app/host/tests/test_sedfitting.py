@@ -8,7 +8,7 @@ class FilterTest(TestCase):
 
     def test_filter_conversion(self):
         """
-        Test blast filter is converted to sedpy filter
+        Test Blast filter is converted to sedpy filter
         """
 
         for filter in Filter.objects.all():
