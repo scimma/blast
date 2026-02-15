@@ -323,6 +323,18 @@ def export_transient_view(request=None, transient_name='', all=''):
                     name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
                 tarinfo.size = cutout_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
+                # Include thumbnail images
+                thumbnail_object_key = object_key.replace('.fits', '.jpg')
+                if not s3.object_exists(path=thumbnail_object_key):
+                    continue
+                thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                thumbnail_tar_path = canonical_path.replace(
+                    os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
+                tarinfo = tarfile.TarInfo(
+                    name=thumbnail_tar_path)
+                tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+
             # Collect SED fit files into memory
             sedfittingresults = []
             for aperture in transient_info['apertures']:

@@ -935,63 +935,21 @@ def export_transient_info(transient_name=''):
 
 def import_transient_info(transient_data_archive):
     '''Import all data associated with a transient from a Blast export file.'''
-    logger.debug(transient_data_archive)
-
-    with tar_open(fileobj=transient_data_archive, mode="r:gz") as tar_fp:
-        for tarinfo in tar_fp:
-            print(tarinfo.name, "is", tarinfo.size, "bytes in size and is ", end="")
-            if tarinfo.isreg():
-                print("a regular file.")
-            elif tarinfo.isdir():
-                print("a directory.")
-            else:
-                print("something else.")
-        # Import metadata and dataset objects
-        try:
-            metadata_tarinfo = [tarinfo for tarinfo in tar_fp if tarinfo.name == 'transient.json'][0]
-        except IndexError:
-            logger.error('Error importing transient dataset: No "transient.json" file found.')
-            return [], []
-        transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
-        transient_name = transient_info['transient']['fields']['name']
-        logger.debug(transient_info['metadata'])
-        # Import cutout image files
-        s3 = ObjectStore()
-        cutout_canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
-        logger.debug(f'All cutouts canonical paths: {cutout_canonical_paths}')
-        for cutout_tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith('cutouts')]:
-            if not cutout_tarinfo.isreg():
-                logger.debug(f'"{cutout_tarinfo.name}" is not a file. Skipping.')
-                continue
-            # Verify that the cutout image file is listed in the transient metadata
-            expected_canonical_path = cutout_tarinfo.name.replace('cutouts/', f'{os.path.join(settings.CUTOUT_ROOT, transient_name)}/')
-            logger.debug(f'Archive file canonical path: {expected_canonical_path}')
-            if not [cutout_canonical_path for cutout_canonical_path in cutout_canonical_paths if cutout_canonical_path == expected_canonical_path]:
-                logger.warning(f'Skipping orphaned data file "{cutout_tarinfo.name}"')
-                continue
-            object_key = os.path.join(settings.S3_BASE_PATH, expected_canonical_path.strip('/'))
-            cutout_fileobj = tar_fp.extractfile(cutout_tarinfo)
-            s3.put_object(path=object_key, data_bytes_obj=cutout_fileobj.read())
-            assert s3.object_exists(object_key)
-    return [], []  # TODO: remove this
-
-    # Construct the import list
-    if isinstance(transient_data, dict):
-        datasets_to_import = [transient_data]
-    elif isinstance(transient_data, list):
-        datasets_to_import = transient_data
-    assert isinstance(datasets_to_import, list)
+    logger.debug(f'Importing transient archive file "{transient_data_archive}"...')
 
     imported_transient_names = []
     import_failures = []
+    s3 = ObjectStore()
 
     def record_import_error(transient_name, err_msg=''):
+        ''' This uses the top-level variable "import_failures".'''
         import_failures.append({
             'transient_name': transient_name,
             'err_msg': err_msg,
         })
 
     def process_transient_dataset(dataset):
+        '''This uses the top-level variables "imported_transient_names" and "import_failures".'''
         # Verify that the transient is not already present (by name)
         transient_name = dataset['transient']['fields']['name']
         if Transient.objects.filter(name__exact=transient_name):
@@ -1015,26 +973,25 @@ def import_transient_info(transient_data_archive):
                                     f'[{transient_name}] Filter "{filter_name}" does not exist.')
                 return
             try:
-                logger.debug(f'''Importing filter:\n{json.dumps(filter['fields'], indent=2)}''')
-                debug_filter_obj_dict = {
-                    'survey': filter_obj.survey.name,
-                    'kcorrect_name': filter_obj.kcorrect_name,
-                    'sedpy_id': filter_obj.sedpy_id,
-                    'hips_id': filter_obj.hips_id,
-                    'vosa_id': filter_obj.vosa_id,
-                    'image_download_method': filter_obj.image_download_method,
-                    'pixel_size_arcsec': filter_obj.pixel_size_arcsec,
-                    'image_fwhm_arcsec': filter_obj.image_fwhm_arcsec,
-                    'wavelength_eff_angstrom': filter_obj.wavelength_eff_angstrom,
-                    'wavelength_min_angstrom': filter_obj.wavelength_min_angstrom,
-                    'wavelength_max_angstrom': filter_obj.wavelength_max_angstrom,
-                    'vega_zero_point_jansky': filter_obj.vega_zero_point_jansky,
-                    'magnitude_zero_point': filter_obj.magnitude_zero_point,
-                    'ab_offset': filter_obj.ab_offset,
-                    'magnitude_zero_point_keyword': filter_obj.magnitude_zero_point_keyword,
-                    'image_pixel_units': filter_obj.image_pixel_units,
-                }
-                logger.debug(f'''Existing filter:\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
+                # debug_filter_obj_dict = {
+                #     'survey': filter_obj.survey.name,
+                #     'kcorrect_name': filter_obj.kcorrect_name,
+                #     'sedpy_id': filter_obj.sedpy_id,
+                #     'hips_id': filter_obj.hips_id,
+                #     'vosa_id': filter_obj.vosa_id,
+                #     'image_download_method': filter_obj.image_download_method,
+                #     'pixel_size_arcsec': filter_obj.pixel_size_arcsec,
+                #     'image_fwhm_arcsec': filter_obj.image_fwhm_arcsec,
+                #     'wavelength_eff_angstrom': filter_obj.wavelength_eff_angstrom,
+                #     'wavelength_min_angstrom': filter_obj.wavelength_min_angstrom,
+                #     'wavelength_max_angstrom': filter_obj.wavelength_max_angstrom,
+                #     'vega_zero_point_jansky': filter_obj.vega_zero_point_jansky,
+                #     'magnitude_zero_point': filter_obj.magnitude_zero_point,
+                #     'ab_offset': filter_obj.ab_offset,
+                #     'magnitude_zero_point_keyword': filter_obj.magnitude_zero_point_keyword,
+                #     'image_pixel_units': filter_obj.image_pixel_units,
+                # }
+                # logger.debug(f'''Matching against existing filter...\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
                 # The survey names associated with the existing and importing filter should match
                 assert filter_obj.survey.name == [survey['fields']['name'] for survey in dataset['surveys']
                                                   if survey['pk'] == filter['fields']['survey']][0]
@@ -1157,7 +1114,6 @@ def import_transient_info(transient_data_archive):
             # Create AperturePhotometry objects
             # Create SEDFittingResult objects
         for aperture in dataset['apertures']:
-            logger.debug(f'''Aperture cutout pk: {aperture['fields']['cutout']}''')
             cutout_name_search = [cutout['fields']['name'] for cutout in dataset['cutouts']
                                   if cutout['pk'] == aperture['fields']['cutout']]
             if cutout_name_search:
@@ -1283,13 +1239,74 @@ def import_transient_info(transient_data_archive):
             tr_obj.last_modified = tr['last_modified']
             tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
             tr_obj.save()
-        # TODO: Install data files.
+        # Record successful database import
         imported_transient_names.append(transient.name)
 
-    # Construct the database objects for each transient.
-    for dataset in datasets_to_import:
-        # Use a nested function to support aborting upon error within nested for loops.
-        process_transient_dataset(dataset)
+    def construct_database_objects(transient_data):
+        # Construct the import list
+        if isinstance(transient_data, dict):
+            datasets_to_import = [transient_data]
+        elif isinstance(transient_data, list):
+            datasets_to_import = transient_data
+        assert isinstance(datasets_to_import, list)
+
+        # Construct the database objects for each transient.
+        for dataset in datasets_to_import:
+            # Use a nested function to support aborting upon error within nested for loops.
+            # This uses the top-level variables "imported_transient_names" and "import_failures".
+            process_transient_dataset(dataset)
+
+    def install_files(file_type):
+        logger.debug(f'Installing "{file_type}" files...')
+        if file_type == 'cutout':
+            canonical_path_root = settings.CUTOUT_ROOT
+            tar_root_path = 'cutouts/'
+            canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+        elif file_type == 'sed':
+            canonical_path_root = settings.SED_OUTPUT_ROOT
+            tar_root_path = 'sed_data/'
+            canonical_paths = []
+            for sedfittingresult in [aperture['sedfittingresults'] for aperture in transient_info['apertures']
+                                     if aperture['sedfittingresults']]:
+                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                    canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+        # Include possible thumbnail paths
+        thumbail_paths = []
+        for canonical_path in canonical_paths:
+            thumbail_paths.append(canonical_path.replace('.fits', '.jpg'))
+        logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
+        for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
+            if not tarinfo.isreg():
+                logger.debug(f'"{tarinfo.name}" is not a file. Skipping.')
+                continue
+            # Verify that the file is listed in the transient metadata
+            expected_canonical_path = tarinfo.name.replace(tar_root_path,
+                                                           f'{os.path.join(canonical_path_root, transient_name)}/')
+            logger.debug(f'Archive file canonical path: {expected_canonical_path}')
+            if not [path for path in canonical_paths if path == expected_canonical_path]:
+                logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
+                continue
+            object_key = os.path.join(settings.S3_BASE_PATH, expected_canonical_path.strip('/'))
+            s3.put_object(path=object_key, data_bytes_obj=tar_fp.extractfile(tarinfo).read())
+            if not s3.object_exists(object_key):
+                record_import_error(transient_name, err_msg=f'Failed to import file "{tarinfo.name}"')
+
+    # Unpack data archive file
+    with tar_open(fileobj=transient_data_archive, mode="r:gz") as tar_fp:
+        # Import metadata and dataset objects
+        try:
+            metadata_tarinfo = [tarinfo for tarinfo in tar_fp if tarinfo.name == 'transient.json'][0]
+        except IndexError:
+            logger.error('Error importing transient dataset: No "transient.json" file found.')
+            return [], []
+        transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
+        transient_name = transient_info['transient']['fields']['name']
+        logger.debug(f'''Importing transient "{transient_name}"...''')
+        construct_database_objects(transient_info)
+        # Import cutout image files
+        install_files('cutout')
+        # Import SED fit files
+        install_files('sed')
 
     # Delete database objects associated with failed imports
     for import_failure in import_failures:
