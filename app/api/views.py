@@ -350,6 +350,17 @@ def export_transient_view(request=None, transient_name='', all=''):
                         name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
                     tarinfo.size = sed_fileobj.getbuffer().nbytes
                     tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
+                    # Include thumbnail images
+                    thumbnail_object_key = object_key.replace('.h5', '.jpg')
+                    if not s3.object_exists(path=thumbnail_object_key):
+                        continue
+                    thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                    thumbnail_tar_path = canonical_path.replace(
+                        os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
+                    tarinfo = tarfile.TarInfo(
+                        name=thumbnail_tar_path)
+                    tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
         tar_bytes_io.seek(0)
         response = StreamingHttpResponse(streaming_content=tar_bytes_io)
         response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"

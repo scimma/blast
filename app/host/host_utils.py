@@ -864,8 +864,6 @@ def export_transient_info(transient_name=''):
     '''Export all data associated with a transient sufficient to import into another Blast instance.'''
     def prune_fields(data_object, model_name):
         if model_name == 'transient':
-            data_object['fields'].pop('tasks_initialized')
-            data_object['fields'].pop('progress')
             data_object['fields'].pop('added_by')
         return data_object
 
@@ -1231,8 +1229,7 @@ def import_transient_info(transient_data_archive):
             try:
                 tr_obj = all_trs.get(task__name=task_name)
             except TaskRegister.DoesNotExist:
-                record_import_error(transient_name,
-                                    f'[{transient_name}] Workflow task "{task_name}" does not exist.')
+                record_import_error(transient_name, f'[{transient_name}] Workflow task "{task_name}" does not exist.')
                 return
             tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
             tr_obj.user_warning = tr['user_warning']
@@ -1261,10 +1258,12 @@ def import_transient_info(transient_data_archive):
         if file_type == 'cutout':
             canonical_path_root = settings.CUTOUT_ROOT
             tar_root_path = 'cutouts/'
+            thumbnail_extension = '.fits'
             canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
         elif file_type == 'sed':
             canonical_path_root = settings.SED_OUTPUT_ROOT
             tar_root_path = 'sed_data/'
+            thumbnail_extension = '.h5'
             canonical_paths = []
             for sedfittingresult in [aperture['sedfittingresults'] for aperture in transient_info['apertures']
                                      if aperture['sedfittingresults']]:
@@ -1273,7 +1272,8 @@ def import_transient_info(transient_data_archive):
         # Include possible thumbnail paths
         thumbail_paths = []
         for canonical_path in canonical_paths:
-            thumbail_paths.append(canonical_path.replace('.fits', '.jpg'))
+            thumbail_paths.append(canonical_path.replace(thumbnail_extension, '.jpg'))
+        canonical_paths.extend(thumbail_paths)
         logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
         for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
             if not tarinfo.isreg():
