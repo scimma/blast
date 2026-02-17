@@ -13,6 +13,24 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.0]
+
+### Added
+
+- Implemented support for importing and exporting self-contained transient datasets in the form of 
+  compressed archive files (.tar.gz), including API endpoint `/api/transient/export/[2026abc]/[all]`,
+  where `2026abc` represents the target transient name and `all` is an optional parameter that will
+  include the cutout and SED fit files in the generated archive file.
+- Added a third option to the Add Transients page for importing a transient by uploading an archive file.
+- Added an API endpoint to delete a transient: `/api/transient/delete/[2026abc]/[all]`, where `2026abc`
+  represents the target transient name and `all` is an optional parameter that will delete the cutout
+  and SED fit files in addition to the transient database objects (e.g. `Cutout`, `Aperture`,
+  `AperturePhotometry`, `SEDFittingResult` objects).
+
+### Changed
+
+- Increased `client_max_body_size` in NGINX proxy to support transient archive file uploads.
+
 ## [1.8.7]
 
 ### Fixed
