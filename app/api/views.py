@@ -372,7 +372,7 @@ def export_transient_view(request=None, transient_name='', all=''):
 @log_usage_metric()
 def delete_transient_view(request=None, transient_name='', all=''):
     if all == 'all':
-        # Delete files also
+        # Atempt to delete files even if transient does not exist in the database
         s3 = ObjectStore()
         cutout_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
                                         settings.CUTOUT_ROOT.strip('/'), transient_name)

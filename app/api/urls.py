@@ -13,8 +13,8 @@ urlpatterns = [
         f"""{base_path}transient/get/<str:transient_name>""",
         views.get_transient_science_payload,
     ),
-    path(
-        f"""{base_path}transient/delete/<str:transient_name>/<str:all>""",
+    re_path(
+        base_path + r"^transient/delete/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.delete_transient_view,
     ),
     re_path(
