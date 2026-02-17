@@ -50,3 +50,4 @@ class TransientUploadForm(forms.Form):
         label='Transient definition table',
         required=False,
     )
+    file = forms.FileField(required=False)

@@ -142,33 +142,6 @@ def transient_list(request):
     return render(request, "transient_list.html", context)
 
 
-@login_required
-@permission_required("host.upload_transient", raise_exception=True)
-@log_usage_metric()
-def import_transient_view(request=None):
-    errors = []
-    imported_transient_names = []
-    if request.method == "POST":
-        form = TransientImportForm(request.POST, request.FILES)
-        logger.debug(request)
-        logger.debug(request.FILES)
-        if form.is_valid():
-            imported_transient_names, import_failures = import_transient_info(request.FILES["file"])
-            for import_failure in import_failures:
-                errors.append(f'''Failed to import "{import_failure['transient_name']}": '''
-                              f'''"{import_failure['err_msg']}"''')
-    else:
-        form = TransientImportForm()
-
-    context = {
-        "form": form,
-        "errors": errors,
-        "imported_transient_names": imported_transient_names,
-    }
-    return render(request, "import_transient.html", context)
-
-
-@login_required
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
 def add_transient(request):
@@ -222,16 +195,24 @@ def add_transient(request):
     errors = []
     defined_transient_names = []
     imported_transient_names = []
+    file_imported_transient_names = []
     existing_transient_names = []
 
-    # add transients -- either from TNS or from RA/Dec/redshift
     if request.method == "POST":
-        form = TransientUploadForm(request.POST)
-
+        form = TransientUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            info = form.cleaned_data["tns_names"]
-            if info:
-                transient_names = [transient_name.strip() for transient_name in info.splitlines()]
+            tns_names = form.cleaned_data["tns_names"]
+            full_info = form.cleaned_data["full_info"]
+            # Import transient dataset from an uploaded archive file
+            if "file" in request.FILES:
+                logger.debug('Importing transient from uploaded archive file...')
+                file_imported_transient_names, import_failures = import_transient_info(request.FILES["file"])
+                for import_failure in import_failures:
+                    errors.append(f'''Failed to import "{import_failure['transient_name']}": '''
+                                  f'''"{import_failure['err_msg']}"''')
+            # Schedule a list of transient names to be imported from TNS asynchronously
+            elif tns_names:
+                transient_names = [transient_name.strip() for transient_name in tns_names.splitlines()]
                 existing_transient_names, imported_transient_names, identify_errors = identify_existing_transients([{
                     'name': name,
                     'ra_deg': None,
@@ -240,11 +221,10 @@ def add_transient(request):
                 errors.extend(identify_errors)
                 # Trigger import and processing of new transients
                 import_transient_list.delay(imported_transient_names)
-
-            info = form.cleaned_data["full_info"]
-            if info:
+            # Add transients from data input as a CSV-formatted table
+            elif full_info:
                 trans_info_set = []
-                reader = csv.DictReader(io.StringIO(info), fieldnames=[
+                reader = csv.DictReader(io.StringIO(full_info), fieldnames=[
                     'name',
                     'ra',
                     'dec',
@@ -320,6 +300,7 @@ def add_transient(request):
         "errors": errors,
         "defined_transient_names": defined_transient_names,
         "imported_transient_names": imported_transient_names,
+        "file_imported_transient_names": file_imported_transient_names,
         "existing_transient_names": existing_transient_names,
     }
     return render(request, "add_transient.html", context)

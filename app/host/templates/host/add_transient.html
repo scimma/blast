@@ -71,6 +71,10 @@
         <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
         &nbsp;&nbsp;Define transients by specifying properties.
       </a>
+      <a href="#" type="button" class="list-group-item list-group-item-action" id="upload-archive-button" onclick="showImportArchiveForm();">
+        <span style="font-size: larger;"><i class="bi bi-file-earmark-zip"></i></span>
+        &nbsp;&nbsp;Import transient from an exported archive file.
+      </a>
     </ul>
   </div>
   
@@ -80,6 +84,17 @@
   <ul>
     {% for error in errors %}
     <li>{{ error }}</li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+  
+  {% if file_imported_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients were imported:</p>
+  <ul>
+    {% for transient_name in file_imported_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
     {% endfor %}
   </ul>
   </div>
@@ -118,10 +133,16 @@
   </div>
   {% endif %}
 
-  <form class="form pt-5 px-5", method="POST">
+  <form id="add-form" class="form pt-5 px-5" method="POST">
       {% csrf_token %}
       <div class="input-group mb-10">
         <div style='margin-bottom:0em'>
+          <div id="import-archive-form" class="transient-form">
+            <p>Import transients from a dataset archive file previously exported from Blast.</p>
+            <div class="input-group-text" id="upload-file-form">
+              {{ form.file }}
+            </div>
+          </div>
           <div id="import-form" class="transient-form">
             <p>Import transients from the TNS by supplying a list of transient names (the formal unique designations used by TNS).</p>
             <div class="input-group-text" id="import-form">
@@ -163,18 +184,39 @@
     function showImportForm() {
       document.getElementById("import-form").style.display = "block";
       document.getElementById("define-form").style.display = "none";
+      document.getElementById("import-archive-form").style.display = "none";
       document.getElementById("import-button").classList.add("active");
       document.getElementById("define-button").classList.remove("active");
+      document.getElementById("upload-archive-button").classList.remove("active");
       document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("submit-btn").innerHTML = "Submit";
       document.getElementById("id_full_info").value = "";
+      document.getElementById("add-form").removeAttribute("enctype");
     }
     function showCreateForm() {
       document.getElementById("import-form").style.display = "none";
       document.getElementById("define-form").style.display = "block";
+      document.getElementById("import-archive-form").style.display = "none";
       document.getElementById("import-button").classList.remove("active");
       document.getElementById("define-button").classList.add("active");
+      document.getElementById("upload-archive-button").classList.remove("active");
       document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("submit-btn").innerHTML = "Submit";
       document.getElementById("id_tns_names").value = "";
+      document.getElementById("add-form").removeAttribute("enctype");
+    }
+    function showImportArchiveForm() {
+      document.getElementById("import-form").style.display = "none";
+      document.getElementById("define-form").style.display = "none";
+      document.getElementById("import-archive-form").style.display = "block";
+      document.getElementById("import-button").classList.remove("active");
+      document.getElementById("define-button").classList.remove("active");
+      document.getElementById("upload-archive-button").classList.add("active");
+      document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("submit-btn").innerHTML = "Upload";
+      document.getElementById("id_tns_names").value = "";
+      document.getElementById("id_full_info").value = "";
+      document.getElementById("add-form").enctype = "multipart/form-data";
     }
 </script>
 {% endblock %}
