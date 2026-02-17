@@ -359,7 +359,18 @@ def export_transient_view(request=None, transient_name='', all=''):
 @login_required
 @permission_required("host.delete_transient", raise_exception=True)
 @log_usage_metric()
-def delete_transient_view(request=None, transient_name=''):
+def delete_transient_view(request=None, transient_name='', all=''):
+    if all == 'all':
+        # Delete files also
+        s3 = ObjectStore()
+        cutout_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                        settings.CUTOUT_ROOT.strip('/'), transient_name)
+        logger.debug(f'Deleting files in "{cutout_file_path}"...')
+        s3.delete_directory(root_path=cutout_file_path)
+        sed_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                     settings.SED_OUTPUT_ROOT.strip('/'), transient_name)
+        logger.debug(f'Deleting files in "{sed_file_path}"...')
+        s3.delete_directory(root_path=sed_file_path)
     # Acquire the transient object or return 404 not found
     try:
         transient = Transient.objects.get(name__exact=transient_name)
@@ -368,5 +379,4 @@ def delete_transient_view(request=None, transient_name=''):
     err_msg = delete_transient(transient=transient)
     if err_msg:
         return HttpResponse(status=500, content=err_msg)
-    else:
-        return HttpResponseRedirect(reverse_lazy("transient_list"))
+    return HttpResponseRedirect(reverse_lazy("transient_list"))

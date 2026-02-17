@@ -138,18 +138,21 @@ class ObjectStore:
         raise FileNotFoundError
 
     def delete_directory(self, root_path):
-        delete_object_list = map(
-            lambda x: DeleteObject(x.object_name),
-            self.client.list_objects(
-                bucket_name=self.bucket,
-                prefix=root_path,
-                recursive=True)
-        )
-        errors = self.client.remove_objects(
+        obj_list = self.client.list_objects(
             bucket_name=self.bucket,
-            delete_object_list=delete_object_list)
-        for error in errors:
-            logger.error("Error deleting object: ", error)
+            prefix=root_path,
+            recursive=True)
+        object_names = [obj.object_name for obj in obj_list]
+        # TODO: There is a better function for deleting a list of objects, remove_objects()
+        #       but as of minio==7.2.15, it does not seem to work. ¯\_(ツ)_/¯
+        for object_name in object_names:
+            try:
+                logger.debug(f'Deleting object "{object_name}"')
+                self.client.remove_object(
+                    bucket_name=self.bucket,
+                    object_name=object_name)
+            except Exception as err:
+                logger.error(f"Error deleting object: {err}")
 
     def get_directory_objects(self, root_path):
         objects = self.client.list_objects(

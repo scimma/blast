@@ -14,7 +14,7 @@ urlpatterns = [
         views.get_transient_science_payload,
     ),
     path(
-        f"""{base_path}transient/delete/<str:transient_name>/""",
+        f"""{base_path}transient/delete/<str:transient_name>/<str:all>""",
         views.delete_transient_view,
     ),
     re_path(
