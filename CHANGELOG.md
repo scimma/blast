@@ -26,9 +26,22 @@ Types of changes:
   represents the target transient name and `all` is an optional parameter that will delete the cutout
   and SED fit files in addition to the transient database objects (e.g. `Cutout`, `Aperture`,
   `AperturePhotometry`, `SEDFittingResult` objects).
+- Dataset archive files for transients 2026dgt, 2026dix, and 2026dkf were added to the 
+  `app/entrypoints/blast-data.json` initial file manifest and uploaded to the public object store.
+
+### Removed
+
+- Removed the 2010H, 2010ag, and 2010ai transient datasets from the data initialization routine. The 
+  associated database objects were removed from `app/host/migrations/0024_load_fixtures.py` and the 
+  files were removed from the `app/entrypoints/blast-data.json` initial file manifest.
 
 ### Changed
 
+- Modified the unit tests to remove references to the 2010H, 2010ag, and 2010ai transients and instead
+  import transient 2026dix from its dataset archive file.
+- Modifed the data initialization routine to import transients 2026dgt, 2026dix, and 2026dkf from their
+  dataset archive files.
+- Updated the documentation with better screenshots and information about the dataset portation system.
 - Increased `client_max_body_size` in NGINX proxy to support transient archive file uploads.
 
 ## [1.8.7]
