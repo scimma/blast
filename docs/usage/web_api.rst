@@ -28,6 +28,8 @@ Here is an example Python snippet to load data as a Python dictionary for the tr
 Here data is a Python dictionary that contains the Blast science payload data m
 model. We describe this model below.
 
+.. _api_data_model:
+
 Blast API data model
 --------------------
 
@@ -315,3 +317,10 @@ SED fit fields
 which can either be "16", "50" ot "84"
 
 * :code:`<aperture_type>_aperture_host_<parameter>_<posterior_percentile>`
+
+Exporting and importing transient datasets
+------------------------------------------
+
+A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in Blast database objects (:ref:`api_data_model`) and associated data files, such as the cutout images and the SED fit files. A full transient dataset can be exported using :code:`/api/transient/export/<transient_name>/all`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads. If the ``all`` option is omitted from the URL, a JSON-formatted document will be returned instead, containing all the database objects associated with the transient but not its files.
+
+To import a dataset, upload one of the exported archive files via the Add Transients webpage as described in :ref:`adding_transients`.
