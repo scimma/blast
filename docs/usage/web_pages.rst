@@ -36,30 +36,27 @@ To download files with 1) parameter estimation chains, 2) parameter confidence i
 Authorized Users
 ----------------
 
-Users with a Blast account can upload custom transients and
-re-start the processing for a given transient that might have
-failed in a way that can be fixed be re-running things (for
-example, if an image cutout server was offline).  If an
-account on Blast is necessary for your science, please
-email David Jones (dojones@hawaii.edu) or create a GitHub issue.
+Users with an authorized Blast account can (1) add transients and (2) re-run transient workflow tasks. To obtain an account, click "Profile" in the top-right corner of the screen, log in with your preferred identity provider (typically your university or home institution), and follow the instructions to request authorization. 
 
-Uploading New Transients
+If you are running Blast locally, use the "click here if you are a Blast administrator" option to login with a local account such as the default ``admin`` superuser that is provisioned the first time Blast is launched.
+
+.. _adding_transients:
+
+Adding New Transients
 ++++++++++++++++++++++++
 
-A link to the transient upload page, :code:`<blast_base_url>/add` will
-appear in the toolbar at the top of the page for authorized users.  Users
-can input a list of transients by ID to be imported from the Transient
-Name Server (TNS), or they can manually specify, via comma-delimited list,
-a transient's name, RA, Dec (both in decimal degrees), redshift, and
-type (SN Ia, for example).  Redshift and type are optional but
-recommended; write "None" if you do not have this information.
-Transient names cannot start with "SN" or "AT". Furthermore, if a transient
-already exists in the database (either by name or by being within one arcsecond
-of an existing transient by RA and Dec), it will not be added again.
+A link to the Add Transient page, :code:`<blast_base_url>/add` will
+appear in the toolbar at the top of the page for authorized users. There
+are three methods of adding new transients:
+
+- Import transients from the Transient Name Server by name.
+- Define transients by specifying properties as a CSV-formatted table.
+- Import transient from an exported archive file.
+
+Follow the detailed instructions for each method that are displayed on the page.
 
 .. image:: ../_static/blast_upload_page.png
 
 Restarting Processing
 +++++++++++++++++++++
-
-Near the top of each transient list page, authorized users will see a yellow buttom labeled "Reprocess."  Clicking this button will set all task statuses to "unprocessed" for the given transient and put them back in the celery worker queue.  We note that most times when a transient has failed at some stage of its process, the "reprocess" button will likely not fix those failures and may increase the compute load.  However, there will be instances in which a service on which Blast depends has temporarily gone offline, and the reprocess option may be useful in those situations.
+Near the top of each transient list page, authorized users will see buttons labeled "Retrigger" and "Reprocess". Sometimes a transient workflow fails to complete due to a temporary operational error (for example, a "transient" 😉 networking failure preventing the download of a cutout image from a remote catalog). In these cases, "retriggering" the workflow will retry failed tasks and run tasks that have not yet been processed. Retriggering a workflow is a safe operation. The "Reprocess" button, however, will reset a workflow to its initial state and run all tasks again as if the transient were new. There is rarely a reason to reprocess a transient instead of retriggering it.
