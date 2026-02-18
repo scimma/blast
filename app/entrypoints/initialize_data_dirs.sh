@@ -46,3 +46,8 @@ if [[ ! -L "${SBI_TRAINING_ROOT}" ]]; then
   mkdir -p "$(dirname "${SBI_TRAINING_ROOT}")"
   ln -s "${DATA_ROOT_DIR}/sbi_training_sets" "${SBI_TRAINING_ROOT}"
 fi
+if [[ ! -L "/data/transient_datasets" ]]; then
+  mkdir -p "${DATA_ROOT_DIR}"/transient_datasets
+  mkdir -p "$(dirname "/data/transient_datasets")"
+  ln -s "${DATA_ROOT_DIR}/transient_datasets" "/data/transient_datasets"
+fi

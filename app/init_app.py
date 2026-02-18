@@ -31,6 +31,12 @@ def main():
         script_text = script.read()
     execute_from_command_line(["__main__.py", "shell", f"--command={script_text}"])
 
+    if os.getenv('SKIP_INITIALIZATION').lower() != 'true':
+        print('Running script: "entrypoints/init_transient_imports.py"...')
+        with open("entrypoints/init_transient_imports.py") as script:
+            script_text = script.read()
+        execute_from_command_line(["__main__.py", "shell", f"--command={script_text}"])
+
 
 if __name__ == "__main__":
     main()
