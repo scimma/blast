@@ -13,6 +13,24 @@ from time import process_time
 from billiard.exceptions import SoftTimeLimitExceeded
 from django.utils import timezone
 
+from host.task_prereqs import ImageDownload_prerequisites
+from host.task_prereqs import MWEBV_Transient_prerequisites
+from host.task_prereqs import HostMatch_prerequisites
+from host.task_prereqs import HostInformation_prerequisites
+from host.task_prereqs import LocalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateLocalPhotometry_prerequisites
+from host.task_prereqs import LocalHostSEDFitting_prerequisites
+from host.task_prereqs import MWEBV_Host_prerequisites
+from host.task_prereqs import GlobalApertureConstruction_prerequisites
+from host.task_prereqs import GlobalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateGlobalPhotometry_prerequisites
+from host.task_prereqs import GlobalHostSEDFitting_prerequisites
+from host.task_prereqs import CropTransientImages_prerequisites
+from host.task_prereqs import GenerateThumbnail_prerequisites
+from host.task_prereqs import GenerateThumbnailFinal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+
 from host.cutouts import download_and_save_cutouts
 from host.prost import run_prost
 from host.host_utils import select_aperture
@@ -28,6 +46,7 @@ from host.host_utils import query_sdss
 from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
+from host.host_utils import get_processing_status_and_progress
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
@@ -53,7 +72,7 @@ from PIL import Image
 from astropy.wcs import WCS
 from django.conf import settings
 
-"""This module contains all of the TransientTaskRunners in blast."""
+"""This module contains all of the TransientTaskRunners in Blast."""
 
 from host.models import TaskRegister
 from host.models import Status
@@ -61,83 +80,6 @@ from host.models import Task
 
 from host.log import get_logger
 logger = get_logger(__name__)
-
-
-def get_all_task_prerequisites(transient_name):
-    return {
-        ImageDownload(transient_name).task_name: ImageDownload(transient_name)._prerequisites(),
-        MWEBV_Transient(transient_name).task_name: MWEBV_Transient(transient_name)._prerequisites(),
-        HostMatch(transient_name).task_name: HostMatch(transient_name)._prerequisites(),
-        HostInformation(transient_name).task_name: HostInformation(transient_name)._prerequisites(),
-        LocalAperturePhotometry(transient_name).task_name: LocalAperturePhotometry(transient_name)._prerequisites(),
-        ValidateLocalPhotometry(transient_name).task_name: ValidateLocalPhotometry(transient_name)._prerequisites(),
-        LocalHostSEDFitting(transient_name).task_name: LocalHostSEDFitting(transient_name)._prerequisites(),
-        MWEBV_Host(transient_name).task_name: MWEBV_Host(transient_name)._prerequisites(),
-        GlobalApertureConstruction(transient_name).task_name: GlobalApertureConstruction(transient_name)._prerequisites(),  # noqa
-        GlobalAperturePhotometry(transient_name).task_name: GlobalAperturePhotometry(transient_name)._prerequisites(),
-        ValidateGlobalPhotometry(transient_name).task_name: ValidateGlobalPhotometry(transient_name)._prerequisites(),
-        GlobalHostSEDFitting(transient_name).task_name: GlobalHostSEDFitting(transient_name)._prerequisites(),
-        CropTransientImages(transient_name).task_name: CropTransientImages(transient_name)._prerequisites(),
-        GenerateThumbnail(transient_name).task_name: GenerateThumbnail(transient_name)._prerequisites(),
-        GenerateThumbnailFinal(transient_name).task_name: GenerateThumbnailFinal(transient_name)._prerequisites(),
-        GenerateThumbnailSEDLocal(transient_name).task_name: GenerateThumbnailSEDLocal(transient_name)._prerequisites(),
-        GenerateThumbnailSEDGlobal(transient_name).task_name: GenerateThumbnailSEDGlobal(transient_name)._prerequisites(),  # noqa
-    }
-
-
-def get_processing_status_and_progress(transient):
-    # Collect all workflow tasks.
-    tasks = TaskRegister.objects.filter(transient__name__exact=transient.name)
-    num_total_tasks = len(tasks)
-    # If there are no tasks associated with the transient, the progress is zero.
-    if num_total_tasks == 0:
-        return 0, "processing"
-
-    # Collect incomplete tasks, which include those currently processing and those not yet processed.
-    incomplete_tasks = tasks.filter(status__message__in=['not processed', 'processing'])
-    logger.debug(f'''"{transient.name}" incomplete tasks: {[task.task.name for task in incomplete_tasks]}''')
-
-    # For each unprocessed task in the workflow, determine whether it could possibly run based on its prerequisites.
-    unprocessed_tasks = incomplete_tasks.filter(status__message__exact='not processed')
-    prerequisites = get_all_task_prerequisites(transient.name)
-    blocked_tasks = []
-    for unprocessed_task in unprocessed_tasks:
-        prereq_tasks = prerequisites[unprocessed_task.task.name]
-        prereqs_errored = []
-        # Iterate over the task's prerequisites and check for any that have failed
-        for task_name, status_message in prereq_tasks.items():
-            prereq_task = Task.objects.get(name__exact=task_name)
-            prereqs_errored.extend(tasks.filter(
-                task__exact=prereq_task,
-                status__type__exact='error',
-            ))
-            # If any of the unprocessed task's prerequisites failed, then it will never execute; it is "blocked".
-            if prereqs_errored:
-                logger.debug(f'''"{transient.name}" prereqs_errored: {[task.task.name for task in prereqs_errored]}''')
-                blocked_tasks.append(unprocessed_task)
-                break
-    unblocked_tasks = [task for task in unprocessed_tasks if task not in blocked_tasks]
-    logger.debug(f'''"{transient.name}" unblocked tasks: {[task.task.name for task in unblocked_tasks]}''')
-
-    # The number of remaining tasks is the sum of the unblocked tasks and those currently processing
-    processing_tasks = incomplete_tasks.filter(status__message__exact='processing')
-    num_remaining_tasks = len(unblocked_tasks) + len(processing_tasks)
-    progress_raw = 100 * (1 - num_remaining_tasks / num_total_tasks)
-    progress = int(round(progress_raw, 0))
-    logger.debug(f'''"{transient.name}" progress (raw): {progress_raw}''')
-
-    # If the progress is not 100%, then the workflow is still processing
-    if progress < 100:
-        processing_status = 'processing'
-    # If the progress is 100%, then the workflow is finished.
-    elif progress == 100:
-        # It is blocked if there are errors; otherwise it is complete.
-        if tasks.filter(status__type='error'):
-            processing_status = 'blocked'
-        else:
-            processing_status = 'completed'
-
-    return progress, processing_status
 
 
 class TransientTaskRunner(TaskRunner):
@@ -341,11 +283,7 @@ class HostMatch(TransientTaskRunner):
         """
         Only prerequisite is that the host match task is not processed.
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "not processed",
-        }
+        return HostMatch_prerequisites
 
     @property
     def task_name(self):
@@ -399,10 +337,7 @@ class MWEBV_Transient(TransientTaskRunner):
         """
         Only prerequisite is that the transient MWEBV task is not processed.
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "not processed",
-        }
+        return MWEBV_Transient_prerequisites
 
     @property
     def task_name(self):
@@ -446,13 +381,7 @@ class MWEBV_Host(TransientTaskRunner):
         """
         Only prerequisite is that the host MWEBV task is not processed.
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Host MWEBV": "not processed"
-        }
+        return MWEBV_Host_prerequisites
 
     @property
     def task_name(self):
@@ -496,9 +425,7 @@ class ImageDownload(TransientTaskRunner):
         """
         No prerequisites
         """
-        return {
-            "Cutout download": "not processed"
-        }
+        return ImageDownload_prerequisites
 
     @property
     def task_name(self):
@@ -541,13 +468,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "not processed",
-        }
+        return GlobalApertureConstruction_prerequisites
 
     @property
     def task_name(self):
@@ -626,13 +547,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Local aperture photometry": "not processed",
-        }
+        return LocalAperturePhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -722,14 +637,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "not processed",
-        }
+        return GlobalAperturePhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -860,14 +768,7 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         Prerequisites are that the validate local photometry task is
         not processed and the local photometry task is processed.
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "not processed",
-        }
+        return ValidateLocalPhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -929,15 +830,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         Prerequisites are that the validate global photometry task
         is not processed and the global photometry task is processed.
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "not processed",
-        }
+        return ValidateGlobalPhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -1025,12 +918,7 @@ class HostInformation(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "not processed"
-        }
+        return HostInformation_prerequisites
 
     @property
     def task_name(self):
@@ -1217,15 +1105,7 @@ class LocalHostSEDFitting(HostSEDFitting):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
-            "Local host SED inference": "not processed",
-        }
+        return LocalHostSEDFitting_prerequisites
 
     @property
     def task_name(self):
@@ -1257,17 +1137,7 @@ class GlobalHostSEDFitting(HostSEDFitting):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Host MWEBV": "processed",
-            "Global host SED inference": "not processed",
-        }
+        return GlobalHostSEDFitting_prerequisites
 
     @property
     def task_name(self):
@@ -1298,10 +1168,7 @@ class GenerateThumbnail(TransientTaskRunner):
     """
 
     def _prerequisites(self):
-        return {
-            "Cutout download": "processed",
-            "Generate thumbnail": "not processed",
-        }
+        return GenerateThumbnail_prerequisites
 
     @property
     def task_name(self):
@@ -1499,20 +1366,7 @@ class GenerateThumbnailFinal(GenerateThumbnail):
     """
 
     def _prerequisites(self):
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
-            "Generate thumbnail": "processed",
-            "Crop transient images": "processed",
-            "Generate thumbnail final": "not processed",
-        }
+        return GenerateThumbnailFinal_prerequisites
 
     @property
     def task_name(self):
@@ -1525,10 +1379,7 @@ class GenerateThumbnailSEDLocal(GenerateThumbnail):
     """
 
     def _prerequisites(self):
-        return {
-            "Local host SED inference": "processed",
-            "Generate thumbnail SED local": "not processed",
-        }
+        return GenerateThumbnailSEDLocal_prerequisites
 
     @property
     def task_name(self):
@@ -1544,10 +1395,7 @@ class GenerateThumbnailSEDGlobal(GenerateThumbnail):
     """
 
     def _prerequisites(self):
-        return {
-            "Global host SED inference": "processed",
-            "Generate thumbnail SED global": "not processed",
-        }
+        return GenerateThumbnailSEDGlobal_prerequisites
 
     @property
     def task_name(self):
@@ -1563,18 +1411,7 @@ class CropTransientImages(TransientTaskRunner):
     """
 
     def _prerequisites(self):
-        return {
-            "Cutout download": "processed",
-            "Transient MWEBV": "processed",
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
-            "Crop transient images": "not processed",
-        }
+        return CropTransientImages_prerequisites
 
     @property
     def task_name(self):

@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+from host.models import Transient
 
 sys.path.append(os.path.join(str(Path(__file__).resolve().parent.parent)))
 # from host.object_store import ObjectStore
@@ -10,9 +11,12 @@ logger = get_logger(__name__)
 
 
 def import_datasets(transient_name_list):
+    transient_search = Transient.objects.filter(name__in=transient_name_list)
     for transient_name in transient_name_list:
+        if transient_search.filter(name__exact=transient_name).exists():
+            logger.debug(f'Skipping existing transient "{transient_name}"')
+            continue
         logger.info(f'Installing transient dataset "{transient_name}"...')
-        logger.debug(os.listdir('/data/transient_datasets'))
         with open(f'''/data/transient_datasets/{transient_name}.tar.gz''', 'rb') as dataset_fileobj:
             # Ignore errors
             imported_transient_names, import_failures = import_transient_info(dataset_fileobj)

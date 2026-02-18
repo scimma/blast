@@ -52,9 +52,27 @@ from host.models import Cutout
 from host.models import Filter
 from host.models import SEDFittingResult
 from host.models import TaskRegister
+from host.models import Task
 from host.models import Transient
 from host.models import Survey
 from host.models import StarFormationHistoryResult
+from host.task_prereqs import ImageDownload_prerequisites
+from host.task_prereqs import MWEBV_Transient_prerequisites
+from host.task_prereqs import HostMatch_prerequisites
+from host.task_prereqs import HostInformation_prerequisites
+from host.task_prereqs import LocalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateLocalPhotometry_prerequisites
+from host.task_prereqs import LocalHostSEDFitting_prerequisites
+from host.task_prereqs import MWEBV_Host_prerequisites
+from host.task_prereqs import GlobalApertureConstruction_prerequisites
+from host.task_prereqs import GlobalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateGlobalPhotometry_prerequisites
+from host.task_prereqs import GlobalHostSEDFitting_prerequisites
+from host.task_prereqs import CropTransientImages_prerequisites
+from host.task_prereqs import GenerateThumbnail_prerequisites
+from host.task_prereqs import GenerateThumbnailFinal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
 
 from .object_store import ObjectStore
 from .models import TaskLock
@@ -989,7 +1007,7 @@ def import_transient_info(transient_data_archive):
                 #     'magnitude_zero_point_keyword': filter_obj.magnitude_zero_point_keyword,
                 #     'image_pixel_units': filter_obj.image_pixel_units,
                 # }
-                # logger.debug(f'''Matching against existing filter...\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
+                # logger.debug(f'''Checking existing filter...\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
                 # The survey names associated with the existing and importing filter should match
                 assert filter_obj.survey.name == [survey['fields']['name'] for survey in dataset['surveys']
                                                   if survey['pk'] == filter['fields']['survey']][0]
@@ -1236,6 +1254,10 @@ def import_transient_info(transient_data_archive):
             tr_obj.last_modified = tr['last_modified']
             tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
             tr_obj.save()
+        # Calculate workflow progress and mark tasks as initialized so retriggering works.
+        transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+        transient.tasks_initialized = True
+        transient.save()
         # Record successful database import
         imported_transient_names.append(transient.name)
 
@@ -1313,3 +1335,80 @@ def import_transient_info(transient_data_archive):
         delete_transient(transient_name=import_failure['transient_name'])
 
     return imported_transient_names, import_failures
+
+
+def get_all_task_prerequisites(transient_name):
+    return {
+        'Cutout download': ImageDownload_prerequisites,
+        'Transient MWEBV': MWEBV_Transient_prerequisites,
+        'Host match': HostMatch_prerequisites,
+        'Host information': HostInformation_prerequisites,
+        'Local aperture photometry': LocalAperturePhotometry_prerequisites,
+        'Validate local photometry': ValidateLocalPhotometry_prerequisites,
+        'Local host SED inference': LocalHostSEDFitting_prerequisites,
+        'Host MWEBV': MWEBV_Host_prerequisites,
+        'Global aperture construction': GlobalApertureConstruction_prerequisites,
+        'Global aperture photometry': GlobalAperturePhotometry_prerequisites,
+        'Validate global photometry': ValidateGlobalPhotometry_prerequisites,
+        'Global host SED inference': GlobalHostSEDFitting_prerequisites,
+        'Crop transient images': CropTransientImages_prerequisites,
+        'Generate thumbnail': GenerateThumbnail_prerequisites,
+        'Generate thumbnail final': GenerateThumbnailFinal_prerequisites,
+        'Generate thumbnail SED local': GenerateThumbnailSEDLocal_prerequisites,
+        'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
+    }
+
+
+def get_processing_status_and_progress(transient):
+    # Collect all workflow tasks.
+    tasks = TaskRegister.objects.filter(transient__name__exact=transient.name)
+    num_total_tasks = len(tasks)
+    # If there are no tasks associated with the transient, the progress is zero.
+    if num_total_tasks == 0:
+        return 0, "processing"
+
+    # Collect incomplete tasks, which include those currently processing and those not yet processed.
+    incomplete_tasks = tasks.filter(status__message__in=['not processed', 'processing'])
+    logger.debug(f'''"{transient.name}" incomplete tasks: {[task.task.name for task in incomplete_tasks]}''')
+
+    # For each unprocessed task in the workflow, determine whether it could possibly run based on its prerequisites.
+    unprocessed_tasks = incomplete_tasks.filter(status__message__exact='not processed')
+    prerequisites = get_all_task_prerequisites(transient.name)
+    blocked_tasks = []
+    for unprocessed_task in unprocessed_tasks:
+        prereq_tasks = prerequisites[unprocessed_task.task.name]
+        prereqs_errored = []
+        # Iterate over the task's prerequisites and check for any that have failed
+        for task_name, status_message in prereq_tasks.items():
+            prereq_task = Task.objects.get(name__exact=task_name)
+            prereqs_errored.extend(tasks.filter(
+                task__exact=prereq_task,
+                status__type__exact='error',
+            ))
+            # If any of the unprocessed task's prerequisites failed, then it will never execute; it is "blocked".
+            if prereqs_errored:
+                logger.debug(f'''"{transient.name}" prereqs_errored: {[task.task.name for task in prereqs_errored]}''')
+                blocked_tasks.append(unprocessed_task)
+                break
+    unblocked_tasks = [task for task in unprocessed_tasks if task not in blocked_tasks]
+    logger.debug(f'''"{transient.name}" unblocked tasks: {[task.task.name for task in unblocked_tasks]}''')
+
+    # The number of remaining tasks is the sum of the unblocked tasks and those currently processing
+    processing_tasks = incomplete_tasks.filter(status__message__exact='processing')
+    num_remaining_tasks = len(unblocked_tasks) + len(processing_tasks)
+    progress_raw = 100 * (1 - num_remaining_tasks / num_total_tasks)
+    progress = int(round(progress_raw, 0))
+    logger.debug(f'''"{transient.name}" progress (raw): {progress_raw}''')
+
+    # If the progress is not 100%, then the workflow is still processing
+    if progress < 100:
+        processing_status = 'processing'
+    # If the progress is 100%, then the workflow is finished.
+    elif progress == 100:
+        # It is blocked if there are errors; otherwise it is complete.
+        if tasks.filter(status__type='error'):
+            processing_status = 'blocked'
+        else:
+            processing_status = 'completed'
+
+    return progress, processing_status

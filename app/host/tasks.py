@@ -12,7 +12,7 @@ from host.system_tasks import TNSDataIngestion
 from host.system_tasks import RetriggerIncompleteWorkflows
 from host.system_tasks import UsageLogRoller
 from host.system_tasks import GarbageCollector
-from host.transient_tasks import get_processing_status_and_progress
+from host.host_utils import get_processing_status_and_progress
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, permission_required
