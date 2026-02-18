@@ -935,7 +935,7 @@ def export_transient_info(transient_name=''):
         try:
             last_modified = tr.last_modified.isoformat()
         except AttributeError:
-            last_modified = ''
+            last_modified = None
         transient_data['workflow_tasks'].append({
             'task_name': tr.task.name,
             'status': {
@@ -1250,8 +1250,12 @@ def import_transient_info(transient_data_archive):
                 record_import_error(transient_name, f'[{transient_name}] Workflow task "{task_name}" does not exist.')
                 return
             tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
-            tr_obj.user_warning = tr['user_warning']
-            tr_obj.last_modified = tr['last_modified']
+            # If the last_modified time is not in the proper ISO format, use null value
+            try:
+                datetime.fromisoformat(tr['last_modified'])
+                tr_obj.last_modified = tr['last_modified']
+            except ValueError:
+                tr_obj.last_modified = None
             tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
             tr_obj.save()
         # Calculate workflow progress and mark tasks as initialized so retriggering works.
