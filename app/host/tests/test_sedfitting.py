@@ -32,7 +32,7 @@ class PropsectorBuildObsTest(TestCase):
 
 #     def test_prospector_global(self):
 
-#     transient = Transient.objects.get(name="2010H")
+#     transient = Transient.objects.get(name="2026dix")
 
 #     apphot_cls = GlobalAperturePhotometry()
 #     status_message = apphot_cls._run_process(transient)
@@ -51,7 +51,7 @@ class PropsectorBuildObsTest(TestCase):
 
 #     def test_prospector_local(self):
 
-#       transient = Transient.objects.get(name="2010H")
+#       transient = Transient.objects.get(name="2026dix")
 
 #       apphot_cls = LocalAperturePhotometry()
 #       status_message = apphot_cls._run_process(transient)

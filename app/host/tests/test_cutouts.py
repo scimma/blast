@@ -8,8 +8,6 @@ from django.test import tag
 from ..cutouts import cutout
 from ..models import Filter
 
-sn = ["2010ag", "2010ai", "2010y", "2010H", ""]
-
 
 class CutoutDownloadTest(TestCase):
 
