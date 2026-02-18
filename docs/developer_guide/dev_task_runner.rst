@@ -42,12 +42,16 @@ then returns the processed status message.
 
 .. note::
 
-    The available status messages can be found in
-    :code:`app/host/fixtures/initial/setup_status.yaml`. The :code:`_run_process`
-    method must return a string that matches the message field of
-    one of the statuses in :code:`app/host/fixtures/initial/setup_status.yaml`.
-    If you want to use a new status add it to
-    :code:`app/host/fixtures/initial/setup_status.yaml`
+    The :code:`_run_process`
+    method must return a string that matches the ``message`` field of
+    one of the ``Status`` objects. The available status messages can be listed
+    using the following command:
+
+    .. code:: bash
+
+        docker exec -it blast-dev-app-1 python manage.py shell \
+        --command='from host.models import Status; print([st.message for st in Status.objects.all()]);'
+
 
 Task name
 ^^^^^^^^^
@@ -66,10 +70,7 @@ a string which is the name of the task. Let's say we are implementing a
 
 .. note::
 
-    You need to add your new task and its name into
-    :code:`app/host/fixtures/initial/setup_tasks.yaml` making sure the return of
-    task_name matches the name field in the fixture. This will ensure Blast
-    registers your task on start up.
+    The new task and its name must be added to the database schema via a migration script; see ``app/host/migrations/0040_add_new_workflow_tasks.py`` for an example. Ensure that the string returned by the ``task_name()`` method matches the new ``Task`` object name field.
 
 
 Prerequisites
@@ -92,18 +93,22 @@ database meeting the prerequisites.
 
 .. note::
 
-    The available tasks can be found in
-    :code:`app/host/fixtures/initial/setup_tasks.yaml`.  The :code:`_prerequisites` method must
-    return a dictionary with keys that match the name field of one of the tasks in
-    :code:`app/host/fixtures/initial/setup_tasks.yaml` and values that match a
-    status :code:`app/host/fixtures/initial/setup_status.yaml`.
+    The available tasks can be listed using the command:
+
+    .. code:: bash
+
+        docker exec -it blast-dev-app-1 python manage.py shell \
+        --command='from host.models import Task; print([t.name for t in Task.objects.all()]);'
+
+    The :code:`_prerequisites` method must
+    return a dictionary with keys that match the name field of one of the Task objects and values that match a Status object (see the "Process method" section above).
 
 Failed Status
 ^^^^^^^^^^^^^
 
 You can specify what status happens if your :code:`_run_process` code
 throws and exception and fails. This is done by implementing the
-:code:`_failed_status_message method`.  This method takes no arguments and returns a
+:code:`_failed_status_message` method.  This method takes no arguments and returns a
 string which is the message of the failed status. Let's say we want the failed
 status to be the Status with the message "failed",
 
@@ -116,11 +121,15 @@ If you do not implement this method it will default to a "failed" status.
 
 .. note::
 
-    The available status messages can be found in
-    :code:`app/host/fixtures/initial/setup_status.yaml`. The _failed_status_message
-    method must return a string that matches the message field of one of the statuses in
-    :code:`app/host/fixtures/initial/setup_status.yaml`. If you want to use a new
-    status add it to :code:`app/host/fixtures/initial/setup_status.yaml`
+    The available status messages can be listed using the following command:
+
+    .. code:: bash
+
+        docker exec -it blast-dev-app-1 python manage.py shell \
+        --command='from host.models import Status; print([st.message for st in Status.objects.all()]);'
+
+    The ``_failed_status_message()``
+    method must return a string that matches one of these status messages. If you want to use a new status, you will need to create a database migration script that creates a new ``Status`` object.
 
 Task Frequency
 ^^^^^^^^^^^^^^

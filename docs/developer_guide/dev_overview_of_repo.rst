@@ -80,12 +80,6 @@ host
 
 The :code:`app/host/` directory contains all the Blast source code.
 
-fixtures
-^^^^^^^^
-
-The :code:`app/host/fixtures/` directory contains all the data that is loaded into
-Blast upon start up.
-
 templates
 ^^^^^^^^^
 
