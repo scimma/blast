@@ -1300,15 +1300,15 @@ def import_transient_info(transient_data_archive):
         for canonical_path in canonical_paths:
             thumbail_paths.append(canonical_path.replace(thumbnail_extension, '.jpg'))
         canonical_paths.extend(thumbail_paths)
-        logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
+        # logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
         for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
             if not tarinfo.isreg():
-                logger.debug(f'"{tarinfo.name}" is not a file. Skipping.')
+                logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
                 continue
             # Verify that the file is listed in the transient metadata
             expected_canonical_path = tarinfo.name.replace(tar_root_path,
                                                            f'{os.path.join(canonical_path_root, transient_name)}/')
-            logger.debug(f'Archive file canonical path: {expected_canonical_path}')
+            # logger.debug(f'Archive file canonical path: {expected_canonical_path}')
             if not [path for path in canonical_paths if path == expected_canonical_path]:
                 logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
                 continue
