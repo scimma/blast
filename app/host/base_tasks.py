@@ -180,4 +180,4 @@ def initialize_all_tasks_status(transient):
                 task=workflow_task,
                 status=Status.objects.get(message__exact="not processed"),
             )
-            logger.info(f'Created task "{workflow_task.name}" for transient "{transient.name}".')
+            logger.debug(f'Created task "{workflow_task.name}" for transient "{transient.name}".')
