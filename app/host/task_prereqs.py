@@ -1,6 +1,10 @@
 ImageDownload_prerequisites = {
     "Cutout download": "not processed"
 }
+GenerateThumbnail_prerequisites = {
+    "Cutout download": "processed",
+    "Generate thumbnail": "not processed",
+}
 MWEBV_Transient_prerequisites = {
     "Cutout download": "processed",
     "Transient MWEBV": "not processed",
@@ -94,10 +98,6 @@ CropTransientImages_prerequisites = {
     "Validate local photometry": "processed",
     "Crop transient images": "not processed",
 }
-GenerateThumbnail_prerequisites = {
-    "Cutout download": "processed",
-    "Generate thumbnail": "not processed",
-}
 GenerateThumbnailFinal_prerequisites = {
     "Cutout download": "processed",
     "Transient MWEBV": "processed",
@@ -113,10 +113,24 @@ GenerateThumbnailFinal_prerequisites = {
     "Generate thumbnail final": "not processed",
 }
 GenerateThumbnailSEDLocal_prerequisites = {
+    "Cutout download": "processed",
+    "Transient MWEBV": "processed",
+    "Host match": "processed",
+    "Host information": "processed",
+    "Local aperture photometry": "processed",
+    "Validate local photometry": "processed",
     "Local host SED inference": "processed",
     "Generate thumbnail SED local": "not processed",
 }
 GenerateThumbnailSEDGlobal_prerequisites = {
+    "Cutout download": "processed",
+    "Transient MWEBV": "processed",
+    "Host match": "processed",
+    "Host information": "processed",
+    "Global aperture construction": "processed",
+    "Global aperture photometry": "processed",
+    "Validate global photometry": "processed",
+    "Host MWEBV": "processed",
     "Global host SED inference": "processed",
     "Generate thumbnail SED global": "not processed",
 }
