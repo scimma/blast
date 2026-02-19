@@ -534,7 +534,7 @@ def results(request, transient_name):
             try:
                 image_data = s3.get_object(path=thumbnail_object_key)
             except Exception as err:
-                logger.info(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
+                logger.debug(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
                 image_data = b''
             image_data_encoded = base64.b64encode(image_data).decode()
             bokeh_cutout_context = {}
@@ -579,7 +579,7 @@ def results(request, transient_name):
                 logger.debug(f'''Downloading thumbnail object: "{thumbnail_object_key}"...''')
                 image_data = s3.get_object(path=thumbnail_object_key)
             except Exception as err:
-                logger.info(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
+                logger.debug(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
                 image_data = b''
             image_data_encoded_sed[scope] = base64.b64encode(image_data).decode()
             interactive_sed_plot[scope] = {}
@@ -795,7 +795,6 @@ def cutout_fits_plot(request):
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')
         filter = request.GET.get('filter')
-        logger.info(f"{transient_name} and {filter}")
 
         # Acquire the transient object or return 404 not found
         try:
@@ -809,9 +808,7 @@ def cutout_fits_plot(request):
             cutout = select_best_cutout(transient.name)
         else:
             cutout_name = f"{transient.name}_{filter}"
-            logger.debug(cutout_name)
             cutout = Cutout.objects.get(name__exact=cutout_name)
-            logger.info(cutout)
         bokeh_context = plot_cutout_image(
             cutout=cutout,
             transient=transient,
