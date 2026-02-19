@@ -1254,7 +1254,7 @@ def import_transient_info(transient_data_archive):
             try:
                 datetime.fromisoformat(tr['last_modified'])
                 tr_obj.last_modified = tr['last_modified']
-            except ValueError:
+            except (ValueError, TypeError):
                 tr_obj.last_modified = None
             tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
             tr_obj.save()
