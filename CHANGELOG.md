@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.1]
+
+### Fixed
+
+- Fixed a bug in the workflow progress calculation introduced by the  refactoring of transient task
+  prerequisites.
+
 ## [1.9.0]
 
 ### Added
