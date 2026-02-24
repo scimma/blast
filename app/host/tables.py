@@ -11,6 +11,11 @@ class TransientTable(tables.Table):
         verbose_name="Name",
         orderable=True,
         order_by="name",
+        attrs={
+            "td": {
+                'style': 'font-family: monospace',
+            }
+        }
     )
 
     # prefix = tables.Column(
@@ -22,6 +27,11 @@ class TransientTable(tables.Table):
         verbose_name="Discovery Date",
         orderable=True,
         order_by="public_timestamp",
+        attrs={
+            "th": {
+                'style': 'width: 13rem;',
+            },
+        }
     )
 
     def order_disc_date(self, queryset, is_descending):
@@ -33,11 +43,21 @@ class TransientTable(tables.Table):
         return (queryset, True)
 
     ra_string = tables.Column(
-        accessor="ra", verbose_name="Right Ascension", orderable=True, order_by="ra_deg"
+        accessor="ra", verbose_name="Right Ascension", orderable=True, order_by="ra_deg",
+        attrs={
+            "td": {
+                'style': 'width: 13rem; font-family: monospace',
+            }
+        }
     )
 
     dec_string = tables.Column(
-        accessor="dec", verbose_name="Declination", orderable=True, order_by="dec_deg"
+        accessor="dec", verbose_name="Declination", orderable=True, order_by="dec_deg",
+        attrs={
+            "td": {
+                'style': 'width: 13rem; font-family: monospace',
+            }
+        }
     )
 
     spec_type = tables.Column(
@@ -53,6 +73,11 @@ class TransientTable(tables.Table):
         verbose_name="Redshift",
         orderable=True,
         order_by="host__redshift",
+        attrs={
+            "td": {
+                'style': 'width: 8rem; font-family: monospace',
+            }
+        }
     )
 
     progress = tables.TemplateColumn(
@@ -86,7 +111,7 @@ class TransientTable(tables.Table):
                     "descending": "descend",  # Instead of `desc`
                 }
             },
-            "class": "table table-bordered table-hover",
+            "class": "table table-bordered table-hover table-sm",
             "id": "k2_transient_tbl",
             "columnDefs": [
                 {"type": "title-numeric", "targets": 1},
