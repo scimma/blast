@@ -1,0 +1,26 @@
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" id="export-dropdown" data-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-save"></i> Download data
+  </a>
+  <div class="dropdown-menu" aria-labelledby="export-dropdown">
+    <a class="dropdown-item" title="Export with files" href="/api/transient/export/{{transient.name}}/all"><i class="bi bi-file-earmark-zip"></i> Export with files (.tar.gz)</a>
+    <a class="dropdown-item" title="Export without files" href="/api/transient/export/{{transient.name}}"><i class="bi bi-filetype-json"></i> Export without files (.json)</a>
+    <a class="dropdown-item" title="Export without files (legacy)" href="/api/transient/get/{{transient.name}}?format=json"><i class="bi bi-filetype-json"></i> Export without files (legacy .json)</a>
+  </div>
+</li>
+{% if is_auth %}
+  {% if has_perm_retrigger_transient %}
+    <li class="nav-item">
+      <a href="{% url 'retrigger_transient' transient.name %}" role="button" class="btn btn-info transient-btn">
+        <i class="bi bi-play-circle"></i> Retrigger
+      </a>
+    </li>
+  {% endif %}
+  {% if has_perm_reprocess_transient %}
+    <li class="nav-item">
+      <a href="{% url 'reprocess_transient' transient.name %}" role="button" class="btn btn-warning transient-btn">
+        <i class="bi bi-bootstrap-reboot"></i> Reprocess
+      </a>
+    </li>
+  {% endif %}
+{% endif %}

@@ -1,10 +1,13 @@
-{% extends "host/card_template.html"%}
+{% extends "host/card_template.html" %}
 {% load latexify %}
 
 <!-- title -->
 {% block title %}
-
 <h4>Host SED inference</h4>
+{% endblock %}
+
+<!-- body -->
+{% block body %}
 <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="global-params-tab" data-toggle="tab" data-target="#global-params" type="button" role="tab" aria-controls="global-params" aria-selected="false">Global</button>
@@ -14,35 +17,30 @@
     </li>
 </ul>
 
-{% endblock %}
-
-<!-- body -->
-{% block body %}
-
 <div class="tab-content" id="myTabContent">
     <div class="tab-pane" id="local-params" role="tabpanel" aria-labelledby="local-params-tab">
         <div class="">
             <br>
             <h4>Local parameter details</h4>
-	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
-	    {% if local_sed_results %}
-	    <div>
-	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'local' %}','_self')">
+        <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
+        {% if local_sed_results %}
+        <div>
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'local' %}','_self')">
               <span>Download Chains</span>
             </button>
-	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_percentiles' transient.name 'local' %}','_self')">
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_percentiles' transient.name 'local' %}','_self')">
               <span>Download Percentiles</span>
             </button>
-	    </div>
+        </div>
 
             <br>
 
-	    {% with table_type="normal Metallicity Dust AGN" %}
-	    {% for ttype in table_type.split %}
-	    {% if ttype != 'normal' %}
-	        <br>
-	        <h5>{{ttype}} parameters</h5>
-	    {% endif %}
+        {% with table_type="normal Metallicity Dust AGN" %}
+        {% for ttype in table_type.split %}
+        {% if ttype != 'normal' %}
+            <br>
+            <h5>{{ttype}} parameters</h5>
+        {% endif %}
 
             <table class="table-condensed table-striped">
             <thead>
@@ -55,23 +53,23 @@
             </thead>
             <tbody>
               {% for item in local_sed_results %}
-	      {% if item.2 and item.4 == ttype %}
+          {% if item.2 and item.4 == ttype %}
             <tr>
                 <td>{% latexify item.0 math_inline=True %}</td>
                 <td align="right">{{item.1|floatformat:3}}</td>
                 <td align="right">{{item.2|floatformat:3}}</td>
                 <td align="right">{{item.3|floatformat:3}}</td>
             </tr>
-	    {% endif %}
+        {% endif %}
             {% endfor %}
             </tbody>
             </table>
-	    {% endfor %}
-	    {% endwith %}
+        {% endfor %}
+        {% endwith %}
 
-	    {% if local_sfh_results %}
-	        <br>
-	        <h5>Binned star formation history</h5>
+        {% if local_sfh_results %}
+            <br>
+            <h5>Binned star formation history</h5>
 
             <table class="table-condensed table-striped">
             <thead>
@@ -84,21 +82,21 @@
             </thead>
             <tbody>
               {% for item in local_sfh_results %}
-	      {% if item.2  %}
+          {% if item.2  %}
             <tr>
                 <td>{{item.3|floatformat:2}}-{{item.4|floatformat:2}} Gyr</td>
                 <td align="right">{{item.0|floatformat:3}}</td>
                 <td align="right">{{item.1|floatformat:3}}</td>
                 <td align="right">{{item.2|floatformat:3}}</td>
             </tr>
-	    {% endif %}
+        {% endif %}
             {% endfor %}
             </tbody>
             </table>
-	    {% endif %}
+        {% endif %}
         {% else %}
         <p>Data not available</p>
-	{% endif %}
+    {% endif %}
         </div>
     </div>
     <div class="tab-pane active" id="global-params" role="tabpanel" aria-labelledby="global-params-tab">
@@ -106,26 +104,26 @@
         <div class="">
             <br>
             <h4>Global parameter details</h4>
-	    <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
-	    {% if global_sed_results %}
-	    <div>
-	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'global' %}','_self')">
+        <h6><a href="https://blast.readthedocs.io/en/latest/usage/sed_params.html">Documentation</a></h6>
+        {% if global_sed_results %}
+        <div>
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_chains' transient.name 'global' %}','_self')">
               <span>Download Chains</span>
             </button>
-	    <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_percentiles' transient.name 'global' %}','_self')">
+        <button style="margin-bottom:5px;" type="button" class="report" onclick="window.open('{% url 'download_percentiles' transient.name 'global' %}','_self')">
               <span>Download Percentiles</span>
             </button>
 
-	    </div>
+        </div>
 
             <br>
 
-	    {% with table_type="normal Metallicity Dust AGN" %}
-	    {% for ttype in table_type.split %}
-	    {% if ttype != 'normal' %}
-	        <br>
-	        <h5>{{ttype}} parameters</h5>
-	    {% endif %}
+        {% with table_type="normal Metallicity Dust AGN" %}
+        {% for ttype in table_type.split %}
+        {% if ttype != 'normal' %}
+            <br>
+            <h5>{{ttype}} parameters</h5>
+        {% endif %}
             <table class="table-condensed table-striped">
             <thead>
             <tr>
@@ -137,23 +135,23 @@
             </thead>
             <tbody>
               {% for item in global_sed_results %}
-	      {% if item.2 and item.4 == ttype %}
+          {% if item.2 and item.4 == ttype %}
             <tr>
                 <td>{% latexify item.0 math_inline=True %}</td>
                 <td align="right">{{item.1|floatformat:3}}</td>
                 <td align="right">{{item.2|floatformat:3}}</td>
                 <td align="right">{{item.3|floatformat:3}}</td>
             </tr>
-	    {% endif %}
+        {% endif %}
             {% endfor %}
             </tbody>
             </table>
-	    {% endfor %}
-	    {% endwith %}
+        {% endfor %}
+        {% endwith %}
 
-	    {% if global_sfh_results %}
-	        <br>
-	        <h5>Binned star formation history</h5>
+        {% if global_sfh_results %}
+            <br>
+            <h5>Binned star formation history</h5>
 
             <table class="table-condensed table-striped">
             <thead>
@@ -166,21 +164,21 @@
             </thead>
             <tbody>
               {% for item in global_sfh_results %}
-	      {% if item.2  %}
+          {% if item.2  %}
             <tr>
                 <td>{{item.3|floatformat:2}}-{{item.4|floatformat:2}} Gyr</td>
                 <td align="right">{{item.0|floatformat:3}}</td>
                 <td align="right">{{item.1|floatformat:3}}</td>
                 <td align="right">{{item.2|floatformat:3}}</td>
             </tr>
-	    {% endif %}
+        {% endif %}
             {% endfor %}
             </tbody>
             </table>
-	    {% endif %}
+        {% endif %}
         {% else %}
-        <p>Data not available</p>	    
-	{% endif %}
+        <p>Data not available</p>
+    {% endif %}
         </div>
     </div>
 </div>

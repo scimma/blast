@@ -1,35 +1,37 @@
 {% extends "host/card_template.html" %}
 
 <!-- card title -->
-{% block title %} <h4>Information</h4>{% endblock %}
+{% block title %}<h4>Information</h4>{% endblock %}
 
 <!-- card body  -->
 {% block body %}
-
-<h4>Transient</h4>
-Name: <a class="link"
-    href="https://www.wis-tns.org/object/{{transient.name}}/">{{transient.tns_prefix}}{{transient.name}}</a><br>
-Right ascension: {{transient.ra}}<br>
-Declination: {{transient.dec}}<br>
-Discovery Date: {{transient.public_timestamp}}<br>
-Classification: {{transient.spectroscopic_class}}<br>
-{% if transient.redshift %}
-Redshift: {{transient.redshift|floatformat:6}}<br>
-{% else %}
-Redshift: None<br>
+<style>
+  td {
+    width: 12rem;
+  }
+</style>
+<table class="table table-responsive table-hover table-sm">
+  <thead><h5>Transient</h5></thead>
+  <tbody>
+    <tr><td>Name:</td><td><code><span style="font-size: 1.5rem;"><a class="link" title="View TNS information" href="https://www.wis-tns.org/object/{{transient.name}}/">{{transient.tns_prefix}}{{transient.name}}</a>{% if warning %}<b style="color:red">(warnings)</b>{% endif %}</code></td></tr>
+    <tr><td>Right ascension:</td><td><code> {{transient.ra}}</code></td></tr>
+    <tr><td>Declination:</td><td><code>{{transient.dec}}</code></td></tr>
+    <tr><td>Discovery Date:</td><td><code>{{transient.public_timestamp}}</code></td></tr>
+    <tr><td>Classification:</td><td><code>{{transient.spectroscopic_class}}</code></td></tr>
+    <tr><td>Redshift:</td><td><code>{% if transient.redshift %}{{transient.redshift|floatformat:6}}{% else %}None{% endif %}</code></td></tr>
+    <tr><td>MW E(B-V):</td><td><code>{{transient.milkyway_dust_reddening|floatformat:3}}</code></td></tr>
+  </tbody>
+</table>
+{% if transient.host %}
+<table class="table table-responsive table-hover table-sm">
+  <thead><h5>Host</h5></thead>
+  <tbody>
+    <tr><td>Name:</td><td><code>{{transient.host.name}}</code></td></tr>
+    <tr><td>Right ascension:</td><td><code> {{transient.host.ra}}</code></td></tr>
+    <tr><td>Declination:</td><td><code>{{transient.host.dec}}</code></td></tr>
+    <tr><td>Redshift:</td><td><code>{% if transient.host.redshift %}{{transient.host.redshift|floatformat:6}}{% else %}None{% endif %}</code></td></tr>
+    <tr><td>Photometric Redshift:</td><td><code>{% if transient.host.photometric_redshift %}{{transient.host.photometric_redshift|floatformat:3}}{% else %}None{% endif %}</code></td></tr>
+  </tbody>
+</table>
 {% endif %}
-MW E(B-V): {{transient.milkyway_dust_reddening|floatformat:3}}<br>
-<br>
-
-<h4>Host</h4>
-Name: {{transient.host.name}}<br>
-Right ascension: {{transient.host.ra}}<br>
-Declination: {{transient.host.dec}}<br>
-{% if transient.host.redshift %}
-Redshift: {{transient.host.redshift|floatformat:6}}<br>
-{% else %}
-Redshift: None<br>
-{% endif %}
-Photometric Redshift: {{transient.host.photometric_redshift|floatformat:3}}<br>
-
-{% endblock %}
+  {% endblock %}

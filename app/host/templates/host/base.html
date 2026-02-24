@@ -2,7 +2,14 @@
 {% load host_tags %}
 <!DOCTYPE html>
 <html lang="en">
-
+<div id="sizer">
+  <!-- Source - https://stackoverflow.com/a/57446305 -->
+  <div class="d-block d-sm-none d-md-none d-lg-none d-xl-none" data-size="xs"></div>
+  <div class="d-none d-sm-block d-md-none d-lg-none d-xl-none" data-size="sm"></div>
+  <div class="d-none d-sm-none d-md-block d-lg-none d-xl-none" data-size="md"></div>
+  <div class="d-none d-sm-none d-md-none d-lg-block d-xl-none" data-size="lg"></div>
+  <div class="d-none d-sm-none d-md-none d-lg-none d-xl-block" data-size="xl"></div>
+</div>
 <head>
   <title>{% block title %}{% endblock %}</title>
   <!-- Boostrap -->
@@ -17,8 +24,40 @@
     border-radius: 5px;
     font-size: 12pt;
   }
+  #myTabContent-sed {
+      margin-top: 1rem;
+  }
+  .card-header:hover {
+    background-color: #c1c1c1;
+    color: #d15e00;
+    cursor: pointer;
+  }
+  .card-hidden {
+    display: none;
+  }
+  .card-header {
+    background-color: #e3e3e3;
+    text-align: center;
+    text-decoration: none;
+  }
+  .card-header a {
+    color: inherit;
+  }
+  table {
+    width: 100%;
+    table-layout:fixed;
+  }
+  .processing-status-table {
+    font-size: 0.8rem;
+  }
   .container {
-    max-width: 1400px;
+    max-width: 1300px;
+  }
+  .page-container {
+    padding-top: 4rem;
+  }
+  .container-lg {
+    padding-top: 1rem;
   }
   footer {
     position: fixed;
@@ -91,6 +130,14 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+  #navbar-left-buttons {
+    width: 200%;
+  }
+  .transient-btn {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    color: white;
+  }
 </style>
   {% load bootstrap4 %}
   {% load static %}
@@ -100,12 +147,12 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-full" aria-controls="navbar-full" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbar-full">
-      <div class="container-fluid d-flex">
+      <div class="container-fluid d-flex" id="navbar-left-buttons">
         <ul class="navbar-nav mr-auto d-flex align-items-center">
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" role="button" id="navbarDropdown" data-toggle="dropdown" aria-expanded="false">
@@ -128,6 +175,7 @@
             <a class="nav-link" href="{% url 'add_transient' %}"><i class="bi bi-database-add"></i> Add Transients</a>
           </li>
           {% endif %}
+          {% block action_buttons %}{% endblock %}
         </ul>
       </div>
       <div class="container-fluid d-flex flex-row-reverse">
@@ -163,7 +211,7 @@
     </div>
   </nav>
 
-  <div class="container bg-light">
+  <div class="container bg-light page-container">
     {% block body %}
     {% endblock %}
   </div>

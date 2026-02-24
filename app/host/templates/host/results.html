@@ -2,51 +2,98 @@
 {% load latexify %}
 
 {% block title %} {{transient.get_display_name}} results {% endblock %}
-{% block script %} {{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }}  {% endblock %}
+{% block script %}
+{{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }}
+
+
+<script>
+
+function viewSize() {
+    // Source - https://stackoverflow.com/a/57446305
+    return $('#sizer').find('div:visible').data('size');
+}
+
+Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderElement => {
+    console.log(cardHeaderElement)
+    var titleElement = cardHeaderElement.getElementsByTagName('h4')[0]
+    var cardBodyElement = Array.from(cardHeaderElement.parentElement.getElementsByClassName('card-body'))[0]
+    if (titleElement.innerHTML.search('Cutout Download Report') >= 0 ||
+        titleElement.innerHTML.search('Processing Status') >= 0) {
+         cardBodyElement.style.display = 'none'
+    }
+    console.log(viewSize())
+    if (viewSize() == 'sm' || viewSize() == 'xs') {
+        if (titleElement.innerHTML.search('Aperture Photometry') >= 0) {
+            cardBodyElement.style.display = 'none'
+        }
+
+    }
+    if (cardBodyElement.style.display != 'none') {
+        titleElement.innerHTML = `<i class="bi"></i> ${titleElement.innerHTML}`
+        cardHeaderElement.title = "Click to hide section"
+        cardHeaderElement.onmouseover = "Click to hide section"
+    } else {
+        titleElement.innerHTML = `<i class="bi bi-chevron-expand"></i> ${titleElement.innerHTML}`
+        cardHeaderElement.title = "Click to display section"
+        cardHeaderElement.classList.add('card-collapsed')
+        cardHeaderElement.style.color = '#FFFFFF'
+        cardHeaderElement.style.background = '#d15e00'
+        cardHeaderElement.onmouseover = "Click to display section"
+    }
+    cardHeaderElement.addEventListener('click', function (event) {
+        var iconElement = titleElement.getElementsByTagName('i')[0]
+        if (cardBodyElement.style.display != 'none') {
+            cardHeaderElement.classList.add('card-collapsed')
+            cardBodyElement.style.display = 'none'
+            iconElement.classList.add('bi-chevron-expand')
+            cardHeaderElement.title = "Click to display section"
+            cardHeaderElement.onmouseover = "Click to display section"
+            cardHeaderElement.style.color = '#FFFFFF'
+            cardHeaderElement.style.background = '#d15e00'
+        } else {
+            cardBodyElement.style.display = 'block'
+            cardHeaderElement.classList.remove('card-collapsed')
+            iconElement.classList.remove('bi-chevron-expand')
+            cardHeaderElement.title = "Click to hide section"
+            cardHeaderElement.onmouseover = "Click to hide section"
+            cardHeaderElement.style.color = null
+            cardHeaderElement.style.background = null
+            // iconElement.classList.toggle('bi-chevron-contract')
+        }
+    })
+});
+</script>
+
+{% endblock %}
 
 {% load crispy_forms_tags %}
 {% block body %}
-
+<style>
+    code {
+        color: black;
+    }
+</style>
 <div class="container-lg">
-    <div class="p-5 text-left bg-light">
-    {% if warning %}
-        <h1 class="mb-3">{{transient.get_display_name}} <b style="color:red">(warnings)</b></h1>
-    {% else %}
-        <h1 class="mb-3">{{transient.get_display_name}} </h1>
-    {% endif %}
-        <a href="/api/transient/get/{{transient.name}}" role="button" class="btn btn-success">Download data <i class="bi bi-box-arrow-in-down"></i></button></a>
-    {% if is_auth %}
-    {% if has_perm_reprocess_transient %}
-    <a href="{% url 'reprocess_transient' transient.name %}" role="button" class="btn btn-warning reprocess">Reprocess</button></a>
-    {% endif %}
-    {% if has_perm_retrigger_transient %}
-    <a href="{% url 'retrigger_transient' transient.name %}" role="button" class="btn btn-info">Retrigger</button></a>
-    {% endif %}
-    {% endif %}
-        <div class="">
-            <div class="row">
-                <div class="col-md-5">
-
-                    {% include "host/information_card.html" %}
-
-                    {% include "host/processing_status_card.html" %}
-
-                    {% include "host/cutout_status_card.html" %}
-
-                    {% include "host/photometry_card.html" %}
-
-                </div>
-
-                <div class="col-md-7">
-                    {% include "host/cutout_card.html" %}
-
-                    {% include "host/sed_card.html" %}
-
-                    {% include "host/sed_inference_card.html" %}
-                </div>
+    <div class="bg-light">
+        <div class="row">
+            <div class="col-md-5">
+                {% include "host/information_card.html" %}
+                {% include "host/processing_status_card.html" %}
+                {% include "host/cutout_status_card.html" %}
+                {% include "host/photometry_card.html" %}
+            </div>
+            <div class="col-md-7">
+                {% include "host/cutout_card.html" %}
+                {% include "host/sed_card.html" %}
+                {% include "host/sed_inference_card.html" %}
             </div>
         </div>
     </div>
 </div>
 
 {% endblock %}
+
+{% block action_buttons %}
+{% include "host/transient_actions.html" %}
+{% endblock %}
+

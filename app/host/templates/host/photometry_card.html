@@ -3,8 +3,11 @@
 {% include "latexify/scripts.html" %}
 <!-- title -->
 {% block title %}
-
 <h4>Aperture Photometry</h4>
+{% endblock %}
+
+<!-- body -->
+{% block body %}
 <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="global-tab" data-toggle="tab" data-target="#global" type="button" role="tab" aria-controls="global" aria-selected="false">Global</button>
@@ -13,11 +16,7 @@
         <button class="nav-link" id="local-tab" data-toggle="tab" data-target="#local" type="button" role="tab" aria-controls="home" aria-selected="true">Local</button>
     </li>
 </ul>
-{% endblock %}
-
-<!-- body -->
-{% block body %}
-<div class="tab-content" id="myTabContent">
+<div class="tab-content" id="myTabContent" style="max-height: 80000px; overflow-y: scroll;">
     <div class="tab-pane" id="local" role="tabpanel" aria-labelledby="local-tab">
         <div class="table-responsive">
             <div class="">

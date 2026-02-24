@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
 
 <!-- title -->
-{% block title %} <h4> Imaging data </h4>{% endblock %}
+{% block title %}<h4>Imaging data</h4>{% endblock %}
 
 <!-- body -->
 {% block body %}
@@ -12,8 +12,7 @@
     {% if bokeh_cutout_div %}
     {{ bokeh_cutout_div | safe }}
     {% else %}
-    <p style="text-align: center;">Click the image to load the interactive plot.</p>
-    <button id="cutout-img-button" onclick="cutoutImgClick('{{ transient.name }}', '{{ cutout.name }}')">
+    <button title="Click the image to load the interactive plot." id="cutout-img-button" onclick="cutoutImgClick('{{ transient.name }}', '{{ cutout.name }}')">
         <img id="cutout-img" src="data:image/png;base64,{{ image_data_encoded }}" style="width: 100%;"/>
     </button>
     <br>

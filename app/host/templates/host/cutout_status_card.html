@@ -5,7 +5,7 @@
 
 <!-- body -->
 {% block body %}
-
+<span id="cutout_card_status"></span>
 {% for filter, status in filter_status.items %}
 {{filter}}:
 {% if status == "yes"%}

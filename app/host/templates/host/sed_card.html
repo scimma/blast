@@ -2,8 +2,11 @@
 
 <!-- title -->
 {% block title %}
-
 <h4>Spectral Energy Distribution</h4>
+{% endblock %}
+
+<!-- body -->
+{% block body %}
 
 <ul class="nav nav-tabs card-header-tabs" id="myTab-sed" role="tablist">
     <li class="nav-item" role="presentation">
@@ -13,11 +16,6 @@
         <button class="nav-link" id="local-sed-tab" data-toggle="tab" data-target="#local-sed" type="button" role="tab" aria-controls="local-sed" aria-selected="true">Local</button>
     </li>
 </ul>
-
-{% endblock %}
-
-<!-- body -->
-{% block body %}
 <div class="tab-content" id="myTabContent-sed">
     <div class="tab-pane" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
         <div class="">
@@ -27,8 +25,7 @@
             {% else %}
             <div id="sed-local-div">
                 {% if image_data_encoded_sed_local %}
-                <p style="text-align: center;">Click the image to load the interactive plot.</p>
-                <button id="sed-local-button" onclick="sedLocalImgClick('{{ transient.name }}', 'local')">
+                <button title="Click the image to load the interactive plot." id="sed-local-button" onclick="sedLocalImgClick('{{ transient.name }}', 'local')">
                     <img id="sed-local" src="data:image/png;base64,{{ image_data_encoded_sed_local }}" style="width: 100%;"/>
                 </button>
                 {% endif %}
@@ -78,8 +75,7 @@
             {% else %}
             <div id="sed-global-div">
                 {% if image_data_encoded_sed_global %}
-                <p style="text-align: center;">Click the image to load the interactive plot.</p>
-                <button id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
+                <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
                     <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
                 </button>
                 {% endif %}
