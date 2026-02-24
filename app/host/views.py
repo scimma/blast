@@ -738,7 +738,7 @@ def report_issue(request, item_id):
     item.user_warning = True
     item.save()
     return HttpResponseRedirect(
-        reverse_lazy("results", kwargs={"slug": item.transient.name})
+        reverse_lazy("results", kwargs={"transient_name": item.transient.name})
     )
 
 
@@ -749,7 +749,7 @@ def resolve_issue(request, item_id):
     item.user_warning = False
     item.save()
     return HttpResponseRedirect(
-        reverse_lazy("results", kwargs={"slug": item.transient.name})
+        reverse_lazy("results", kwargs={"transient_name": item.transient.name})
     )
 
 
