@@ -7,10 +7,10 @@
 {% block body %}
 <table class="table table-sm" style="text-align: center;">
   <thead style="font-size:1.3rem;">
-    <th><i class="bi bi-check" , style="font-size: 2rem; color: green; vertical-align: middle;"></i> Available</th>
-    <th><i class="bi bi-x" , style="font-size: 2rem; color: red; vertical-align: middle;"></i> Missing</th>
+    <th><i class="bi bi-check" , style="font-size: 2rem; color: green; vertical-align: middle;"></i> Downloaded</th>
+    <th><i class="bi bi-x" , style="font-size: 2rem; color: red; vertical-align: middle;"></i> Unavailable</th>
   </thead>
-  <tbody>
+  <tbody style="font-family: monospace;">
     <tr>
       <td style="color: green;">
         {% for filter, status in filter_status.items %}{% if status == "yes"%}{{filter}}<br />{% endif %}{% endfor %}
