@@ -23,7 +23,10 @@ class ImageGetForm(forms.Form):
         self.fields["filters"] = forms.ChoiceField(
             label="",
             choices=choices,
-            widget=forms.Select(attrs={"placeholder": "select cutout"}),
+            widget=forms.Select(attrs={
+                "placeholder": "select cutout",
+                "class": "custom-select",
+            }),
         )
 
 

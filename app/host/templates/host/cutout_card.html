@@ -10,6 +10,7 @@
 <div id="cutout-img-div" class="d-flex justify-content-center align-items-center">
     <div id="cutout-loader-mask" class="loader-mask"></div>
     <div id="loading-indicator" class="loader"></div>
+    <div id="cutout-img-bokeh" style="width: 100%;">
     {% if bokeh_cutout_div %}
     {{ bokeh_cutout_div | safe }}
     {% else %}
@@ -18,6 +19,7 @@
     </button>
     <br>
     {% endif %}
+    </div>
 </div>
 <form class="form" , method="POST">
     {% csrf_token %}
@@ -29,9 +31,6 @@
         </div>
     </div>
 </form>
-{% if bokeh_cutout_div %}
-{{ bokeh_cutout_div | safe }}
-{% endif %}
 <script>
     document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, filter) {
@@ -45,7 +44,7 @@
                 filter: filter
             },
             success: function (resp) {
-                document.getElementById("cutout-img-div").innerHTML = resp.bokeh_cutout_div;
+                document.getElementById("cutout-img-bokeh").innerHTML = resp.bokeh_cutout_div;
                 document.getElementById("bokeh-cutout-script-wrapper").innerHTML = ''
                 var cutout_script = document.createElement("script");
                 cutout_script.type = 'text/javascript';

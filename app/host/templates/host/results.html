@@ -14,13 +14,11 @@ function viewSize() {
 }
 
 Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderElement => {
-    console.log(cardHeaderElement)
     var titleElement = cardHeaderElement.getElementsByTagName('h4')[0]
     var cardBodyElement = Array.from(cardHeaderElement.parentElement.getElementsByClassName('card-body'))[0]
     if (titleElement.innerHTML.search('Cutout Download Report') >= 0) {
          cardBodyElement.style.display = 'none'
     }
-    console.log(viewSize())
     if (viewSize() == 'sm' || viewSize() == 'xs') {
         if (titleElement.innerHTML.search('Cutout Download Report') >= 0 ||
             titleElement.innerHTML.search('Processing Status') >= 0 ||
@@ -79,8 +77,8 @@ Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderEle
         <div class="row">
             <div class="col-lg-5 col-md-6">
                 {% include "host/information_card.html" %}
-                {% include "host/processing_status_card.html" %}
                 {% include "host/cutout_status_card.html" %}
+                {% include "host/processing_status_card.html" %}
             </div>
             <div class="col-lg-7 col-md-6">
                 {% include "host/cutout_card.html" %}
