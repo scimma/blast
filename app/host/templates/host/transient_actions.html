@@ -1,3 +1,8 @@
+<style>
+  .navbar .nav-link i {
+    font-size: larger;
+  }
+</style>
 <li class="nav-item dropdown">
   <a class="nav-link dropdown-toggle" href="#" role="button" id="export-dropdown" data-toggle="dropdown" aria-expanded="false">
     <i class="bi bi-save"></i> Download data
@@ -9,18 +14,19 @@
   </div>
 </li>
 {% if is_auth %}
-  {% if has_perm_retrigger_transient %}
-    <li class="nav-item">
-      <a href="{% url 'retrigger_transient' transient.name %}" role="button" class="btn btn-info transient-btn">
-        <i class="bi bi-play-circle"></i> Retrigger
-      </a>
-    </li>
-  {% endif %}
-  {% if has_perm_reprocess_transient %}
-    <li class="nav-item">
-      <a href="{% url 'reprocess_transient' transient.name %}" role="button" class="btn btn-warning transient-btn">
-        <i class="bi bi-bootstrap-reboot"></i> Reprocess
-      </a>
-    </li>
-  {% endif %}
+{% if has_perm_retrigger_transient or has_perm_reprocess_transient %}
+<li class="nav-item dropdown">
+  <a class="nav-link dropdown-toggle" href="#" role="button" id="workflow-dropdown" data-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-diagram-2"></i> Workflow
+  </a>
+  <div class="dropdown-menu" aria-labelledby="workflow-dropdown">
+    {% if has_perm_retrigger_transient %}
+    <a class="dropdown-item" title="Retrigger workflow" href="{% url 'retrigger_transient' transient.name %}"><i class="bi bi-play-circle"></i> Retrigger workflow</a>
+    {% endif %}
+    {% if has_perm_reprocess_transient %}
+    <a class="dropdown-item" style="color: red;" title="Reprocess workflow" href="{% url 'reprocess_transient' transient.name %}"><i class="bi bi-bootstrap-reboot"></i> Reprocess workflow</a>
+    {% endif %}
+  </div>
+</li>
+{% endif %}
 {% endif %}
