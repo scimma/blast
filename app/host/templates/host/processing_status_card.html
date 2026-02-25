@@ -10,29 +10,29 @@
 <table class="table table-striped processing-status-table table-sm">
     <thead>
         <tr>
-            <th scope="col" style="width: 35%;">Task Name</th>
-            <th scope="col" style="width: 20%;">Status</th>
-            <th scope="col" style="width: 20%;">Time (s)</th>
-            {% if is_auth %}<th scope="col" style="width: 25%;">Warning Flag</th>{% endif %}
+            <th scope="col" style="width: 40%;">Task Name</th>
+            <th scope="col" style="width: 25%;">Status</th>
+            <th scope="col" style="width: 15%;">Time (s)</th>
+            {% if is_auth %}<th scope="col" style="width: 20%;">Warning Flag</th>{% endif %}
         </tr>
     </thead>
     <tbody>
         {% for item in transient_taskregister_set %}
         <tr>
       {% if item.user_warning %}
-            <td><b style="color:red">{{item.task.name}}</b></td>
+            <td class="align-middle"><b style="color:red">{{item.task.name}}</b></td>
       {% else %}
-            <td>{{ item.task.name }}</td>
+            <td class="align-middle">{{ item.task.name }}</td>
       {% endif %}
-            <td> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
-            <td>
+            <td class="align-middle"> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
+            <td class="align-middle">
                 {% if item.last_processing_time_seconds == 'None' %}
                     --
                 {% else %}
                     {{item.last_processing_time_seconds}}
                 {% endif %}
             </td>
-        <td>
+        <td class="align-middle">
         {% if item.user_warning %}
             <a href="#" type="button" title="Issue reported. Click to clear. (requires authorization)"><span class="report" 
                 {% if is_auth %}
