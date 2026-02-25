@@ -33,18 +33,18 @@
                 <table class="table-condensed table-striped" style="text-align: right;">
                     <thead>
                         <tr>
-                            <th scope="col">Filter</th>
-                            <th scope="col">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
-                            <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
-                            <th scope="col">Mag</th>
-                            <th scope="col">Mag error</th>
-                            <th scope="col">Mag sys</th>
+                            <th scope="col" style="width: 20%; text-align: left;">Filter</th>
+                            <th scope="col" style="width: 15%;">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                            <th scope="col" style="width: 15%;">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                            <th scope="col" style="width: 15%;">Mag</th>
+                            <th scope="col" style="width: 20%;">Mag error</th>
+                            <th scope="col" style="width: 15%;">Mag sys</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in local_aperture_photometry %}
                         <tr>
-                            <td>{{item.filter.name}}</td>
+                            <td style="text-align: left;">{{item.filter.name}}</td>
                             <td>{{item.flux_rounded}}</td>
                             <td>{{item.flux_error_rounded}}</td>
                             <td>{{item.magnitude|floatformat:3}}</td>
@@ -83,18 +83,18 @@
         <table class="table-condensed table-striped" style="text-align: right;">
             <thead>
             <tr>
-                <th scope="col">Filter</th>
-                            <th scope="col">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
-                            <th scope="col">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
-                <th scope="col">Mag</th>
-                <th scope="col">Mag error</th>
-                <th scope="col">Mag sys</th>                
+                <th scope="col" style="width: 20%; text-align: left;">Filter</th>
+                <th scope="col" style="width: 15%;">Flux {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                <th scope="col" style="width: 15%;">Flux error {% latexify '{\rm (\mu Jy)}' math_inline=True %}</th>
+                <th scope="col" style="width: 15%;">Mag</th>
+                <th scope="col" style="width: 20%;">Mag error</th>
+                <th scope="col" style="width: 15%;">Mag sys</th>                
             </tr>
             </thead>
             <tbody>
             {% for item in global_aperture_photometry %}
             <tr>
-                <td>{{item.filter.name}}</td>
+                <td style="text-align: left;">{{item.filter.name}}</td>
                 <td>{{item.flux_rounded}}</td>
                 <td>{{item.flux_error_rounded}}</td>
                 <td>{{item.magnitude|floatformat:3}}</td>
