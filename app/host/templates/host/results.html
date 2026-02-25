@@ -17,13 +17,14 @@ Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderEle
     console.log(cardHeaderElement)
     var titleElement = cardHeaderElement.getElementsByTagName('h4')[0]
     var cardBodyElement = Array.from(cardHeaderElement.parentElement.getElementsByClassName('card-body'))[0]
-    if (titleElement.innerHTML.search('Cutout Download Report') >= 0 ||
-        titleElement.innerHTML.search('Processing Status') >= 0) {
+    if (titleElement.innerHTML.search('Cutout Download Report') >= 0) {
          cardBodyElement.style.display = 'none'
     }
     console.log(viewSize())
     if (viewSize() == 'sm' || viewSize() == 'xs') {
-        if (titleElement.innerHTML.search('Aperture Photometry') >= 0) {
+        if (titleElement.innerHTML.search('Cutout Download Report') >= 0 ||
+            titleElement.innerHTML.search('Processing Status') >= 0 ||
+            titleElement.innerHTML.search('Aperture Photometry') >= 0) {
             cardBodyElement.style.display = 'none'
         }
 
@@ -76,15 +77,21 @@ Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderEle
 <div class="container-lg">
     <div class="bg-light">
         <div class="row">
-            <div class="col-md-5">
+            <div class="col-lg-5 col-md-6">
                 {% include "host/information_card.html" %}
                 {% include "host/processing_status_card.html" %}
                 {% include "host/cutout_status_card.html" %}
-                {% include "host/photometry_card.html" %}
             </div>
-            <div class="col-md-7">
+            <div class="col-lg-7 col-md-6">
                 {% include "host/cutout_card.html" %}
                 {% include "host/sed_card.html" %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6 col-md-12">
+                {% include "host/photometry_card.html" %}
+            </div>
+            <div class="col-lg-6 col-md-12">
                 {% include "host/sed_inference_card.html" %}
             </div>
         </div>
