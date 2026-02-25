@@ -7,8 +7,9 @@
 
 <!-- body -->
 {% block body %}
-<div id="loading-indicator" class="loader"></div>
-<div id="cutout-img-div">
+<div id="cutout-img-div" class="d-flex justify-content-center align-items-center">
+    <div id="cutout-loader-mask" class="loader-mask"></div>
+    <div id="loading-indicator" class="loader"></div>
     {% if bokeh_cutout_div %}
     {{ bokeh_cutout_div | safe }}
     {% else %}
@@ -35,7 +36,7 @@
     document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, filter) {
         document.getElementById('loading-indicator').style.display = "block";
-        document.getElementById('cutout-img-div').style.display = "none";
+        $("#cutout-loader-mask").show();
         $.ajax({
             url: "{% url 'cutout_fits_plot' %}",
             type: "GET",
@@ -55,6 +56,7 @@
                 document.getElementById("bokeh-cutout-script-wrapper").appendChild(cutout_script);
                 document.getElementById('cutout-img-div').style.display = "block";
                 document.getElementById('loading-indicator').style.display = "none";
+                $("#cutout-loader-mask").hide();
             },
         });
     }

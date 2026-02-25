@@ -18,12 +18,13 @@
 </ul>
 <div class="tab-content" id="myTabContent-sed">
     <div class="tab-pane" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
-        <div class="">
-            <div id="loading-indicator-sed-local" class="loader"></div>
+        <div>
             {% if bokeh_sed_local_div %}
             {{ bokeh_sed_local_div | safe }}
             {% else %}
-            <div id="sed-local-div">
+            <div id="sed-local-div" class="d-flex justify-content-center align-items-center">
+                <div id="sed-local-loader-mask" class="loader-mask"></div>
+                <div id="loading-indicator-sed-local" class="loader"></div>
                 {% if image_data_encoded_sed_local %}
                 <button title="Click the image to load the interactive plot." id="sed-local-button" onclick="sedLocalImgClick('{{ transient.name }}', 'local')">
                     <img id="sed-local" src="data:image/png;base64,{{ image_data_encoded_sed_local }}" style="width: 100%;"/>
@@ -36,7 +37,7 @@
                 document.getElementById('loading-indicator-sed-local').style.display = "none";
                 function sedLocalImgClick(transient, scope) {
                     document.getElementById('loading-indicator-sed-local').style.display = "block";
-                    document.getElementById('sed-local-div').style.display = "none";
+                     $("#sed-local-loader-mask").show();
                     $.ajax({
                         url: "{% url 'fetch_sed_plot' %}",
                         type: "GET",
@@ -53,6 +54,8 @@
                             var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
                             sed_local_script.text = script_trimmed;
                             document.body.appendChild(sed_local_script);
+                            document.getElementById('loading-indicator-sed-local').style.display = "none";
+                            $("#sed-local-loader-mask").hide();
                         },
                     });
                 }
@@ -65,28 +68,31 @@
     </div>
 
     <div class="tab-pane active" id="global-sed" role="tabpanel" aria-labelledby="global-sed-tab">
-        <div class="">
+        <div>
             {% if contam_warning %}
             <b style="color:red">Warning:</b> possible contaminating objects in the global aperture<br>
             {% endif %}
-            <div id="loading-indicator-sed-global" class="loader"></div>
-            {% if bokeh_sed_global_div %}
-            {{ bokeh_sed_global_div | safe }}
-            {% else %}
-            <div id="sed-global-div">
-                {% if image_data_encoded_sed_global %}
-                <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
-                    <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
-                </button>
-                {% endif %}
-                <br>
+            <div class="d-flex justify-content-center align-items-center">
+                <div id="sed-global-loader-mask" class="loader-mask"></div>
+                <div id="loading-indicator-sed-global" class="loader"></div>
+            
+                {% if bokeh_sed_global_div %}
+                {{ bokeh_sed_global_div | safe }}
+                {% else %}
+                <div id="sed-global-div">
+                    {% if image_data_encoded_sed_global %}
+                    <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
+                        <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
+                    </button>
+                    {% endif %}
+                    <br>
+                </div>
             </div>
-
             <script>
                 document.getElementById('loading-indicator-sed-global').style.display = "none";
                 function sedGlobalImgClick(transient, scope) {
                     document.getElementById('loading-indicator-sed-global').style.display = "block";
-                    document.getElementById('sed-global-div').style.display = "none";
+                    $("#sed-global-loader-mask").show();
                     $.ajax({
                         url: "{% url 'fetch_sed_plot' %}",
                         type: "GET",
@@ -103,6 +109,8 @@
                             var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
                             sed_global_script.text = script_trimmed;
                             document.body.appendChild(sed_global_script);
+                            document.getElementById('loading-indicator-sed-global').style.display = "none";
+                            $("#sed-global-loader-mask").hide();
                         },
                     });
                 }
