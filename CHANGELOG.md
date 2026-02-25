@@ -17,8 +17,10 @@ Types of changes:
 
 ### Changed
 
-- Revised layout and styling of transient results pages. Information cards are collapsable and
-  tables are formatted more legibly. Transient action buttons for downloading transient data
+- Revised layout and styling of webpages, primarily the transient results page. Information cards
+  are collapsable and tables are formatted more legibly. Buttons controlling workflow
+  retriggering/reprocessing, as well as buttons for downloading transient data products, were moved
+  to the navbar. Improved image loading indicator animation.
 
 ### Fixed
 
