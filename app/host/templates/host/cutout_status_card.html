@@ -5,14 +5,20 @@
 
 <!-- body -->
 {% block body %}
-<span id="cutout_card_status"></span>
-{% for filter, status in filter_status.items %}
-{{filter}}:
-{% if status == "yes"%}
-    <i class="bi bi-check", style="font-size: 2rem; color: green;"></i>
-{% else %}
-    <i class="bi bi-x", style="font-size: 2rem; color: red;"></i>
-{% endif %}
-{% endfor %}
-
+<table class="table table-sm" style="text-align: center;">
+  <thead style="font-size:1.3rem;">
+    <th><i class="bi bi-check" , style="font-size: 2rem; color: green; vertical-align: middle;"></i> Available</th>
+    <th><i class="bi bi-x" , style="font-size: 2rem; color: red; vertical-align: middle;"></i> Missing</th>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="color: green;">
+        {% for filter, status in filter_status.items %}{% if status == "yes"%}{{filter}}<br />{% endif %}{% endfor %}
+      </td>
+      <td style="color: red;">
+        {% for filter, status in filter_status.items %}{% if status != "yes"%}{{filter}}<br />{% endif %}{% endfor %}
+      </td>
+    </tr>
+  </tbody>
+</table>
 {% endblock %}
