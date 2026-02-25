@@ -13,6 +13,17 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.2]
+
+### Changed
+
+- Revised layout and styling of transient results pages. Information cards are collapsable and
+  tables are formatted more legibly. Transient action buttons for downloading transient data
+
+### Fixed
+
+- Fixed a bug in the issue reporting & resolving API endpoints.
+
 ## [1.9.1]
 
 ### Fixed
