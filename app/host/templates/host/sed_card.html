@@ -72,21 +72,19 @@
             {% if contam_warning %}
             <b style="color:red">Warning:</b> possible contaminating objects in the global aperture<br>
             {% endif %}
-            <div class="d-flex justify-content-center align-items-center">
+            
+            {% if bokeh_sed_global_div %}
+            {{ bokeh_sed_global_div | safe }}
+            {% else %}
+            <div id="sed-global-div" class="d-flex justify-content-center align-items-center">
                 <div id="sed-global-loader-mask" class="loader-mask"></div>
                 <div id="loading-indicator-sed-global" class="loader"></div>
-            
-                {% if bokeh_sed_global_div %}
-                {{ bokeh_sed_global_div | safe }}
-                {% else %}
-                <div id="sed-global-div">
-                    {% if image_data_encoded_sed_global %}
-                    <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
-                        <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
-                    </button>
-                    {% endif %}
-                    <br>
-                </div>
+                {% if image_data_encoded_sed_global %}
+                <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
+                    <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
+                </button>
+                {% endif %}
+                <br>
             </div>
             <script>
                 document.getElementById('loading-indicator-sed-global').style.display = "none";
