@@ -20,7 +20,7 @@
         {% for item in transient_taskregister_set %}
         <tr>
       {% if item.user_warning %}
-            <td class="align-middle"><b style="color:red">{{item.task.name}}</b></td>
+            <td class="align-middle" title="An issue has been reported."><b style="color:red">{{item.task.name}}</b></td>
       {% else %}
             <td class="align-middle">{{ item.task.name }}</td>
       {% endif %}
@@ -32,6 +32,7 @@
                     {{item.last_processing_time_seconds}}
                 {% endif %}
             </td>
+        {% if is_auth %}
         <td class="align-middle">
         {% if item.user_warning %}
             <a href="#" type="button" title="Issue reported. Click to clear. (requires authorization)"><span class="report" 
@@ -41,7 +42,7 @@
                 onclick="return false;"
                 {% endif %}
             ><i class="bi bi-exclamation-triangle issue-reported"></i></span></a>
-            {% else %}
+        {% else %}
             <a href="#" type="button" title="No issues reported. Click to report an issue. (requires authorization)"><span class="report" 
                 {% if is_auth %}
                 onclick="window.open('{% url 'report_issue' item.pk %}','_self')"
@@ -51,6 +52,7 @@
             ><i class="bi bi-check-circle issue-resolved"></i></span></a>
         {% endif %}
         </td>
+        {% endif %}
         </tr>
        {% endfor %}
     </tbody>
