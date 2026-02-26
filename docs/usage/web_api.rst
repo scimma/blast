@@ -3,39 +3,95 @@
 Web API
 =======
 
-Blast also provides an application programming interface, which you can use
-to fetch Blast data programmatically.  The API allows queries on individual database tables (below),
-as well as an API endpoint for getting all data for a given transient (:ref:`api_all`).
+Blast provides an HTTP application programming interface (API) for fetching data programmatically.  The API allows queries on :ref:`individual data objects associated with a transient<api_individual>`, as well as :ref:`fetching all data for a given transient<api_all>`.
+
+.. _api_all:
+
+Downloading *all* Blast data for a given transient
+--------------------------------------------------
+
+A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in :ref:`Blast database objects<models>` and associated data files, such as the cutout images and the SED fit files. 
+
+A **full transient dataset** can be exported using :code:`/api/transient/export/<transient_name>/all`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads.
+
+There are currently two API endpoints that return **all tabular data** associated with a transient (i.e. data stored as text instead of as binary files) as a JSON-formatted document:
+
+1. :code:`/api/transient/get/<transient_name>?format=json`
+
+   The structure, or schema, of the document returned by this endpoint is detailed in the :ref:`science_payload_schema` section below. It is a relatively flat hierarchy.
+
+   Here is an example Python snippet to load data as a Python dictionary for the transient 2026dix.
+   
+   .. code:: python
+   
+       from urllib.request import urlopen
+       import json
+   
+       response = urlopen('<base_blast_url>/api/transient/get/2026dix?format=json')
+       data = json.loads(response.read())
+
+2. :code:`/api/transient/export/<transient_name>`
+
+   The schema of the document returned by this endpoint serializes transient-associated objects more closely to the internal models (see :ref:`models`). It was designed is to capture a transient dataset in a self-contained way amenable to import into any Blast instance. The result is a more hierarchical structure, but one with static keys and less redundancy that also supports simpler parsing algorithms. The schema includes additional related objects: cutouts, surveys, and filters. Although the surveys and filters exist independently of a particular transient, they are included because transient cutout objects are associated with filters associated with surveys.
 
 .. _api_individual:
 
-Downloading Blast data for individual tables via Python
+Downloading individual Blast data objects
 -------------------------------------------------------
 
-The url endpoint to grab the data for a particular transient is
-:code:`/api/transient/?name=transient_name&format=json`.
-Here is an example Python snippet to load data as a Python dictionary for the transient
-2010H
+Internally, Blast defines a set of :ref:`data models<models>` (:code:`transient`, :code:`host`, :code:`aperture`, etc.) that define the structure of objects associated with an astronomical transient.
+
+There are API endpoints to fetch these objects from the Blast database, with URLs of the form
+:code:`/api/<model_name>` (e.g. :code:`/api/host`). Each of these functions, detailed below, offers filtering options that narrow the scope of the returned results (e.g. :code:`/api/host/?redshift_gte=4&format=json`). **As the Blast database continues to grow, requesting all objects by omitting filters is discouraged.**
+
+As a concrete example, here is a Python script that will fetch the :code:`transient` database object associated with the transient 2026dix:
 
 .. code:: python
 
     from urllib.request import urlopen
     import json
 
-    response = urlopen('<base_blast_url>/api/transient/?name=2010H&format=json')
+    response = urlopen('<base_blast_url>/api/transient/?name=2026dix&format=json')
     data = json.loads(response.read())
 
-Here data is a Python dictionary that contains the Blast science payload data m
-model. We describe this model below.
+This returns a JSON document like:
 
-.. _api_data_model:
+.. code:: javascript
 
-Blast API data model
---------------------
+   [
+     {
+        "id": 76390,
+        "ra_deg": 177.6559502,
+        "dec_deg": 55.3535889,
+        "name": "2026dix",
+        "display_name": null,
+        "public_timestamp": "2026-02-16T09:26:15.072000Z",
+        "redshift": 0.003185,
+        "spectroscopic_class": "SN IIb",
+        "milkyway_dust_reddening": 0.0110031844861805,
+        "progress": 100,
+        "software_version": "1.8.7",
+        "host": {
+          "id": 92200,
+          "ra_deg": 177.662201,
+          "dec_deg": 55.353867,
+          "name": "NGC3913",
+          "redshift": 0.0041580065070319,
+          "redshift_err": 0.0012474019521095,
+          "photometric_redshift": null,
+          "photometric_redshift_err": null,
+          "milkyway_dust_reddening": 0.011014966275543,
+          "software_version": "1.8.7"
+        }
+     }
+   ]
 
-The data model for different tables within Blast are described below.  Foreign key-linked fields
-are also displayed to simplify API calls; for example, the attributes of the associated Host
-are returned in addition to the Transient fields when a given transient is queried.
+.. _api_data_schema:
+
+Blast API data schema
+---------------------
+
+Each API endpoint for fetching the various :ref:`Blast data objects<models>`, along with its response data schema, is described below. Foreign key-linked fields are also displayed to simplify API calls; for example, the attributes of the associated Host are returned in addition to the Transient fields when a given transient is queried.
 
 Transient fields
 ++++++++++++++++
@@ -224,32 +280,12 @@ TaskRegister filtering options
 Example:
 :code:`<blast_base_url>/api/taskregister/?status=failed`
 
-.. _api_all:
+.. _science_payload_schema:
 
-Downloading *all* Blast data for a given transient
---------------------------------------------------
+Science payload data schema
+---------------------------
 
-The url endpoint to grab the data for a particular transient is
-:code:`/api/transient/get/<transient_name>`.  Here is an example Python snippet to load data as a Python dictionary for the transient 2018gv.
-
-.. code:: python
-
-    from urllib.request import urlopen
-    import json
-
-    response = urlopen('<base_blast_url>/api/transient/get/2018gv?format=json')
-    data = json.loads(response.read())
-
-Here data is a Python dictionary that contains the Blast science payload data
-model. We describe this model below; for clarity, field names are slightly different
-than in the base data model above.
-
-Science payload data model
---------------------------
-
-The data model for a single transient contains the following components.  Foreign key-linked fields
-are also displayed to simplify API calls; for example, the attributes of the associated Host
-are returned in addition to the Transient fields.
+The data schema for the JSON-formatted response of the API endpoint :code:`/api/transient/get/<transient_name>?format=json` contains the components detailed in subsections below. Field names differ slightly from those in the :ref:`API data schema<api_data_schema>` above for the sake of clarity.
 
 Transient fields
 ++++++++++++++++
@@ -317,12 +353,3 @@ SED fit fields
 which can either be "16", "50" ot "84"
 
 * :code:`<aperture_type>_aperture_host_<parameter>_<posterior_percentile>`
-
-.. _exporting_transients:
-
-Exporting and importing transient datasets
-------------------------------------------
-
-A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in Blast database objects (:ref:`api_data_model`) and associated data files, such as the cutout images and the SED fit files. A full transient dataset can be exported using :code:`/api/transient/export/<transient_name>/all`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads. If the ``all`` option is omitted from the URL, a JSON-formatted document will be returned instead, containing all the database objects associated with the transient but not its files.
-
-To import a dataset, upload one of the exported archive files via the Add Transients webpage as described in :ref:`adding_transients`.

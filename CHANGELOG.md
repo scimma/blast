@@ -21,6 +21,7 @@ Types of changes:
   are collapsable and tables are formatted more legibly. Buttons controlling workflow
   retriggering/reprocessing, as well as buttons for downloading transient data products, were moved
   to the navbar. Improved image loading indicator animation.
+- Updated and revised documentation
 
 ### Fixed
 

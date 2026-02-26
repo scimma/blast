@@ -26,7 +26,7 @@ The individual transient pages list details of a given transient as well as its 
 Downloading data
 ++++++++++++++++
 
-All data associated with a transient can be downloaded using the :code:`Download Data` dropdown menu in the navigation bar. Each data product linked from the menu can also be accessed programmatically via the REST API; see the :ref:`api` for additional information on each column as well as how to execute queries on individual database tables via the API. See :ref:`exporting_transients`
+All data associated with a transient can be downloaded using the :code:`Download Data` dropdown menu in the navigation bar. Each data product linked from the menu can also be accessed programmatically via the REST API; see the :ref:`api` for additional information on each column as well as how to execute queries on individual database tables via the API. See :ref:`api_all`
 
 If SED fitting data is available, the download menu will display links for 1) parameter estimation chains, 2) parameter confidence intervals, and 3) best-fit models and uncertainties. These files are in :code:`.npz` format and can be read with :code:`np.load`.  Parameters correspond to the Prospector-alpha model, with details given `here <https://arxiv.org/abs/1609.09073>`_.  To do these downloads programmatically, see :ref:`sedfittingresult`.
 
@@ -58,7 +58,12 @@ Follow the detailed instructions for each method that are displayed on the page.
 
 Restarting Processing
 +++++++++++++++++++++
-Near the top of each transient list page, authorized users will see buttons labeled "Retrigger" and "Reprocess". Sometimes a transient workflow fails to complete due to a temporary operational error (for example, a "transient" 😉 networking failure preventing the download of a cutout image from a remote catalog). In these cases, "retriggering" the workflow will retry failed tasks and run tasks that have not yet been processed. Retriggering a workflow is a safe operation. The "Reprocess" button, however, will reset a workflow to its initial state and run all tasks again as if the transient were new. There is rarely a reason to reprocess a transient instead of retriggering it.
+
+Near the top of each transient list page, authorized users will see a "Workflow" menu with buttons to "retrigger" and "reprocess" the transient processing stages.
+
+Sometimes a transient workflow fails to complete due to a temporary operational error (for example, a "transient" 😉 networking failure preventing the download of a cutout image from a remote catalog). In these cases, "retriggering" the workflow will retry failed tasks and run tasks that have not yet been processed. Retriggering a workflow is a safe operation.
+
+"Reprocessing" a workflow, however, will reset it to its initial state and run all tasks again as if the transient were new, overwriting any data previously generated. There is rarely a reason to reprocess a transient instead of retriggering it.
 
 .. rubric:: Footnotes
 
