@@ -14,15 +14,15 @@
     <a class="dropdown-item" title="Export without files (legacy)" href="/api/transient/get/{{transient.name}}?format=json"><i class="bi bi-filetype-json"></i> Export without files (legacy .json)</a>
     {% if local_sed_results %}
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Local SED fit chains" href="{% url 'download_chains' transient.name 'local' %}"><i class="bi bi-link"></i> Local SED fit chains (.npz)</a>
-    <a class="dropdown-item" title="Local SED fit percentiles" href="{% url 'download_percentiles' transient.name 'local' %}"><i class="bi bi-percent"></i> Local SED fit percentiles (.npz)</a>
-    <a class="dropdown-item" title="Local SED fit percentiles" href="{% url 'download_modelfit' transient.name 'local' %}"><i class="bi bi-graph-up"></i> Local SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Local parameter confidence intervals" href="{% url 'download_modelfit' transient.name 'local' %}"><i class="bi bi-graph-up"></i> Local SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Local parameter confidence intervals" href="{% url 'download_percentiles' transient.name 'local' %}"><i class="bi bi-percent"></i> Local parameter confidence intervals (.npz)</a>
+    <a class="dropdown-item" title="Local parameter estimation chains" href="{% url 'download_chains' transient.name 'local' %}"><i class="bi bi-link"></i> Local parameter estimation chains (.npz)</a>
     {% endif %}
     {% if global_sed_results %}
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Global SED fit chains" href="{% url 'download_chains' transient.name 'global' %}"><i class="bi bi-link"></i> Global SED fit chains (.npz)</a>
-    <a class="dropdown-item" title="Global SED fit percentiles" href="{% url 'download_percentiles' transient.name 'global' %}"><i class="bi bi-percent"></i> Global SED fit percentiles (.npz)</a>
-    <a class="dropdown-item" title="Global SED fit percentiles" href="{% url 'download_modelfit' transient.name 'global' %}"><i class="bi bi-graph-up"></i> Global SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Global parameter confidence intervals" href="{% url 'download_modelfit' transient.name 'global' %}"><i class="bi bi-graph-up"></i> Global SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Global parameter confidence intervals" href="{% url 'download_percentiles' transient.name 'global' %}"><i class="bi bi-percent"></i> Global parameter confidence intervals (.npz)</a>
+    <a class="dropdown-item" title="Global parameter estimation chains" href="{% url 'download_chains' transient.name 'global' %}"><i class="bi bi-link"></i> Global parameter estimation chains (.npz)</a>
     {% endif %}
   </div>
 </li>
