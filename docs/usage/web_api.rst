@@ -318,6 +318,8 @@ which can either be "16", "50" ot "84"
 
 * :code:`<aperture_type>_aperture_host_<parameter>_<posterior_percentile>`
 
+.. _exporting_transients:
+
 Exporting and importing transient datasets
 ------------------------------------------
 

@@ -19,19 +19,18 @@ table (see below).
 Individual Transient Pages
 --------------------------
 
-.. image:: ../_static/blast_transient_information_1.png
+The individual transient pages list details of a given transient as well as its downloaded cutout images, photometric apertures, photometry, and SED properties.  Cutout image and SED plots are interactive [#bokeh]_.  The status of a transient's processing is given as well. Authorized users will see an additional column with buttons to report issues with specific processing stages; for example, a poor estimation of isophotal aperture radius, or a SED model that does not fit the data. These reports will cause the task to be highlighted in red font, and "warnings" will appear at the top of the page by the transient name. The goal of reporting is to help users avoid dubious results, but there is no need to flag stages that already have a "failed" status.
 
-The individual transient pages list details of a given transient as well as its
-downloaded cutout images, photometric apertures, photometry, and SED properties.  Cutout image and SED plots are interactive via Bokeh.  The status of a transient's processing is given as well, and users can use the "Report" button to flag if a stage has yielded suspect results (for example, a poor estimation of isophotal aperture radius, or a SED model that does not fit the data).  The goal of this button is to help users avoid suspect results, but there is no need to flag stages that already have a "failed" status.
-
-.. image:: ../_static/blast_transient_information_2.png
+.. image:: ../_static/blast_transient_result_page.png
 
 Downloading data
 ++++++++++++++++
 
-For all metadata associated with each transient, the :code:`Download Data` button near the top of the page links to the Django REST API, and can be accessed programmatically.  See the :ref:`api` for additional information on each column as well as how to execute queries on individual database tables via the API.
+All data associated with a transient can be downloaded using the :code:`Download Data` dropdown menu in the navigation bar. Each data product linked from the menu can also be accessed programmatically via the REST API; see the :ref:`api` for additional information on each column as well as how to execute queries on individual database tables via the API. See :ref:`exporting_transients`
 
-To download files with 1) parameter estimation chains, 2) parameter confidence intervals, and 3) best-fit models and uncertainties, the page includes "Download Chains", "Download Percentiles", and "Download Best-Fit Model" links.  These files are in :code:`.npz` format and can be read with :code:`np.load`.  Parameters correspond to the Prospector-alpha model, with details given `here <https://arxiv.org/abs/1609.09073>`_.  To do these downloads programmatically, see :ref:`sedfittingresult`.
+If SED fitting data is available, the download menu will display links for 1) parameter estimation chains, 2) parameter confidence intervals, and 3) best-fit models and uncertainties. These files are in :code:`.npz` format and can be read with :code:`np.load`.  Parameters correspond to the Prospector-alpha model, with details given `here <https://arxiv.org/abs/1609.09073>`_.  To do these downloads programmatically, see :ref:`sedfittingresult`.
+
+.. image:: ../_static/blast_transient_data_download.png
 
 Authorized Users
 ----------------
@@ -60,3 +59,7 @@ Follow the detailed instructions for each method that are displayed on the page.
 Restarting Processing
 +++++++++++++++++++++
 Near the top of each transient list page, authorized users will see buttons labeled "Retrigger" and "Reprocess". Sometimes a transient workflow fails to complete due to a temporary operational error (for example, a "transient" 😉 networking failure preventing the download of a cutout image from a remote catalog). In these cases, "retriggering" the workflow will retry failed tasks and run tasks that have not yet been processed. Retriggering a workflow is a safe operation. The "Reprocess" button, however, will reset a workflow to its initial state and run all tasks again as if the transient were new. There is rarely a reason to reprocess a transient instead of retriggering it.
+
+.. rubric:: Footnotes
+
+.. [#bokeh] Interactive plots use the Bokeh library. See :ref:`software_acknowledgements`.
