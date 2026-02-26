@@ -1,3 +1,5 @@
+.. _software_acknowledgements:
+
 Software
 ========
 
@@ -22,6 +24,9 @@ please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
    * - NumPy
      - `<https://github.com/numpy/numpy>`_
      - `<https://ui.adsabs.harvard.edu/abs/2020Natur.585..357H/abstract>`_
+   * - Bokeh
+     - `<https://bokeh.org/>`_
+     - 
    * - GHOST
      - `<https://github.com/uiucsn/astro_ghost>`_
      - `<https://ui.adsabs.harvard.edu/abs/2021ApJ...908..170G/abstract>`_
@@ -59,5 +64,5 @@ please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
      - `<https://github.com/wangbingjie/sbi_pp>`_
      - `<https://doi.org/10.3847/2041-8213/ace361>`_
    * - Prost
-     - `<https://github.com/alexandergagliano/Prost>_`
-     - `<https://astro-prost.readthedocs.io/>_`
+     - `<https://github.com/alexandergagliano/Prost>`_
+     - `<https://astro-prost.readthedocs.io/>`_
