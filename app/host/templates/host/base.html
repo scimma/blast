@@ -22,7 +22,7 @@
   body {
     border-radius: 5px;
     font-size: 12pt;
-    margin-bottom: 10rem;
+    margin-bottom: 9rem;
   }
   #myTabContent-sed {
       margin-top: 1rem;
@@ -72,7 +72,7 @@
     margin-top: 2rem;
     position: fixed;
     bottom: 0;
-    max-height: 10rem;
+    max-height: 9rem;
     overflow-y: auto;
     width: 100%;
     background-color: #e3e6e8;
@@ -248,10 +248,10 @@
     {% endblock %}
   </div>
 
-  <footer class="py-3">
+  <footer class="py-1">
     <div class="container">
       <div class="row">
-        <div class="col-10 offset-1">
+        <div class="col-md-9 offset-md-1 col-xs-12" style="align-content: center;">
           <span class="text-muted">
             <a href="mailto:{% support_email %}?subject=Blast%20support%20request&body=
             Please%20provide%20a%20detailed%20description%20of%20your%20problem%20or%20question.%20Make%20sure%20to%20search%20the%20documentation%20%28https%3A%2F%2Fblast.readthedocs.io%29%20and%20our%20GitHub%20Discussions%20%28https%3A%2F%2Fgithub.com%2Fscimma%2Fblast%2Fdiscussions%29%20for%20answers%20first.%20We%20appreciate%20your%20patience%20in%20receiving%20a%20response%3B%20please%20allow%20one%20or%20two%20days%20before%20sending%20a%20follow-up%20email.
@@ -284,8 +284,11 @@
             </span>
           </span>
         </div>
+        <div class="col-md-1 col-xs-12" style="align-content: center;">
+          <a title="Supported by NSF" href="{% url 'acknowledgements' %}"><img class="img-responsive" style="height: 4rem;" alt="nsf_logo.png" src="/static/images/nsf_logo.png" /></a>
+        </div>
       </div>
-      <div class="row support-statement">
+      <!-- <div class="row support-statement">
         <div class="col-md-7 offset-md-2 col-xs-12">
           This project is supported by National Science Foundation grants
           <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=2510993">OAC-2510993</a> and
@@ -293,10 +296,7 @@
           Any opinions, findings, conclusions or recommendations expressed in this material are those of the developers
           and do not necessarily reflect the views of the National Science Foundation.
         </div>
-        <div class="col-md-1 col-xs-12">
-          <img class="img-responsive" style="width: 100%; min-width: 80px; max-width: 100px;" alt="nsf_logo.png" src="/static/images/nsf_logo.png" />
-        </div>
-      </div>
+      </div> -->
     </div>
   </footer>
 
