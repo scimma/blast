@@ -13,6 +13,19 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.3]
+
+### Added
+
+- Added SCIMMA logo and link to scimma.org to header.
+- Added NSF logo to footer linking to the existing Acknowledgements page.
+- Added a Django admin command `blast_admin` to execute functions defined in a `local_util.py` module
+  in the same directory. This is useful in local dev environments, allowing the developer to add/modify
+  functions dynamically and executing code in the Django environment using
+  `python manage.py blast_admin [custom_func]`.
+- Updated GitHub Action versions used in `.github/workflows/docker_image_workflow.yml`
+
+
 ## [1.9.2]
 
 ### Changed
