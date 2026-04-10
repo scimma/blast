@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.4]
+
+### Added
+
+- Added a `robots.txt` file to reduce system load caused by web crawlers when serving Blast publicly on the internet.
+
 ## [1.9.3]
 
 ### Added
