@@ -17,6 +17,7 @@ from host.host_utils import reset_workflow_if_not_processing
 from app.celery import app
 from celery.contrib.abortable import AbortableTask, AbortableAsyncResult
 import gzip
+from influxdb_client import InfluxDBClient, Point
 
 from .models import Transient
 from .models import UsageMetricsLog
@@ -286,16 +287,7 @@ def ingest_missed_tns_transients():
 
 
 class UsageLogRoller(SystemTaskRunner):
-    def run_process(self):
-        """
-        Roll the usage logs by generating archive files and uploading them to the object store.
-        Prune the archived usage logs from the database.
-        """
-        logs = UsageMetricsLog.objects.all().order_by('request_time')
-        num_logs = settings.USAGE_METRICS_LOGS_PER_ARCHIVE
-        if len(logs) < num_logs:
-            logger.info(f'''Not enough log entries to archive: {len(logs)} < {num_logs}''')
-            return
+    def export_to_files(self, num_logs, logs):
         s3 = ObjectStore()
         remaining_logs = logs
         while len(remaining_logs) >= num_logs:
@@ -337,6 +329,50 @@ class UsageLogRoller(SystemTaskRunner):
                         os.remove(file_path)
                     except FileNotFoundError:
                         logger.warning(f'''Unable to delete temporary log archive file: "{file_path}" not found.''')
+
+    def export_to_influxdb(self, logs):
+        points = []
+        for log_entry in logs:
+            logger.debug(log_entry)
+            if not log_entry.request_time or not log_entry.request_url:
+                print("Skipping invalid item:", log_entry)
+                continue
+
+            point = Point('requests')
+            point.field('request_url', log_entry.request_url)
+            point.field('request_method', log_entry.request_method)
+            point.field('submitted_data', log_entry.submitted_data)
+            point.field('request_user', log_entry.request_user)
+            point.field('request_ip', log_entry.request_ip)
+            point.field('request_user_agent', log_entry.request_user_agent)
+            point.time(log_entry.request_time)
+            logger.debug(point)
+            points.append(point)
+
+        token = os.getenv('INFLUXDB_INIT_ADMIN_TOKEN', '')
+        org = os.getenv('INFLUXDB_INIT_ORG', '')
+        bucket = os.getenv('INFLUXDB_INIT_BUCKET', '')
+        url = os.getenv('INFLUXDB_URL', 'http://influxdb:8086')
+
+        client = InfluxDBClient(url=url, token=token, org=org)
+        write_api = client.write_api()
+        write_api.write(bucket=bucket, record=points)
+        write_api.close()
+
+    def run_process(self):
+        """
+        Roll the usage logs by generating archive files and uploading them to the object store.
+        Prune the archived usage logs from the database.
+        """
+        logs = UsageMetricsLog.objects.all().order_by('request_time')
+        num_logs = settings.USAGE_METRICS_LOGS_PER_ARCHIVE
+        if len(logs) < num_logs:
+            logger.info(f'''Not enough log entries to archive: {len(logs)} < {num_logs}''')
+            return
+        # Export to files in object store
+        self.export_to_files(num_logs, logs)
+        # Export to InfluxDB
+        self.export_to_influxdb(logs)
 
     @property
     def task_name(self):

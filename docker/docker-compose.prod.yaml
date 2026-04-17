@@ -30,6 +30,22 @@ services:
       - ../env/.env.default
       - ../env/.env.prod
 
+  influxdb:
+    extends:
+      file: docker-compose.yml
+      service: influxdb
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
   celery-worker:
     extends:
       file: docker-compose.yml

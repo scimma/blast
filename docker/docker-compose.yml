@@ -10,6 +10,9 @@ volumes:
   blast-data:
     name: "blast-data"
   object-data: {}
+  influxdb2-data: {}
+  influxdb2-config: {}
+  grafana-storage: {}
 
 services:
   nginx:
@@ -69,6 +72,32 @@ services:
       - "slim_dev"
       - "ci"
       - "batch"
+
+  influxdb:
+    image: influxdb:2
+    platform: linux/x86_64
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - influxdb2-data:/var/lib/influxdb2
+      - influxdb2-config:/etc/influxdb2
+    profiles:
+      - "full_prod"
+      - "full_dev"
+
+  grafana:
+    image: grafana/grafana-enterprise
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - 127.0.0.1:${GRAFANA_PORT:-3000}:${GRAFANA_PORT:-3000}
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    profiles:
+      - "full_prod"
+      - "full_dev"
 
   celery-worker:
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
