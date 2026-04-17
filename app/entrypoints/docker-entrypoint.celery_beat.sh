@@ -3,8 +3,8 @@
 set -e
 
 if [[ $DISABLE_CELERY_BEAT == "true" ]]; then
-    echo "Celery Beat is disabled. Terminating."
-    exit 0
+    echo "Celery Beat is disabled. Suspending."
+    sleep infinity
 fi
 
 bash entrypoints/wait-for-it.sh ${DB_HOST}:${DB_PORT} --timeout=0
