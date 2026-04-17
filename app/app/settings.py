@@ -32,6 +32,8 @@ S3_BASE_PATH = os.getenv("S3_BASE_PATH", "")
 S3_LOGS_PATH = os.getenv("S3_LOGS_PATH", "")
 # Usage metrics collection system
 USAGE_METRICS_LOGROLLER_ENABLED = os.getenv("USAGE_METRICS_LOGROLLER_ENABLED", "true").lower() in ["true", "t"]
+USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED = os.getenv("USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED",
+                                                     "false").lower() in ["true", "t"]
 USAGE_METRICS_LOGROLLER_FREQUENCY = int(os.getenv('USAGE_METRICS_LOGROLLER_FREQUENCY', '3600'))
 USAGE_METRICS_LOGS_PER_ARCHIVE = int(os.getenv('USAGE_METRICS_LOGS_PER_ARCHIVE', '1000'))
 USAGE_METRICS_IGNORE_REQUESTS = [

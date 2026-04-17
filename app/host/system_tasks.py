@@ -371,8 +371,9 @@ class UsageLogRoller(SystemTaskRunner):
             return
         # Export to files in object store
         self.export_to_files(num_logs, logs)
-        # Export to InfluxDB
-        self.export_to_influxdb(logs)
+        if settings.USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED:
+            # Export to InfluxDB
+            self.export_to_influxdb(logs)
 
     @property
     def task_name(self):
