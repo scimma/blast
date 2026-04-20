@@ -9,6 +9,9 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+  influxdb-data: {}
+  influxdb-config: {}
+  grafana-storage: {}
 
 services:
 

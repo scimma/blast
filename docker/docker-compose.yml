@@ -10,8 +10,8 @@ volumes:
   blast-data:
     name: "blast-data"
   object-data: {}
-  influxdb2-data: {}
-  influxdb2-config: {}
+  influxdb-data: {}
+  influxdb-config: {}
   grafana-storage: {}
 
 services:
@@ -80,8 +80,8 @@ services:
     networks:
       - internal
     volumes:
-      - influxdb2-data:/var/lib/influxdb2
-      - influxdb2-config:/etc/influxdb2
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
     profiles:
       - "full_prod"
       - "full_dev"
