@@ -13,6 +13,14 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.9.5]
+
+### Added
+
+- Added support for usage monitoring with InfluxDB and Grafana. When `USAGE_METRICS_LOGROLLER_ENABLED` and
+  `USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED` are true, the buffer of usage logs will be periodically exported
+  to InfluxDB as well as to the object store, providing a Grafana-compatible data source for real-time monitoring.
+
 ## [1.9.4]
 
 ### Added
