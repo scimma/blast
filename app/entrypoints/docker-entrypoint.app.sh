@@ -2,11 +2,7 @@
 
 set -eo pipefail
 
-# If .dustmapsrc has been mounted as a read-only file at /tmp/.dustmapsrc,
-# copy it to the expected location /root/.dustmapsrc if it does not already exist.
-if [[ ! -f "/root/.dustmapsrc" && -f "/tmp/.dustmapsrc" ]]; then
-  cp /tmp/.dustmapsrc /root/.dustmapsrc
-fi
+bash entrypoints/install_dustmaps_config.sh
 
 INIT_STARTED_DATA="${DATA_ROOT_DIR}/.initializing_data"
 INIT_STARTED_DB="${DATA_ROOT_DIR}/.initializing_db"
