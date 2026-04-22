@@ -1,6 +1,5 @@
 from minio import Minio
 from minio.commonconfig import CopySource
-from minio.deleteobjects import DeleteObject
 from minio.error import S3Error
 import io
 import os
