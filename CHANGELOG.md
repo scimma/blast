@@ -15,6 +15,13 @@ Types of changes:
 
 ## [1.9.5]
 
+### Changed
+
+- Refactored the `dustmaps` config to use the `DUSTMAPS_DATA_ROOT` environment variable, simplifying its use
+  by eliminating the need to override the value within Python modules that use `dustmaps`.
+- Added a `utils.py` module loaded by the management command defined in `app/host/management/commands/blast_admin.py`
+  with example functions that have been useful to Blast developers and operators.
+
 ### Added
 
 - Added support for usage monitoring with InfluxDB and Grafana. When `USAGE_METRICS_LOGROLLER_ENABLED` and
