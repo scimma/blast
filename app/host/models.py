@@ -556,6 +556,10 @@ class SEDFittingResult(models.Model):
     log_age_50 = models.FloatField(null=True, blank=True)
     log_age_84 = models.FloatField(null=True, blank=True)
 
+    age_16 = models.FloatField(null=True, blank=True)
+    age_50 = models.FloatField(null=True, blank=True)
+    age_84 = models.FloatField(null=True, blank=True)
+
     log_tau_16 = models.FloatField(null=True, blank=True)
     log_tau_50 = models.FloatField(null=True, blank=True)
     log_tau_84 = models.FloatField(null=True, blank=True)
