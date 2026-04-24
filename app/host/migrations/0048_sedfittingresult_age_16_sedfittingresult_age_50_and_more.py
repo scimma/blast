@@ -8,12 +8,9 @@ def copy_logage_to_age(apps, schema_editor):
     SEDFittingResult = apps.get_model("host", "SEDFittingResult")
     all_sed_res = SEDFittingResult.objects.all()
     for sed_res in all_sed_res:
-        log_age_16 = sed_res.log_age_16
-        log_age_50 = sed_res.log_age_50
-        log_age_84 = sed_res.log_age_84
-        sed_res.age_16 = log_age_16
-        sed_res.age_50 = log_age_50
-        sed_res.age_84 = log_age_84
+        sed_res.age_16 = sed_res.log_age_16
+        sed_res.age_50 = sed_res.log_age_50
+        sed_res.age_84 = sed_res.log_age_84
         sed_res.save()
 
 

@@ -13,6 +13,23 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.10.0]
+
+## Changed
+
+- Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be deprecated and replaced by the `age` columns.
+- Updated units in documentation for above columns from log years to gigayears.
+- Prospector results will feed the age info to the `age` columns as well.
+- Import an export file should also fill the `age` columns, regardless of if the export files contain them.
+
+## Deprecated
+
+- The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model will be deprecated and replaced by the `age` columns in a future update
+
+### Fixed
+
+- Added `age` columns to the `SEDFittingResult` model to accurately reflect how the age is in gigayears and not in `log_10` years as implied by the `log_age` columns.
+
 ## [1.9.4]
 
 ### Added

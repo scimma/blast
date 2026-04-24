@@ -1182,6 +1182,7 @@ def import_transient_info(transient_data_archive):
                 #     logsfh.append([sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0])
                 # logsfh = [[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
                 #           for sfh_pk in sedfittingresults['fields']['logsfh']]
+
                 sedfittingresult = SEDFittingResult.objects.create(
                     aperture=aperture_obj,
                     transient=transient,
@@ -1199,6 +1200,9 @@ def import_transient_info(transient_data_archive):
                     log_age_16=sedfittingresults['fields']['log_age_16'],
                     log_age_50=sedfittingresults['fields']['log_age_50'],
                     log_age_84=sedfittingresults['fields']['log_age_84'],
+                    age_16=sedfittingresults['fields']['age_16'] if 'age_16' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_16'],
+                    age_50=sedfittingresults['fields']['age_50'] if 'age_50' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_50'],
+                    age_84=sedfittingresults['fields']['age_84'] if 'age_84' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_84'],
                     log_tau_16=sedfittingresults['fields']['log_tau_16'],
                     log_tau_50=sedfittingresults['fields']['log_tau_50'],
                     log_tau_84=sedfittingresults['fields']['log_tau_84'],
