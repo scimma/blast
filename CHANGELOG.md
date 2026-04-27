@@ -31,6 +31,21 @@ Types of changes:
 
 - Added `age` columns to the `SEDFittingResult` model to accurately reflect how the age is in gigayears and not in `log_10` years as implied by the `log_age` columns.
 
+## [1.9.5]
+
+### Changed
+
+- Refactored the `dustmaps` config to use the `DUSTMAPS_DATA_ROOT` environment variable, simplifying its use
+  by eliminating the need to override the value within Python modules that use `dustmaps`.
+- Added a `utils.py` module loaded by the management command defined in `app/host/management/commands/blast_admin.py`
+  with example functions that have been useful to Blast developers and operators.
+
+### Added
+
+- Added support for usage monitoring with InfluxDB and Grafana. When `USAGE_METRICS_LOGROLLER_ENABLED` and
+  `USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED` are true, the buffer of usage logs will be periodically exported
+  to InfluxDB as well as to the object store, providing a Grafana-compatible data source for real-time monitoring.
+
 ## [1.9.4]
 
 ### Added

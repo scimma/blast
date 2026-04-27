@@ -131,6 +131,7 @@ class TransientFilter(django_filters.FilterSet):
 
 
 @silk_profile(name="List transients")
+@log_usage_metric()
 def transient_list(request):
     transients = Transient.objects.order_by("-public_timestamp")
     transientfilter = TransientFilter(request.GET, queryset=transients)
@@ -640,6 +641,7 @@ def stream_sed_output_file(file_path):
     return response
 
 
+@log_usage_metric()
 def download_chains(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
@@ -647,6 +649,7 @@ def download_chains(request, slug, aperture_type):
     return stream_sed_output_file(sed_result.chains_file.name)
 
 
+@log_usage_metric()
 def download_modelfit(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
@@ -654,6 +657,7 @@ def download_modelfit(request, slug, aperture_type):
     return stream_sed_output_file(sed_result.model_file.name)
 
 
+@log_usage_metric()
 def download_percentiles(request, slug, aperture_type):
     sed_result = get_object_or_404(
         SEDFittingResult, transient__name=slug, aperture__type=aperture_type
@@ -661,16 +665,19 @@ def download_percentiles(request, slug, aperture_type):
     return stream_sed_output_file(sed_result.percentiles_file.name)
 
 
+@log_usage_metric()
 def acknowledgements(request):
     context = {}
     return render(request, "acknowledgements.html", context)
 
 
+@log_usage_metric()
 def team(request):
     context = {}
     return render(request, "team_members.html", context)
 
 
+@log_usage_metric()
 def home(request):
     # This view can only reached in development mode where the webserver proxy, which serves
     # static content and governs endpoints, either does not exist or can be bypassed.
@@ -764,6 +771,7 @@ def resource_not_found_view(request, exception, template_name="generic_404.html"
 
 
 # View for the privacy policy
+@log_usage_metric()
 def privacy_policy(request):
     return render(request, "privacy_policy.html")
 
@@ -774,6 +782,7 @@ def healthz(request):
 
 
 # Function for getting the SED data plot
+@log_usage_metric()
 def fetch_sed_plot(request):
     transient_name = request.GET.get('transient_name')
     # Acquire the transient object or return 404 not found
@@ -791,6 +800,7 @@ def fetch_sed_plot(request):
 
 
 # Function for getting the cutout FITS plot
+@log_usage_metric()
 def cutout_fits_plot(request):
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')

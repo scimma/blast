@@ -9,6 +9,9 @@ volumes:
   django-static: {}
   blast-data:
     name: "blast-data"
+  influxdb-data: {}
+  influxdb-config: {}
+  grafana-storage: {}
 
 services:
 
@@ -26,6 +29,22 @@ services:
     extends:
       file: docker-compose.yml
       service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  influxdb:
+    extends:
+      file: docker-compose.yml
+      service: influxdb
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
     env_file:
       - ../env/.env.default
       - ../env/.env.prod

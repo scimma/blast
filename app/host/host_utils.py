@@ -26,10 +26,6 @@ from django.conf import settings
 from django.db.models import Q
 from dustmaps.sfd import SFDQuery
 
-# Use correct dustmap data directory
-from dustmaps.config import config
-config.reset()
-config["data_dir"] = settings.DUSTMAPS_DATA_ROOT
 from photutils.aperture import aperture_photometry
 from photutils.aperture import EllipticalAperture
 from photutils.background import Background2D
