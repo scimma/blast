@@ -296,7 +296,7 @@ class HostMatch(TransientTaskRunner):
         """
         Emit status message for failure consistent with the available Status objects
         """
-        return "no host match"
+        return "failed"
 
     def _run_process(self, transient):
         """
