@@ -1197,12 +1197,20 @@ def import_transient_info(transient_data_archive):
                     log_ssfr_16=sedfittingresults['fields']['log_ssfr_16'],
                     log_ssfr_50=sedfittingresults['fields']['log_ssfr_50'],
                     log_ssfr_84=sedfittingresults['fields']['log_ssfr_84'],
-                    log_age_16=sedfittingresults['fields']['log_age_16'],
-                    log_age_50=sedfittingresults['fields']['log_age_50'],
-                    log_age_84=sedfittingresults['fields']['log_age_84'],
-                    age_16=sedfittingresults['fields']['age_16'] if 'age_16' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_16'],
-                    age_50=sedfittingresults['fields']['age_50'] if 'age_50' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_50'],
-                    age_84=sedfittingresults['fields']['age_84'] if 'age_84' in sedfittingresult['fields'] else sedfittingresults['fields']['log_age_84'],
+                    # TODO: log_age_16, log_age_50, log_age_84 are deprecated after v1.9.4. Support will be removed in
+                    #       a future release.
+                    log_age_16=sedfittingresults['fields']['log_age_16'] if 'age_16' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_16'],
+                    log_age_50=sedfittingresults['fields']['log_age_50'] if 'age_50' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_50'],
+                    log_age_84=sedfittingresults['fields']['log_age_84'] if 'age_84' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_84'],
+                    age_16=sedfittingresults['fields']['age_16'] if 'age_16' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_16'],
+                    age_50=sedfittingresults['fields']['age_50'] if 'age_50' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_50'],
+                    age_84=sedfittingresults['fields']['age_84'] if 'age_84' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_84'],
                     log_tau_16=sedfittingresults['fields']['log_tau_16'],
                     log_tau_50=sedfittingresults['fields']['log_tau_50'],
                     log_tau_84=sedfittingresults['fields']['log_tau_84'],
