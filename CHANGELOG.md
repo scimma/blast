@@ -13,14 +13,25 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.10.1]
+
+### Fixed
+
+- Fixed a bug in the dataset archive importer to support importing transients lacking host information.
+
+### Changed
+
+- The `HostMatch._run_process()` function was altered to treat any unhandled exception as a failure with a corresponding "failed" status message. Previously, an unhandled exception would result in a misleading "no host match" status.
+- Additional logic was added to avoid creating duplicate `Host` objects: The host information returned by Prost is compared against existing Host objects by cone search and by name. If Prost does not provide a name, the object ID is used instead.
+
 ## [1.10.0]
 
-## Deprecated
+### Deprecated
 
 - The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model are deprecated. They have been replaced by
   corresponding `age` columns and will be removed in a future release.
 
-## Changed
+### Changed
 
 - Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be deprecated and replaced by the `age` columns.
 - Updated units in documentation for above columns from log years to gigayears.

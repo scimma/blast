@@ -100,10 +100,14 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
         rmtree(output_dir, ignore_errors=True)
     try:
         name = hosts["host_name"][0]
+        obj_id = hosts["host_objID"][0]
         ra_deg = hosts["host_ra"][0]
         dec_deg = hosts["host_dec"][0]
     except KeyError:
         return None
+    # If the name field is empty, use the object ID as the name instead
+    if not name:
+        name = obj_id
     # If a match was found, use a name and cone search to avoid duplicating Host objects
     existing_host, conflict = find_existing_host(transient, name, ra_deg, dec_deg)
     # If no existing host was found, create a new Host object
