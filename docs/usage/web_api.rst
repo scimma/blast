@@ -209,8 +209,8 @@ API link: :code:`/api/sedfittingresult/`
 * "log_mass" (log base 10 of the surviving host stellar mass [solar masses])
 * "log_sfr" (log base 10 of the host star formation rate [solar masses / year])
 * "log_ssfr" (log base 10 of the host specific star formation rate [/ year])
-* "log_age" (age of the host stellar [gigayear]) (deprecated, use "age")
-* "age" (age of the host stellar [gigayear])
+* "log_age" (host stellar age [gigayear]) (DEPRECATED, use "age")
+* "age" (host stellar age [gigayear])
 
 <posterior_percentile> is the percentile value from the posterior distribution
 which can either be "16", "50" ot "84"
