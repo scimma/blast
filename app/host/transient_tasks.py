@@ -303,29 +303,12 @@ class HostMatch(TransientTaskRunner):
         Run the host matching algorithm.
         """
         host = run_prost(transient)
-
-        if host is not None:
-            host.save()
-            transient.host = host
-            transient.save()
-
-            # having a weird error here
-            # possible issues communicating with the database
-            transient_check = Transient.objects.get(name=transient.name)
-            if transient_check.host is None:
-                # let's try twice just in case
-                transient.host = host
-                transient.save()
-
-                transient_check = Transient.objects.get(name=transient.name)
-                if transient_check.host is None:
-                    raise RuntimeError("problem saving transient to the database!")
-
-            status_message = "processed"
-        else:
-            status_message = "no host match"
-
-        return status_message
+        if host is None:
+            return "no host match"
+        host.save()
+        transient.host = host
+        transient.save()
+        return "processed"
 
 
 class MWEBV_Transient(TransientTaskRunner):
