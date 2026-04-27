@@ -552,9 +552,14 @@ class SEDFittingResult(models.Model):
     log_ssfr_50 = models.FloatField(null=True, blank=True)
     log_ssfr_84 = models.FloatField(null=True, blank=True)
 
+    # Deprecated after version v1.9.5
     log_age_16 = models.FloatField(null=True, blank=True)
     log_age_50 = models.FloatField(null=True, blank=True)
     log_age_84 = models.FloatField(null=True, blank=True)
+
+    age_16 = models.FloatField(null=True, blank=True)
+    age_50 = models.FloatField(null=True, blank=True)
+    age_84 = models.FloatField(null=True, blank=True)
 
     log_tau_16 = models.FloatField(null=True, blank=True)
     log_tau_50 = models.FloatField(null=True, blank=True)

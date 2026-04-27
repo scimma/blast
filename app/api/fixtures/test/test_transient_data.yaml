@@ -167,9 +167,9 @@
     log_ssfr_16: 15.676
     log_ssfr_50: 12.34343
     log_ssfr_84: 12
-    log_age_16: 1.0
-    log_age_50: 0.1
-    log_age_84: 5.0
+    age_16: 1.0
+    age_50: 0.1
+    age_84: 5.0
     log_tau_16: 1.0
     log_tau_50: 5.0
     log_tau_84: 60
@@ -219,9 +219,9 @@
     log_ssfr_16: 15.676
     log_ssfr_50: 12.34343
     log_ssfr_84: 12
-    log_age_16: 1.0
-    log_age_50: 0.1
-    log_age_84: 5.0
+    age_16: 1.0
+    age_50: 0.1
+    age_84: 5.0
     log_tau_16: 1.0
     log_tau_50: 5.0
     log_tau_84: 60
