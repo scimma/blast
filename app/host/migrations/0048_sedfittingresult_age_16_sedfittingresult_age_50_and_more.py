@@ -2,8 +2,9 @@
 
 from django.db import migrations, models
 
+
 def copy_logage_to_age(apps, schema_editor):
-    """Copy over the value in the log_age columns to the newly created age columns 
+    """Copy over the value in the log_age columns to the newly created age columns
     (see https://github.com/scimma/blast/issues/330)"""
     SEDFittingResult = apps.get_model("host", "SEDFittingResult")
     all_sed_res = SEDFittingResult.objects.all()
@@ -12,7 +13,6 @@ def copy_logage_to_age(apps, schema_editor):
         sed_res.age_50 = sed_res.log_age_50
         sed_res.age_84 = sed_res.log_age_84
         sed_res.save()
-
 
 
 class Migration(migrations.Migration):
