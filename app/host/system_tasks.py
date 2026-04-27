@@ -187,7 +187,7 @@ class GarbageCollector(SystemTaskRunner):
 
     @property
     def task_initially_enabled(self):
-        return True
+        return False
 
 
 class RetriggerIncompleteWorkflows(SystemTaskRunner):
