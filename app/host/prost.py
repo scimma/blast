@@ -124,7 +124,7 @@ def run_prost(transient, output_dir_root=settings.PROST_OUTPUT_ROOT):
     idx = 0
     while host_search:
         idx += 1
-        new_host_name = f'{name}_{idx}'
+        new_host_name = f'''{name if name else "host"}_{idx}'''
         host_search = Host.objects.filter(name__exact=new_host_name)
     new_host = Host(ra_deg=ra_deg, dec_deg=dec_deg, name=new_host_name)
     return new_host
