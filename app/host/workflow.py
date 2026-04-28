@@ -56,8 +56,10 @@ def reprocess_transient(request=None, transient_name=''):
     assert transient_name
     try:
         transient = Transient.objects.get(name__exact=transient_name)
-        # TODO: This could be smarter. We don't *always* need to re-process every stage.
-        initialize_all_tasks_status(transient)
+        # Setting tasks_initialized to false will cause the
+        # transient tasks to be reset/created when the workflow starts.
+        transient.tasks_initialized = "False"
+        transient.save()
         result = transient_workflow.delay(transient_name)
     except Transient.DoesNotExist:
         result = None
