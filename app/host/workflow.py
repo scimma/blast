@@ -81,10 +81,6 @@ def transient_workflow(transient_name=None):
         print(f'Downloading transient info from TNS: "{transient_name}"...')
         blast_transients = get_transients_from_tns_by_name([transient_name])
         for transient in blast_transients:
-            # TO DO: User object is not JSON-serializable, and this task is also launched
-            #        by a periodic system task, so we could consider replacing the
-            #        added_by value with a simple string of the username.
-            # transient.added_by = request.User
             transient.save()
             print(f'New transient added from TNS: "{transient_name}"...')
     # Initialize the tasks if necessary
