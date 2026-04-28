@@ -5,7 +5,6 @@ from django.conf import settings
 from django.core import serializers
 from django.db.models import Q
 from datetime import datetime, timedelta, timezone
-from host.base_tasks import initialize_all_tasks_status
 from host.base_tasks import SystemTaskRunner
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
@@ -51,17 +50,16 @@ class TNSDataIngestion(SystemTaskRunner):
             now - time_delta, tns_credentials=tns_credentials
         )
         logger.info("TNS query complete.")
-        saved_transients = Transient.objects.all()
         count = 0
         logger.info(f'Processing transient imported from TNS: "{[tr.name for tr in transients_from_tns]}"')
         for transient_from_tns in transients_from_tns:
-
             # If the transient has not already been ingested, save the TNS
             # data and proceed to the next transient
-            saved_transient = saved_transients.filter(name__exact=transient_from_tns.name)
+            saved_transient = Transient.objects.filter(name__exact=transient_from_tns.name)
             if not saved_transient:
                 transient_from_tns.save()
                 count += 1
+                transient_workflow.delay(transient_from_tns.name)
                 continue
             # If the transient was previously ingested, compare to the incoming TNS data.
             saved_transient = saved_transient[0]
@@ -111,26 +109,6 @@ class TNSDataIngestion(SystemTaskRunner):
     @property
     def task_initially_enabled(self):
         return True
-
-
-class InitializeTransientTasks(SystemTaskRunner):
-    def run_process(self):
-        """
-        Initializes all task in the database to not processed for new transients.
-        """
-
-        uninitialized_transients = Transient.objects.filter(
-            tasks_initialized__exact="False"
-        )
-        for transient in uninitialized_transients:
-            initialize_all_tasks_status(transient)
-            transient.tasks_initialized = "True"
-            transient.save()
-            transient_workflow.delay(transient.name)
-
-    @property
-    def task_name(self):
-        return "Initialize transient task"
 
 
 class IngestMissedTNSTransients(SystemTaskRunner):
@@ -268,14 +246,6 @@ def tns_data_ingestion(self):
         return
     # Run the TNS ingestion
     TNSDataIngestion().run_process()
-
-
-@shared_task(
-    time_limit=task_time_limit,
-    soft_time_limit=task_soft_time_limit,
-)
-def initialize_transient_task():
-    InitializeTransientTasks().run_process()
 
 
 @shared_task(

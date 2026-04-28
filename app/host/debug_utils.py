@@ -56,7 +56,6 @@ def rerun_failed_task(task_register):
         GlobalHostSEDFitting(task_register.transient.name),
         LocalHostSEDFitting(task_register.transient.name),
         TNSDataIngestion(),
-        InitializeTransientTasks(),
         IngestMissedTNSTransients(),
     ]
 
