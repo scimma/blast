@@ -78,13 +78,11 @@ def retrigger_transient(request=None, transient_name=''):
 )
 def import_transient_list(transient_names):
     '''This function assumes that the input transient_names are not in the database.'''
-    def process_transient(transient_name):
-        transient_workflow.delay(transient_name)
     uploaded_transient_names = []
     for transient_name in transient_names:
         logger.info(f'Triggering workflow for new transient "{transient_name}"...')
         try:
-            process_transient(transient_name)
+            transient_workflow.delay(transient_name)
             uploaded_transient_names.append(transient_name)
         except Exception as err:
             logger.error(f'''Error processing new transient: {err}''')
