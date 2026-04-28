@@ -1269,7 +1269,7 @@ def import_transient_info(transient_data_archive):
             tr_obj.save()
         # Calculate workflow progress and mark tasks as initialized so retriggering works.
         transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
-        transient.tasks_initialized = True
+        transient.tasks_initialized = "True"
         transient.save()
         # Record successful database import
         imported_transient_names.append(transient.name)

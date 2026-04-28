@@ -90,7 +90,7 @@ class TNSDataIngestion(SystemTaskRunner):
             saved_transient.spectroscopic_class = transient_from_tns.spectroscopic_class
             saved_transient.redshift = transient_from_tns.redshift
             # Reinitialize the transient state so that its processing workflow will run again if necessary.
-            saved_transient.tasks_initialized = False
+            saved_transient.tasks_initialized = "False"
             saved_transient.save()
 
             # If the redshift value was updated, reprocess the entire workflow.
