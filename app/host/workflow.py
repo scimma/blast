@@ -87,16 +87,11 @@ def transient_workflow(transient_name=None):
             # transient.added_by = request.User
             transient.save()
             print(f'New transient added from TNS: "{transient_name}"...')
-    # Initialize the tasks
-    uninitialized_transients = Transient.objects.filter(
-        tasks_initialized__exact="False",
-        name__exact=transient_name,
-    )
-    for transient in uninitialized_transients:
-        if transient.name == transient_name:
-            initialize_all_tasks_status(transient)
-            transient.tasks_initialized = "True"
-            transient.save()
+    # Initialize the tasks if necessary
+    for transient in Transient.objects.filter(tasks_initialized__exact="False", name__exact=transient_name):
+        initialize_all_tasks_status(transient)
+        transient.tasks_initialized = "True"
+        transient.save()
     # Execute the workflow
     workflow = chain(
         # workflow_init.si(transient_name),
