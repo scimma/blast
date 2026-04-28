@@ -78,15 +78,17 @@ def transient_workflow(transient_name=None):
     assert transient_name
     try:
         Transient.objects.get(name__exact=transient_name)
-        print(f'Transient already exists: "{transient_name}"...')
+        logger.debug(f'Starting workflow for existing transient "{transient_name}"')
     except Transient.DoesNotExist:
-        print(f'Downloading transient info from TNS: "{transient_name}"...')
+        logger.info(f'''Workflow triggered for transient that does not exist: {transient_name}''')
+        logger.info(f'''Downloading transient info from TNS for "{transient_name}"''')
         blast_transients = get_transients_from_tns_by_name([transient_name])
         for transient in blast_transients:
             transient.save()
-            print(f'New transient added from TNS: "{transient_name}"...')
+            logger.debug(f'New transient downloaded from TNS: "{transient_name}"')
     # Initialize the tasks if necessary
     for transient in Transient.objects.filter(tasks_initialized__exact="False", name__exact=transient_name):
+        logger.debug(f'Initializing all transient tasks for "{transient_name}"')
         initialize_all_tasks_status(transient)
         transient.tasks_initialized = "True"
         transient.save()
