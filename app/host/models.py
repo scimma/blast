@@ -147,7 +147,7 @@ class Transient(SkyObject):
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
     public_timestamp = models.DateTimeField(null=True, blank=True)
-    host = models.ForeignKey(Host, on_delete=models.CASCADE, null=True, blank=True)
+    host = models.ForeignKey(Host, on_delete=models.SET_NULL, null=True, blank=True)
     objects = TransientManager()
     tasks_initialized = models.CharField(max_length=20, default="False")
     redshift = models.FloatField(null=True, blank=True)
@@ -155,7 +155,7 @@ class Transient(SkyObject):
     photometric_class = models.CharField(max_length=20, null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     processing_status = models.CharField(max_length=20, default="processing")
-    added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     progress = models.IntegerField(default=0)
     software_version = models.CharField(max_length=50, blank=True, null=True)
 
