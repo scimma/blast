@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='host',
             name='object_id',
-            field=models.CharField(blank=True, max_length=100, null=True, unique=True),
+            field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AlterField(
             model_name='transient',
