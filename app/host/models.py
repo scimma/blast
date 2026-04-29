@@ -140,9 +140,10 @@ class Transient(SkyObject):
             raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
                                   '''characters, and may include underscores and hyphens. '''
                                   '''Spaces are not allowed.''')
-        if name.find('--') > -1 or name.find('__') > -1:
-            raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
-                                  '''underscores or hyphens.''')
+        for nonconsecutive_char in '-_':
+            if name.find(nonconsecutive_char * 2) > -1:
+                raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
+                                      f'''"{nonconsecutive_char}" characters.''')
 
     name = models.CharField(max_length=64, unique=True, validators=[validate_name])
     display_name = models.CharField(null=True, blank=True)
