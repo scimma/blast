@@ -302,12 +302,20 @@ class HostMatch(TransientTaskRunner):
         """
         Run the host matching algorithm.
         """
-        host = run_prost(transient)
+        result = run_prost(transient)
+        error = result['error']
+        if error:
+            logger.error(f'Error with host matching: {error}')
+            raise Exception(error)
+        host = result['host']
         if host is None:
             return "no host match"
         host.save()
         transient.host = host
         transient.save()
+        if result['new']:
+            logger.info(f'''Created new Host object: "{host.name}" (object ID "{host.object_id}" from '''
+                        f'''catalog "{host.catalog_name}", release "{host.catalog_release}")''')
         return "processed"
 
 
