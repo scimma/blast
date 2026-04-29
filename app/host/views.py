@@ -15,7 +15,6 @@ from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
-from host.forms import TransientImportForm
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
