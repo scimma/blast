@@ -1,7 +1,9 @@
 from astropy.coordinates import SkyCoord
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
 from ..models import SkyObject
+from ..models import Host
 
 
 class SkyObjectTest(TestCase):
@@ -23,3 +25,35 @@ class SkyObjectTest(TestCase):
 
     def test_dec_string(self):
         self.assertTrue(self.sky_obj.dec == "13d00m00.00s")
+
+
+class ValidateHostNameTest(TestCase):
+    valid_names = [
+        'V4l.1_d-N4m+3',
+    ]
+    invalid_names = [
+        'name with spaces',
+        'name	with	tabs',
+        'name_$_inv@lid_chars',
+        '_leading_underscore',
+        'trailing_underscore_',
+        '-leading-hyphen',
+        'trailing-hyphen-',
+        'consecutive__under___scores',
+        'consecutive--hyph----ens',
+        'consecutive++plus++++signs',
+        'consecutive..period....s',
+        'name__collision__',
+        'name____collision',
+        'name_$$_collision',
+        " name with spaces ",
+    ]
+
+    def test_host_name_validation(self):
+        for name in self.valid_names + self.invalid_names:
+            try:
+                Host.validate_name(name)
+                assert name in self.valid_names
+            except ValidationError:
+                assert name in self.invalid_names
+

@@ -85,7 +85,31 @@ class Host(SkyObject):
             of the host
     """
 
-    name = models.CharField(max_length=100, blank=True, null=True)
+    def name_regex():
+        '''Central location for host identifier naming regex. Combine with rules defined in validate_name().'''
+        return r"[a-zA-Z0-9]+[a-zA-Z0-9_\-\+\.]*[a-zA-Z0-9]+\Z"
+
+    def validate_name(name):
+        '''
+        Host name/identifier validation. Central definition of naming rules that complements
+        regular expression from name_regex(). See https://docs.djangoproject.com/en/5.2/ref/validators/
+
+        :param name: Host identifier
+        '''
+        host_name_max_length = Host._meta.get_field('name').max_length
+        if len(name) > host_name_max_length:
+            raise ValidationError(f'''Invalid host identifier: "{name}" is longer than the max length '''
+                                  f'''of {host_name_max_length} characters.''')
+        if not bool(re.match(Host.name_regex(), name)):
+            raise ValidationError(f'''Invalid host identifier: "{name}" must begin and end with alphanumeric '''
+                                  '''characters, and may include underscores, hyphens, plus signs and periods. '''
+                                  '''Spaces are not allowed.''')
+        for nonconsecutive_chars in '-_+.':
+            if name.find(nonconsecutive_chars * 2) > -1:
+                raise ValidationError(f'''Invalid host identifier: "{name}" may not contain consecutive '''
+                                      '''underscores, hyphens, plus signs, nor periods.''')
+
+    name = models.CharField(max_length=100, validators=[validate_name])
     redshift = models.FloatField(null=True, blank=True)
     redshift_err = models.FloatField(null=True, blank=True)
     photometric_redshift = models.FloatField(null=True, blank=True)
