@@ -15,12 +15,12 @@ Types of changes:
 
 ## [1.10.0]
 
-## Deprecated
+### Deprecated
 
 - The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model are deprecated. They have been replaced by
   corresponding `age` columns and will be removed in a future release.
 
-## Changed
+### Changed
 
 - Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be deprecated and replaced by the `age` columns.
 - Updated units in documentation for above columns from log years to gigayears.
