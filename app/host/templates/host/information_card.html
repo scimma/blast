@@ -32,7 +32,16 @@
 <h5 style="text-align: center;" class="pt-3">Host</h5>
 <table class="table table-responsive table-hover table-sm transient-info-table">
   <tbody>
+    {% if transient.host.name %}
     <tr><td class="align-middle transient-info-table-td">Name:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.name}}</code></td></tr>
+    {% endif %}
+    {% if transient.host.object_id %}
+    <tr><td class="align-middle transient-info-table-td">Object ID:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.object_id}}</code></td></tr>
+    {% endif %}
+    {% if transient.host.catalog_name and transient.host.catalog_release %}
+    <tr><td class="align-middle transient-info-table-td">Catalog Name:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.catalog_name}}</code></td></tr>
+    <tr><td class="align-middle transient-info-table-td">Catalog Release:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.catalog_release}}</code></td></tr>
+    {% endif %}
     <tr><td class="align-middle transient-info-table-td">Right ascension:</td><td class="align-middle" style="text-align: left;"><code> {{transient.host.ra}}</code></td></tr>
     <tr><td class="align-middle transient-info-table-td">Declination:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.dec}}</code></td></tr>
     <tr><td class="align-middle transient-info-table-td">Redshift:</td><td class="align-middle" style="text-align: left;"><code>{% if transient.host.redshift %}{{transient.host.redshift|floatformat:6}}{% else %}None{% endif %}</code></td></tr>
