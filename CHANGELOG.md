@@ -13,7 +13,7 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [1.10.1]
+## [1.11.0]
 
 ### Fixed
 
@@ -22,7 +22,11 @@ Types of changes:
 ### Changed
 
 - The `HostMatch._run_process()` function was altered to treat any unhandled exception as a failure with a corresponding "failed" status message. Previously, an unhandled exception would result in a misleading "no host match" status.
-- Additional logic was added to avoid creating duplicate `Host` objects: The host information returned by Prost is compared against existing Host objects by cone search and by name. If Prost does not provide a name, the object ID is used instead.
+- Additional logic was added to avoid creating duplicate `Host` objects: The host information returned by Prost is compared against existing Host objects by cone search and by catalog information.
+
+### Removed
+
+- Removed the obsolete "Initialize transient task" periodic task. Workflows for new transients ingested from TNS are now triggered upon discovery. Thus, all pathways for adding new transients now automatically initialize and trigger workflows immediately, eliminating the need for this periodic task.
 
 ## [1.10.0]
 
