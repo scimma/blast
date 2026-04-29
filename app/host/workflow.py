@@ -1,5 +1,4 @@
 from celery import chain
-from celery import chord
 from celery import group
 from celery import shared_task
 from host.transient_tasks import crop_transient_images

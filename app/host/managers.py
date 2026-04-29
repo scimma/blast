@@ -8,7 +8,6 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 
-
 class TransientManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -25,11 +24,6 @@ class TaskManager(models.Manager):
 
 
 class SurveyManager(models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
-
-
-class CatalogManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
 

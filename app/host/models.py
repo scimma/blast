@@ -16,7 +16,6 @@ from django.core.exceptions import ValidationError
 import re
 
 from .managers import ApertureManager
-from .managers import CatalogManager
 from .managers import CutoutManager
 from .managers import FilterManager
 from .managers import HostManager
