@@ -628,6 +628,17 @@ class TaskLock(models.Model):
         return f'''{self.name}: created {self.time_created}, expires {self.time_expires}'''
 
 
+class AliasTransient(models.Model):
+    """
+    Model to link aliases to transients
+    """
+    alias = models.CharField(max_length=64, unique=True)
+    transient_name = models.ForeignKey(Transient, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'''{self.alias} is an alias for transient {self.transient_name}'''
+
+
 class UsageMetricsLog(models.Model):
     """
     Model to keep track of usage metrics based on requests.
