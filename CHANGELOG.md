@@ -21,6 +21,8 @@ Types of changes:
   source catalog information provided by the host matcher.
 - Added support for input arguments to custom functions invoked by the `blast_admin` Django custom
   management command. See `blast_admin.py` module docstring for details.
+- Added `CELERY_LOG_LEVEL` environment variable to override default logging levels for Celery workers and
+  Celery Beat.
 
 ### Changed
 
@@ -38,7 +40,7 @@ Types of changes:
   from TNS are now triggered upon discovery. Thus, all pathways for adding new transients now automatically
   initialize and trigger workflows immediately, eliminating the need for this periodic task.
 - Removed unused TransientImportForm
-- Removed unused CatalogManage
+- Removed unused CatalogManager
 
 ### Fixed
 
