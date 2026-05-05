@@ -22,6 +22,8 @@ TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 QUERY_TIMEOUT = int(os.environ.get("QUERY_TIMEOUT", "60"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False").lower() in ["true", "t", "1"]
+CUTOUT_DOWNLOAD_SLEEP_TIME = int(os.getenv("CUTOUT_DOWNLOAD_SLEEP_TIME", "0"))
+CUTOUT_DOWNLOAD_MAX_TRIES = int(os.getenv("CUTOUT_DOWNLOAD_MAX_TRIES", "1"))
 # Set JOB_SCRATCH_MAX_SIZE to 0 to determine scratch volume capacity using os.statvfs
 JOB_SCRATCH_MAX_SIZE = int(float(os.getenv('JOB_SCRATCH_MAX_SIZE', str(20 * 1024**3))))  # 20 GiB
 JOB_SCRATCH_FREE_SPACE = int(float(os.getenv('JOB_SCRATCH_FREE_SPACE', str(5 * 1024**3))))  # 5 GiB

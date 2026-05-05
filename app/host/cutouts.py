@@ -32,9 +32,6 @@ from .models import Filter
 from host.log import get_logger
 logger = get_logger(__name__)
 
-DOWNLOAD_SLEEP_TIME = int(os.environ.get("DOWNLOAD_SLEEP_TIME", "0"))
-DOWNLOAD_MAX_TRIES = int(os.environ.get("DOWNLOAD_MAX_TRIES", "1"))
-
 # from host import SkyServer
 
 
@@ -625,8 +622,9 @@ download_function_dict = {
 }
 
 
-def cutout(transient, survey, fov=Quantity(0.1, unit="deg"), download_max_tries=DOWNLOAD_MAX_TRIES,
-           download_sleep_time=DOWNLOAD_SLEEP_TIME):
+def cutout(transient, survey, fov=Quantity(0.1, unit="deg"),
+           download_max_tries=settings.CUTOUT_DOWNLOAD_MAX_TRIES,
+           download_sleep_time=settings.CUTOUT_DOWNLOAD_SLEEP_TIME):
     """
     Download image cutout data from a survey.
     Parameters
