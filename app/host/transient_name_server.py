@@ -75,7 +75,7 @@ def rate_limit_query_tns(data, headers, search_url):
         # Wait until a TNS query lock is acquired
         if TaskLock.objects.request_lock('tns_query'):
             break
-        logger.debug('''Waiting to aquire TNS query lock...''')
+        logger.debug('''Waiting to acquire TNS query lock...''')
         time.sleep(1)
     # Enable the TNS_SIMULATE flag for development purposes to avoid pinging the actual TNS server
     if settings.TNS_SIMULATE:

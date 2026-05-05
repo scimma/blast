@@ -566,7 +566,7 @@ def query_ned(position):
     while timeout > time.time() - time_start:
         if TaskLock.objects.request_lock('ned_query'):
             break
-        logger.debug('''Waiting to aquire NED query lock...''')
+        logger.debug('''Waiting to acquire NED query lock...''')
         time.sleep(1)
 
     galaxy_data = {"redshift": None}
@@ -602,7 +602,7 @@ def query_sdss(position):
     while timeout > time.time() - time_start:
         if TaskLock.objects.request_lock('SDSS_query'):
             break
-        logger.debug('''Waiting to aquire SDSS query lock...''')
+        logger.debug('''Waiting to acquire SDSS query lock...''')
         time.sleep(1)
     galaxy_data = {"redshift": None}
     try:
