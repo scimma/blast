@@ -664,7 +664,7 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg"), download_max_tries=
                 fits = hips_cutout(transient, survey, image_size=num_pixels)
                 status = 0
             except Exception as err:
-                print(f"Conection timed out, could not download {survey.name} data")
+                print(f"Connection timed out, could not download {survey.name} data")
                 fits = None
                 status = 1
                 error = err
