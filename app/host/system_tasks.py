@@ -52,10 +52,13 @@ class TNSDataIngestion(SystemTaskRunner):
         logger.info("TNS query complete.")
         count = 0
         logger.info(f'Processing transient imported from TNS: "{[tr.name for tr in transients_from_tns]}"')
+        # Search for existing transients in a single database query to avoid unnecessary database load
+        # when iterating over incoming transient data.
+        existing_transients = Transient.objects.filter(name__in=[tr.name for tr in transients_from_tns])
         for transient_from_tns in transients_from_tns:
             # If the transient has not already been ingested, save the TNS
             # data and proceed to the next transient
-            saved_transient = Transient.objects.filter(name__exact=transient_from_tns.name)
+            saved_transient = existing_transients.filter(name__exact=transient_from_tns.name)
             if not saved_transient:
                 transient_from_tns.save()
                 count += 1
