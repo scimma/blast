@@ -32,6 +32,9 @@ Types of changes:
 - Additional logic was added to the host matching task to avoid creating duplicate `Host` objects: The host
   information returned by Prost is compared against existing Host objects by cone search and by catalog information. 
 - Updated the host information card displayed on result pages to include the new catalog information.
+- Replaced `on_delete=models.CASCADE` with `on_delete=models.SET_NULL` for the `User` and `Host`
+  objects associated with a `Transient` object. Transients should not be deleted in the event one or both 
+  of these associated objects are deleted.
 - Removed redundant call to `initialize_all_tasks_status()` in `reprocess_transient()`
 
 ### Removed
