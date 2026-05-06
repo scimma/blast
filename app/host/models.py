@@ -633,10 +633,31 @@ class AliasTransient(models.Model):
     Model to link aliases to transients
     """
     alias = models.CharField(max_length=64, unique=True)
-    transient_name = models.ForeignKey(Transient, on_delete=models.CASCADE)
+    transient = models.ForeignKey(Transient, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'''{self.alias} is an alias for transient {self.transient_name}'''
+        return f'''{self.alias} is an alias for transient {self.transient}'''
+
+    class Meta:
+        permissions = [
+            ("add_alias_transient", "Add Alias for transient"),
+        ]
+
+
+class AliasHost(models.Model):
+    """
+    Model to link aliases to transients
+    """
+    alias = models.CharField(max_length=100, unique=True)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'''{self.alias} is an alias for Host {self.host}'''
+
+    class Meta:
+        permissions = [
+            ("add_alias_host", "Add Alias for host"),
+        ]
 
 
 class UsageMetricsLog(models.Model):
