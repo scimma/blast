@@ -13,23 +13,62 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.11.0]
+
+### Added
+
+- Added three new fields to the Host mode (`object_id`, `catalog_name`, `catalog_release`) to capture the
+  source catalog information provided by the host matcher.
+- Added support for input arguments to custom functions invoked by the `blast_admin` Django custom
+  management command. See `blast_admin.py` module docstring for details.
+- Added `CELERY_LOG_LEVEL` environment variable to override default logging levels for Celery workers and
+  Celery Beat.
+
+### Changed
+
+- The `HostMatch._run_process()` function was altered to treat any unhandled exception as a failure with a 
+  corresponding "failed" status message. Previously, an unhandled exception would result in a misleading 
+  "no host match" status.
+- Additional logic was added to the host matching task to avoid creating duplicate `Host` objects: The host
+  information returned by Prost is compared against existing Host objects by cone search and by catalog information. 
+- Updated the host information card displayed on result pages to include the new catalog information.
+- Replaced `on_delete=models.CASCADE` with `on_delete=models.SET_NULL` for the `User` and `Host`
+  objects associated with a `Transient` object. Transients should not be deleted in the event one or both 
+  of these associated objects are deleted.
+- Removed redundant call to `initialize_all_tasks_status()` in `reprocess_transient()`
+
+### Removed
+
+- Removed the obsolete "Initialize transient task" periodic task. Workflows for new transients ingested
+  from TNS are now triggered upon discovery. Thus, all pathways for adding new transients now automatically
+  initialize and trigger workflows immediately, eliminating the need for this periodic task.
+- Removed unused TransientImportForm
+- Removed unused CatalogManager
+
+### Fixed
+
+- Fixed a bug in the dataset archive importer to support importing transients lacking host information.
+
 ## [1.10.0]
 
 ### Deprecated
 
-- The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model are deprecated. They have been replaced by
-  corresponding `age` columns and will be removed in a future release.
+- The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model are
+  deprecated. They have been replaced by corresponding `age` columns and will be removed in a future release.
 
 ### Changed
 
-- Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be deprecated and replaced by the `age` columns.
+- Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be
+  deprecated and replaced by the `age` columns.
 - Updated units in documentation for above columns from log years to gigayears.
 - Prospector results will feed the age info to the `age` columns as well.
-- Updated archive file import algorithm to populate the `age` values from `log_age` values if the `age` keys are missing.
+- Updated archive file import algorithm to populate the `age` values from `log_age` values if the `age`
+  keys are missing.
 
 ### Fixed
 
-- Added `age` columns to the `SEDFittingResult` model to accurately reflect how the age is in gigayears and not in `log_10` years as implied by the `log_age` columns.
+- Added `age` columns to the `SEDFittingResult` model to accurately reflect how the age is in gigayears
+  and not in `log_10` years as implied by the `log_age` columns.
 
 ## [1.9.5]
 

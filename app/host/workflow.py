@@ -1,5 +1,4 @@
 from celery import chain
-from celery import chord
 from celery import group
 from celery import shared_task
 from host.transient_tasks import crop_transient_images
@@ -56,8 +55,10 @@ def reprocess_transient(request=None, transient_name=''):
     assert transient_name
     try:
         transient = Transient.objects.get(name__exact=transient_name)
-        # TODO: This could be smarter. We don't *always* need to re-process every stage.
-        initialize_all_tasks_status(transient)
+        # Setting tasks_initialized to false will cause the
+        # transient tasks to be reset/created when the workflow starts.
+        transient.tasks_initialized = "False"
+        transient.save()
         result = transient_workflow.delay(transient_name)
     except Transient.DoesNotExist:
         result = None
@@ -76,27 +77,20 @@ def transient_workflow(transient_name=None):
     assert transient_name
     try:
         Transient.objects.get(name__exact=transient_name)
-        print(f'Transient already exists: "{transient_name}"...')
+        logger.debug(f'Starting workflow for existing transient "{transient_name}"')
     except Transient.DoesNotExist:
-        print(f'Downloading transient info from TNS: "{transient_name}"...')
+        logger.info(f'''Workflow triggered for transient that does not exist: {transient_name}''')
+        logger.info(f'''Downloading transient info from TNS for "{transient_name}"''')
         blast_transients = get_transients_from_tns_by_name([transient_name])
         for transient in blast_transients:
-            # TO DO: User object is not JSON-serializable, and this task is also launched
-            #        by a periodic system task, so we could consider replacing the
-            #        added_by value with a simple string of the username.
-            # transient.added_by = request.User
             transient.save()
-            print(f'New transient added from TNS: "{transient_name}"...')
-    # Initialize the tasks
-    uninitialized_transients = Transient.objects.filter(
-        tasks_initialized__exact="False",
-        name__exact=transient_name,
-    )
-    for transient in uninitialized_transients:
-        if transient.name == transient_name:
-            initialize_all_tasks_status(transient)
-            transient.tasks_initialized = "True"
-            transient.save()
+            logger.debug(f'New transient downloaded from TNS: "{transient_name}"')
+    # Initialize the tasks if necessary
+    for transient in Transient.objects.filter(tasks_initialized__exact="False", name__exact=transient_name):
+        logger.debug(f'Initializing all transient tasks for "{transient_name}"')
+        initialize_all_tasks_status(transient)
+        transient.tasks_initialized = "True"
+        transient.save()
     # Execute the workflow
     workflow = chain(
         # workflow_init.si(transient_name),

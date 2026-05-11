@@ -566,7 +566,7 @@ def query_ned(position):
     while timeout > time.time() - time_start:
         if TaskLock.objects.request_lock('ned_query'):
             break
-        logger.debug('''Waiting to aquire NED query lock...''')
+        logger.debug('''Waiting to acquire NED query lock...''')
         time.sleep(1)
 
     galaxy_data = {"redshift": None}
@@ -602,7 +602,7 @@ def query_sdss(position):
     while timeout > time.time() - time_start:
         if TaskLock.objects.request_lock('SDSS_query'):
             break
-        logger.debug('''Waiting to aquire SDSS query lock...''')
+        logger.debug('''Waiting to acquire SDSS query lock...''')
         time.sleep(1)
     galaxy_data = {"redshift": None}
     try:
@@ -1030,48 +1030,49 @@ def import_transient_info(transient_data_archive):
         # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
         #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
         #       missing?
-        host_name = dataset['host']['fields']['name']
-        ra_deg = dataset['host']['fields']['ra_deg']
-        dec_deg = dataset['host']['fields']['dec_deg']
-        cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
-                       & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
-                       & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
-                       & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
-        proximate_hosts = Host.objects.filter(cone_search)
-        if proximate_hosts:
-            logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
-                        f'''importing host "{host_name}".''')
         host = None
-        # If there is an existing proximate host for an unnamed host, claim this is the same host
-        if not host_name and proximate_hosts:
-            host = proximate_hosts[0]
-        elif host_name:
-            # Find existing hosts with the same name
-            host_search = Host.objects.filter(name__exact=host_name)
-            if host_search:
-                # If the host name matches, require that the position overlaps
-                proximity_search = host_search.filter(cone_search)
-                # Consider the import a failure if there is an inconsistent host definition
-                if not proximity_search:
-                    record_import_error(transient_name,
-                                        f'[{transient_name}] Host with matching name "{host_name}" '
-                                        f'exists, but it is in a different location.')
-                    return
-                # If the name and location match, claim this is the same host
-                host = proximity_search[0]
-        # If no host match was found, create a new Host object
-        if not host:
-            host = Host.objects.create(
-                ra_deg=dataset['host']['fields']['ra_deg'],
-                dec_deg=dataset['host']['fields']['dec_deg'],
-                name=dataset['host']['fields']['name'],
-                redshift=dataset['host']['fields']['redshift'],
-                redshift_err=dataset['host']['fields']['redshift_err'],
-                photometric_redshift=dataset['host']['fields']['photometric_redshift'],
-                photometric_redshift_err=dataset['host']['fields']['photometric_redshift_err'],
-                milkyway_dust_reddening=dataset['host']['fields']['milkyway_dust_reddening'],
-                software_version=dataset['host']['fields']['software_version'],
-            )
+        if dataset['host']:
+            host_name = dataset['host']['fields']['name']
+            ra_deg = dataset['host']['fields']['ra_deg']
+            dec_deg = dataset['host']['fields']['dec_deg']
+            cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
+                           & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
+                           & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
+                           & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
+            proximate_hosts = Host.objects.filter(cone_search)
+            if proximate_hosts:
+                logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
+                            f'''importing host "{host_name}".''')
+            # If there is an existing proximate host for an unnamed host, claim this is the same host
+            if not host_name and proximate_hosts:
+                host = proximate_hosts[0]
+            elif host_name:
+                # Find existing hosts with the same name
+                host_search = Host.objects.filter(name__exact=host_name)
+                if host_search:
+                    # If the host name matches, require that the position overlaps
+                    proximity_search = host_search.filter(cone_search)
+                    # Consider the import a failure if there is an inconsistent host definition
+                    if not proximity_search:
+                        record_import_error(transient_name,
+                                            f'[{transient_name}] Host with matching name "{host_name}" '
+                                            f'exists, but it is in a different location.')
+                        return
+                    # If the name and location match, claim this is the same host
+                    host = proximity_search[0]
+            # If no host match was found, create a new Host object
+            if not host:
+                host = Host.objects.create(
+                    ra_deg=dataset['host']['fields']['ra_deg'],
+                    dec_deg=dataset['host']['fields']['dec_deg'],
+                    name=dataset['host']['fields']['name'],
+                    redshift=dataset['host']['fields']['redshift'],
+                    redshift_err=dataset['host']['fields']['redshift_err'],
+                    photometric_redshift=dataset['host']['fields']['photometric_redshift'],
+                    photometric_redshift_err=dataset['host']['fields']['photometric_redshift_err'],
+                    milkyway_dust_reddening=dataset['host']['fields']['milkyway_dust_reddening'],
+                    software_version=dataset['host']['fields']['software_version'],
+                )
         # Verify that the Cutout objects do not exist (by name).
         for cutout in dataset['cutouts']:
             cutout_name = cutout['fields']['name']
@@ -1268,7 +1269,7 @@ def import_transient_info(transient_data_archive):
             tr_obj.save()
         # Calculate workflow progress and mark tasks as initialized so retriggering works.
         transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
-        transient.tasks_initialized = True
+        transient.tasks_initialized = "True"
         transient.save()
         # Record successful database import
         imported_transient_names.append(transient.name)

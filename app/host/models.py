@@ -16,7 +16,6 @@ from django.core.exceptions import ValidationError
 import re
 
 from .managers import ApertureManager
-from .managers import CatalogManager
 from .managers import CutoutManager
 from .managers import FilterManager
 from .managers import HostManager
@@ -92,6 +91,9 @@ class Host(SkyObject):
     photometric_redshift = models.FloatField(null=True, blank=True)
     photometric_redshift_err = models.FloatField(null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
+    object_id = models.CharField(max_length=100, blank=True, null=True)
+    catalog_name = models.CharField(max_length=100, blank=False, null=True)
+    catalog_release = models.CharField(max_length=100, blank=False, null=True)
     objects = HostManager()
     software_version = models.CharField(max_length=50, blank=True, null=True)
 
@@ -138,16 +140,17 @@ class Transient(SkyObject):
             raise ValidationError(f'''Invalid transient identifier: "{name}" must begin and end with alphanumeric '''
                                   '''characters, and may include underscores and hyphens. '''
                                   '''Spaces are not allowed.''')
-        if name.find('--') > -1 or name.find('__') > -1:
-            raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
-                                  '''underscores or hyphens.''')
+        for nonconsecutive_char in '-_':
+            if name.find(nonconsecutive_char * 2) > -1:
+                raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
+                                      f'''"{nonconsecutive_char}" characters.''')
 
     name = models.CharField(max_length=64, unique=True, validators=[validate_name])
     display_name = models.CharField(null=True, blank=True)
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
     public_timestamp = models.DateTimeField(null=True, blank=True)
-    host = models.ForeignKey(Host, on_delete=models.CASCADE, null=True, blank=True)
+    host = models.ForeignKey(Host, on_delete=models.SET_NULL, null=True, blank=True)
     objects = TransientManager()
     tasks_initialized = models.CharField(max_length=20, default="False")
     redshift = models.FloatField(null=True, blank=True)
@@ -155,7 +158,7 @@ class Transient(SkyObject):
     photometric_class = models.CharField(max_length=20, null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
     processing_status = models.CharField(max_length=20, default="processing")
-    added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     progress = models.IntegerField(default=0)
     software_version = models.CharField(max_length=50, blank=True, null=True)
 

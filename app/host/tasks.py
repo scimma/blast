@@ -7,7 +7,6 @@ from host.base_tasks import task_time_limit
 from host.workflow import transient_workflow
 from host.models import Transient
 from host.system_tasks import IngestMissedTNSTransients
-from host.system_tasks import InitializeTransientTasks
 from host.system_tasks import TNSDataIngestion
 from host.system_tasks import RetriggerIncompleteWorkflows
 from host.system_tasks import UsageLogRoller
@@ -24,7 +23,6 @@ logger = get_logger(__name__)
 
 periodic_tasks = [
     TNSDataIngestion(),
-    InitializeTransientTasks(),
     IngestMissedTNSTransients(),
     RetriggerIncompleteWorkflows(),
     GarbageCollector(),
@@ -78,13 +76,11 @@ def retrigger_transient(request=None, transient_name=''):
 )
 def import_transient_list(transient_names):
     '''This function assumes that the input transient_names are not in the database.'''
-    def process_transient(transient_name):
-        transient_workflow.delay(transient_name)
     uploaded_transient_names = []
     for transient_name in transient_names:
         logger.info(f'Triggering workflow for new transient "{transient_name}"...')
         try:
-            process_transient(transient_name)
+            transient_workflow.delay(transient_name)
             uploaded_transient_names.append(transient_name)
         except Exception as err:
             logger.error(f'''Error processing new transient: {err}''')

@@ -296,36 +296,27 @@ class HostMatch(TransientTaskRunner):
         """
         Emit status message for failure consistent with the available Status objects
         """
-        return "no host match"
+        return "failed"
 
     def _run_process(self, transient):
         """
         Run the host matching algorithm.
         """
-        host = run_prost(transient)
-
-        if host is not None:
-            host.save()
-            transient.host = host
-            transient.save()
-
-            # having a weird error here
-            # possible issues communicating with the database
-            transient_check = Transient.objects.get(name=transient.name)
-            if transient_check.host is None:
-                # let's try twice just in case
-                transient.host = host
-                transient.save()
-
-                transient_check = Transient.objects.get(name=transient.name)
-                if transient_check.host is None:
-                    raise RuntimeError("problem saving transient to the database!")
-
-            status_message = "processed"
-        else:
-            status_message = "no host match"
-
-        return status_message
+        result = run_prost(transient)
+        error = result['error']
+        if error:
+            logger.error(f'Error with host matching: {error}')
+            raise Exception(error)
+        host = result['host']
+        if host is None:
+            return "no host match"
+        host.save()
+        transient.host = host
+        transient.save()
+        if result['new']:
+            logger.info(f'''Created new Host object: "{host.name}" (object ID "{host.object_id}" from '''
+                        f'''catalog "{host.catalog_name}", release "{host.catalog_release}")''')
+        return "processed"
 
 
 class MWEBV_Transient(TransientTaskRunner):
