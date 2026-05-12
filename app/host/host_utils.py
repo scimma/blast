@@ -1072,9 +1072,15 @@ def import_transient_info(transient_data_archive):
                     photometric_redshift_err=dataset['host']['fields']['photometric_redshift_err'],
                     milkyway_dust_reddening=dataset['host']['fields']['milkyway_dust_reddening'],
                     software_version=dataset['host']['fields']['software_version'],
-                    object_id=dataset['host']['fields']['object_id'],
-                    catalog_name=dataset['host']['fields']['catalog_name'],
-                    catalog_release=dataset['host']['fields']['catalog_release'],
+                    # object_id added in v1.12.0
+                    object_id=(dataset['host']['fields']['object_id']
+                               if 'object_id' in dataset['host']['fields'] else None),
+                    # catalog_name added in v1.12.0
+                    catalog_name=(dataset['host']['fields']['catalog_name']
+                                  if 'catalog_name' in dataset['host']['fields'] else None),
+                    # catalog_release added in v1.12.0
+                    catalog_release=(dataset['host']['fields']['catalog_release']
+                                     if 'catalog_release' in dataset['host']['fields'] else None),
                 )
         # Verify that the Cutout objects do not exist (by name).
         for cutout in dataset['cutouts']:
