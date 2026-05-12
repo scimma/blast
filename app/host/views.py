@@ -18,6 +18,7 @@ from host.forms import TransientUploadForm
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
+from host.models import Alias
 from host.models import Aperture
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -503,6 +504,8 @@ def results(request, transient_name):
     # Acquire the transient object or return 404 not found
     try:
         transient = Transient.objects.get(name__exact=transient_name)
+        transient_aliases = Alias.objects.filter(transient=transient)
+        host_aliases = Alias.objects.filter(host=transient.host)
     except Transient.DoesNotExist:
         return render(request, "transient_404.html", status=404)
 
@@ -604,6 +607,8 @@ def results(request, transient_name):
     context = {
         **{
             "transient": transient,
+            "transient_aliases": ', '.join([alias.alias for alias in transient_aliases]),
+            "host_aliases": ', '.join([alias.alias for alias in host_aliases]),
             "filter_select_form": filter_select_form,
             "filter_status": filter_status,
             "local_aperture": local_aperture[0] if local_aperture.exists() else None,

@@ -631,36 +631,32 @@ class TaskLock(models.Model):
         return f'''{self.name}: created {self.time_created}, expires {self.time_expires}'''
 
 
-class AliasTransient(models.Model):
+class Alias(models.Model):
     """
-    Model to link aliases to transients
+    Model to link aliases to transients and hosts
     """
-    alias = models.CharField(max_length=64, unique=True)
-    transient = models.ForeignKey(Transient, on_delete=models.CASCADE)
+    def validate_name(alias):
+        '''
+        Alias validation.
+        :param alias: Alias value
+        '''
+        max_length = Transient._meta.get_field('alias').max_length
+        if len(alias) > max_length:
+            raise ValidationError(f'''Invalid alias: "{alias}" is longer than the max length '''
+                                  f'''of {max_length} characters.''')
 
     def __str__(self):
-        return f'''{self.alias} is an alias for transient {self.transient}'''
+        return (f'''"{self.alias}" is an alias for {'transient' if self.transient else 'host'} '''
+                f'''"{self.transient.name if self.transient else self.host.name}"''')
 
-    class Meta:
-        permissions = [
-            ("add_alias_transient", "Add Alias for transient"),
-        ]
+    # class Meta:
+    #     permissions = [
+    #         ("add_alias", "Add Alias for transients & hosts"),
+    #     ]
 
-
-class AliasHost(models.Model):
-    """
-    Model to link aliases to transients
-    """
-    alias = models.CharField(max_length=100, unique=True)
-    host = models.ForeignKey(Host, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'''{self.alias} is an alias for Host {self.host}'''
-
-    class Meta:
-        permissions = [
-            ("add_alias_host", "Add Alias for host"),
-        ]
+    alias = models.CharField(max_length=64, unique=True, validators=[validate_name])
+    transient = models.ForeignKey(Transient, null=True, blank=True, on_delete=models.CASCADE)
+    host = models.ForeignKey(Host, null=True, blank=True, on_delete=models.CASCADE)
 
 
 class UsageMetricsLog(models.Model):

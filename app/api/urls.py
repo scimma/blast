@@ -21,9 +21,9 @@ urlpatterns = [
         base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.export_transient_view,
     ),
-    path(
-        f"""{base_path}alias/post/<str:option>/<str:object_name>/<str:object_alias>""",
-        views.put_alias_name,
+    re_path(
+        base_path + r"^alias/(?P<alias>.+)/((?P<object_type>.+)/(?P<name>.+)|)$",
+        views.alias_handler,
     ),
 ]
 
