@@ -1,13 +1,6 @@
 """
-This module contains functions designed to be invoked as arguments to the `blast_admin`
-custom Django management command.
-
-For example, to run the render_homepage() function, execute:
-
-   python manage.py blast_admin render_homepage
-
-The functions defined here are primarily shared as examples based on functions that were
-at some point useful to the Blast developers and operators.
+This module contains functions designed to be invoked as arguments to the `dev`
+custom Django management command. See the `dev.py` module docstring for usage instructions.
 """
 
 
@@ -39,10 +32,12 @@ def update_periodic_task():
             print(f'updated: {task}')
 
 
-def delete_transient_list():
+def delete_transient_list(transients_to_delete=[]):
+    """
+    python manage.py dev delete_transient_list --input_args \
+        '{"transients_to_delete": ["tran_1", "tran_2", ...]}'
+    """
     from host.host_utils import delete_transient
-
-    transients_to_delete = []
 
     print(f'''Deletion requested for {len(transients_to_delete)} transients.''')
 

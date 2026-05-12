@@ -1,11 +1,15 @@
 """
-This module defines a custom Django management command "blast_admin". Its purpose is to
-aid Blast admin and development operations that require the Django environment, such as
+This module defines a custom Django management command "dev". Its purpose is to
+aid admin and development operations that require the Django environment, such as
 accessing database objects using the Django ORM.
 
-The usage syntax is as follows:
+The usage syntax is as follows for positional arguments:
 
-   python manage.py blast_admin [func_name] --input_args '{"arg1": "val1", "arg2": "val2"}'
+   python manage.py dev [func_name] --input_args '["val1", "val2"]'
+
+or keyword arguments:
+
+   python manage.py dev [func_name] --input_args '{"arg1": "val1", "arg2": "val2"}'
 
 where "func_name()" is defined in either "util.py" (public code) or "local_util.py"
 (local scratch ignored by Git), and --input_args is a JSON-formatted string containing either
@@ -28,8 +32,7 @@ class Command(BaseCommand):
     help = "Run scratch function"
 
     def add_arguments(self, parser):
-        parser.add_argument('func_name', type=str,
-                            help="Fully-qualified function name to call, e.g. 'myapp.utils.process_item'")
+        parser.add_argument('func_name', type=str, help="Function name to call, e.g. 'process_item'")
         parser.add_argument('--input_args', type=str, default='[]',
                             help=(
                                 "JSON string representing the function arguments. "
