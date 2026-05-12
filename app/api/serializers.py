@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from host import models
 from rest_framework import serializers
 
@@ -27,7 +25,16 @@ class HostSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Host
         depth = 1
-        fields = ["name", "ra_deg", "dec_deg", "redshift", "milkyway_dust_reddening"]
+        fields = [
+            "name",
+            "ra_deg",
+            "dec_deg",
+            "redshift",
+            "milkyway_dust_reddening",
+            "object_id",
+            "catalog_name",
+            "catalog_release",
+        ]
 
 
 class ApertureSerializer(serializers.ModelSerializer):
@@ -36,11 +43,13 @@ class ApertureSerializer(serializers.ModelSerializer):
         depth = 1
         fields = "__all__"
 
+
 class AperturePhotometrySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.AperturePhotometry
         depth = 1
         fields = "__all__"
+
 
 class SEDFittingResultSerializer(serializers.ModelSerializer):
     class Meta:
