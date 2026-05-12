@@ -13,6 +13,23 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.12.0]
+
+### Added
+
+- Added a new Alias model to store user-defined aliases for Transient and Host objects. A corresponding
+  API endpoint for managing the Alias objects was also added.
+
+### Changed
+
+- Host objects must now have unique `name` values. Since v1.11.0, the host matching task generates a
+  deterministic coordinate-based name in cases where no name value is provided by the catalogs. 
+
+### Fixed
+
+- The transient archive import function was ignoring the catalog info Host fields added in v1.11.0, so
+  these were added.
+
 ## [1.11.0]
 
 ### Added
