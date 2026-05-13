@@ -82,7 +82,7 @@ api_url_patterns = [
     re_path(r"^api/", include(router.urls)),
     # TODO: As of v1.5.7, this api/schema endpoint is broken:
     #       "AssertionError: `inflection` must be installed for OpenAPI schema support."
-    re_path(r"^api/schema/$", schema_view),
+    # re_path(r"^api/schema/$", schema_view),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
 
