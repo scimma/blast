@@ -198,6 +198,8 @@ class HostViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = HostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = HostFilter
+    lookup_field = 'name'
+    lookup_value_regex = r"[^/]+[/]?"
 
 
 def transient_exists(transient_name: str) -> bool:

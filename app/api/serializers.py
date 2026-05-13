@@ -18,7 +18,14 @@ class TransientSerializer(serializers.ModelSerializer):
             "photometric_class",
             "processing_status",
             "added_by",
+            "host",
         ]
+
+    aliases = serializers.SerializerMethodField()
+
+    def get_aliases(self, obj):
+        aliases = models.Alias.objects.filter(transient=obj)
+        return [alias.alias for alias in aliases]
 
 
 class HostSerializer(serializers.HyperlinkedModelSerializer):
@@ -34,7 +41,14 @@ class HostSerializer(serializers.HyperlinkedModelSerializer):
             "object_id",
             "catalog_name",
             "catalog_release",
+            "aliases",
         ]
+
+    aliases = serializers.SerializerMethodField()
+
+    def get_aliases(self, obj):
+        aliases = models.Alias.objects.filter(host=obj)
+        return [alias.alias for alias in aliases]
 
 
 class ApertureSerializer(serializers.ModelSerializer):
