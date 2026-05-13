@@ -86,6 +86,19 @@ This returns a JSON document like:
      }
    ]
 
+.. _api_alias:
+
+Manage aliases for Transient and Host objects
+---------------------------------------------
+
+Authorized users can associate an arbitrary number of aliases to Transient and Host objects.
+The alias itself must be unique across both types of target objects.
+
+* :code:`GET /api/alias/<alias>/` - Fetch information about an existing :code:`alias`
+* :code:`DELETE /api/alias/<alias>/` - Delete existing :code:`alias`
+* :code:`POST /api/alias/<alias>/(transient|host)/<name>/` - Create a new :code:`alias` by specifying 
+    the :code:`name` of the target object and whether the target object is a "transient" or a "host".
+
 .. _api_data_schema:
 
 Blast API data schema
@@ -137,6 +150,9 @@ API link: :code:`/api/host/`
 * :code:`dec_deg` - host declination in decimal degrees e.g., 60.123424
 * :code:`redshift` - host redshift e.g., 0.01
 * :code:`milkyway_dust_reddening` - host E(B-V) e.g, 0.2
+* :code:`object_id` - Object ID provided by the host matcher from the external catalog
+* :code:`catalog_name` - Name of the external catalog containing the associated host information
+* :code:`catalog_release` - Specific release of the external catalog containing the associated host information
 
 Host filtering options
 ^^^^^^^^^^^^^^^^^^^^^^
