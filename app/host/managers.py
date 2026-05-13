@@ -49,8 +49,8 @@ class ApertureManager(models.Manager):
 
 
 class AliasManager(models.Manager):
-    def get_by_natural_key(self, name):
-        return self.get(name=name)
+    def get_by_natural_key(self, alias):
+        return self.get(alias=alias)
 
 
 class TaskLockManager(models.Manager):

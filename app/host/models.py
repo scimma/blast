@@ -24,6 +24,7 @@ from .managers import SurveyManager
 from .managers import TaskManager
 from .managers import TransientManager
 from .managers import TaskLockManager
+from .managers import AliasManager
 
 # from django_celery_beat.models import PeriodicTask
 
@@ -657,7 +658,7 @@ class Alias(models.Model):
     alias = models.CharField(max_length=64, unique=True, validators=[validate_name])
     transient = models.ForeignKey(Transient, null=True, blank=True, on_delete=models.CASCADE)
     host = models.ForeignKey(Host, null=True, blank=True, on_delete=models.CASCADE)
-
+    objects = AliasManager()
 
 class UsageMetricsLog(models.Model):
     """
