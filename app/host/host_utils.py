@@ -1011,6 +1011,12 @@ def import_transient_info(transient_data_archive):
                 assert filter_obj.sedpy_id == filter['fields']['sedpy_id']
                 assert filter_obj.hips_id == filter['fields']['hips_id']
                 assert filter_obj.vosa_id == filter['fields']['vosa_id']
+            except AssertionError as err:
+                record_import_error(transient_name, f'[{transient_name}] Filter named '
+                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+                return
+            # Allow some Filter fields to evolve
+            try:
                 assert filter_obj.image_download_method == filter['fields']['image_download_method']
                 assert filter_obj.pixel_size_arcsec == filter['fields']['pixel_size_arcsec']
                 assert filter_obj.image_fwhm_arcsec == filter['fields']['image_fwhm_arcsec']
@@ -1023,9 +1029,8 @@ def import_transient_info(transient_data_archive):
                 assert filter_obj.magnitude_zero_point_keyword == filter['fields']['magnitude_zero_point_keyword']
                 assert filter_obj.image_pixel_units == filter['fields']['image_pixel_units']
             except AssertionError as err:
-                record_import_error(transient_name, f'[{transient_name}] Filter named '
-                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
-                return
+                logger.warning(f'[{transient_name}] Filter named '
+                               f'"{filter_obj.name}" exists but is not identical to the import: {err}')
         # Verify that if the Host exists (by name), that it is identical.
         # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
         #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
