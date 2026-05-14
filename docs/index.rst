@@ -28,6 +28,7 @@ Usage
    usage/web_pages
    usage/web_api
    usage/sed_params
+   usage/data_files
    usage/batch
 
 

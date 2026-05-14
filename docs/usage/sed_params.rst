@@ -1,3 +1,5 @@
+.. _sed_params:
+
 Spectral Energy Distribution Parameters
 =======================================
 

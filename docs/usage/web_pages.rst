@@ -28,7 +28,7 @@ Downloading data
 
 All data associated with a transient can be downloaded using the :code:`Download Data` dropdown menu in the navigation bar. Each data product linked from the menu can also be accessed programmatically via the REST API; see the :ref:`api` for additional information on each column as well as how to execute queries on individual database tables via the API. See :ref:`api_all`
 
-If SED fitting data is available, the download menu will display links for 1) parameter estimation chains, 2) parameter confidence intervals, and 3) best-fit models and uncertainties. These files are in :code:`.npz` format and can be read with :code:`np.load`.  Parameters correspond to the Prospector-alpha model, with details given `here <https://arxiv.org/abs/1609.09073>`_.  To do these downloads programmatically, see :ref:`sedfittingresult`.
+If SED fitting data is available, the download menu will display links for 1) parameter estimation chains, 2) parameter confidence intervals, and 3) best-fit models and uncertainties. These files are in :code:`.npz` format and can be read with :code:`np.load`; for additional details see :ref:`data_files`.  Parameters correspond to the Prospector-alpha model, with details given `here <https://arxiv.org/abs/1609.09073>`_.  To do these downloads programmatically, see :ref:`sedfittingresult`.
 
 .. image:: ../_static/blast_transient_data_download.png
 
