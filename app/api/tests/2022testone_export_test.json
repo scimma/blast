@@ -1,0 +1,903 @@
+{
+  "metadata": {
+    "app_version": "v1.12.0",
+    "export_time": "2026-05-14T20:48:04.427295+00:00"
+  },
+  "transient": {
+    "model": "host.transient",
+    "pk": 5,
+    "fields": {
+      "ra_deg": 120.027325,
+      "dec_deg": 2.1707639,
+      "name": "2022testone",
+      "display_name": null,
+      "tns_id": 9999,
+      "tns_prefix": "AT",
+      "public_timestamp": "2022-02-04T07:29:02.112Z",
+      "host": 4,
+      "tasks_initialized": "False",
+      "redshift": null,
+      "spectroscopic_class": null,
+      "photometric_class": null,
+      "milkyway_dust_reddening": null,
+      "processing_status": "processing",
+      "progress": 0,
+      "software_version": null
+    }
+  },
+  "host": {
+    "model": "host.host",
+    "pk": 4,
+    "fields": {
+      "ra_deg": 121.60043802,
+      "dec_deg": 1.03606313,
+      "name": "PSO J080624.103+010209.859",
+      "redshift": null,
+      "redshift_err": null,
+      "photometric_redshift": null,
+      "photometric_redshift_err": null,
+      "milkyway_dust_reddening": null,
+      "object_id": null,
+      "catalog_name": null,
+      "catalog_release": null,
+      "software_version": null
+    }
+  },
+  "apertures": [
+    {
+      "model": "host.aperture",
+      "pk": 5,
+      "fields": {
+        "ra_deg": 121.6015,
+        "dec_deg": 1.03586,
+        "name": "2022testone_local",
+        "cutout": null,
+        "transient": 5,
+        "orientation_deg": 0.0,
+        "semi_major_axis_arcsec": 1.0,
+        "semi_minor_axis_arcsec": 1.0,
+        "type": "local",
+        "software_version": null
+      },
+      "sedfittingresults": [
+        {
+          "model": "host.sedfittingresult",
+          "pk": 5,
+          "fields": {
+            "transient": 5,
+            "aperture": 5,
+            "posterior": "",
+            "log_mass_16": 10.0,
+            "log_mass_50": 20.0,
+            "log_mass_84": 30.0,
+            "mass_surviving_ratio": null,
+            "log_sfr_16": 123.4546,
+            "log_sfr_50": 123.4566,
+            "log_sfr_84": 56.564565,
+            "log_ssfr_16": 15.676,
+            "log_ssfr_50": 12.34343,
+            "log_ssfr_84": 12.0,
+            "log_age_16": null,
+            "log_age_50": null,
+            "log_age_84": null,
+            "age_16": 1.0,
+            "age_50": 0.1,
+            "age_84": 5.0,
+            "log_tau_16": 1.0,
+            "log_tau_50": 5.0,
+            "log_tau_84": 60.0,
+            "logzsol_16": 0.0,
+            "logzsol_50": 0.0,
+            "logzsol_84": 0.0,
+            "dust2_16": 0.0,
+            "dust2_50": 0.0,
+            "dust2_84": 0.0,
+            "dust_index_16": 0.0,
+            "dust_index_50": 0.0,
+            "dust_index_84": 0.0,
+            "dust1_fraction_16": 0.0,
+            "dust1_fraction_50": 0.0,
+            "dust1_fraction_84": 0.0,
+            "log_fagn_16": 0.0,
+            "log_fagn_50": 0.0,
+            "log_fagn_84": 0.0,
+            "log_agn_tau_16": 0.0,
+            "log_agn_tau_50": 0.0,
+            "log_agn_tau_84": 0.0,
+            "gas_logz_16": 0.0,
+            "gas_logz_50": 0.0,
+            "gas_logz_84": 0.0,
+            "duste_qpah_16": 0.0,
+            "duste_qpah_50": 0.0,
+            "duste_qpah_84": 0.0,
+            "duste_umin_16": 0.0,
+            "duste_umin_50": 0.0,
+            "duste_umin_84": 0.0,
+            "log_duste_gamma_16": 0.0,
+            "log_duste_gamma_50": 0.0,
+            "log_duste_gamma_84": 0.0,
+            "chains_file": "",
+            "percentiles_file": "",
+            "model_file": "",
+            "software_version": null,
+            "logsfh": []
+          }
+        }
+      ],
+      "aperturephotometry": [
+        {
+          "model": "host.aperturephotometry",
+          "pk": 38,
+          "fields": {
+            "aperture": 5,
+            "filter": 2,
+            "transient": 5,
+            "flux": 1091.48,
+            "flux_error": 130.38,
+            "magnitude": 0.0,
+            "magnitude_error": 0.0,
+            "is_validated": null,
+            "software_version": null
+          }
+        },
+        {
+          "model": "host.aperturephotometry",
+          "pk": 39,
+          "fields": {
+            "aperture": 5,
+            "filter": 1,
+            "transient": 5,
+            "flux": 2183.8,
+            "flux_error": 224.97,
+            "magnitude": 0.0,
+            "magnitude_error": 0.0,
+            "is_validated": null,
+            "software_version": null
+          }
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "model": "host.aperture",
+      "pk": 6,
+      "fields": {
+        "ra_deg": 11.6015,
+        "dec_deg": 10.03586,
+        "name": "2022testone_2MASS_H_global",
+        "cutout": 21,
+        "transient": 5,
+        "orientation_deg": 0.0,
+        "semi_major_axis_arcsec": 0.4,
+        "semi_minor_axis_arcsec": 0.5,
+        "type": "global",
+        "software_version": null
+      },
+      "sedfittingresults": [
+        {
+          "model": "host.sedfittingresult",
+          "pk": 6,
+          "fields": {
+            "transient": 5,
+            "aperture": 6,
+            "posterior": "",
+            "log_mass_16": 1.0,
+            "log_mass_50": 2.0,
+            "log_mass_84": 3.0,
+            "mass_surviving_ratio": null,
+            "log_sfr_16": 123.4546,
+            "log_sfr_50": 123.4566,
+            "log_sfr_84": 56.564565,
+            "log_ssfr_16": 15.676,
+            "log_ssfr_50": 12.34343,
+            "log_ssfr_84": 12.0,
+            "log_age_16": null,
+            "log_age_50": null,
+            "log_age_84": null,
+            "age_16": 1.0,
+            "age_50": 0.1,
+            "age_84": 5.0,
+            "log_tau_16": 1.0,
+            "log_tau_50": 5.0,
+            "log_tau_84": 60.0,
+            "logzsol_16": 0.0,
+            "logzsol_50": 0.0,
+            "logzsol_84": 0.0,
+            "dust2_16": 0.0,
+            "dust2_50": 0.0,
+            "dust2_84": 0.0,
+            "dust_index_16": 0.0,
+            "dust_index_50": 0.0,
+            "dust_index_84": 0.0,
+            "dust1_fraction_16": 0.0,
+            "dust1_fraction_50": 0.0,
+            "dust1_fraction_84": 0.0,
+            "log_fagn_16": 0.0,
+            "log_fagn_50": 0.0,
+            "log_fagn_84": 0.0,
+            "log_agn_tau_16": 0.0,
+            "log_agn_tau_50": 0.0,
+            "log_agn_tau_84": 0.0,
+            "gas_logz_16": 0.0,
+            "gas_logz_50": 0.0,
+            "gas_logz_84": 0.0,
+            "duste_qpah_16": 0.0,
+            "duste_qpah_50": 0.0,
+            "duste_qpah_84": 0.0,
+            "duste_umin_16": 0.0,
+            "duste_umin_50": 0.0,
+            "duste_umin_84": 0.0,
+            "log_duste_gamma_16": 0.0,
+            "log_duste_gamma_50": 0.0,
+            "log_duste_gamma_84": 0.0,
+            "chains_file": "",
+            "percentiles_file": "",
+            "model_file": "",
+            "software_version": null,
+            "logsfh": []
+          }
+        }
+      ],
+      "aperturephotometry": [
+        {
+          "model": "host.aperturephotometry",
+          "pk": 40,
+          "fields": {
+            "aperture": 6,
+            "filter": 2,
+            "transient": 5,
+            "flux": 99.0,
+            "flux_error": 99.0,
+            "magnitude": 0.0,
+            "magnitude_error": 0.0,
+            "is_validated": null,
+            "software_version": null
+          }
+        },
+        {
+          "model": "host.aperturephotometry",
+          "pk": 41,
+          "fields": {
+            "aperture": 6,
+            "filter": 1,
+            "transient": 5,
+            "flux": 1.0,
+            "flux_error": 1.0,
+            "magnitude": 10.0,
+            "magnitude_error": 0.2,
+            "is_validated": null,
+            "software_version": null
+          }
+        }
+      ],
+      "starformationhistoryresult": []
+    }
+  ],
+  "cutouts": [
+    {
+      "model": "host.cutout",
+      "pk": 21,
+      "fields": {
+        "name": "2022testone_2MASS_J",
+        "filter": 2,
+        "transient": 5,
+        "fits": "/data/cutout_cdn/2010H/2MASS/2MASS_J.fits",
+        "message": null,
+        "software_version": null,
+        "cropped": false
+      }
+    },
+    {
+      "model": "host.cutout",
+      "pk": 22,
+      "fields": {
+        "name": "2022testone_2MASS_H",
+        "filter": 1,
+        "transient": 5,
+        "fits": "/data/cutout_cdn/2010H/2MASS/2MASS_H.fits",
+        "message": null,
+        "software_version": null,
+        "cropped": false
+      }
+    }
+  ],
+  "filters": [
+    {
+      "model": "host.filter",
+      "pk": 3,
+      "fields": {
+        "name": "2MASS_K",
+        "survey": 1,
+        "kcorrect_name": "twomass_Ks",
+        "sedpy_id": "twomass_k",
+        "hips_id": "CDS/P/2MASS/K",
+        "vosa_id": "2MASS/2MASS.Ks",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.0,
+        "image_fwhm_arcsec": 2.9,
+        "wavelength_eff_angstrom": 21590.0,
+        "wavelength_min_angstrom": 19543.69,
+        "wavelength_max_angstrom": 23552.4,
+        "vega_zero_point_jansky": 666.8,
+        "magnitude_zero_point": null,
+        "ab_offset": 1.8378,
+        "magnitude_zero_point_keyword": "MAGZP",
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 4,
+      "fields": {
+        "name": "WISE_W1",
+        "survey": 2,
+        "kcorrect_name": "wise_w1",
+        "sedpy_id": "wise_w1",
+        "hips_id": "CDS/P/allWISE/W1",
+        "vosa_id": "WISE/WISE.W1",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.375,
+        "image_fwhm_arcsec": 5.84,
+        "wavelength_eff_angstrom": 33526.0,
+        "wavelength_min_angstrom": 27540.97,
+        "wavelength_max_angstrom": 38723.88,
+        "vega_zero_point_jansky": 309.54,
+        "magnitude_zero_point": 20.5,
+        "ab_offset": 2.699,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 5,
+      "fields": {
+        "name": "WISE_W2",
+        "survey": 2,
+        "kcorrect_name": "wise_w2",
+        "sedpy_id": "wise_w2",
+        "hips_id": "CDS/P/allWISE/W2",
+        "vosa_id": "WISE/WISE.W2",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.375,
+        "image_fwhm_arcsec": 6.48,
+        "wavelength_eff_angstrom": 46028.0,
+        "wavelength_min_angstrom": 39633.26,
+        "wavelength_max_angstrom": 53413.6,
+        "vega_zero_point_jansky": 171.79,
+        "magnitude_zero_point": 19.5,
+        "ab_offset": 3.339,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 6,
+      "fields": {
+        "name": "WISE_W3",
+        "survey": 2,
+        "kcorrect_name": "wise_w3",
+        "sedpy_id": "wise_w3",
+        "hips_id": "CDS/P/allWISE/W3",
+        "vosa_id": "WISE/WISE.W3",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.375,
+        "image_fwhm_arcsec": 6.72,
+        "wavelength_eff_angstrom": 115608.0,
+        "wavelength_min_angstrom": 74430.44,
+        "wavelength_max_angstrom": 172613.43,
+        "vega_zero_point_jansky": 31.67,
+        "magnitude_zero_point": 18.0,
+        "ab_offset": 5.174,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 7,
+      "fields": {
+        "name": "WISE_W4",
+        "survey": 2,
+        "kcorrect_name": "wise_w4",
+        "sedpy_id": "wise_w4",
+        "hips_id": "CDS/P/allWISE/W4",
+        "vosa_id": "WISE/WISE.W4",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.375,
+        "image_fwhm_arcsec": 11.82,
+        "wavelength_eff_angstrom": 220883.0,
+        "wavelength_min_angstrom": 195200.83,
+        "wavelength_max_angstrom": 279107.24,
+        "vega_zero_point_jansky": 8.36,
+        "magnitude_zero_point": 13.0,
+        "ab_offset": 6.62,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 8,
+      "fields": {
+        "name": "GALEX_NUV",
+        "survey": 3,
+        "kcorrect_name": "galex_NUV",
+        "sedpy_id": "galex_nuv",
+        "hips_id": "CDS/P/GALEXGR6/AIS/NUV",
+        "vosa_id": "GALEX/GALEX.NUV",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.5,
+        "image_fwhm_arcsec": 5.3,
+        "wavelength_eff_angstrom": 2304.74,
+        "wavelength_min_angstrom": 1692.52,
+        "wavelength_max_angstrom": 3006.67,
+        "vega_zero_point_jansky": 788.55,
+        "magnitude_zero_point": 20.08,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 9,
+      "fields": {
+        "name": "GALEX_FUV",
+        "survey": 3,
+        "kcorrect_name": "galex_FUV",
+        "sedpy_id": "galex_fuv",
+        "hips_id": "CDS/P/GALEXGR6/AIS/FUV",
+        "vosa_id": "GALEX/GALEX.FUV",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 1.5,
+        "image_fwhm_arcsec": 4.2,
+        "wavelength_eff_angstrom": 1549.02,
+        "wavelength_min_angstrom": 1340.32,
+        "wavelength_max_angstrom": 1806.43,
+        "vega_zero_point_jansky": 520.73,
+        "magnitude_zero_point": 18.82,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 10,
+      "fields": {
+        "name": "PanSTARRS_g",
+        "survey": 4,
+        "kcorrect_name": "none",
+        "sedpy_id": "panstarrs_g",
+        "hips_id": "CDS/P/PanSTARRS/DR1/g",
+        "vosa_id": "PAN-STARRS/PS1.g",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.25,
+        "image_fwhm_arcsec": 1.31,
+        "wavelength_eff_angstrom": 4810.88,
+        "wavelength_min_angstrom": 3943.4,
+        "wavelength_max_angstrom": 5593.27,
+        "vega_zero_point_jansky": 3893.0,
+        "magnitude_zero_point": 25.0,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 11,
+      "fields": {
+        "name": "PanSTARRS_r",
+        "survey": 4,
+        "kcorrect_name": "none",
+        "sedpy_id": "panstarrs_r",
+        "hips_id": "CDS/P/PanSTARRS/DR1/r",
+        "vosa_id": "PAN-STARRS/PS1.r",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.25,
+        "image_fwhm_arcsec": 1.19,
+        "wavelength_eff_angstrom": 6156.36,
+        "wavelength_min_angstrom": 5386.23,
+        "wavelength_max_angstrom": 7035.65,
+        "vega_zero_point_jansky": 3135.5,
+        "magnitude_zero_point": 25.0,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 12,
+      "fields": {
+        "name": "PanSTARRS_i",
+        "survey": 4,
+        "kcorrect_name": "none",
+        "sedpy_id": "panstarrs_i",
+        "hips_id": "CDS/P/PanSTARRS/DR1/i",
+        "vosa_id": "PAN-STARRS/PS1.i",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.25,
+        "image_fwhm_arcsec": 1.11,
+        "wavelength_eff_angstrom": 7503.68,
+        "wavelength_min_angstrom": 6778.45,
+        "wavelength_max_angstrom": 8304.37,
+        "vega_zero_point_jansky": 2577.03,
+        "magnitude_zero_point": 25.0,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 13,
+      "fields": {
+        "name": "PanSTARRS_z",
+        "survey": 4,
+        "kcorrect_name": "none",
+        "sedpy_id": "panstarrs_z",
+        "hips_id": "CDS/P/PanSTARRS/DR1/z",
+        "vosa_id": "PAN-STARRS/PS1.z",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.25,
+        "image_fwhm_arcsec": 1.07,
+        "wavelength_eff_angstrom": 8668.56,
+        "wavelength_min_angstrom": 8028.0,
+        "wavelength_max_angstrom": 9346.0,
+        "vega_zero_point_jansky": 2273.05,
+        "magnitude_zero_point": 25.0,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 14,
+      "fields": {
+        "name": "PanSTARRS_y",
+        "survey": 4,
+        "kcorrect_name": "none",
+        "sedpy_id": "panstarrs_y",
+        "hips_id": "CDS/P/PanSTARRS/DR1/y",
+        "vosa_id": "PAN-STARRS/PS1.y",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.25,
+        "image_fwhm_arcsec": 1.02,
+        "wavelength_eff_angstrom": 9613.45,
+        "wavelength_min_angstrom": 9100.5,
+        "wavelength_max_angstrom": 10838.5,
+        "vega_zero_point_jansky": 2203.66,
+        "magnitude_zero_point": 25.0,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 15,
+      "fields": {
+        "name": "SDSS_i",
+        "survey": 5,
+        "kcorrect_name": "sdss_i0",
+        "sedpy_id": "sdss_i",
+        "hips_id": "CDS/P/SDSS9/i",
+        "vosa_id": "SLOAN/SDSS.i",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.4,
+        "image_fwhm_arcsec": 1.26,
+        "wavelength_eff_angstrom": 7470.6,
+        "wavelength_min_angstrom": 6430.0,
+        "wavelength_max_angstrom": 8630.0,
+        "vega_zero_point_jansky": 3971.19,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 16,
+      "fields": {
+        "name": "SDSS_r",
+        "survey": 5,
+        "kcorrect_name": "sdss_r0",
+        "sedpy_id": "sdss_r",
+        "hips_id": "CDS/P/SDSS9/r",
+        "vosa_id": "SLOAN/SDSS.r",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.4,
+        "image_fwhm_arcsec": 1.32,
+        "wavelength_eff_angstrom": 6141.12,
+        "wavelength_min_angstrom": 5415.34,
+        "wavelength_max_angstrom": 6989.14,
+        "vega_zero_point_jansky": 3142.02,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 17,
+      "fields": {
+        "name": "SDSS_u",
+        "survey": 5,
+        "kcorrect_name": "sdss_u0",
+        "sedpy_id": "sdss_u",
+        "hips_id": "CDS/P/SDSS9/u",
+        "vosa_id": "SLOAN/SDSS.u",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.4,
+        "image_fwhm_arcsec": 1.53,
+        "wavelength_eff_angstrom": 3608.04,
+        "wavelength_min_angstrom": 3048.28,
+        "wavelength_max_angstrom": 4028.23,
+        "vega_zero_point_jansky": 1628.72,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 18,
+      "fields": {
+        "name": "SDSS_z",
+        "survey": 5,
+        "kcorrect_name": "sdss_z0",
+        "sedpy_id": "sdss_z",
+        "hips_id": "CDS/P/SDSS9/z",
+        "vosa_id": "SLOAN/SDSS.z",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.4,
+        "image_fwhm_arcsec": 1.29,
+        "wavelength_eff_angstrom": 8922.78,
+        "wavelength_min_angstrom": 7960.44,
+        "wavelength_max_angstrom": 10833.25,
+        "vega_zero_point_jansky": 2227.03,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 19,
+      "fields": {
+        "name": "SDSS_g",
+        "survey": 5,
+        "kcorrect_name": "sdss_g0",
+        "sedpy_id": "sdss_g",
+        "hips_id": "CDS/P/SDSS9/g",
+        "vosa_id": "SLOAN/SDSS.g",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.4,
+        "image_fwhm_arcsec": 1.44,
+        "wavelength_eff_angstrom": 4671.78,
+        "wavelength_min_angstrom": 3797.64,
+        "wavelength_max_angstrom": 5553.04,
+        "vega_zero_point_jansky": 4023.57,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 20,
+      "fields": {
+        "name": "DES_g",
+        "survey": 6,
+        "kcorrect_name": "decam_g",
+        "sedpy_id": "des_g",
+        "hips_id": "CDS/P/DES-DR1/g",
+        "vosa_id": "CTIO/DECam.g",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.2637,
+        "image_fwhm_arcsec": 1.16,
+        "wavelength_eff_angstrom": 4770.83,
+        "wavelength_min_angstrom": 3925.42,
+        "wavelength_max_angstrom": 5529.96,
+        "vega_zero_point_jansky": 3905.01,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 21,
+      "fields": {
+        "name": "DES_r",
+        "survey": 6,
+        "kcorrect_name": "decam_r",
+        "sedpy_id": "des_r",
+        "hips_id": "CDS/P/DES-DR1/r",
+        "vosa_id": "CTIO/DECam.r",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.2637,
+        "image_fwhm_arcsec": 1.07,
+        "wavelength_eff_angstrom": 6371.33,
+        "wavelength_min_angstrom": 5519.97,
+        "wavelength_max_angstrom": 7233.72,
+        "vega_zero_point_jansky": 3027.32,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 22,
+      "fields": {
+        "name": "DES_i",
+        "survey": 6,
+        "kcorrect_name": "decam_i",
+        "sedpy_id": "des_i",
+        "hips_id": "CDS/P/DES-DR1/i",
+        "vosa_id": "CTIO/DECam.i",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.2637,
+        "image_fwhm_arcsec": 0.97,
+        "wavelength_eff_angstrom": 7774.19,
+        "wavelength_min_angstrom": 6948.18,
+        "wavelength_max_angstrom": 8645.68,
+        "vega_zero_point_jansky": 2467.82,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 23,
+      "fields": {
+        "name": "DES_z",
+        "survey": 6,
+        "kcorrect_name": "decam_z",
+        "sedpy_id": "des_z",
+        "hips_id": "CDS/P/DES-DR1/z",
+        "vosa_id": "CTIO/DECam.z",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.2637,
+        "image_fwhm_arcsec": 0.93,
+        "wavelength_eff_angstrom": 9157.9,
+        "wavelength_min_angstrom": 8341.2,
+        "wavelength_max_angstrom": 10074.26,
+        "vega_zero_point_jansky": 2247.33,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 24,
+      "fields": {
+        "name": "DES_Y",
+        "survey": 6,
+        "kcorrect_name": "decam_Y",
+        "sedpy_id": "des_y",
+        "hips_id": "CDS/P/DES-DR1/Y",
+        "vosa_id": "CTIO/DECam.y",
+        "image_download_method": "custom",
+        "pixel_size_arcsec": 0.2637,
+        "image_fwhm_arcsec": 0.91,
+        "wavelength_eff_angstrom": 9886.35,
+        "wavelength_min_angstrom": 9364.77,
+        "wavelength_max_angstrom": 10685.78,
+        "vega_zero_point_jansky": 2146.18,
+        "magnitude_zero_point": 22.5,
+        "ab_offset": 0.0,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 1,
+      "fields": {
+        "name": "2MASS_H",
+        "survey": 1,
+        "kcorrect_name": "twomass_H",
+        "sedpy_id": "twomass_H",
+        "hips_id": "CDS/P/2MASS/H",
+        "vosa_id": "2MASS/2MASS.H",
+        "image_download_method": "hips",
+        "pixel_size_arcsec": 1.0,
+        "image_fwhm_arcsec": null,
+        "wavelength_eff_angstrom": 16620.0,
+        "wavelength_min_angstrom": 14787.38,
+        "wavelength_max_angstrom": 18231.02,
+        "vega_zero_point_jansky": 1024.0,
+        "magnitude_zero_point": 20.4871,
+        "ab_offset": null,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    },
+    {
+      "model": "host.filter",
+      "pk": 2,
+      "fields": {
+        "name": "2MASS_J",
+        "survey": 1,
+        "kcorrect_name": "twomass_J",
+        "sedpy_id": "twomass_j",
+        "hips_id": "CDS/P/2MASS/J",
+        "vosa_id": "2MASS/2MASS.J",
+        "image_download_method": "hips",
+        "pixel_size_arcsec": 1.0,
+        "image_fwhm_arcsec": null,
+        "wavelength_eff_angstrom": 12350.0,
+        "wavelength_min_angstrom": 10806.47,
+        "wavelength_max_angstrom": 14067.97,
+        "vega_zero_point_jansky": 1594.0,
+        "magnitude_zero_point": 20.9044,
+        "ab_offset": null,
+        "magnitude_zero_point_keyword": null,
+        "image_pixel_units": "counts/sec"
+      }
+    }
+  ],
+  "surveys": [
+    {
+      "model": "host.survey",
+      "pk": 2,
+      "fields": {
+        "name": "WISE"
+      }
+    },
+    {
+      "model": "host.survey",
+      "pk": 3,
+      "fields": {
+        "name": "GALEX"
+      }
+    },
+    {
+      "model": "host.survey",
+      "pk": 4,
+      "fields": {
+        "name": "PanSTARRS"
+      }
+    },
+    {
+      "model": "host.survey",
+      "pk": 5,
+      "fields": {
+        "name": "SDSS"
+      }
+    },
+    {
+      "model": "host.survey",
+      "pk": 6,
+      "fields": {
+        "name": "DES"
+      }
+    },
+    {
+      "model": "host.survey",
+      "pk": 1,
+      "fields": {
+        "name": "2MASS"
+      }
+    }
+  ],
+  "workflow_tasks": []
+}

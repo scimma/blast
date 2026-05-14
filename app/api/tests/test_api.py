@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 from django.contrib.auth.models import User, Permission
 from django.test import Client
 from django.test import TestCase
@@ -6,6 +8,7 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.contrib.contenttypes.models import ContentType
 from host.models import Alias
+
 
 class APITest(TestCase):
     fixtures = ["../fixtures/test/test_transient_data.yaml"]
@@ -169,3 +172,16 @@ class APITest(TestCase):
         response = self.client.delete(f'/api/alias/{alias}/')
         self.assertTrue(response.status_code == status.HTTP_404_NOT_FOUND)
         # print(f'[{response.status_code}] {response.content}')
+
+    def test_transient_export_no_files(self):
+        client = APIClient()
+        # Load expected data
+        with open(os.path.join(Path(__file__).resolve().parent, '2022testone_export_test.json')) as fp:
+            expected_data = json.load(fp)
+        expected_data.pop('metadata')
+        # Fetch data from API
+        request = client.get("/api/transient/export/2022testone/")
+        data = json.loads(request.content)
+        # Remove the metadata content that contains the generation timestamp
+        data.pop('metadata')
+        self.assertTrue(data == expected_data)
