@@ -5,6 +5,61 @@
 
 <!-- card body  -->
 {% block body %}
+
+<script>
+  /*
+  *  getCookie function copied from https://docs.djangoproject.com/en/5.2/howto/csrf/
+  */
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              // Does this cookie string begin with the name we want?
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+  /*
+  *  Add an alias via the Blast API
+  */
+  addAlias = async (objectName, objectType) => {
+    let newAlias = prompt(`Enter new alias for the ${objectType}:`)
+    if (newAlias.length < 5) {
+      alert(`Alias is too short. Must be at least 5 characters.`)
+      return;
+    }
+    let url = `/api/alias/${newAlias}/${objectType}/${objectName}/`;
+    const csrfToken = getCookie('csrftoken');
+    let headers = new Headers({
+      "X-CSRFToken": csrfToken,
+      // Note: User-Agent header is not mutable on all browsers and so
+      //       is not guaranteed to include this custom suffix.
+      "User-Agent": `${navigator.userAgent} web app`
+    });
+    await fetch(url, { method: "POST", headers: headers })
+    // success handling
+      .then((result) => {
+        console.log(JSON.stringify(result));
+        console.log(result.status);
+        console.log(result.statusText);
+        if (result.status != 201) {
+          alert(`Error adding alias: ${result.statusText}`)
+        }
+        location.reload();
+      })
+      // error handling
+      .catch((errorMsg) => {
+        console.log(errorMsg);
+        alert(`Error adding alias: ${errorMsg}`)
+      });
+    }
+</script>
 <style>
   .transient-info-table-td {
     width: 12rem;
@@ -20,9 +75,21 @@
 <table class="table table-responsive table-hover table-sm transient-info-table">
   <tbody>
     <tr><td class="align-middle transient-info-table-td">Name:</td><td class="align-middle" style="text-align: left;"><code><span style="font-size: 1.5rem;"><a class="link" title="View TNS information" href="https://www.wis-tns.org/object/{{transient.name}}/">{{transient.tns_prefix}}{{transient.name}}</a></code></td></tr>
-    {% if transient_aliases %}
-    <tr><td class="align-middle transient-info-table-td">Aliases:</td><td class="align-middle" style="text-align: left;"><code>{{transient_aliases}}</code></td></tr>
-    {% endif %}
+      {% if is_auth and has_perm_add_alias %}
+      <tr>
+        <td class="align-middle transient-info-table-td">Aliases:</td>
+        <td class="align-middle" style="text-align: left;"><code>{% if transient_aliases %}{{transient_aliases}}{% else %}None{% endif %}</code></td>
+        <td class="align-middle" style="text-align: center;">
+          <a href="#" type="button" title="Add transient alias"><span class="" onclick="addAlias(`{{transient.name}}`, `transient`)"
+            ><i class="bi bi-plus-circle" style="font-size: larger;"></i></span></a>
+          </td>
+        </tr>
+        {% elif transient_aliases %}
+        <tr>
+          <td class="align-middle transient-info-table-td">Aliases:</td>
+          <td class="align-middle" style="text-align: left;"><code>{{transient_aliases}}</code></td>
+      </tr>
+      {% endif %}
     <tr><td class="align-middle transient-info-table-td">Right ascension:</td><td class="align-middle" style="text-align: left;"><code> {{transient.ra}}</code></td></tr>
     <tr><td class="align-middle transient-info-table-td">Declination:</td><td class="align-middle" style="text-align: left;"><code>{{transient.dec}}</code></td></tr>
     <tr><td class="align-middle transient-info-table-td">Discovery Date:</td><td class="align-middle" style="text-align: left;"><code>{{transient.public_timestamp}}</code></td></tr>
@@ -38,8 +105,20 @@
     {% if transient.host.name %}
     <tr><td class="align-middle transient-info-table-td">Name:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.name}}</code></td></tr>
     {% endif %}
-    {% if host_aliases %}
-    <tr><td class="align-middle transient-info-table-td">Aliases:</td><td class="align-middle" style="text-align: left;"><code>{{host_aliases}}</code></td></tr>
+    {% if is_auth and has_perm_add_alias %}
+    <tr>
+      <td class="align-middle transient-info-table-td">Aliases:</td>
+      <td class="align-middle" style="text-align: left;"><code>{% if host_aliases %}{{host_aliases}}{% else %}None{% endif %}</code></td>
+      <td class="align-middle" style="text-align: center;">
+        <a href="#" type="button" title="Add transient alias"><span class="" onclick="addAlias(`{{transient.host.name}}`, `host`)"
+          ><i class="bi bi-plus-circle" style="font-size: larger;"></i></span></a>
+        </td>
+      </tr>
+      {% elif host_aliases %}
+      <tr>
+        <td class="align-middle transient-info-table-td">Aliases:</td>
+        <td class="align-middle" style="text-align: left;"><code>{{host_aliases}}</code></td>
+    </tr>
     {% endif %}
     {% if transient.host.object_id %}
     <tr><td class="align-middle transient-info-table-td">Object ID:</td><td class="align-middle" style="text-align: left;"><code>{{transient.host.object_id}}</code></td></tr>
@@ -56,3 +135,4 @@
 </table>
 {% endif %}
   {% endblock %}
+

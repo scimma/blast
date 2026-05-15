@@ -38,5 +38,6 @@ def user_profile(request):
         'username_b64decoded': username_b64decoded,
         'has_perm_retrigger_transient': check_perms(user, "host.retrigger_transient"),
         'has_perm_reprocess_transient': check_perms(user, "host.reprocess_transient"),
+        'has_perm_add_alias': check_perms(user, "host.add_alias"),
     }
     return context
