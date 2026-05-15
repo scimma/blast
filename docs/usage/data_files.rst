@@ -3,7 +3,7 @@
 Blast Data Files
 ================
 
-In addition to the data queryable via the :doc:`Blast API <web_api>`, Blast provides several downloadable data files that can be used to reproduce the SED-fitting results that Blast displays.  These are the :ref:`percentiles file<percentiles_file>`, the :ref:`parameter chains file<parameter_file>`, and the :ref:`model file<model_file>`.  Each file is described below.  Additionally, Blast includes an option to export all files (via the :code:`Download Data` menu), which, in addition to the previous files, includes FITS cutout images, Prospector HDF5-formatted output files, and a JSON file with schema data associated with each transient.
+In addition to the data queryable via the :doc:`Blast API <web_api>`, Blast provides several downloadable data files that can be used to reproduce the SED-fitting results that Blast displays.  These are the :ref:`percentiles file<percentiles_file>`, the :ref:`parameter chains file<parameter_file>`, and the :ref:`model file<model_file>`.  Each file is described below.  Additionally, Blast includes an option to export all files (via the :code:`Download Data` menu), which, in addition to the previous files, includes FITS cutout images, Prospector HDF5-formatted output files, and a JSON file with schema data associated with each transient.  We hope to update/simplify a number of the use cases described below in the coming months.
 
 .. _parameter_file:
 
@@ -21,10 +21,10 @@ Basic Example
     print(np.percentile(chains['stellar_mass'],[16,50,84]))
 
 
-Description:
-^^^^^^^^^^^^
+Description
+^^^^^^^^^^^
 
-The :code:`*chain.npz` files contain posterior samples for each Prospector-:math:`\alpha` parameter, as well as the derived star-formation history (:code:`sfh`), the mass-weighted age (`mwa`), the star-formation rate (:code:`sfr`), and the specific star-formation rate (:code:`ssfr`).  :code:`sfr` and :code:`ssfr` have three columns, which correspond to the SFR/sSFR averaged over 0 Myr, 30~Myr, and 100~Myr, respectively; the 100~Myr average is the default value reported via the Blast webpages.  The :code:`age_intep` variable gives the time axis corresponding to the star-formation history.  The stellar mass is the *surviving* stellar mass, in contrast to the total formed mass often reported by Prospector; the ratio of surviving to total stellar mass is reported as :code:`mass_surviving_ratio` via the :ref:`SED fitting results<sedfittingresult>`.
+The :code:`*chain.npz` files contain posterior samples for each Prospector-:math:`\alpha` parameter, as well as the derived star-formation history (:code:`sfh`), the mass-weighted age (:code:`mwa`), the star-formation rate (:code:`sfr`), and the specific star-formation rate (:code:`ssfr`).  :code:`sfr` and :code:`ssfr` have three columns, which correspond to the SFR/sSFR averaged over 0 Myr, 30~Myr, and 100~Myr timescales, respectively; the 100~Myr average is the default value reported via the Blast webpages.  The :code:`age_intep` variable gives the time axis corresponding to the :code:`sfh`.  The stellar mass is the *surviving* stellar mass, in contrast to the total formed mass often reported by Prospector; the ratio of surviving to total stellar mass is reported as :code:`mass_surviving_ratio` via the :ref:`SED fitting results<sedfittingresult>`.
 
 Broadly the units should follow the descriptions in the :ref:`SED parameters<sed_params>`, and note that :code:`age_interp` is in units of Gyr.
 
@@ -46,7 +46,7 @@ Basic Example
 Description
 ^^^^^^^^^^^
 
-Broadly the same as the parameter chains file above, but each parameter has an array of three elements (or sometimes three columns) corresponding to the 16th, 50th, and 84th percentiles from the posterior samples.  Additionally, these files include confidence intervals for the model spectra and model photometry, in :code:`modspec` and :code:`modphot`, respectively.  The :code:`theta_lbs` key contains the full set of prospector model parameters for reference.
+This file is broadly the same as the parameter chains file above, but each parameter has an array of three elements (or sometimes three columns) corresponding to the 16th, 50th, and 84th percentiles from the posterior samples.  Additionally, these files include confidence intervals for the model spectra and model photometry, in :code:`modspec` and :code:`modphot`, respectively.  The :code:`theta_lbs` key contains the full set of prospector model parameters for reference.
 
 Note: for transients at z < 0.015, an offset is applied in the model spectra and photometry due to practical considerations.  See :ref:`low_z` below for help interpreting these data.
 
@@ -112,7 +112,7 @@ The SED model file contains the best-fit model spectrum, photometry, and their r
 
 
 Unfortunately, for plotting the model photometry, you will also need:
-1) the prospector results file, in HDF5 format, which is downloadable using the ":ref:`export with all files<api_all>`" link in a transient results page, and
+1) the prospector results file, in HDF5 format, which is downloadable using the ":ref:`export with all files<api_all>`" link in a given transient results page, and
 2) the filter transmission curves from Blast, available `here <https://github.com/scimma/blast/tree/main/data/transmission>`_.
 
 
@@ -171,6 +171,8 @@ as follows, with fluxes in units of microJansky::
 Finally, to plot the observed photometry alongside the SED model above, we just need to convert the SED model to microJansky::
 
 
+    redshift = d['host']['fields']['redshift']
+    # alternately, d['transient']['fields']['redshift'] if host redshift is not available
     plt.errorbar(lam_obs/(1+redshift),flux_list,yerr=flux_error_list,fmt='o',color='r')
     plt.plot(data['rest_wavelength'],maggies_to_uJy(data['spec']),color='k')
     plt.show()
@@ -182,12 +184,12 @@ Low-Redshift Transients
 -----------------------
 
 In the local volume, small changes in redshift equate to large differences in predicted magnitude,
-making it impractical to generate a sufficiently large training set for the SBI approach.  Instead,
+making it impractical to generate a sufficiently large training set for the SBI approach in this regime.  Instead,
 we artificially redshift the transient photometry by an additional :math:`\Delta z = 0.015` using the WMAP 2009 cosmology.
-Resulting model files are therefore at a slightly different redshift than the transient and must be
-de-redshifted for appropriate plotting.  We believe the small systematic errors caused by this subtle wavelength
+Resulting model files are therefore at an increased distance compared to the transient and their flux must be adjusted
+for plotting alongside the data.  We believe the small systematic errors caused by this subtle wavelength
 shift should be negligible for most/all SED-fitting applications.  However, it is important to note
-that --- from all SED-fitting approaches --- some derived SED parameters, such as stellar mass,
+that --- for all SED-fitting approaches --- some derived SED parameters, such as stellar mass,
 become increasingly unreliable when the luminosity distance cannot be reliably inferred, as is the case at :math:`z < 0.01`.
 
 To generate plots using model files for transients at :math:`z < 0.015`, just apply a small offset to the normalization::
