@@ -10,7 +10,7 @@ Blast provides an HTTP application programming interface (API) for fetching data
 Downloading *all* Blast data for a given transient
 --------------------------------------------------
 
-A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in :ref:`Blast database objects<models>` and associated data files, such as the cutout images and the SED fit files. 
+A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in :ref:`Blast database objects<models>` and associated :ref:`data files<data_files>`, such as the cutout images and the SED fit files. 
 
 A **full transient dataset** can be exported using :code:`/api/transient/export/<transient_name>/all`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads.
 
