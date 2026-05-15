@@ -1,7 +1,7 @@
+from textwrap import dedent
 import django_tables2 as tables
 from django.db.models.functions import Coalesce
 from django.db.models import F
-
 from .models import Transient
 
 
@@ -81,18 +81,23 @@ class TransientTable(tables.Table):
     )
 
     progress = tables.TemplateColumn(
-        """          {% if record.progress == 0 %}
-              Waiting
-          {% elif record.progress == 100 %}
-            <div class="progress">
-              <div class="progress-bar bg-success" role="progressbar" style="width: {{record.progress}}%;" aria-valuenow="{{transient.progress}}" aria-valuemin="0" aria-valuemax="100">{{record.progress}}%</div>
+        dedent("""
+        {% if record.progress == 0 %}
+          Waiting
+        {% elif record.progress == 100 %}
+          <div class="progress">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{record.progress}}%;"
+                 aria-valuenow="{{record.progress}}" aria-valuemin="0" aria-valuemax="100">{{record.progress}}%
             </div>
-          {% else %}
-            <div class="progress">
-              <div class="progress-bar" role="progressbar" style="width: {{record.progress}}%;" aria-valuenow="{{record.progress}}" aria-valuemin="0" aria-valuemax="100">{{record.progress}}%</div>
+          </div>
+        {% else %}
+          <div class="progress">
+            <div class="progress-bar" role="progressbar" style="width: {{record.progress}}%;"
+                 aria-valuenow="{{record.progress}}" aria-valuemin="0" aria-valuemax="100">{{record.progress}}%
             </div>
-          {% endif %}
-""",
+          </div>
+        {% endif %}
+        """),
         verbose_name="Progress",
         orderable=True,
         order_by="progress",
