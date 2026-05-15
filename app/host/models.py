@@ -660,6 +660,7 @@ class Alias(models.Model):
     host = models.ForeignKey(Host, null=True, blank=True, on_delete=models.CASCADE)
     objects = AliasManager()
 
+
 class UsageMetricsLog(models.Model):
     """
     Model to keep track of usage metrics based on requests.

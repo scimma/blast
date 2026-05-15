@@ -50,6 +50,7 @@ logger = get_logger(__name__)
 
 ############################################################
 # Filter Sets
+
 class TransientFilter(django_filters.FilterSet):
     redshift_lte = django_filters.NumberFilter(
         field_name="redshift", lookup_expr="lte")
