@@ -335,12 +335,6 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
     hover = HoverTool(renderers=[p], tooltips=TOOLTIPS, visible=False)
     fig.add_tools(hover)
 
-    # remove the loading spinner
-    hide_loading_indicator = CustomJS(args=dict(), code=f"""
-            document.getElementById('loading-indicator-sed-{type}').style.display = "none";
-        """)
-    curdoc().js_on_event("document_ready", hide_loading_indicator)
-
     # second check on SED file
     # long-term shouldn't be necessary, just a result of debugging
     if sed_results_file is not None and os.path.exists(sed_results_file) and os.path.exists(sed_modeldata_file):

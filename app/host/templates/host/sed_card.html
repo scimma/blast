@@ -20,7 +20,9 @@
     <div class="tab-pane" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
         <div>
             {% if bokeh_sed_local_div %}
-            {{ bokeh_sed_local_div | safe }}
+            <div id="sed-local-div" class="d-flex justify-content-center align-items-center">
+                {{ bokeh_sed_local_div | safe }}
+            </div>
             {% else %}
             <div id="sed-local-div" class="d-flex justify-content-center align-items-center">
                 <div id="sed-local-loader-mask" class="loader-mask"></div>
@@ -34,10 +36,10 @@
             </div>
 
             <script>
-                document.getElementById('loading-indicator-sed-local').style.display = "none";
+                $("#loading-indicator-sed-local").hide()
                 function sedLocalImgClick(transient, scope) {
-                    document.getElementById('loading-indicator-sed-local').style.display = "block";
-                     $("#sed-local-loader-mask").show();
+                    $("#loading-indicator-sed-local").show();
+                    $("#sed-local-loader-mask").show();
                     $.ajax({
                         url: "{% url 'fetch_sed_plot' %}",
                         type: "GET",
@@ -54,7 +56,7 @@
                             var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
                             sed_local_script.text = script_trimmed;
                             document.body.appendChild(sed_local_script);
-                            document.getElementById('loading-indicator-sed-local').style.display = "none";
+                            $("#loading-indicator-sed-local").hide()
                             $("#sed-local-loader-mask").hide();
                         },
                     });
@@ -76,7 +78,9 @@
             {% endif %}
             
             {% if bokeh_sed_global_div %}
-            {{ bokeh_sed_global_div | safe }}
+            <div id="sed-global-div" class="d-flex justify-content-center align-items-center">
+                {{ bokeh_sed_global_div | safe }}
+            </div>
             {% else %}
             <div id="sed-global-div" class="d-flex justify-content-center align-items-center">
                 <div id="sed-global-loader-mask" class="loader-mask"></div>
@@ -89,9 +93,9 @@
                 <br>
             </div>
             <script>
-                document.getElementById('loading-indicator-sed-global').style.display = "none";
+                $("#loading-indicator-sed-global").hide()
                 function sedGlobalImgClick(transient, scope) {
-                    document.getElementById('loading-indicator-sed-global').style.display = "block";
+                    $("#loading-indicator-sed-global").show();
                     $("#sed-global-loader-mask").show();
                     $.ajax({
                         url: "{% url 'fetch_sed_plot' %}",
@@ -109,7 +113,7 @@
                             var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
                             sed_global_script.text = script_trimmed;
                             document.body.appendChild(sed_global_script);
-                            document.getElementById('loading-indicator-sed-global').style.display = "none";
+                            $("#loading-indicator-sed-global").hide()
                             $("#sed-global-loader-mask").hide();
                         },
                     });
