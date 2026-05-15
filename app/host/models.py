@@ -650,11 +650,6 @@ class Alias(models.Model):
         return (f'''"{self.alias}" is an alias for {'transient' if self.transient else 'host'} '''
                 f'''"{self.transient.name if self.transient else self.host.name}"''')
 
-    # class Meta:
-    #     permissions = [
-    #         ("add_alias", "Add Alias for transients & hosts"),
-    #     ]
-
     alias = models.CharField(max_length=64, unique=True, validators=[validate_name])
     transient = models.ForeignKey(Transient, null=True, blank=True, on_delete=models.CASCADE)
     host = models.ForeignKey(Host, null=True, blank=True, on_delete=models.CASCADE)

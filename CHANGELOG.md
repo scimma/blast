@@ -19,6 +19,7 @@ Types of changes:
 
 - Added a new Alias model to store user-defined aliases for Transient and Host objects. A corresponding
   API endpoint for managing the Alias objects was also added.
+- Added documentation on how to use the downloadable Blast data files.
 
 ### Changed
 
