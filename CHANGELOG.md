@@ -17,8 +17,8 @@ Types of changes:
 
 ### Added
 
-- Added a new Alias model to store user-defined aliases for Transient and Host objects. A corresponding
-  API endpoint for managing the Alias objects was also added.
+- Added a new Alias model and corresponding API endpoint to store user-defined aliases for Transient 
+  and Host objects. A rudimentary web interface for adding aliases was also created.
 - Added documentation on how to use the downloadable Blast data files.
 
 ### Changed
@@ -28,8 +28,7 @@ Types of changes:
 
 ### Fixed
 
-- The transient archive import function was ignoring the catalog info Host fields added in v1.11.0, so
-  these were added.
+- The transient archive import function no longer ignores the catalog info Host fields added in v1.11.0.
 
 ## [1.11.0]
 
