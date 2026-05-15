@@ -40,6 +40,7 @@ from api.serializers import SEDFittingResultSerializer
 from api.serializers import TaskRegisterSerializer
 from api.serializers import TaskSerializer
 from api.serializers import HostSerializer
+from api.serializers import AliasSerializer
 from api.datamodel import unpack_component_groups
 from api.datamodel import serialize_blast_science_data
 from api.components import data_model_components
@@ -138,6 +139,12 @@ class SEDFittingResultFilter(django_filters.FilterSet):
         fields = ()
 
 
+class AliasFilter(django_filters.FilterSet):
+    class Meta:
+        model = Alias
+        fields = ("alias",)
+
+
 ############################################################
 # ViewSets
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -199,8 +206,13 @@ class HostViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = HostSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = HostFilter
-    lookup_field = 'name'
     lookup_value_regex = r"[^/]+[/]?"
+
+
+class AliasViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Alias.objects.all()
+    serializer_class = AliasSerializer
+    filterset_class = AliasFilter
 
 
 def transient_exists(transient_name: str) -> bool:
@@ -330,7 +342,7 @@ def alias_handler(request, alias: str, object_type: str = None, name: str = None
             )
         except Alias.DoesNotExist:
             return Response(
-                {"message": f"Alias with name {name} does not exist."},
+                {"message": f'''Alias with name "{alias}" does not exist.'''},
                 status=status.HTTP_404_NOT_FOUND,
             )
     if request.method == 'POST':

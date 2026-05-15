@@ -65,6 +65,21 @@ class AperturePhotometrySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class AliasSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Alias
+        fields = ["alias", "transient", "host"]
+
+    transient = serializers.SerializerMethodField()
+    host = serializers.SerializerMethodField()
+
+    def get_transient(self, obj):
+        return obj.transient.name if obj.transient else None
+
+    def get_host(self, obj):
+        return obj.host.name if obj.host else None
+
+
 class SEDFittingResultSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SEDFittingResult
