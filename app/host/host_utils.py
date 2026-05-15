@@ -2,7 +2,8 @@ import json
 from tarfile import open as tar_open
 from datetime import datetime, timezone
 from django.core import serializers
-
+from api.serializers import TransientSerializer
+from api.serializers import HostSerializer
 import os
 import math
 import time
@@ -42,6 +43,7 @@ from .photometric_calibration import fluxerr_to_magerr
 from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
 from host.models import Aperture
+from host.models import Alias
 from host.models import Host
 from host.models import AperturePhotometry
 from host.models import Cutout
@@ -902,9 +904,19 @@ def export_transient_info(transient_name=''):
     assert isinstance(transient, dict)
     # Export intrinsic transient data
     transient_data['transient'] = prune_fields(transient, 'transient')
+    # Include transient aliases
+    # TODO: Unify the serialization across the application and API functions
+    aliases = TransientSerializer(transient_obj).data['aliases']
+    assert isinstance(aliases, list)
+    transient_data['transient']['fields']['aliases'] = aliases
     # Export host information
     if transient_obj.host:
         transient_data['host'] = json.loads(serializers.serialize("json", [transient_obj.host]))[0]
+        # Include host aliases
+        # TODO: Unify the serialization across the application and API functions
+        aliases = HostSerializer(transient_obj.host).data['aliases']
+        assert isinstance(aliases, list)
+        transient_data['host']['fields']['aliases'] = aliases
     # Export cutout image data
     cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
     assert isinstance(cutouts, list)
@@ -1087,6 +1099,10 @@ def import_transient_info(transient_data_archive):
                     catalog_release=(dataset['host']['fields']['catalog_release']
                                      if 'catalog_release' in dataset['host']['fields'] else None),
                 )
+                # Create Alias objects
+                if 'aliases' in dataset['host']['fields']:
+                    for alias in dataset['host']['fields']['aliases']:
+                        Alias.objects.create(alias=alias, host=host)
         # Verify that the Cutout objects do not exist (by name).
         for cutout in dataset['cutouts']:
             cutout_name = cutout['fields']['name']
@@ -1122,6 +1138,10 @@ def import_transient_info(transient_data_archive):
             processing_status=dataset['transient']['fields']['processing_status'],
             software_version=dataset['transient']['fields']['software_version'],
         )
+        # Create Alias objects
+        if 'aliases' in dataset['transient']['fields']:
+            for alias in dataset['transient']['fields']['aliases']:
+                Alias.objects.create(alias=alias, transient=transient)
         # Create Cutout objects
         for cutout in dataset['cutouts']:
             filter_name = [filter['fields']['name'] for filter in dataset['filters']
