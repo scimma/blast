@@ -181,8 +181,8 @@ Low-Redshift Transients
 In the local volume, small changes in redshift equate to large differences in predicted magnitude,
 making it impractical to generate a sufficiently large training set for the SBI approach in this regime.  Instead,
 we artificially redshift the transient photometry by an additional :math:`\Delta z = 0.015` using the WMAP 2009 cosmology.
-Resulting model files are therefore at a slightly different redshift than the transient and must be
-de-redshifted for plotting.  We believe the small systematic errors caused by this subtle wavelength
+Resulting model files are therefore at an increased distance compared to the transient and their flux must be adjusted
+for plotting alongside the data.  We believe the small systematic errors caused by this subtle wavelength
 shift should be negligible for most/all SED-fitting applications.  However, it is important to note
 that --- for all SED-fitting approaches --- some derived SED parameters, such as stellar mass,
 become increasingly unreliable when the luminosity distance cannot be reliably inferred, as is the case at :math:`z < 0.01`.
