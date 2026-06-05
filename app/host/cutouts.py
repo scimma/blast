@@ -449,10 +449,10 @@ def DES_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr9"
-    svc_ls_dr9 = sia.SIAService(DEF_ACCESS_URL)
+    DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
+    svc_ls_dr10 = sia.SIAService(DEF_ACCESS_URL)
 
-    imgTable = svc_ls_dr9.search(
+    imgTable = svc_ls_dr10.search(
         (position.ra.deg, position.dec.deg),
         (image_size / np.cos(position.dec.deg * np.pi / 180), image_size),
         verbosity=2,
