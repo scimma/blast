@@ -433,8 +433,11 @@ def WISE_cutout(position, image_size=None, filter=None):
 
     return fits_image
 
-
-def DES_cutout(position, image_size=None, filter=None):
+        
+def DES_cutout(
+        position, image_size=None, filter=None,
+        DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
+):
     """
     Download DES image cutout from NOIRLab
 
@@ -449,10 +452,9 @@ def DES_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
-    svc_ls_dr10 = sia.SIAService(DEF_ACCESS_URL)
+    svc_ls = sia.SIAService(DEF_ACCESS_URL)
 
-    imgTable = svc_ls_dr10.search(
+    imgTable = svc_ls.search(
         (position.ra.deg, position.dec.deg),
         (image_size / np.cos(position.dec.deg * np.pi / 180), image_size),
         verbosity=2,
@@ -467,22 +469,26 @@ def DES_cutout(position, image_size=None, filter=None):
     if len(valid_urls):
         # we need both the depth and the image
         time.sleep(1)
+        print(valid_urls[0])
         try:
-            fits_image = fits.open(
-                valid_urls[0].replace("-depth-", "-image-"), cache=None
-            )
+            r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
+            fits_image = fits.open(BytesIO(r.content))
         except Exception as e:
+            print(f'opening the URL {valid_urls[0]} failed')
             ### found some bad links...
             return None
         if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
             # no idea what's happening here but this is a mess
             return None
         try:
-            depth_image = fits.open(valid_urls[0])
+            r = requests.get(valid_urls[0], stream=True)
+            depth_image = fits.open(BytesIO(r.content))
         except Exception as e:
             # wonder if there's some issue with other tasks clearing the cache
             time.sleep(5)
-            depth_image = fits.open(valid_urls[0])
+            r = requests.get(valid_urls[0], stream=True)
+            depth_image = fits.open(BytesIO(r.content))
+
         wcs_depth = WCS(depth_image[0].header)
         xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
 
