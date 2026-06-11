@@ -433,8 +433,36 @@ def WISE_cutout(position, image_size=None, filter=None):
 
     return fits_image
 
-        
 def DES_cutout(
+        position, image_size=None, filter=None,
+        DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
+):
+    """
+    Download DES image cutout from NOIRLab
+
+    Parameters
+    ----------
+    :position : :class:`~astropy.coordinates.SkyCoord`
+        Target centre position of the cutout image to be downloaded.
+    :image_size: int: size of cutout image in pixels
+    :filter: str: Panstarrs filter (g r i z y)
+    Returns
+    -------
+    :cutout : :class:`~astropy.io.fits.HDUList` or None
+    """
+
+    for DEF_ACCESS_URL in ["https://datalab.noirlab.edu/sia/ls_dr10",
+                           "https://datalab.noirlab.edu/sia/ls_dr9"]:
+        fits_image = DES_cutout_single_version(
+            position, image_size=image_size, filter=filter,
+            DEF_ACCESS_URL = DEF_ACCESS_URL
+        )
+        if fits_image is not None:
+            break
+    
+    return fits_image
+
+def DES_cutout_single_version(
         position, image_size=None, filter=None,
         DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
 ):
