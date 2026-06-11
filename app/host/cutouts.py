@@ -501,14 +501,9 @@ def DES_cutout_single_version(
             r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
             fits_image = fits.open(BytesIO(r.content))
         except Exception as e:
-            time.sleep(5)
-            try:
-                r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
-                fits_image = fits.open(BytesIO(r.content))
-            except:
-                print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
-                ### found some bad links...
-                return None
+            print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
+            ### found some bad links...
+            return None
         
         if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
             # no idea what's happening here but this is a mess
