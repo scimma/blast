@@ -469,7 +469,6 @@ def DES_cutout(
     if len(valid_urls):
         # we need both the depth and the image
         time.sleep(1)
-        print(valid_urls[0])
         try:
             r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
             fits_image = fits.open(BytesIO(r.content))
