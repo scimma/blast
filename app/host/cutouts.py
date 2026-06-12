@@ -433,9 +433,10 @@ def WISE_cutout(position, image_size=None, filter=None):
 
     return fits_image
 
+
 def DES_cutout(
-        position, image_size=None, filter=None,
-        DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
+    position, image_size=None, filter=None,
+    DEF_ACCESS_URL="https://datalab.noirlab.edu/sia/ls_dr10"
 ):
     """
     Download DES image cutout from NOIRLab
@@ -455,16 +456,17 @@ def DES_cutout(
                            "https://datalab.noirlab.edu/sia/ls_dr9"]:
         fits_image = DES_cutout_single_version(
             position, image_size=image_size, filter=filter,
-            DEF_ACCESS_URL = DEF_ACCESS_URL
+            DEF_ACCESS_URL=DEF_ACCESS_URL
         )
         if fits_image is not None:
             break
-    
+
     return fits_image
 
+
 def DES_cutout_single_version(
-        position, image_size=None, filter=None,
-        DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr10"
+    position, image_size=None, filter=None,
+    DEF_ACCESS_URL="https://datalab.noirlab.edu/sia/ls_dr10"
 ):
     """
     Download DES image cutout from NOIRLab
@@ -500,18 +502,18 @@ def DES_cutout_single_version(
         try:
             r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
             fits_image = fits.open(BytesIO(r.content))
-        except Exception as e:
+        except Exception:
             print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
-            ### found some bad links...
+            # found some bad links...
             return None
-        
+
         if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
             # no idea what's happening here but this is a mess
             return None
         try:
             r = requests.get(valid_urls[0], stream=True)
             depth_image = fits.open(BytesIO(r.content))
-        except Exception as e:
+        except Exception:
             # wonder if there's some issue with other tasks clearing the cache
             time.sleep(5)
             r = requests.get(valid_urls[0], stream=True)
@@ -555,7 +557,7 @@ def TWOMASS_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    irsaquery = f"https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS={position.ra.deg},{position.dec.deg}&SIZE=0.01"
+    irsaquery = f"https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS={position.ra.deg},{position.dec.deg}&SIZE=0.01"  # noqa
     response = requests.get(url=irsaquery)
 
     fits_image = None
