@@ -435,8 +435,7 @@ def WISE_cutout(position, image_size=None, filter=None):
 
 
 def DES_cutout(
-    position, image_size=None, filter=None,
-    DEF_ACCESS_URL="https://datalab.noirlab.edu/sia/ls_dr10"
+    position, image_size=None, filter=None
 ):
     """
     Download DES image cutout from NOIRLab
@@ -500,8 +499,8 @@ def DES_cutout_single_version(
         # we need both the depth and the image
         time.sleep(1)
         try:
-            r = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
-            fits_image = fits.open(BytesIO(r.content))
+            req = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
+            fits_image = fits.open(BytesIO(req.content))
         except Exception:
             print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
             # found some bad links...
@@ -511,13 +510,13 @@ def DES_cutout_single_version(
             # no idea what's happening here but this is a mess
             return None
         try:
-            r = requests.get(valid_urls[0], stream=True)
-            depth_image = fits.open(BytesIO(r.content))
+            req = requests.get(valid_urls[0], stream=True)
+            depth_image = fits.open(BytesIO(req.content))
         except Exception:
             # wonder if there's some issue with other tasks clearing the cache
             time.sleep(5)
-            r = requests.get(valid_urls[0], stream=True)
-            depth_image = fits.open(BytesIO(r.content))
+            req = requests.get(valid_urls[0], stream=True)
+            depth_image = fits.open(BytesIO(req.content))
 
         wcs_depth = WCS(depth_image[0].header)
         xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
