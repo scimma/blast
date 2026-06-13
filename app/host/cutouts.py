@@ -494,48 +494,47 @@ def DES_cutout_single_version(
             valid_urls += [img["access_url"]]
             logger.debug(f'''DES image URL: {valid_urls[-1]}''')
 
-    if len(valid_urls):
-        # we need both the depth and the image
-        time.sleep(1)
-        try:
-            req = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
-            fits_image = fits.open(BytesIO(req.content))
-        except Exception:
-            print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
-            # found some bad links...
-            return None
+    if not len(valid_urls):
+        return None
+    # we need both the depth and the image
+    time.sleep(1)
+    try:
+        req = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
+        fits_image = fits.open(BytesIO(req.content))
+    except Exception:
+        print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
+        # found some bad links...
+        return None
 
-        if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
-            # no idea what's happening here but this is a mess
-            return None
-        try:
-            req = requests.get(valid_urls[0], stream=True)
-            depth_image = fits.open(BytesIO(req.content))
-        except Exception:
-            # wonder if there's some issue with other tasks clearing the cache
-            time.sleep(5)
-            req = requests.get(valid_urls[0], stream=True)
-            depth_image = fits.open(BytesIO(req.content))
+    if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
+        # no idea what's happening here but this is a mess
+        return None
+    try:
+        req = requests.get(valid_urls[0], stream=True)
+        depth_image = fits.open(BytesIO(req.content))
+    except Exception:
+        # wonder if there's some issue with other tasks clearing the cache
+        time.sleep(5)
+        req = requests.get(valid_urls[0], stream=True)
+        depth_image = fits.open(BytesIO(req.content))
 
-        wcs_depth = WCS(depth_image[0].header)
-        xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
+    wcs_depth = WCS(depth_image[0].header)
+    xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
 
-        # this is ugly - just assuming the exposure time at the
-        # location of interest is uniform across the image
-        if np.shape(depth_image[0].data) == (1, 1):
-            exptime = depth_image[0].data[0][0]
-        else:
-            exptime = depth_image[0].data[int(yc), int(xc)]
-        if exptime == 0:
-            fits_image = None
-        else:
-            wcs = WCS(fits_image[0].header)
-            cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
-            fits_image[0].data = cutout.data
-            fits_image[0].header.update(cutout.wcs.to_header())
-            fits_image[0].header["EXPTIME"] = exptime
+    # this is ugly - just assuming the exposure time at the
+    # location of interest is uniform across the image
+    if np.shape(depth_image[0].data) == (1, 1):
+        exptime = depth_image[0].data[0][0]
     else:
+        exptime = depth_image[0].data[int(yc), int(xc)]
+    if exptime == 0:
         fits_image = None
+    else:
+        wcs = WCS(fits_image[0].header)
+        cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
+        fits_image[0].data = cutout.data
+        fits_image[0].header.update(cutout.wcs.to_header())
+        fits_image[0].header["EXPTIME"] = exptime
 
     return fits_image
 
