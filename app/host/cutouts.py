@@ -434,9 +434,7 @@ def WISE_cutout(position, image_size=None, filter=None):
     return fits_image
 
 
-def DES_cutout(
-    position, image_size=None, filter=None
-):
+def DES_cutout(position, image_size=None, filter=None):
     """
     Download DES image cutout from NOIRLab
 
@@ -451,11 +449,12 @@ def DES_cutout(
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    for DEF_ACCESS_URL in ["https://datalab.noirlab.edu/sia/ls_dr10",
-                           "https://datalab.noirlab.edu/sia/ls_dr9"]:
+    # Try DR10 first, fall back to DR9 if data is not returned.
+    for url in ["https://datalab.noirlab.edu/sia/ls_dr10",
+                "https://datalab.noirlab.edu/sia/ls_dr9"]:
         fits_image = DES_cutout_single_version(
             position, image_size=image_size, filter=filter,
-            DEF_ACCESS_URL=DEF_ACCESS_URL
+            access_url=url
         )
         if fits_image is not None:
             break
@@ -465,7 +464,7 @@ def DES_cutout(
 
 def DES_cutout_single_version(
     position, image_size=None, filter=None,
-    DEF_ACCESS_URL="https://datalab.noirlab.edu/sia/ls_dr10"
+    access_url="https://datalab.noirlab.edu/sia/ls_dr10"
 ):
     """
     Download DES image cutout from NOIRLab
@@ -481,7 +480,7 @@ def DES_cutout_single_version(
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    svc_ls = sia.SIAService(DEF_ACCESS_URL)
+    svc_ls = sia.SIAService(access_url)
 
     imgTable = svc_ls.search(
         (position.ra.deg, position.dec.deg),
