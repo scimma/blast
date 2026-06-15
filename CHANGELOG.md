@@ -13,7 +13,7 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [1.12.1]
+## [1.13.1]
 
 ### Changed
 
@@ -25,8 +25,15 @@ Types of changes:
 
 ### Fixed
 
-- Incorporated photutils fix for mis-aligned apertures in DES legacy survey images that caused offset 
+- Incorporated photutils fix for misaligned apertures in DES legacy survey images that caused offset
   apertures in the plotting and photometry.
+
+## [1.13.0]
+
+### Changed
+
+- Reintroduce the formerly excluded `host` value in `TransientSerializer` that defines the data
+  object returned by the `/api/transient/` API endpoint.
 
 ## [1.12.0]
 
