@@ -13,6 +13,21 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.12.1]
+
+### Changed
+
+- Now using astropy version 7.2.0, prospector 1.4.1, photutils dev version (commit 2573ef4, until
+  latest release)
+- Included legacy survey data release [DES DR10](https://www.legacysurvey.org/dr10/description/)
+- Updated how legacy survey downloads works, resulting in fewer download timeouts.
+- Improved efficiency of cutout unit test by using ThreadPoolExecutor to test downloads in parallel.
+
+### Fixed
+
+- Incorporated photutils fix for mis-aligned apertures in DES legacy survey images that caused offset 
+  apertures in the plotting and photometry.
+
 ## [1.12.0]
 
 ### Added
