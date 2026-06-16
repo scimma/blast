@@ -1,9 +1,10 @@
 ---
 name: "\U0001F41E Bug Report"
 about: Report an issue to help the project improve.
-title: ""
+title: ''
 labels: bug
-assignees: []
+assignees: djones1040
+type: Bug
 
 ---
 
