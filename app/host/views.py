@@ -741,28 +741,18 @@ def update_home_page_statistics():
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
         fp.write(html_body)
 
-
 @login_required
 @log_usage_metric()
-def report_issue(request, item_id):
-    item = TaskRegister.objects.get(pk=item_id)
-    item.user_warning = True
+def issue_handling(request, item_id, action):
+    item = get_object_or_404(TaskRegister, pk=item_id)
+    if action == 'report':
+        item.user_warning = True
+    elif action == 'resolve':
+        item.user_warning = False
     item.save()
     return HttpResponseRedirect(
         reverse_lazy("results", kwargs={"transient_name": item.transient.name})
     )
-
-
-@login_required
-@log_usage_metric()
-def resolve_issue(request, item_id):
-    item = TaskRegister.objects.get(pk=item_id)
-    item.user_warning = False
-    item.save()
-    return HttpResponseRedirect(
-        reverse_lazy("results", kwargs={"transient_name": item.transient.name})
-    )
-
 
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):
