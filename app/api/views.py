@@ -41,8 +41,6 @@ from api.serializers import TaskRegisterSerializer
 from api.serializers import TaskSerializer
 from api.serializers import HostSerializer
 from api.serializers import AliasSerializer
-from api.datamodel import unpack_component_groups
-from api.datamodel import serialize_blast_science_data
 from api.components import data_model_components
 
 from host.log import get_logger
@@ -271,24 +269,6 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
 #     except AliasHost.DoesNotExist or AliasTransient.DoesNotExist:
 #         exists = False
 #     return exists
-
-
-@api_view(["GET"])
-@log_usage_metric()
-def get_transient_science_payload(request, transient_name):
-    if not transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} not in database"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    component_groups = [
-        component_group(transient_name) for component_group in data_model_components
-    ]
-    components = unpack_component_groups(component_groups)
-    data = serialize_blast_science_data(components)
-
-    return Response(data, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
