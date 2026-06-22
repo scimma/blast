@@ -41,7 +41,6 @@ from api.serializers import TaskRegisterSerializer
 from api.serializers import TaskSerializer
 from api.serializers import HostSerializer
 from api.serializers import AliasSerializer
-from api.components import data_model_components
 
 from host.log import get_logger
 logger = get_logger(__name__)
