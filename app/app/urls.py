@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
 
 urlpatterns = [
     path("admin/", admin.site.urls, name='admin'),
@@ -27,3 +29,8 @@ urlpatterns = [
 
 handler403 = "host.views.error_view"
 handler404 = "host.views.resource_not_found_view"
+
+urlpatterns += [
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'), # Download of API Schema in YAML
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
