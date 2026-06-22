@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Fixed
+
+- Added the missing microjansky unit label to the flux axis label of the SED plots.
+
 ## [1.12.0]
 
 ### Added
