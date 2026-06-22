@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.decorators import login_required, permission_required
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -290,7 +291,11 @@ def get_transient_science_payload(request, transient_name):
 
     return Response(data, status=status.HTTP_200_OK)
 
-
+@extend_schema(request=None, responses={
+        201: OpenApiResponse(description="Transient successfully posted"),
+        400: OpenApiResponse(description="Invalid RA/Dec values"),
+        409: OpenApiResponse(description="Transient already exists in database"),
+    })
 @api_view(["POST"])
 def post_transient(request, transient_name, transient_ra, transient_dec):
     if transient_exists(transient_name):
@@ -319,7 +324,32 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
         status=status.HTTP_201_CREATED,
     )
 
-
+@extend_schema_view(
+    get=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=None,
+        responses={
+            200: AliasSerializer,
+            404: OpenApiResponse(description="Alias not found"),
+        }
+    ),
+    post=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=AliasSerializer,
+        responses={
+            201: AliasSerializer,
+            409: OpenApiResponse(description="Alias already exists"),
+        }
+    ),
+    delete=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=None,
+        responses={
+            204: OpenApiResponse(description="Alias deleted"),
+            404: OpenApiResponse(description="Alias not found"),
+        }
+    ),
+)
 @api_view(["GET", "POST", "DELETE"])
 @log_usage_metric()
 def alias_handler(request, alias: str, object_type: str = None, name: str = None):
