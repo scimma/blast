@@ -6,8 +6,7 @@ Disallow: /download_modelfit/
 Disallow: /download_percentiles/
 Disallow: /retrigger_transient/
 Disallow: /reprocess_transient/
-Disallow: /report_issue/
-Disallow: /resolve_issue/
+Disallow: /issue_handling/
 Disallow: /healthz/
 Disallow: /cutout_fits_plot/
 Disallow: /fetch_sed_plot/
