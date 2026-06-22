@@ -11,7 +11,7 @@
     <a class="dropdown-item" title="Export with all files" href="/api/transient/export/{{transient.name}}/all"><i class="bi bi-file-earmark-zip"></i> Export with all files (.tar.gz)</a>
     <div class="dropdown-divider"></div>
     <a class="dropdown-item" title="Export without files" href="/api/transient/export/{{transient.name}}"><i class="bi bi-filetype-json"></i> Export without files (.json)</a>
-    <a class="dropdown-item" title="Export without files (legacy)" href="/api/transient/get/{{transient.name}}?format=json"><i class="bi bi-filetype-json"></i> Export without files (legacy .json)</a>
+    
     {% if local_sed_results %}
     <div class="dropdown-divider"></div>
     <a class="dropdown-item" title="Local parameter confidence intervals" href="{% url 'download_modelfit' transient.name 'local' %}"><i class="bi bi-graph-up"></i> Local SED best-fit model (.npz)</a>
