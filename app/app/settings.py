@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "django_filters",
     'django_celery_results',  # TODO: This can be removed if using Redis as Celery backend
     "latexify",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -86,7 +87,8 @@ WSGI_APPLICATION = "app.wsgi.application"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-tn6@rg(#694!6p^c!^0ekz5d)jyxk(dxtx-z9m2%$h&w$p0#+)")
-DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
+# DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
+DEBUG = True
 # Internationalization & timezone
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
@@ -230,6 +232,18 @@ REST_FRAMEWORK = {
         f'rest_framework.permissions.{os.environ.get("API_AUTHENTICATION")}',
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+######################################################################
+# DRF Spectacular Config
+#
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Your Project API',
+    'DESCRIPTION': 'API Schema view for the Blast Transient Catalog',
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 ######################################################################
