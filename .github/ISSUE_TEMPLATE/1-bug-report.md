@@ -1,70 +1,35 @@
 ---
 name: "\U0001F41E Bug Report"
 about: Report an issue to help the project improve.
-title: "[Bug] "
+title: ''
 labels: bug
 assignees: djones1040
+type: Bug
 
 ---
 
-# **🐞 Bug Report**
+<!--
+Provide a clear and concise description of the undesirable behavior.
+-->
 
-## **Describe the bug**
-<!-- A clear and concise description of what the bug is. -->
 
-*
+<!--
+If the behavior was correct in a previous version of Blast, please note the working version here.
+-->
 
----
 
-### **Is this a regression?**
-<!-- Did this behaviour used to work in the previous version? -->
-<!-- Yes, the previous version in which this bug was not present was: ... -->
+<!--
+If it is not self-evident, what did you expect should have happened?
+-->
 
----
 
-### **To Reproduce**
+<!--
+Write the steps to reproduce the error if possible. For example:
 
-<!-- Steps to reproduce the error:
-(e.g.:)
-1. Use x argument / navigate to
+1. Use X argument / navigate to Y page
 2. Fill this information
 3. Go to...
-4. See error -->
+4. See error on page Z
 
-<!-- Write the steps here (add or remove as many steps as needed)-->
-
-1.
-2.
-3.
-4.
-
----
-
-### **Expected behaviour**
-<!-- A clear and concise description of what you expected to happen. -->
-
-*
-
----
-
-### **Media prove**
-<!-- If applicable, add screenshots or videos to help explain your problem. -->
-
----
-
-### **Your environment**
-
-<!-- use all the applicable bulleted list element for this specific issue,
-and remove all the bulleted list elements that are not relevant for this issue. -->
-
-* OS: <!--[e.g. Ubuntu 5.4.0-26-generic x86_64 / Windows 1904 ...]-->
-* Node version:
-* Npm version:
-* Browser name and version:
-
----
-
-### **Additional context**
-<!-- Add any other context or additional information about the problem here.-->
-
-*
+Feel free to add screenshots or videos to help explain your problem.
+-->

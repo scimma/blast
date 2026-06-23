@@ -3,32 +3,21 @@ name: "\U0001F680\U0001F195 Feature Request"
 about: Suggest an idea or possible new feature for this project.
 title: ''
 labels: feature request
-assignees: djones1040
+assignees: ''
+type: Feature
 
 ---
 
-# **🚀 Feature Request**
+<!--
+Is your feature request related to a problem? Please write a clear and concise description of what the problem is.
+-->
 
-## **Is your feature request related to a problem? Please describe.**
-<!-- A clear and concise description of what the problem is. Ex. I'm always frustrated when [...] -->
 
-*
+<!--
+Describe the solution you would like to see.
+-->
 
----
 
-## **Describe the solution you'd like**
-<!-- A clear and concise description of what you want to happen. -->
-
-*
-
----
-
-## **Describe alternatives you've considered**
-<!-- A clear and concise description of any alternative solutions or features you've considered. -->
-
-*
-
----
-
-### **Additional context**
-<!-- Add any other context or additional information about the problem here.-->
+<!--
+Describe any alternative solutions or features you have considered.
+-->
