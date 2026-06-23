@@ -71,13 +71,13 @@
         <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
         &nbsp;&nbsp;Define transients by specifying properties.
       </a>
+      <a href="#" type="button" class="list-group-item list-group-item-action" id="update-button" onclick="showUpdateForm();">
+        <span style="font-size: larger;"><i class="bi bi-filetype-csv"></i></span>
+        &nbsp;&nbsp;Update properties of existing transients.
+      </a>
       <a href="#" type="button" class="list-group-item list-group-item-action" id="upload-archive-button" onclick="showImportArchiveForm();">
         <span style="font-size: larger;"><i class="bi bi-file-earmark-zip"></i></span>
         &nbsp;&nbsp;Import transient from an exported archive file.
-      </a>
-      <a href="#" type="button" class="list-group-item list-group-item-action" id="update-button" onclick="showUpdateForm();">
-        <span style="font-size: larger;"><i class="bi bi-file-update-zip"></i></span>
-        &nbsp;&nbsp;Update transient redshift, host-galaxy coordinates, host-redshift, or r-band aperture.
       </a>
     </ul>
   </div>
@@ -177,13 +177,13 @@
           <div id="update-form" class="transient-form">
             <p>Update transients by supplying a comma-separated value (CSV) table,
               where each row defines a transient with the following columns of information:<br>
-              <code>Identifier, RA, Dec, Redshift, Classification, HostName, HostRA, HostDec, HostRedshift, global_aperture_a, global_perture_b, global_aperture_theta, Comment</code>
+              <code>Identifier, RA, Dec, Redshift, Classification, HostName, HostRA, HostDec, HostRedshift, Global_aperture_a, Global_aperture_b, Global_aperture_theta, Comment</code>
               <ul>
                 <li>The identifier is a unique, machine-friendly transient name. It must match the name of an existing transient in the database.</li>
                 <li>RA/Dec must be decimal degrees.</li>
 		<li>If Blast has not successfully identified a host galaxy and you wish to update any host information, you must provide HostRA and HostDec.</li>
-                <li>global_aperture_a and global_aperture_b must be in arcseconds.</li>
-                <li>global_aperture_theta must be in degrees. For a right-handed world coordinate system, theta increases counterclockwise from North (PA=0).</li>
+                <li>Global_aperture_a and Global_aperture_b must be in arcseconds.</li>
+                <li>Global_aperture_theta must be in degrees. For a right-handed world coordinate system, theta increases counterclockwise from North (PA=0).</li>
                 <li>The comment field is a brief explanation (500-character max) for why the transient data were updated/</li>
                 <li>Use "None" to indicate data that should not be updated.</li>
 		<li>For a given transient, the "Cutout download" and "Transient MWEBV" tasks must have completed successfully for these updates to be recorded.</li>
@@ -191,7 +191,7 @@
               <p>A transient will not be added if the name already exists in the database or if the coordinates are within one arcsecond of an existing transient.</p>
             </p>
             <div class="input-group-text">
-              {{ form.update_info | as_crispy_field }}
+              {{ form.full_info | as_crispy_field }}
             </div>
           </div>
 
@@ -209,9 +209,11 @@
     function showImportForm() {
       document.getElementById("import-form").style.display = "block";
       document.getElementById("define-form").style.display = "none";
+      document.getElementById("update-form").style.display = "none";
       document.getElementById("import-archive-form").style.display = "none";
       document.getElementById("import-button").classList.add("active");
       document.getElementById("define-button").classList.remove("active");
+      document.getElementById("update-button").classList.remove("active");
       document.getElementById("upload-archive-button").classList.remove("active");
       document.getElementById("submit-btn").style.display = "block";
       document.getElementById("submit-btn").innerHTML = "Submit";
@@ -221,9 +223,11 @@
     function showCreateForm() {
       document.getElementById("import-form").style.display = "none";
       document.getElementById("define-form").style.display = "block";
+      document.getElementById("update-form").style.display = "none";
       document.getElementById("import-archive-form").style.display = "none";
       document.getElementById("import-button").classList.remove("active");
       document.getElementById("define-button").classList.add("active");
+      document.getElementById("update-button").classList.remove("active");
       document.getElementById("upload-archive-button").classList.remove("active");
       document.getElementById("submit-btn").style.display = "block";
       document.getElementById("submit-btn").innerHTML = "Submit";
@@ -233,9 +237,11 @@
     function showImportArchiveForm() {
       document.getElementById("import-form").style.display = "none";
       document.getElementById("define-form").style.display = "none";
+      document.getElementById("update-form").style.display = "none";
       document.getElementById("import-archive-form").style.display = "block";
       document.getElementById("import-button").classList.remove("active");
       document.getElementById("define-button").classList.remove("active");
+      document.getElementById("update-button").classList.remove("active");
       document.getElementById("upload-archive-button").classList.add("active");
       document.getElementById("submit-btn").style.display = "block";
       document.getElementById("submit-btn").innerHTML = "Upload";
@@ -243,5 +249,20 @@
       document.getElementById("id_full_info").value = "";
       document.getElementById("add-form").enctype = "multipart/form-data";
     }
+    function showUpdateForm() {
+      document.getElementById("import-form").style.display = "none";
+      document.getElementById("define-form").style.display = "none";
+      document.getElementById("update-form").style.display = "block";
+      document.getElementById("import-archive-form").style.display = "none";
+      document.getElementById("import-button").classList.remove("active");
+      document.getElementById("define-button").classList.remove("active");
+      document.getElementById("update-button").classList.add("active");
+      document.getElementById("upload-archive-button").classList.remove("active");
+      document.getElementById("submit-btn").style.display = "block";
+      document.getElementById("submit-btn").innerHTML = "Submit";
+      document.getElementById("id_tns_names").value = "";
+      document.getElementById("add-form").removeAttribute("enctype");
+    }
+
 </script>
 {% endblock %}

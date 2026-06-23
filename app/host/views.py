@@ -199,12 +199,14 @@ def add_transient(request):
     imported_transient_names = []
     file_imported_transient_names = []
     existing_transient_names = []
-
+    transients_not_found = []
+    
     if request.method == "POST":
         form = TransientUploadForm(request.POST, request.FILES)
         if form.is_valid():
             tns_names = form.cleaned_data["tns_names"]
             full_info = form.cleaned_data["full_info"]
+
             # Import transient dataset from an uploaded archive file
             if "file" in request.FILES:
                 logger.debug('Importing transient from uploaded archive file...')
@@ -265,6 +267,7 @@ def add_transient(request):
                         errors.append(err_msg)
                         continue
                     trans_info_set.append(trans_info)
+            # update transient or host properties
             elif update_info:
                 trans_info_set = []
                 reader = csv.DictReader(io.StringIO(update_info), fieldnames=[
@@ -282,7 +285,6 @@ def add_transient(request):
                     'aperture_orientation_deg',
                     'update_comment'
                 ])
-                transients_not_found = []
                 existing_transient_names = []
                 transients_to_update = []
                 for transient in reader:

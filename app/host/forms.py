@@ -49,4 +49,14 @@ class TransientUploadForm(forms.Form):
         label='Transient definition table',
         required=False,
     )
+    update_info = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'style': 'min-width: 30rem;',
+            'cols': 100,
+            'placeholder': 'Identifier, RA, Dec, Redshift, Classification, HostName, HostRA, HostDec, HostRedshift, Global_aperture_a, Global_aperture_b, Global_aperture_theta, Comment'
+        }),
+        label='Transient update table',
+        required=False,
+    )
+
     file = forms.FileField(required=False)
