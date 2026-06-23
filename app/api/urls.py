@@ -1,6 +1,7 @@
 import os
 
 from django.urls import path, re_path
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from . import views
 
@@ -32,3 +33,8 @@ if os.environ.get("ALLOW_API_POST") == "YES":
             views.post_transient,
         )
     )
+
+urlpatterns += [
+    path('schema/', SpectacularAPIView.as_view(), name='schema'), # Download of API Schema in YAML
+    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
