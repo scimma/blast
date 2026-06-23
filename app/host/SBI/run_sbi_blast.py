@@ -232,13 +232,13 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
     for f in all_filters:
         if f.name in observations["filternames"]:
             iflt = np.array(observations["filternames"]) == f.name
-            mags = np.append(mags, maggies_to_asinh(observations["maggies"][iflt][0]))
+            mags = np.append(mags, maggies_to_asinh(observations["maggies"][iflt]))
             mags_unc = np.append(
                 mags_unc,
                 2.5
                 / np.log(10)
-                * observations["maggies_unc"][iflt][0]
-                / observations["maggies"][iflt][0],
+                * observations["maggies_unc"][iflt]
+                / observations["maggies"][iflt],
             )
             if f.name in uv_filters:
                 has_uv = True
