@@ -1584,3 +1584,12 @@ def final_progress(transient_name):
             rmtree(os.path.join(base_path, transient.name))
         except FileNotFoundError:
             pass
+
+
+@shared_task(
+    name="Render Dataset Revision",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def render_dataset_revision(transient_name):
+    transient = Transient.objects.get(name=transient_name)

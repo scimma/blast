@@ -15,6 +15,7 @@ from host.transient_tasks import local_host_sed_fitting
 from host.transient_tasks import mwebv_host
 from host.transient_tasks import mwebv_transient
 from host.transient_tasks import final_progress
+from host.transient_tasks import render_dataset_revision
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.transient_tasks import validate_global_photometry
@@ -98,19 +99,19 @@ def transient_workflow(transient_name=None):
         group(
             generate_thumbnail.si(transient_name),
             chain(
-                mwebv_transient.si(transient_name),
-                host_match.si(transient_name),
-                host_information.si(transient_name),
+                chain(mwebv_transient.si(transient_name), render_dataset_revision.si(transient_name)),
+                chain(host_match.si(transient_name), render_dataset_revision.si(transient_name)),
+                chain(host_information.si(transient_name), render_dataset_revision.si(transient_name)),
                 group(
-                    mwebv_host.si(transient_name),
+                    chain(mwebv_host.si(transient_name), render_dataset_revision.si(transient_name)),
                     chain(
-                        global_aperture_construction.si(transient_name),
-                        global_aperture_photometry.si(transient_name),
-                        validate_global_photometry.si(transient_name),
+                        chain(global_aperture_construction.si(transient_name), render_dataset_revision.si(transient_name)),
+                        chain(global_aperture_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
+                        chain(validate_global_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
                     ),
                     chain(
-                        local_aperture_photometry.si(transient_name),
-                        validate_local_photometry.si(transient_name),
+                        chain(local_aperture_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
+                        chain(validate_local_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
                     ),
                 ),
                 crop_transient_images.si(transient_name),
@@ -119,15 +120,15 @@ def transient_workflow(transient_name=None):
         group(
             generate_thumbnail_final.si(transient_name),
             chain(
-                global_host_sed_fitting.si(transient_name),
+                chain(global_host_sed_fitting.si(transient_name), render_dataset_revision.si(transient_name)),
                 generate_thumbnail_sed_global.si(transient_name),
             ),
             chain(
-                local_host_sed_fitting.si(transient_name),
+                chain(local_host_sed_fitting.si(transient_name), render_dataset_revision.si(transient_name)),
                 generate_thumbnail_sed_local.si(transient_name),
             ),
         ),
-        final_progress.si(transient_name)
+        chain(final_progress.si(transient_name), render_dataset_revision.si(transient_name))
     )
     workflow.delay()
 
