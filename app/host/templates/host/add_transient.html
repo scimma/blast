@@ -115,6 +115,18 @@
   </div>
   {% endif %}
   
+  {% if updated_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients were updated and re-triggered:</p>
+  <ul>
+    {% for transient_name in updated_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
+
+  
   {% if defined_transient_names|length %}
   <div class="py-3">
   <p>The following transients were successfully added to the Blast database:</p>
@@ -179,9 +191,10 @@
               where each row defines a transient with the following columns of information:<br>
               <code>Identifier, RA, Dec, Redshift, Classification, HostName, HostRA, HostDec, HostRedshift, Global_aperture_a, Global_aperture_b, Global_aperture_theta, Comment</code>
               <ul>
-                <li>The identifier is a unique, machine-friendly transient name. It must match the name of an existing transient in the database.</li>
+                <li>The identifier must match the name of an existing transient in the database.</li>
                 <li>RA/Dec must be decimal degrees.</li>
 		<li>If Blast has not successfully identified a host galaxy and you wish to update any host information, you must provide HostRA and HostDec.</li>
+		<li>If Blast has not successfully identified a host galaxy, you must provide HostRA and HostDec if you wish to input aperture parameters..</li>
                 <li>Global_aperture_a and Global_aperture_b must be in arcseconds.</li>
                 <li>Global_aperture_theta must be in degrees. For a right-handed world coordinate system, theta increases counterclockwise from North (PA=0).</li>
                 <li>The comment field is a brief explanation (500-character max) for why the transient data were updated/</li>
