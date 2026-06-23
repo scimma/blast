@@ -35,6 +35,6 @@ if os.environ.get("ALLOW_API_POST") == "YES":
     )
 
 urlpatterns += [
-    path('schema/', SpectacularAPIView.as_view(), name='schema'), # Download of API Schema in YAML
+    path('schema/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
     path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

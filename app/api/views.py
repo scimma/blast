@@ -291,11 +291,12 @@ def get_transient_science_payload(request, transient_name):
 
     return Response(data, status=status.HTTP_200_OK)
 
+
 @extend_schema(request=None, responses={
-        201: OpenApiResponse(description="Transient successfully posted"),
-        400: OpenApiResponse(description="Invalid RA/Dec values"),
-        409: OpenApiResponse(description="Transient already exists in database"),
-    })
+    201: OpenApiResponse(description="Transient successfully posted"),
+    400: OpenApiResponse(description="Invalid RA/Dec values"),
+    409: OpenApiResponse(description="Transient already exists in database"),
+})
 @api_view(["POST"])
 def post_transient(request, transient_name, transient_ra, transient_dec):
     if transient_exists(transient_name):
@@ -323,6 +324,7 @@ def post_transient(request, transient_name, transient_ra, transient_dec):
         {"message": f"transient successfully posted: {data_string}"},
         status=status.HTTP_201_CREATED,
     )
+
 
 @extend_schema_view(
     get=extend_schema(

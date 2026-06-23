@@ -1,10 +1,10 @@
 from host import models
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
-from drf_spectacular.types import OpenApiTypes
 
 ##################
 # Nested Serializers
+
 
 class UserNestedSerializer(serializers.ModelSerializer):
     class Meta:
@@ -54,6 +54,7 @@ class FilterNestedSerializer(serializers.ModelSerializer):
             "vega_zero_point_jansky", "magnitude_zero_point", "ab_offset",
         ]
 
+
 class TransientNestedSerializer(serializers.ModelSerializer):
     host = HostNestedSerializer(read_only=True)
     added_by = UserNestedSerializer(read_only=True)
@@ -67,6 +68,7 @@ class TransientNestedSerializer(serializers.ModelSerializer):
             "milkyway_dust_reddening", "processing_status", "progress",
             "host", "added_by",
         ]
+
 
 class CutoutNestedSerializer(serializers.ModelSerializer):
     filter = FilterNestedSerializer(read_only=True)
@@ -90,6 +92,7 @@ class ApertureNestedSerializer(serializers.ModelSerializer):
             "type", "cutout", "transient",
         ]
 
+
 class StarFormationHistoryResultNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.StarFormationHistoryResult
@@ -99,6 +102,7 @@ class StarFormationHistoryResultNestedSerializer(serializers.ModelSerializer):
             "logsfr_tmin", "logsfr_tmax",
         ]
 
+
 class CutoutField(serializers.RelatedField):
     def to_representation(self, value):
         return value.filter.name
@@ -107,6 +111,7 @@ class CutoutField(serializers.RelatedField):
 class TransientSerializer(serializers.ModelSerializer):
 
     host = HostNestedSerializer(read_only=True)
+
     class Meta:
         model = models.Transient
         exclude = [
@@ -116,7 +121,6 @@ class TransientSerializer(serializers.ModelSerializer):
             "photometric_class",
             "processing_status",
             "added_by"
-#            "host",
         ]
 
     aliases = serializers.SerializerMethodField()
@@ -206,6 +210,7 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
 class CutoutSerializer(serializers.ModelSerializer):
     filter = FilterNestedSerializer(read_only=True)
     transient = TransientNestedSerializer(read_only=True)
+
     class Meta:
         model = models.Cutout
         depth = 1
@@ -229,6 +234,7 @@ class TaskRegisterSerializer(serializers.ModelSerializer):
     task = TaskNestedSerializer(read_only=True)
     status = StatusNestedSerializer(read_only=True)
     transient = TransientNestedSerializer(read_only=True)
+
     class Meta:
         model = models.TaskRegister
         depth = 1
