@@ -71,6 +71,7 @@ from host.task_prereqs import GenerateThumbnail_prerequisites
 from host.task_prereqs import GenerateThumbnailFinal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
 
 from .object_store import ObjectStore
 from .models import TaskLock
@@ -616,7 +617,7 @@ def query_sdss(position):
     finally:
         # Release the SDSS query lock
         logger.debug('''Releasing SDSS query lock...''')
-        TaskLock.objects.release_lock('sdss_query')
+        TaskLock.objects.release_lock('SDSS_query')
 
     return galaxy_data
 
@@ -1402,6 +1403,7 @@ def get_all_task_prerequisites(transient_name):
         'Generate thumbnail final': GenerateThumbnailFinal_prerequisites,
         'Generate thumbnail SED local': GenerateThumbnailSEDLocal_prerequisites,
         'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
+        'Host spectrum download': HostSpectrumDownload_prerequisites,
     }
 
 
