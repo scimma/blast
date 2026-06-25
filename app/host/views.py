@@ -542,29 +542,6 @@ def results(request, transient_name):
             image_data_encoded = base64.b64encode(image_data).decode()
             bokeh_cutout_context = {}
 
-    if request.method == "POST":
-        # Selecting a new filter from the dropdown menu of the interactive image plot
-        # triggers an HTTP POST request instead of a GET.
-        # TODO: Replace this with an AJAX call to replace the image plot without a full page reload.
-        filter_select_form = ImageGetForm(request.POST, filter_choices=filters)
-        if filter_select_form.is_valid():
-            filter = filter_select_form.cleaned_data["filters"]
-            cutout = all_cutouts.filter(filter__name__exact=filter)[0]
-
-    # If the thumbnail is not available, display the Bokeh cutout plot
-    if request.method == "POST" or image_data == b'':
-        try:
-            bokeh_cutout_context = plot_cutout_image(
-                cutout=cutout,
-                transient=transient,
-                global_aperture=global_aperture.prefetch_related(),
-                local_aperture=local_aperture.prefetch_related(),
-            )
-        except Exception as err:
-            logger.error(f'''Error rendering cutout plot: {err}''')
-        image_data = b''
-        image_data_encoded = base64.b64encode(image_data).decode()
-
     # Download the SED thumbnails if they exist
     s3 = ObjectStore()
     interactive_sed_plot = {}
