@@ -13,6 +13,11 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+- Added new cutout download function to CutoutViewSet
+- Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
+- Transient results page now has download links next to each available filter under 'Cutout Download Report'
+
 ## [1.12.0]
 
 ### Added
