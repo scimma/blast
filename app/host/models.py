@@ -708,6 +708,10 @@ class HostSpectrum(models.Model):
             wavelength of the spectrum in Angstroms.
         redshift (django.db.model.FloatField): Spectroscopic redshift
             from the source survey.
+        ra_deg (django.db.model.FloatField): Right Ascension of the 
+            fiber/spectrum in decimal degrees.
+        dec_deg (django.db.model.FloatField): Declination of the 
+            fiber/spectrum in decimal degrees.
         spectrum_id (django.db.model.CharField): Source-specific
             identifier
         message (django.db.model.CharField): Optional status message.
@@ -729,6 +733,8 @@ class HostSpectrum(models.Model):
     wavelength_min_angstrom = models.FloatField(null=True, blank=True)
     wavelength_max_angstrom = models.FloatField(null=True, blank=True)
     redshift = models.FloatField(null=True, blank=True)
+    ra_deg = models.FloatField(null=True, blank=True)
+    dec_deg = models.FloatField(null=True, blank=True)
     spectrum_id = models.CharField(max_length=200, null=True, blank=True)
     message = models.CharField(max_length=100, null=True, blank=True)
     software_version = models.CharField(max_length=50, blank=True, null=True)

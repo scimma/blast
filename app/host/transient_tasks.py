@@ -1526,7 +1526,9 @@ class HostSpectrumDownload(TransientTaskRunner):
             'wavelength_min_angstrom': spectrum_data['wavelength_min_angstrom'],
             'wavelength_max_angstrom': spectrum_data['wavelength_max_angstrom'],
             'redshift': spectrum_data['redshift'],
-            'spectrum_id': spectrum_data['spectrum_id'],
+            'ra_deg': spectrum_data.get('ra_deg'),
+            'dec_deg': spectrum_data.get('dec_deg'),
+            'spectrum_id': spectrum_data['spectrum_id']
         }
         self._overwrite_or_create_object(HostSpectrum, query, data)
 

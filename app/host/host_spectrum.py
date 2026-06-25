@@ -160,6 +160,8 @@ def fetch_host_spectrum(position):
                     'redshift': spec_redshift,
                     'wavelength_min_angstrom': float(wavelength.min()),
                     'wavelength_max_angstrom': float(wavelength.max()),
+                    'ra_deg': float(record.ra) if record.ra is not None else None,
+                    'dec_deg': float(record.dec) if record.dec is not None else None
                 }
                 logger.info(f'''Spectrum successfully fetched via SPARCL from {getattr(record, 'data_release', 'unknown')}.''')
 
@@ -200,6 +202,8 @@ def fetch_host_spectrum(position):
                             'redshift': redshift,
                             'wavelength_min_angstrom': wl_min,
                             'wavelength_max_angstrom': wl_max,
+                            'ra_deg': float(ned_results[best_idx]['RA']),
+                            'dec_deg': float(ned_results[best_idx]['DEC']),
                         }
                         logger.debug(f'''NED spectrum found for "{object_name}", z={redshift}''')
                     else:
