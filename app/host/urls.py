@@ -69,7 +69,7 @@ router = DefaultRouter()
 
 router.register(r"transient", api.views.TransientViewSet)
 router.register(r"aperture", api.views.ApertureViewSet)
-router.register(r"cutout", api.views.CutoutViewSet)
+router.register(r"cutout", api.views.CutoutViewSet, basename="cutout")
 router.register(r"filter", api.views.FilterViewSet)
 router.register(r"aperturephotometry", api.views.AperturePhotometryViewSet)
 router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet)
