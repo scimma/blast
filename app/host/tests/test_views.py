@@ -18,7 +18,40 @@ class ViewTest(TestCase):
         response = self.client.get("/transients/2022testtwo/")
         self.assertEqual(response.status_code, 200)
 
+class ModifyTransientTest(TestCase):
+    def setUp(self):
+        import base64
+        username = 'testuser'
+        b64username = base64.urlsafe_b64encode(username.encode('utf-8')).decode('utf-8').strip('=')
+        self.credentials = {"username": b64username, "password": "secret"}
+        User.objects.create_user(**self.credentials, is_superuser=True)
+        self.client.login(**self.credentials)
+        with open('''/data/transient_datasets/2026dix.tar.gz''', 'rb') as dataset_fileobj:
+            import_transient_info(dataset_fileobj)
 
+    def test_add_tansients_by_definition(self):
+        # TODO: This test is fragile due to the explicit HTML string search.
+        response = self.client.post("/add/", data={
+            'update_info': dedent('''
+                2026dix,None,None,0.05,SN Ia,None,None,None,None,None,None,None,z and class test
+                2026dgt,None,None,None,None,None,132.3561625,29.5105694,None,5,5,0,host pos test
+            ''')})
+        self.assertEqual(response.status_code, 200)
+        # Check that transients were updated
+        self.assertContains(
+            response,
+            text=("""
+
+""")
+        # Check that 2026dix z and class were updated
+            
+        # Check the 2026dgt host coord and aperture were updated
+
+        # check that 2026dix tasks set to unprocessed
+
+        # check that 2026dgt tasks set to unprocessed
+
+        
 class AddTransientTest(TestCase):
     def setUp(self):
         import base64
@@ -85,3 +118,4 @@ class AddTransientTest(TestCase):
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
+

@@ -13,6 +13,14 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Added
+
+- Added a new form to update properties of existing transients
+- Form prompts retriggering of updated transients from the relevant stages
+- Added a new migration to record comments on any user-updated properties
+
 ## [1.12.0]
 
 ### Added
