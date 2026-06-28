@@ -22,6 +22,7 @@ class ViewTest(TestCase):
         response = self.client.get("/transients/2022testtwo/")
         self.assertEqual(response.status_code, 200)
 
+
 class ModifyTransientTest(TestCase):
     def setUp(self):
         import base64
@@ -46,55 +47,54 @@ class ModifyTransientTest(TestCase):
         # Check that transients were updated
         self.assertContains(
             response,
-            text=(""" <p>The following transients were updated and re-triggered:</p>\n  <ul>\n    \n    <li><a href="/transients/2026dix">2026dix</a></li>\n    \n    <li><a href="/transients/2026dgt">2026dgt</a></li>
-"""
-                  )
-            )
+            text=(""" <p>The following transients were updated and re-triggered:</p>\n  <ul>"""
+                  """\n    \n    <li><a href="/transients/2026dix">2026dix</a></li>\n    \n    <li>"""
+                  """<a href="/transients/2026dgt">2026dgt</a></li>"""))
 
         # Check that 2026dix z and class were updated
         transient_26dix = Transient.objects.get(name='2026dix')
-        self.assertEqual(transient_26dix.redshift,0.05)
-        self.assertEqual(transient_26dix.spectroscopic_class,'SN Ia')
-            
+        self.assertEqual(transient_26dix.redshift, 0.05)
+        self.assertEqual(transient_26dix.spectroscopic_class, 'SN Ia')
+
         # Check the 2026dgt host coord and aperture were updated
         transient_26dgt = Transient.objects.get(name='2026dgt')
-        self.assertEqual(transient_26dgt.host.ra_deg,132.3561625)
-        self.assertEqual(transient_26dgt.host.dec_deg,29.5105694)
+        self.assertEqual(transient_26dgt.host.ra_deg, 132.3561625)
+        self.assertEqual(transient_26dgt.host.dec_deg, 29.5105694)
 
-        aperture = Aperture.objects.get(transient__name='2026dgt',cutout__filter__name='PanSTARRS_g')
-        self.assertEqual(aperture.semi_major_axis_arcsec,5)
-        self.assertEqual(aperture.semi_minor_axis_arcsec,5)
-        self.assertEqual(aperture.orientation_deg,0)
-            
+        aperture = Aperture.objects.get(transient__name='2026dgt', cutout__filter__name='PanSTARRS_g')
+        self.assertEqual(aperture.semi_major_axis_arcsec, 5)
+        self.assertEqual(aperture.semi_minor_axis_arcsec, 5)
+        self.assertEqual(aperture.orientation_deg, 0)
+
         # check that 2026dix tasks set to unprocessed
-        tasks_not_processed = TaskRegister.objects.filter(transient__name='2026dix',task__name__in=[
-            'Global host SED inference','Local aperture photometry',
-            'Validate local photometry','Local host SED inference'
-            ]
+        tasks_not_processed = TaskRegister.objects.filter(transient__name='2026dix', task__name__in=[
+            'Global host SED inference', 'Local aperture photometry',
+            'Validate local photometry', 'Local host SED inference'
+        ]
         )
         for t in tasks_not_processed:
-            self.assertEqual(t.status.message,'not processed')
+            self.assertEqual(t.status.message, 'not processed')
 
         tasks_processed = TaskRegister.objects.filter(transient__name='2026dix').filter(
             ~Q(
                 task__name__in=[
-                    'Global host SED inference','Local aperture photometry',
-                    'Validate local photometry','Local host SED inference'
+                    'Global host SED inference', 'Local aperture photometry',
+                    'Validate local photometry', 'Local host SED inference'
                 ]
             )
         )
         for t in tasks_processed:
-            self.assertEqual(t.status.message,'processed')
-                                                          
+            self.assertEqual(t.status.message, 'processed')
+
         # check that 2026dgt tasks set to unprocessed
-        tasks_not_processed = TaskRegister.objects.filter(transient__name='2026dgt',task__name__in=[
+        tasks_not_processed = TaskRegister.objects.filter(transient__name='2026dgt', task__name__in=[
             'Global aperture photometry',
             'Validate global photometry',
             'Global host SED inference'
-            ]
+        ]
         )
         for t in tasks_not_processed:
-            self.assertEqual(t.status.message,'not processed')
+            self.assertEqual(t.status.message, 'not processed')
 
         tasks_processed = TaskRegister.objects.filter(transient__name='2026dgt').filter(
             ~Q(
@@ -106,9 +106,9 @@ class ModifyTransientTest(TestCase):
             )
         )
         for t in tasks_processed:
-            self.assertEqual(t.status.message,'processed')
+            self.assertEqual(t.status.message, 'processed')
 
-        
+
 class AddTransientTest(TestCase):
     def setUp(self):
         import base64
@@ -175,4 +175,3 @@ class AddTransientTest(TestCase):
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
-
