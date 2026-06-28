@@ -325,6 +325,7 @@ def add_transient(request):
                             existing_transient = Transient.objects.get(name=transient['name'])
                         except:
                             transients_not_found += [transient['name']]
+                            continue
                         if transient['specclass'].lower().strip() != "none":
                             existing_transient.spectroscopic_class = transient['specclass'].strip()
                         if transient['redshift'].lower().strip() != "none":

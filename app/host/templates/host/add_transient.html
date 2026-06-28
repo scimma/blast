@@ -126,6 +126,16 @@
   </div>
   {% endif %}
 
+  {% if not_existing_transient_names|length %}
+  <div class="py-3">
+  <p>The following transients were not found in the database:</p>
+  <ul>
+    {% for transient_name in not_existing_transient_names %}
+    <li><a href="/transients/{{ transient_name }}">{{ transient_name }}</a></li>
+    {% endfor %}
+  </ul>
+  </div>
+  {% endif %}
   
   {% if defined_transient_names|length %}
   <div class="py-3">
@@ -197,7 +207,7 @@
 		<li>If Blast has not successfully identified a host galaxy, you must provide HostRA and HostDec if you wish to input aperture parameters..</li>
                 <li>Global_aperture_a and Global_aperture_b must be in arcseconds.</li>
                 <li>Global_aperture_theta must be in degrees. For a right-handed world coordinate system, theta increases counterclockwise from North (PA=0).</li>
-                <li>The comment field is a brief explanation (500-character max) for why the transient data were updated/</li>
+                <li>The comment field is a brief explanation (500-character max) for why the transient data were updated.</li>
                 <li>Use "None" to indicate data that should not be updated.</li>
 		<li>For a given transient, the "Cutout download" and "Transient MWEBV" tasks must have completed successfully for these updates to be recorded.</li>
               </ul>
