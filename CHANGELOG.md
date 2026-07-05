@@ -13,6 +13,11 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Changed
+- Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
+
 ## [1.12.0]
 
 ### Added
