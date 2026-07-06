@@ -516,6 +516,10 @@ def results(request, transient_name):
         filter_.name: ("yes" if filter_.name in filters else "no")
         for filter_ in Filter.objects.all()
     }
+    cutout_ids = {
+        cutout.filter.name: cutout.pk
+        for cutout in all_cutouts
+    }
 
     # Compile aperture details
     global_aperture = select_aperture(transient)
@@ -611,6 +615,7 @@ def results(request, transient_name):
             "host_aliases": ', '.join([alias.alias for alias in host_aliases]),
             "filter_select_form": filter_select_form,
             "filter_status": filter_status,
+            "cutout_ids": cutout_ids,
             "local_aperture": local_aperture[0] if local_aperture.exists() else None,
             "global_aperture": global_aperture[0] if global_aperture.exists() else None,
             "local_sed_results": compile_sed_results(transient, 'base', 'local'),

@@ -15,7 +15,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.decorators import login_required, permission_required
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from host.object_store import ObjectStore
 from host.models import Aperture
@@ -49,8 +49,19 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 
+def stream_download_file(file_path):
+    # Stream the data file from the S3 bucket
+    s3 = ObjectStore()
+    object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+    filename = os.path.basename(file_path)
+    obj_stream = s3.stream_object(object_key)
+    response = StreamingHttpResponse(streaming_content=obj_stream)
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
 ############################################################
 # Filter Sets
+
 
 class TransientFilter(django_filters.FilterSet):
     redshift_lte = django_filters.NumberFilter(
@@ -166,6 +177,11 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CutoutSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = CutoutFilter
+
+    @action(methods=['get'], detail=True, url_path="download")
+    def download(self, request, pk=None):
+        cutout = self.get_object()
+        return stream_download_file(cutout.fits.name)
 
 
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
