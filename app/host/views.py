@@ -615,7 +615,7 @@ def results(request, transient_name):
             "host_aliases": ', '.join([alias.alias for alias in host_aliases]),
             "filter_select_form": filter_select_form,
             "filter_status": filter_status,
-            "cutout_ids" : cutout_ids,
+            "cutout_ids": cutout_ids,
             "local_aperture": local_aperture[0] if local_aperture.exists() else None,
             "global_aperture": global_aperture[0] if global_aperture.exists() else None,
             "local_sed_results": compile_sed_results(transient, 'base', 'local'),

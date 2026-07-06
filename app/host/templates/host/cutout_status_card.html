@@ -6,23 +6,24 @@
 
 <!-- body -->
 {% block body %}
-<table class="table table-sm" style="text-align: center;">
+<table class="table table-sm" style="text-align: right;">
   <thead style="font-size:1.3rem;">
-    <th colspan="2"><i class="bi bi-check" , style="font-size: 2rem; color: green; vertical-align: middle;"></i> Downloadable</th>
+    <th><i class="bi bi-check" , style="font-size: 2rem; color: green; vertical-align: middle;"></i> Downloadable</th>
     <th><i class="bi bi-x" , style="font-size: 2rem; color: red; vertical-align: middle;"></i> Unavailable</th>
   </thead>
   <tbody style="font-family: monospace;">
     <tr>
       <td style="color: green;">
-        {% for filter, status in filter_status.items %}{% if status == "yes"%}{{filter}}<br />{% endif %}{% endfor %}
-      </td>
-      <td>
-        {% for filter, status in filter_status.items %}{% if status == "yes"%}
+      {% for filter, status in filter_status.items %}
         {% with cutout_id=cutout_ids|get_item:filter %}
-        <a href="{% url 'cutout-download' cutout_id %}"><i class="btn"></i> Download
-        </a>
-        <br />{% endwith %}{% endif %}{% endfor %}
-      </td> 
+          {% if status == "yes"%}
+            <a href="{% url 'cutout-download' cutout_id %}" style="color: green;" title="Download image">
+              {{filter}} <i class="bi bi-download"></i>
+            </a><br />
+          {% endif %}
+        {% endwith %}
+      {% endfor %}
+      </td>
       <td style="color: red;">
         {% for filter, status in filter_status.items %}{% if status != "yes"%}{{filter}}<br />{% endif %}{% endfor %}
       </td>
