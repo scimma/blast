@@ -48,6 +48,7 @@ from api.components import data_model_components
 from host.log import get_logger
 logger = get_logger(__name__)
 
+
 def stream_download_file(file_path):
     # Stream the data file from the S3 bucket
     s3 = ObjectStore()
@@ -60,6 +61,7 @@ def stream_download_file(file_path):
 
 ############################################################
 # Filter Sets
+
 
 class TransientFilter(django_filters.FilterSet):
     redshift_lte = django_filters.NumberFilter(
@@ -180,6 +182,7 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     def download(self, request, pk=None):
         cutout = self.get_object()
         return stream_download_file(cutout.fits.name)
+
 
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Filter.objects.all()
