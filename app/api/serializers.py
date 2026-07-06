@@ -84,20 +84,20 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
     chains_file = serializers.SerializerMethodField()
     model_file = serializers.SerializerMethodField()
     percentiles_file = serializers.SerializerMethodField()
+
     class Meta:
         model = models.SEDFittingResult
         depth = 1
         exclude = ["log_tau_16", "log_tau_50", "log_tau_84", "posterior"]
 
     def to_representation(self, instance):
-    #     """Hardcode download URL"""
+        # Hardcode download URL
         ret = super().to_representation(instance)
         ret['chains_file'] = self.get_chains_file(instance)
         ret['model_file'] = self.get_model_file(instance)
         ret['percentiles_file'] = self.get_percentiles_file(instance)
-        
         return ret
-    
+
     def get_chains_file(self, obj):
         request = self.context["request"]
 
@@ -110,10 +110,9 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
                 },
             )
         )
-    
+
     def get_model_file(self, obj):
         request = self.context["request"]
-
         return request.build_absolute_uri(
             reverse(
                 "sedfittingresult-download",
@@ -126,7 +125,6 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
 
     def get_percentiles_file(self, obj):
         request = self.context["request"]
-
         return request.build_absolute_uri(
             reverse(
                 "sedfittingresult-download",

@@ -13,7 +13,6 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.decorators import login_required, permission_required
-from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, action
@@ -48,6 +47,7 @@ from api.components import data_model_components
 
 from host.log import get_logger
 logger = get_logger(__name__)
+
 
 def stream_download_file(file_path):
     # Stream the data file from the S3 bucket
@@ -209,9 +209,9 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
         elif file_type == 'percentiles':
             file_field = sed_result.percentiles_file
         else:
-            return Response({'error':"unknown file type"}, status=400)
-        
+            return Response({'error': "unknown file type"}, status=400)
         return stream_download_file(file_field.name)
+
 
 class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TaskRegister.objects.all()
