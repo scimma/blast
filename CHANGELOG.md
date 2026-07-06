@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+- Added new download functions to `/api/sedfittingresult`, replacing view functions: `download_chains`, `download_modelfit`, `download_percentiles`.
+- New download URL: `/api/sedfittingresult/{id}/download/{download-type}/`
+- Fixed download URLs on `/api/sedfittingresult` using new download functions, rerouted transient download on front-end to these functions. Functionality from front-end is identical.
+
+
 ## [1.12.0]
 
 ### Added

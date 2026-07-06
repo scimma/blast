@@ -1,9 +1,6 @@
 User-agent: *
 Disallow: /transient/
 Disallow: /add/
-Disallow: /download_chains/
-Disallow: /download_modelfit/
-Disallow: /download_percentiles/
 Disallow: /retrigger_transient/
 Disallow: /reprocess_transient/
 Disallow: /report_issue/

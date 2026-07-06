@@ -21,21 +21,6 @@ urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
     path(f"""{base_path}transients/<slug:transient_name>/""", views.results, name="results"),
-    path(
-        f"""{base_path}download_chains/<slug:slug>/<str:aperture_type>/""",
-        views.download_chains,
-        name="download_chains",
-    ),
-    path(
-        f"""{base_path}download_modelfit/<slug:slug>/<str:aperture_type>/""",
-        views.download_modelfit,
-        name="download_modelfit",
-    ),
-    path(
-        f"""{base_path}download_percentiles/<slug:slug>/<str:aperture_type>/""",
-        views.download_percentiles,
-        name="download_percentiles",
-    ),
     path(f"""{base_path}acknowledgements/""", views.acknowledgements, name="acknowledgements"),
     path(f"""{base_path}team/""", views.team, name="team"),
     path(f"""{base_path}""", views.home),
@@ -72,7 +57,7 @@ router.register(r"aperture", api.views.ApertureViewSet)
 router.register(r"cutout", api.views.CutoutViewSet)
 router.register(r"filter", api.views.FilterViewSet)
 router.register(r"aperturephotometry", api.views.AperturePhotometryViewSet)
-router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet)
+router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet, basename="sedfittingresult")
 router.register(r"taskregister", api.views.TaskRegisterViewSet)
 router.register(r"task", api.views.TaskViewSet)
 router.register(r"host", api.views.HostViewSet)
