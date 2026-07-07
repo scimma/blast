@@ -518,7 +518,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         data = {
             "name": f"{aperture_cutout[0].name}_global",
             "cutout": aperture_cutout[0],
-            "orientation_deg": (180 / np.pi) * aperture.theta.value,
+            "orientation_deg": (180 / np.pi) * aperture.theta.rad,
             "ra_deg": aperture.positions.ra.degree,
             "dec_deg": aperture.positions.dec.degree,
             "semi_major_axis_arcsec": aperture.a.value,
