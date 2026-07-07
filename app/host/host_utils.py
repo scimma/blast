@@ -430,7 +430,7 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
                 .to_mask()
                 .to_image(np.shape(image[0].data))
             )
-            obj_ids = catalog._segment_img.data[np.where(mask_image == True)]  # noqa: E712
+            obj_ids = catalog._segmentation_image.data[np.where(mask_image == True)]  # noqa: E712
             source_obj = source_data._labels
 
             # let's look for contaminants
@@ -555,7 +555,6 @@ def construct_aperture(image, position):
     # make sure we know this failed
     if source_separation_arcsec > 5:
         return None
-
     return elliptical_sky_aperture(source_data, wcs)
 
 
