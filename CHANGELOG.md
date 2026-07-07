@@ -35,6 +35,8 @@ Types of changes:
 
 - Incorporated photutils fix for misaligned apertures in DES legacy survey images that caused offset
   apertures in the plotting and photometry.
+- Added the missing microjansky unit label to the flux axis label of the SED plots.
+
 
 ## [1.12.0]
 
