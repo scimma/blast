@@ -3,6 +3,13 @@ This module contains functions designed to be invoked as arguments to the `dev`
 custom Django management command. See the `dev.py` module docstring for usage instructions.
 """
 
+from host.models import Status
+from host.models import TaskRegister
+from host.models import Transient
+from host.object_store import ObjectStore
+from host.transient_tasks import generate_thumbnail_sed_global
+from host.transient_tasks import generate_thumbnail_sed_local
+
 
 def render_homepage():
     from host.views import update_home_page_statistics
@@ -375,3 +382,59 @@ def export_logs_to_influxdb():
         write_api.close()
 
     main()
+
+
+def generate_all_sed_thumbnails(dry_run=True, prefix='', batch_size=0, force=False):
+    s3 = ObjectStore()
+    dry_run_msg = '[dry-run] ' if dry_run else ''
+    thumbnail_tasks = [
+        ('Generate thumbnail SED local', generate_thumbnail_sed_local),
+        ('Generate thumbnail SED global', generate_thumbnail_sed_global),
+    ]
+    transients = []
+    print(f'''{dry_run_msg}DEBUG: Querying Transient objects...''')
+    transients = Transient.objects.filter(name__startswith=prefix)
+    if batch_size:
+        transients = transients[:batch_size]
+    print(f'''{dry_run_msg}DEBUG: Querying TaskRegister objects...''')
+    trs = TaskRegister.objects.all()
+    print(f'''{dry_run_msg}DEBUG: Iterating TaskRegister objects...''')
+    print(f'''{dry_run_msg}DEBUG: {len(transients)} transients found.''')
+    for transient in transients:
+        trans_name = transient.name
+        print(f'''{dry_run_msg}DEBUG: Analyzing {trans_name}...''')
+        for task_name, task_func in thumbnail_tasks:
+            try:
+                thumb_tr = trs.get(transient__name=trans_name, task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                print(f'''{dry_run_msg}WARNING: "{trans_name}" missing task "{task_name}"''')
+                continue
+            print(f'''{dry_run_msg}DEBUG: "{trans_name}" status "{task_name}" : {thumb_tr.status.message}''')
+            run_task = False
+            if thumb_tr.status.message != 'processed':
+                run_task = True
+                print(f'''{dry_run_msg}DEBUG: "{trans_name}" status is "{thumb_tr.status.message}".''')
+            else:
+                # exists = s3.object_exists(thumbnail_object_key)
+                trans_obj_keys = s3.list_directory(f'apps/blast/astro-data/data/sed_output/{trans_name}/')
+                # print(trans_obj_keys)
+                # If there are any JPEGs in the transient directory, assume one is the thumbnail
+                for scope in ['local', 'global']:
+                    jpg_obj_keys = [key for key in trans_obj_keys if key.lower().endswith(f'_{scope}.jpg')]
+                    exists = True if jpg_obj_keys else False
+                    print(f'''{dry_run_msg}DEBUG: "{trans_name}" JPEG files ({scope}): {jpg_obj_keys}''')
+                    # Run the task if the thumbnail is missing or if the force option is set to true
+                    run_task = force or not exists
+                    if run_task:
+                        print(f'''{dry_run_msg} DEBUG: "{trans_name}
+                                " marked "processed" but {scope} JPG is missing. Resetting task status...''')
+                        if not dry_run:
+                            thumb_tr.status = Status.objects.get(message='not processed')
+                            thumb_tr.save()
+            if run_task:
+                print(f'''{dry_run_msg}WARNING: "{trans_name}" needs to run "{task_name}".''')
+                if dry_run:
+                    continue
+                task_func.delay(trans_name)
+            else:
+                print(f'''{dry_run_msg}DEBUG: "{trans_name}" thumbnail already generated.''')
