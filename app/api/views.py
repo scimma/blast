@@ -199,17 +199,14 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = SEDFittingResultFilter
 
+    allowed_file_types = {'chains', 'model', 'percentiles'}
+
     @action(methods=['get'], detail=True, url_path=r"download/(?P<file_type>[^/.]+)")
     def download(self, request, pk=None, file_type=None):
-        sed_result = self.get_object()
-        if file_type == 'chains':
-            file_field = sed_result.chains_file
-        elif file_type == 'model':
-            file_field = sed_result.model_file
-        elif file_type == 'percentiles':
-            file_field = sed_result.percentiles_file
-        else:
+        if file_type not in self.allowed_file_types:
             return Response({'error': "unknown file type"}, status=400)
+        sed_result = self.get_object()
+        file_field = getattr(sed_result, f"{file_type}_file")
         return stream_download_file(file_field.name)
 
 
