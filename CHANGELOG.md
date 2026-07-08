@@ -13,7 +13,7 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [x.y.z]
+## [1.13.0]
 
 ### Added
 
