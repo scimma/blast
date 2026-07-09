@@ -301,9 +301,9 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
             # Pan-STARRS in particular seems a little off
             # we'll have to re-train at some point, but for now just pull
             # uncertainties from the training sample
-            for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
-                chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-                x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
+            #for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
+            #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
+            #    x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
 
             all_x.append(x)
 
@@ -502,11 +502,11 @@ def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=10):
                 )[1]
                 # signal.alarm(run_params["tmax_per_obj"])
 
-                for idx, fname in enumerate(obs["filternames"]):
-                    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-                    samp_y_guess[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][
-                        idx
-                    ]
+                #for idx, fname in enumerate(obs["filternames"]):
+                #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
+                #    samp_y_guess[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][
+                #        idx
+                #    ]
 
                 do_continue = False
                 for tmax, npost in zip(
@@ -647,10 +647,10 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
             # Pan-STARRS in particular seems a little off
             # we'll have to re-train at some point, but for now just pull
             # uncertainties from the training sample
-            for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
+            #for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
                 # if 'PanSTARRS' in fname or '2MASS' in fname or 'SDSS' in fname or 'DES' in fname:
-                chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-                samp_y_guess[22:][idx] = y_train[idx_chi2_selected][chc][22:][idx]
+            #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
+            #    samp_y_guess[22:][idx] = y_train[idx_chi2_selected][chc][22:][idx]
 
             # if we can't get one posterior sample in one second, we should move along
             # to the next MC sample
@@ -760,9 +760,9 @@ def sbi_baseline(obs, run_params, sbi_params, max_neighbors=10):
 
     x = np.concatenate([y_obs, sig_obs, [obs["redshift"]]])
 
-    for idx, fname in enumerate(obs["filternames"]):
-        chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-        x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
+    #for idx, fname in enumerate(obs["filternames"]):
+    #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
+    #    x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
 
     try:
         ave_theta = hatp_x_y.sample(
@@ -813,6 +813,7 @@ def sbi_pp(obs, run_params, sbi_params, max_neighbors=10):
 
     y_obs = np.copy(obs["mags"])
     sig_obs = np.copy(obs["mags_unc"])
+
     # copy the observed data to be used by sbi
     # missing data, if any, will be filled in later
     obs["mags_sbi"] = y_obs
@@ -875,9 +876,9 @@ def sbi_pp(obs, run_params, sbi_params, max_neighbors=10):
 
         x = np.concatenate([y_obs, sig_obs, [obs["redshift"]]])
 
-        for idx, fname in enumerate(obs["filternames"]):
-            chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-            x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
+        #for idx, fname in enumerate(obs["filternames"]):
+        #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
+        #    x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
 
         try:
             ave_theta = hatp_x_y.sample(

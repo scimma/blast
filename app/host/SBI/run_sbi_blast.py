@@ -196,7 +196,7 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
     meds_sigs, stds_sigs = [], []
 
     for f in all_filters:
-        toy_noise_x, toy_noise_y = np.loadtxt(
+        toy_noise_x, toy_noise_y, toy_noise_std = np.loadtxt(
             f"host/SBI/snrfiles/{f.name}_magvsnr.txt", dtype=float, unpack=True
         )
         meds_sigs += [
@@ -211,7 +211,7 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         stds_sigs += [
             interp1d(
                 toy_noise_x,
-                1.0857 * 1 / toy_noise_y,
+                (1.0857 * 1 / toy_noise_y)*(toy_noise_std/toy_noise_y),
                 kind="slinear",
                 fill_value="extrapolate",  # (0.01,1.0),
                 bounds_error=False,
