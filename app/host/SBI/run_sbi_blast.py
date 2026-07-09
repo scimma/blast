@@ -42,8 +42,8 @@ run_params = {
 sbi_params = {
     "anpe_fname_global": f"{settings.SBIPP_ROOT}/SBI_model_global.pt",  # trained sbi model
     "train_fname_global": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_global.h5",  # training set
-    "anpe_fname_local": f"{settings.SBIPP_ROOT}/SBI_model_local.pt",  # trained sbi model
-    "train_fname_local": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_local.h5",  # training set
+    "anpe_fname_local": f"{settings.SBIPP_ROOT}/SBI_model_global.pt",  # trained sbi model
+    "train_fname_local": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_global.h5",  # training set
     "nhidden": 500,  # architecture of the trained density estimator
     "nblocks": 15,  # architecture of the trained density estimator
 }
