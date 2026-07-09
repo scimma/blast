@@ -79,12 +79,16 @@ class AliasSerializer(serializers.ModelSerializer):
     def get_host(self, obj):
         return obj.host.name if obj.host else None
 
+class DownloadURLField(serializers.SerializerMethodField):
+    #Like SerializerMethodField, but also passes self.field_name to the method, avoid hardcoding per-field wrappers.
+    def to_representation(self, obj):
+        method = getattr(self.parent, self.method_name)
+        return method(obj, self.field_name)
 
 class SEDFittingResultSerializer(serializers.ModelSerializer):
-    chains_file = serializers.SerializerMethodField()
-    model_file = serializers.SerializerMethodField()
-    percentiles_file = serializers.SerializerMethodField()
-
+    chains_file = DownloadURLField(method_name='get_download_file')
+    model_file = DownloadURLField(method_name='get_download_file')
+    percentiles_file = DownloadURLField(method_name='get_download_file')
     class Meta:
         model = models.SEDFittingResult
         depth = 1
@@ -93,46 +97,15 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         # Hardcode download URL
         ret = super().to_representation(instance)
-        ret['chains_file'] = self.get_chains_file(instance)
-        ret['model_file'] = self.get_model_file(instance)
-        ret['percentiles_file'] = self.get_percentiles_file(instance)
+        ret['chains_file'] = self.get_download_file(instance, "chains")
+        ret['model_file'] = self.get_download_file(instance, "model")
+        ret['percentiles_file'] = self.get_download_file(instance, "percentiles")
         return ret
-
-    def get_chains_file(self, obj):
-        request = self.context["request"]
-
-        return request.build_absolute_uri(
-            reverse(
-                "sedfittingresult-download",
-                kwargs={
-                    "pk": obj.pk,
-                    "file_type": "chains",
-                },
-            )
-        )
-
-    def get_model_file(self, obj):
+    
+    def get_download_file(self, obj, file_type):
         request = self.context["request"]
         return request.build_absolute_uri(
-            reverse(
-                "sedfittingresult-download",
-                kwargs={
-                    "pk": obj.pk,
-                    "file_type": "model",
-                },
-            )
-        )
-
-    def get_percentiles_file(self, obj):
-        request = self.context["request"]
-        return request.build_absolute_uri(
-            reverse(
-                "sedfittingresult-download",
-                kwargs={
-                    "pk": obj.pk,
-                    "file_type": "percentiles",
-                },
-            )
+            reverse("sedfittingresult-download", kwargs={"pk": obj.pk, "file_type": file_type})
         )
 
 
