@@ -118,12 +118,13 @@ def chidof(mags, obsphot, obsphot_unc, individual=False):
         return chi / np.sum(np.isfinite(obsphot))
 
 
-def gauss_approx_missingband(obs, run_params, sbi_params, max_neighbors=200):
+def gauss_approx_missingband(obs, run_params, sbi_params, max_neighbors=10):
     """nearest neighbor approximation of missing bands;
     see sec. 4.1.2 for details
     """
     use_res = False
-    y_train = sbi_params["y_train"]
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags_sbi"])
     sig_obs = np.copy(obs["mags_unc_sbi"])
@@ -190,9 +191,10 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
         print("sbi missing bands")
     ave_theta = []
 
-    max_neighbors = 200
+    max_neighbors = 10
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
     hatp_x_y = sbi_params["hatp_x_y"]
-    y_train = sbi_params["y_train"]
+    y_train = sbi_params["y_train"][redshift_idx]
     y_obs = np.copy(obs["mags_sbi"])
     sig_obs = np.copy(obs["mags_unc_sbi"])
     invalid_mask = np.copy(obs["missing_mask"])
@@ -212,7 +214,7 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
     chi_nei = chidof(
         mags=look_in_training, obsphot=y_obs[valid_idx], obsphot_unc=sig_obs[valid_idx]
     )
-
+#    import pdb; pdb.set_trace()
     _chi2_thres = run_params["ini_chi2"] * 1
     cnt = 0
     use_res = True
@@ -371,7 +373,8 @@ def lim_of_noisy_guass(obs, run_params, sbi_params):
 
     use_res = 1
 
-    y_train = sbi_params["y_train"]
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags_sbi"])
     sig_obs = np.copy(obs["mags_unc_sbi"])
@@ -420,7 +423,7 @@ def lim_of_noisy_guass(obs, run_params, sbi_params):
     return lims, use_res
 
 
-def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=200):
+def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=10):
     """used when observations have out-of-distribution uncertainties;
     see sec. 4.1.1 for details
     """
@@ -431,8 +434,9 @@ def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=200):
 
     ave_theta = []
 
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
     hatp_x_y = sbi_params["hatp_x_y"]
-    y_train = sbi_params["y_train"]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags_sbi"])
     sig_obs = np.copy(obs["mags_unc_sbi"])
@@ -564,8 +568,9 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
 
     ave_theta = []
 
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
     hatp_x_y = sbi_params["hatp_x_y"]
-    y_train = sbi_params["y_train"]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags_sbi"])
     sig_obs = np.copy(obs["mags_unc_sbi"])
@@ -696,7 +701,7 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
     return ave_theta, use_res, timeout_flag, cnt
 
 
-def sbi_baseline(obs, run_params, sbi_params, max_neighbors=200):
+def sbi_baseline(obs, run_params, sbi_params, max_neighbors=10):
     signal.signal(signal.SIGALRM, timeout_handler)
 
     if run_params["verbose"]:
@@ -714,8 +719,9 @@ def sbi_baseline(obs, run_params, sbi_params, max_neighbors=200):
         "nsamp_noisy": -99,  # number of MC samples drawn
     }
 
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
     hatp_x_y = sbi_params["hatp_x_y"]
-    y_train = sbi_params["y_train"]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags"])
     sig_obs = np.copy(obs["mags_unc"])
@@ -777,7 +783,7 @@ def sbi_baseline(obs, run_params, sbi_params, max_neighbors=200):
     return ave_theta, obs, flags
 
 
-def sbi_pp(obs, run_params, sbi_params, max_neighbors=200):
+def sbi_pp(obs, run_params, sbi_params, max_neighbors=10):
     """wrapper for sbi++; this should be the only function needed to be called outside this scipt under normal circumstances
 
     obs: a dictionary at least containing
@@ -801,8 +807,9 @@ def sbi_pp(obs, run_params, sbi_params, max_neighbors=200):
         "nsamp_noisy": -99,  # number of MC samples drawn
     }
 
+    redshift_idx = np.where(abs(obs["redshift"]-sbi_params["y_train"][:,-1]) < 0.05)[0]
     hatp_x_y = sbi_params["hatp_x_y"]
-    y_train = sbi_params["y_train"]
+    y_train = sbi_params["y_train"][redshift_idx]
 
     y_obs = np.copy(obs["mags"])
     sig_obs = np.copy(obs["mags_unc"])

@@ -993,7 +993,7 @@ class HostSEDFitting(TransientTaskRunner):
         #     logger.warning('All SED output files exist. Skipping SED fitting calculation...')
         #     return "processed"
 
-        if transient.best_redshift is None or transient.best_redshift > 0.2:
+        if transient.best_redshift is None or transient.best_redshift > 1.0:
             # training sample doesn't work here
             return "redshift too high"
 

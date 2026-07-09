@@ -224,7 +224,7 @@ def build_model_nonparam(obs=None, **extras):
         "N": 1,
         "isfree": True,
         "init": 0.5,
-        "prior": priors.FastUniform(a=0, b=0.2),
+        "prior": priors.FastUniform(a=0, b=1.0),
     }
 
     model_params["logmass"] = {
