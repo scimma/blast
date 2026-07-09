@@ -18,6 +18,7 @@ class TransientSerializer(serializers.ModelSerializer):
             "photometric_class",
             "processing_status",
             "added_by"
+            # "host",
         ]
 
     aliases = serializers.SerializerMethodField()
