@@ -214,7 +214,7 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
     chi_nei = chidof(
         mags=look_in_training, obsphot=y_obs[valid_idx], obsphot_unc=sig_obs[valid_idx]
     )
-#    import pdb; pdb.set_trace()
+
     _chi2_thres = run_params["ini_chi2"] * 1
     cnt = 0
     use_res = True
