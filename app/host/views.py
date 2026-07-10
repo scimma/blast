@@ -205,15 +205,14 @@ def add_transient(request):
     file_imported_transient_names = []
     existing_transient_names = []
     transients_not_found = []
-    transients_to_update = []
-    
+
     if request.method == "POST":
         form = TransientUploadForm(request.POST, request.FILES)
         if form.is_valid():
             tns_names = form.cleaned_data["tns_names"]
             full_info = form.cleaned_data["full_info"]
             update_info = form.cleaned_data["update_info"]
-            
+
             # Import transient dataset from an uploaded archive file
             if "file" in request.FILES:
                 logger.debug('Importing transient from uploaded archive file...')
@@ -304,6 +303,213 @@ def add_transient(request):
                 import_transient_list.delay(defined_transient_names)
             # update transient or host properties
             elif update_info:
+
+                def process_transient_update(existing_transient, csv_line):
+                    transient_fields = [
+                        'redshift',
+                        'ra_deg',
+                        'dec_deg',
+                        'specclass',
+                        'update_comment',
+                    ]
+                    aperture_fields = [
+                        'aperture_semi_major_axis_arcsec',
+                        'aperture_semi_minor_axis_arcsec',
+                        'aperture_orientation_deg',
+                    ]
+                    host_fields = [
+                        'host_name',
+                        'host_ra_deg',
+                        'host_dec_deg',
+                        'host_redshift',
+                    ]
+                    float_fields = [
+                        'redshift',
+                        'ra_deg',
+                        'dec_deg',
+                        'host_ra_deg',
+                        'host_dec_deg',
+                        'host_redshift',
+                        'aperture_semi_major_axis_arcsec',
+                        'aperture_semi_minor_axis_arcsec',
+                        'aperture_orientation_deg',
+                    ]
+                    # Parse raw string values and convert to appropriate types
+                    # TODO: There should be error handling here to return HTTP 400 in the case of invalid input
+                    transient = {}
+                    for key, value in csv_line.items():
+                        # Strip all extraneous space characters from string values
+                        transient[key] = value.strip()
+                        # If the value is "none", set to Python None value
+                        if transient[key].lower() == "none":
+                            transient[key] = None
+                            continue
+                        # Parse floating point values
+                        if key in float_fields:
+                            transient[key] = float(value)
+                        # Update existing transient with provided values
+                        if key in transient_fields:
+                            setattr(existing_transient, key, transient[key])
+
+                    # If any of the relevant host-related values were provided, update the associated Host object
+                    update_host = any([value for key, value in transient.items() if key in host_fields])
+                    if update_host:
+                        try:
+                            host = Host.objects.get(transient__name=transient['name'])
+                        except Host.DoesNotExist:
+                            # if any host info is being updated, we might need to create a Host object
+                            host = Host.objects.create(
+                                ra_deg=transient['host_ra_deg'],
+                                dec_deg=transient['host_dec_deg'],
+                                transient=existing_transient
+                            )
+                        # Update the Host object with the provided values
+                        for key in host_fields:
+                            setattr(host, key.replace('host_', ''), transient[key])
+
+                    # If any of the relevant aperture-related values were provided, update the associated object
+                    update_aperture = any([value for key, value in transient.items() if key in aperture_fields])
+                    if update_aperture:
+
+                        cutouts = Cutout.objects.filter(transient=existing_transient).filter(~Q(fits=""))
+                        aperture_cutout = select_cutout_aperture(cutouts, choice=0)[0]
+
+                        # we need to delete any other global apertures associated with this transient
+                        # if we want to update the parameters.
+                        other_apertures = Aperture.objects.filter(
+                            transient__name=transient['name'],
+                            type='global'
+                        ).exclude(
+                            cutout__filter=aperture_cutout.filter
+                        )
+                        # we also need to delete any global photometry associated with those apertures
+                        for o in other_apertures:
+                            AperturePhotometry.objects.filter(aperture=o).delete()
+                        other_apertures.delete()
+                        if not update_host:
+                            host = Host.objects.get(transient__name=transient['name'])
+                        try:
+                            aperture = Aperture.objects.get(
+                                transient__name=transient['name'],
+                                cutout__filter=aperture_cutout.filter,
+                                type='global'
+                            )
+                            if update_host:
+                                aperture.ra_deg = host.ra_deg
+                                aperture.dec_deg = host.dec_deg
+                            # Update the Aperture object with the provided values
+                            for key in aperture_fields:
+                                setattr(aperture, key.replace('aperture_', ''), transient[key])
+                        except Aperture.DoesNotExist:
+                            aperture = Aperture.objects.create(
+                                name=f"{existing_transient.name}_{aperture_cutout.filter.name}_global",
+                                cutout=aperture_cutout,
+                                transient=existing_transient,
+                                ra_deg=host.ra_deg,
+                                dec_deg=host.dec_deg,
+                                orientation_deg=transient['aperture_orientation_deg'],
+                                semi_major_axis_arcsec=transient['aperture_semi_major_axis_arcsec'],
+                                semi_minor_axis_arcsec=transient['aperture_semi_minor_axis_arcsec'],
+                                type='global')
+
+                    # Determine which fields were updated and store in the Transient object
+                    ignored_fields = [
+                        'update_comment',
+                        'name',
+                    ]
+                    fields_updated = [key for key, value in transient.items()
+                                      if key not in ignored_fields and value is not None]
+                    existing_transient.update_fields = ','.join(fields_updated)
+
+                    # if we made it all the way to the end, we can save
+                    existing_transient.save()
+                    if update_host:
+                        host.save()
+                    if update_aperture:
+                        aperture.save()
+                    return existing_transient, update_host, update_aperture
+
+                def retrigger_updated_transient_workflow(existing_transient, update_host, update_aperture):
+                    # reset the relevant task statuses to "not processed" so that they can be re-triggered.
+                    # this is a pretty annoying set of logic, the goal is not to reprocess any jobs that
+                    # would override the customized data
+                    tasknames_to_redo = []
+                    tasknames_to_skip = []
+                    fields_updated = existing_transient.update_fields.split(',')
+                    if 'ra_deg' in fields_updated or 'dec_deg' in fields_updated:
+                        tasknames_to_redo += [
+                            'Transient MWEBV',
+                            'Host match',
+                            'Host information',
+                            'Host MWEBV',
+                            'Global aperture construction',
+                            'Global aperture photometry',
+                            'Validate global photometry',
+                            'Global host SED inference',
+                            'Local aperture photometry',
+                            'Validate local photometry',
+                            'Local host SED inference',
+                        ]
+                    if 'redshift' in fields_updated or 'host_redshift' in fields_updated:
+                        tasknames_to_redo += [
+                            'Global host SED inference',
+                            'Local aperture photometry',
+                            'Validate local photometry',
+                            'Local host SED inference',
+                        ]
+
+                    if update_host:
+                        tasknames_to_skip += [
+                            'Cutout download',
+                            'Transient MWEBV',
+                            'Host match',
+                            'Host information',
+                            'Host MWEBV',
+                        ]
+                        tasknames_to_redo += [
+                            'Global aperture construction',
+                            'Global aperture photometry',
+                            'Validate global photometry',
+                            'Global host SED inference',
+                        ]
+                        mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,
+                                                                       task__name='Host MWEBV')
+                        mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
+                        mwebv_task_register.status = Status.objects.get(message=mwebv_status)
+                        mwebv_task_register.save()
+                        host_task_register = TaskRegister.objects.get(transient=existing_transient,
+                                                                      task__name='Host information')
+                        host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
+                        host_task_register.status = Status.objects.get(message=host_status)
+                        host_task_register.save()
+
+                    if update_aperture:
+                        tasknames_to_skip += ['Global aperture construction']
+                        tasknames_to_redo += [
+                            'Global aperture photometry',
+                            'Validate global photometry',
+                            'Global host SED inference',
+                        ]
+                    # now we make sure that tasks_to_redo doesn't include anything in tasks to skip
+                    for i, tnr in enumerate(tasknames_to_redo):
+                        if tnr in tasknames_to_skip:
+                            tasknames_to_redo.pop(i)
+                    tasknames_to_redo = np.unique(tasknames_to_redo)
+                    tasknames_to_skip = np.unique(tasknames_to_skip)
+
+                    tasks_to_redo = TaskRegister.objects.filter(transient=existing_transient,
+                                                                task__name__in=tasknames_to_redo)
+                    tasks_to_skip = TaskRegister.objects.filter(transient=existing_transient,
+                                                                task__name__in=tasknames_to_skip)
+                    for tr in tasks_to_redo:
+                        tr.status = Status.objects.get(message='not processed')
+                        tr.save()
+                    for tr in tasks_to_skip:
+                        tr.status = Status.objects.get(message='processed')
+                        tr.save()
+                    # Retrigger updated transients
+                    retrigger_transient(transient_name=existing_transient.name)
+
                 reader = csv.DictReader(io.StringIO(update_info), fieldnames=[
                     'name',
                     'ra_deg',
@@ -317,210 +523,24 @@ def add_transient(request):
                     'aperture_semi_major_axis_arcsec',
                     'aperture_semi_minor_axis_arcsec',
                     'aperture_orientation_deg',
-                    'update_comment'
+                    'update_comment',
                 ])
-                for transient in reader:
+                transients_to_update = []
+                for csv_line in reader:
                     try:
-                        try:
-                            existing_transient = Transient.objects.get(name=transient['name'])
-                        except:
-                            transients_not_found += [transient['name']]
-                            continue
-                        if transient['specclass'].lower().strip() != "none":
-                            existing_transient.spectroscopic_class = transient['specclass'].strip()
-                        if transient['redshift'].lower().strip() != "none":
-                            existing_transient.redshift = float(transient['redshift'].strip())
-                        if transient['ra_deg'].lower().strip() != "none":
-                            existing_transient.ra_deg = float(transient['ra_deg'].strip())
-                        if transient['dec_deg'].lower().strip() != "none":
-                            existing_transient.dec_deg = float(transient['dec_deg'].strip())
-                        if transient['update_comment'].lower().strip() != "none":
-                            existing_transient.update_comment = transient['update_comment'].strip()
-                        fields_updated = []
-                        for k in transient.keys():
-                            if k == 'update_comment' or k == 'name': continue
-                            if transient[k].lower().strip() != "none":
-                                fields_updated += [k]
-                        existing_transient.update_fields = ','.join(fields_updated)
-
-                        if 'redshift' in fields_updated:
-                            update_transient_redshift = True
-                        else:
-                            update_transient_redshift = False
-
-                        if 'host_redshift' in fields_updated:
-                            update_host_redshift = True
-                        else:
-                            update_host_redshift = False
-
-                            
-                        if 'ra_deg' in fields_updated or 'dec_deg' in fields_updated:
-                            update_transient_loc = True
-                        else:
-                            update_transient_loc = False
-                            
-                        # host parameters
-                        if transient['host_name'].lower().strip() != "none" or \
-                           transient['host_ra_deg'].lower().strip() != "none" or \
-                           transient['host_dec_deg'].lower().strip() != "none" or \
-                           transient['host_redshift'].lower().strip() != "none":
-                            update_host = True
-                            host = Host.objects.filter(transient__name=transient['name'])
-                            if not len(host):
-                                # if any host info is being updated, we might need to create
-                                # a host object
-                                    host = Host.objects.create(
-                                        ra_deg=float(transient['host_ra_deg'].lower().strip()),
-                                        dec_deg=float(transient['host_dec_deg'].lower().strip()),
-                                        transient=existing_transient
-                                    )
-                            else:
-                                host = host[0]
-                            if transient['host_name'].lower().strip() != "none":
-                                host.name = transient['host_name'].strip()
-                            if transient['host_ra_deg'].lower().strip() != "none":
-                                host.ra_deg = float(transient['host_ra_deg'].strip())
-                            if transient['host_dec_deg'].lower().strip() != "none":
-                                host.dec_deg = float(transient['host_dec_deg'].strip())
-                            if transient['host_redshift'].lower().strip() != "none":
-                                host.redshift = float(transient['host_redshift'].strip())
-                        else:
-                            update_host = False
-                            
-                        # aperture parameters
-                        if transient['aperture_semi_major_axis_arcsec'].lower().strip() != "none" or \
-                           transient['aperture_semi_minor_axis_arcsec'].lower().strip() != "none" or \
-                           transient['aperture_orientation_deg'].lower().strip() != "none":
-                            update_aperture = True
-
-                            if not update_host:
-                                host = Host.objects.get(transient__name=transient['name'])
-                            
-                            cutouts = Cutout.objects.filter(transient=existing_transient).filter(~Q(fits=""))
-                            aperture_cutout = select_cutout_aperture(cutouts, choice=0)[0]
-
-                            # we need to delete any other global apertures associated with this transient
-                            # if we want to update the parameters.
-                            other_apertures = Aperture.objects.filter(
-                                transient__name=transient['name'],
-                                type='global'
-                            ).exclude(
-                                cutout__filter=aperture_cutout.filter
-                            )
-                            # we also need to delete any global photometry associated with those apertures
-                            for o in other_apertures:
-                                AperturePhotometry.objects.filter(aperture=o).delete()
-                            other_apertures.delete()
-
-                            
-                            aperture = Aperture.objects.filter(
-                                transient__name=transient['name'],
-                                cutout__filter=aperture_cutout.filter,
-                                type='global'
-                            )
-                            if not len(aperture):
-                                aperture = Aperture.objects.create(
-                                    name=f"{existing_transient.name}_{aperture_cutout.filter.name}_global",
-                                    cutout=aperture_cutout,
-                                    transient=existing_transient,
-                                    ra_deg=host.ra_deg,
-                                    dec_deg=host.dec_deg,
-                                    orientation_deg=float(transient['aperture_orientation_deg'].lower().strip()),
-                                    semi_major_axis_arcsec=float(transient['aperture_semi_major_axis_arcsec'].lower().strip()),
-                                    semi_minor_axis_arcsec=float(transient['aperture_semi_minor_axis_arcsec'].lower().strip()),
-                                    type='global'
-                                )
-                            else:
-                                aperture = aperture[0]
-                                if update_host:
-                                    aperture.ra_deg = host.ra_deg
-                                    aperture.dec_deg = host.dec_deg
-                                if transient['aperture_orientation_deg'].lower().strip() != "none":
-                                    aperture.orientation_deg = float(transient['aperture_orientation_deg'].strip())
-                                if transient['aperture_semi_major_axis_arcsec'].lower().strip() != "none":
-                                    aperture.semi_major_axis_arcsec = float(transient['aperture_semi_major_axis_arcsec'].strip())
-                                if transient['aperture_semi_minor_axis_arcsec'].lower().strip() != "none":
-                                    aperture.semi_minor_axis_arcsec = float(transient['aperture_semi_minor_axis_arcsec'].strip())
-
-                        else:
-                            update_aperture = False
-                            
-                        # if we made it all the way to the end, we can save
-                        existing_transient.save()
-                        if update_host: host.save()
-                        if update_aperture: aperture.save()
-
-                        # reset the relevant task statuses to "not processed" so that they can be re-triggered.
-                        # this is a pretty annoying set of logic, the goal is not to reprocess any jobs that
-                        # would override the customized data
-                        tasknames_to_redo = []
-                        tasknames_to_skip = []
-                        if update_transient_loc:
-                            tasknames_to_redo += [
-                                'Transient MWEBV','Host match','Host information',
-                                'Host MWEBV','Global aperture construction',
-                                'Global aperture photometry','Validate global photometry',
-                                'Global host SED inference','Local aperture photometry',
-                                'Validate local photometry','Local host SED inference'
-                            ]
-                        if update_transient_redshift or update_host_redshift:
-                            tasknames_to_redo += [
-                                'Global host SED inference','Local aperture photometry',
-                                'Validate local photometry','Local host SED inference'
-                            ]
-
-                        if update_host:
-                            tasknames_to_skip += [
-                                'Cutout download','Transient MWEBV','Host match',
-                                'Host information','Host MWEBV'
-                            ]
-                            tasknames_to_redo += [
-                                'Global aperture construction','Global aperture photometry',
-                                'Validate global photometry','Global host SED inference'
-                            ]
-                            mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,task__name='Host MWEBV')
-                            mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
-                            mwebv_task_register.status = Status.objects.get(message=mwebv_status)
-                            mwebv_task_register.save()
-                            host_task_register = TaskRegister.objects.get(transient=existing_transient,task__name='Host information')
-                            host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
-                            host_task_register.status = Status.objects.get(message=host_status)
-                            host_task_register.save()
-                            
-                        if update_aperture:
-                            tasknames_to_skip += ['Global aperture construction']
-                            tasknames_to_redo += [
-                                'Global aperture photometry',
-                                'Validate global photometry',
-                                'Global host SED inference'
-                            ]
-                        # now we make sure that tasks_to_redo doesn't include anything in tasks to skip
-                        for i,tnr in enumerate(tasknames_to_redo):
-                            if tnr in tasknames_to_skip:
-                                tasknames_to_redo.pop(i)
-                        tasknames_to_redo = np.unique(tasknames_to_redo)
-                        tasknames_to_skip = np.unique(tasknames_to_skip)
-                        
-                        tasks_to_redo = TaskRegister.objects.filter(transient=existing_transient,task__name__in=tasknames_to_redo)
-                        tasks_to_skip = TaskRegister.objects.filter(transient=existing_transient,task__name__in=tasknames_to_skip)
-                        for tr in tasks_to_redo:
-                            tr.status = Status.objects.get(message='not processed')
-                            tr.save()
-                        for tr in tasks_to_skip:
-                            tr.status = Status.objects.get(message='processed')
-                            tr.save()
-                        transients_to_update += [existing_transient.name]
-                        
+                        existing_transient = Transient.objects.get(name=csv_line['name'])
+                        existing_transient, update_host, update_aperture = process_transient_update(existing_transient,
+                                                                                                    csv_line)
+                        transients_to_update += retrigger_updated_transient_workflow(existing_transient, update_host,
+                                                                                     update_aperture)
+                    except Transient.DoesNotExist:
+                        transients_not_found += [csv_line['name']]
+                        continue
                     except Exception as err:
                         err_msg = f'''Error parsing line "{transient}": {err}'''
                         logger.error(err_msg)
                         errors.append(err_msg)
                         continue
-
-                # Retrigger updated transients
-                for tu in transients_to_update:
-                    retrigger_transient(transient_name=tu)
-                
 
     else:
         form = TransientUploadForm()
@@ -533,7 +553,7 @@ def add_transient(request):
         "file_imported_transient_names": file_imported_transient_names,
         "existing_transient_names": existing_transient_names,
         "not_existing_transient_names": transients_not_found,
-        "updated_transient_names":transients_to_update,
+        "updated_transient_names": transients_to_update,
     }
     return render(request, "add_transient.html", context)
 
