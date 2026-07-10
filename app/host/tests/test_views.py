@@ -168,10 +168,10 @@ class AddTransientTest(TestCase):
                 response,
                 text=(f'&quot;{name}&quot; must begin and end with alphanumeric characters,'''
                       ''' and may include underscores and hyphens. Spaces are not allowed.'''))
-        for name in ['abcdefg1234__7', 'abcde--1234567']:
+        for name, character in [('abcdefg1234__7', '_'), ('abcde--1234567', '-')]:
             self.assertContains(
                 response,
-                text=f'&quot;{name}&quot; may not contain consecutive underscores or hyphens')
+                text=f'&quot;{name}&quot; may not contain consecutive &quot;{character}&quot; characters')
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
