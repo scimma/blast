@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Removed
+
+- Remove POST request handling from results view function rendered obsolete in v1.8.0.
+
 ## [1.12.0]
 
 ### Added
