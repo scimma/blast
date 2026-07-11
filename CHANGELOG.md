@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Fixed
+
+- Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
+
 ## [1.13.0]
 
 ### Added
