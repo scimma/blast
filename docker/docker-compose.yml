@@ -16,6 +16,7 @@ volumes:
 
 services:
   nginx:
+    platform: linux/amd64
     image: nginx:1.21-alpine
     restart: always
     depends_on:
@@ -33,6 +34,7 @@ services:
       - "slim_dev"
 
   app:
+    platform: linux/amd64
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.app.sh
     networks:
@@ -52,8 +54,8 @@ services:
       - "batch"
 
   database:
+    platform: linux/amd64
     image: postgres:16
-    platform: linux/x86_64
     restart: always
     volumes:
       - blast-db:/var/lib/postgresql/data
@@ -74,8 +76,8 @@ services:
       - "batch"
 
   influxdb:
+    platform: linux/amd64
     image: influxdb:2
-    platform: linux/x86_64
     restart: unless-stopped
     networks:
       - internal
@@ -87,6 +89,7 @@ services:
       - "full_dev"
 
   grafana:
+    platform: linux/amd64
     image: grafana/grafana-enterprise
     restart: unless-stopped
     networks:
@@ -100,6 +103,7 @@ services:
       - "full_dev"
 
   celery-worker:
+    platform: linux/amd64
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery.sh
     networks:
@@ -124,6 +128,7 @@ services:
       - "batch"
 
   celery-beat:
+    platform: linux/amd64
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery_beat.sh
     networks:
@@ -138,6 +143,7 @@ services:
     #  - "batch"
 
   redis:
+    platform: linux/amd64
     image: redis:alpine
     restart: always
     ports:
@@ -151,6 +157,7 @@ services:
       - "ci"
 
   flower:
+    platform: linux/amd64
     image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
     command: bash entrypoints/docker-entrypoint.flower.sh
     networks:
@@ -163,6 +170,7 @@ services:
       - "batch"
 
   batch:
+    platform: linux/amd64
     image: python:3.9-buster
     command: bash docker-entrypoint.batch.sh
     networks:
@@ -177,6 +185,7 @@ services:
       - "batch"
 
   object-store:
+    platform: linux/amd64
     image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
     ports:
       - 127.0.0.1:${S3_CONSOLE_PORT:-9001}:${S3_CONSOLE_PORT:-9001}

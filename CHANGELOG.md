@@ -18,6 +18,30 @@ Types of changes:
 ### Changed
 - Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
 
+## [1.13.0]
+
+### Added
+
+- Added a new form to update properties of existing transients
+- Form prompts retriggering of updated transients from the relevant stages
+- Added a new migration to record comments on any user-updated properties
+
+### Changed
+
+- Now using astropy version 7.2.0, prospector 1.4.1, photutils dev version (commit 2573ef4, until
+  latest release)
+- Included legacy survey data release [DES DR10](https://www.legacysurvey.org/dr10/description/)
+- Updated how legacy survey downloads works, resulting in fewer download timeouts.
+- Improved efficiency of cutout unit test by using ThreadPoolExecutor to test downloads in parallel.
+- Reintroduce the formerly excluded `host` value in `TransientSerializer` that defines the data
+  object returned by the `/api/transient/` API endpoint.
+
+### Fixed
+
+- Incorporated photutils fix for misaligned apertures in DES legacy survey images that caused offset
+  apertures in the plotting and photometry.
+- Added the missing microjansky unit label to the flux axis label of the SED plots.
+
 ## [1.12.0]
 
 ### Added
