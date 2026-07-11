@@ -23,6 +23,10 @@ Types of changes:
 
 - Remove POST request handling from results view function rendered obsolete in v1.8.0.
 
+### Fixed
+
+- Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
+
 ## [1.13.0]
 
 ### Added

@@ -36,7 +36,7 @@ class ModifyTransientTest(TestCase):
         with open('''/data/transient_datasets/2026dgt.tar.gz''', 'rb') as dataset_fileobj:
             import_transient_info(dataset_fileobj)
 
-    def test_add_tansients_by_definition(self):
+    def test_update_transient(self):
         # TODO: This test is fragile due to the explicit HTML string search.
         response = self.client.post("/add/", data={
             'update_info': dedent("""
@@ -120,7 +120,7 @@ class AddTransientTest(TestCase):
         with open('''/data/transient_datasets/2026dix.tar.gz''', 'rb') as dataset_fileobj:
             import_transient_info(dataset_fileobj)
 
-    def test_add_tansients_by_definition(self):
+    def test_add_transients_by_definition(self):
         # TODO: This test is fragile due to the explicit HTML string search.
         response = self.client.post("/add/", data={
             'full_info': dedent('''
@@ -168,10 +168,10 @@ class AddTransientTest(TestCase):
                 response,
                 text=(f'&quot;{name}&quot; must begin and end with alphanumeric characters,'''
                       ''' and may include underscores and hyphens. Spaces are not allowed.'''))
-        for name in ['abcdefg1234__7', 'abcde--1234567']:
+        for name, character in [('abcdefg1234__7', '_'), ('abcde--1234567', '-')]:
             self.assertContains(
                 response,
-                text=f'&quot;{name}&quot; may not contain consecutive underscores or hyphens')
+                text=f'&quot;{name}&quot; may not contain consecutive &quot;{character}&quot; characters')
 
         # print(f'''Response: [{response.status_code}]\n{response.content}''')
         # print(f'''Response: [{response.status_code}]\n{response.content.decode('utf-8')}''')
