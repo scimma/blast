@@ -9,10 +9,6 @@ if base_path != "":
     base_path = f"""{base_path}/"""
 
 urlpatterns = [
-    path(
-        f"""{base_path}transient/get/<str:transient_name>""",
-        views.get_transient_science_payload,
-    ),
     re_path(
         base_path + r"^transient/delete/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.delete_transient_view,
