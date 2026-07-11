@@ -16,7 +16,12 @@ Types of changes:
 ## [x.y.z]
 
 ### Changed
+
 - Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
+
+### Removed
+
+- Remove POST request handling from results view function rendered obsolete in v1.8.0.
 
 ## [1.13.0]
 
