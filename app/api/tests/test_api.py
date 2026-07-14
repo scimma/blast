@@ -65,9 +65,9 @@ class APITest(TestCase):
         self.assertTrue(data["local_aperture_host_log_ssfr_16"] == 15.676)
         self.assertTrue(data["local_aperture_host_log_ssfr_50"] == 12.34343)
         self.assertTrue(data["local_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["local_aperture_host_log_age_16"] == 1.0)
-        self.assertTrue(data["local_aperture_host_log_age_50"] == 0.1)
-        self.assertTrue(data["local_aperture_host_log_age_84"] == 5.0)
+        self.assertTrue(data["local_aperture_host_age_16"] == 1.0)
+        self.assertTrue(data["local_aperture_host_age_50"] == 0.1)
+        self.assertTrue(data["local_aperture_host_age_84"] == 5.0)
 
         self.assertTrue(data["global_aperture_host_log_mass_16"] == 1.0)
         self.assertTrue(data["global_aperture_host_log_mass_50"] == 2.0)
@@ -78,9 +78,9 @@ class APITest(TestCase):
         self.assertTrue(data["global_aperture_host_log_ssfr_16"] == 15.676)
         self.assertTrue(data["global_aperture_host_log_ssfr_50"] == 12.34343)
         self.assertTrue(data["global_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["global_aperture_host_log_age_16"] == 1.0)
-        self.assertTrue(data["global_aperture_host_log_age_50"] == 0.1)
-        self.assertTrue(data["global_aperture_host_log_age_84"] == 5.0)
+        self.assertTrue(data["global_aperture_host_age_16"] == 1.0)
+        self.assertTrue(data["global_aperture_host_age_50"] == 0.1)
+        self.assertTrue(data["global_aperture_host_age_84"] == 5.0)
 
         self.assertTrue(request.status_code == status.HTTP_200_OK)
 
