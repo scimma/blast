@@ -31,7 +31,7 @@ run_params = {
     "ini_chi2": 5,  # chi^2 cut usedi in the nearest neighbor search
     "max_chi2": 5000,  # the maximum chi^2 to reach in case we Incremently increase the chi^2
     # in the case of insufficient neighbors
-    "noisy_sig": 2,  # deviation from the noise model, above which the measuremnt is taked as OOD
+    "noisy_sig": 3,  # deviation from the noise model, above which the measuremnt is taked as OOD
     "tmax_per_obj": 120000,  # max time spent on one object / mc sample in secs
     "tmax_all": 600000,  # max time spent on all mc samples in mins
     "outdir": "output",  # output directory
