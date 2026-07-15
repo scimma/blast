@@ -76,7 +76,6 @@ router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet)
 router.register(r"taskregister", api.views.TaskRegisterViewSet)
 router.register(r"task", api.views.TaskViewSet)
 router.register(r"host", api.views.HostViewSet)
-router.register(r"alias", api.views.AliasViewSet)
 
 # Login/Logout
 api_url_patterns = [

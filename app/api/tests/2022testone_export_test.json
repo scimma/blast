@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "app_version": "v1.12.0",
-    "export_time": "2026-05-14T20:48:04.427295+00:00"
+    "app_version": "v1.13.1",
+    "export_time": "2026-07-14T13:21:36.181774+00:00"
   },
   "transient": {
     "model": "host.transient",
@@ -22,7 +22,10 @@
       "milkyway_dust_reddening": null,
       "processing_status": "processing",
       "progress": 0,
-      "software_version": null
+      "software_version": null,
+      "update_comment": null,
+      "update_fields": null,
+      "aliases": []
     }
   },
   "host": {
@@ -40,7 +43,8 @@
       "object_id": null,
       "catalog_name": null,
       "catalog_release": null,
-      "software_version": null
+      "software_version": null,
+      "aliases": []
     }
   },
   "apertures": [

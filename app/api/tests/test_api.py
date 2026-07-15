@@ -65,9 +65,9 @@ class APITest(TestCase):
         self.assertTrue(data["local_aperture_host_log_ssfr_16"] == 15.676)
         self.assertTrue(data["local_aperture_host_log_ssfr_50"] == 12.34343)
         self.assertTrue(data["local_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["local_aperture_host_log_age_16"] == 1.0)
-        self.assertTrue(data["local_aperture_host_log_age_50"] == 0.1)
-        self.assertTrue(data["local_aperture_host_log_age_84"] == 5.0)
+        self.assertTrue(data["local_aperture_host_age_16"] == 1.0)
+        self.assertTrue(data["local_aperture_host_age_50"] == 0.1)
+        self.assertTrue(data["local_aperture_host_age_84"] == 5.0)
 
         self.assertTrue(data["global_aperture_host_log_mass_16"] == 1.0)
         self.assertTrue(data["global_aperture_host_log_mass_50"] == 2.0)
@@ -78,9 +78,9 @@ class APITest(TestCase):
         self.assertTrue(data["global_aperture_host_log_ssfr_16"] == 15.676)
         self.assertTrue(data["global_aperture_host_log_ssfr_50"] == 12.34343)
         self.assertTrue(data["global_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["global_aperture_host_log_age_16"] == 1.0)
-        self.assertTrue(data["global_aperture_host_log_age_50"] == 0.1)
-        self.assertTrue(data["global_aperture_host_log_age_84"] == 5.0)
+        self.assertTrue(data["global_aperture_host_age_16"] == 1.0)
+        self.assertTrue(data["global_aperture_host_age_50"] == 0.1)
+        self.assertTrue(data["global_aperture_host_age_84"] == 5.0)
 
         self.assertTrue(request.status_code == status.HTTP_200_OK)
 
@@ -129,7 +129,7 @@ class APITest(TestCase):
         name = '2022testone'
         alias = '2022testone-alias-test!'
         # Attempt to create an alias without permission
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}')
+        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
         # print(f'[{response.status_code}] {response.content}')
         data = json.loads(response.content)
         self.assertTrue(response.status_code == status.HTTP_403_FORBIDDEN)
@@ -140,7 +140,7 @@ class APITest(TestCase):
         )
         user.user_permissions.add(add_permission)
         assert user.has_perm('host.add_alias')
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}')
+        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
         self.assertTrue(response.status_code == status.HTTP_201_CREATED)
         data = json.loads(response.content)
         self.assertTrue(data["message"].startswith("Alias successfully created:"))
@@ -151,7 +151,7 @@ class APITest(TestCase):
         # Fail when attempting to create another alias with the same name
         self.client.force_login(user)
         object_type = 'host'
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}')
+        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
         self.assertTrue(response.status_code == status.HTTP_409_CONFLICT)
         # Attempt to delete an alias without permission
         response = self.client.delete(f'/api/alias/{alias}/')
