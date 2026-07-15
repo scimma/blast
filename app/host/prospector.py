@@ -29,6 +29,7 @@ from prospect.sources import FastStepBasis
 from prospect.utils.obsutils import fix_obs
 from scipy.special import gamma
 from scipy.special import gammainc
+from scipy.interpolate import interp1d
 
 from .host_utils import get_dust_maps
 from .models import AperturePhotometry
@@ -180,10 +181,30 @@ def build_obs(transient, aperture_type, use_mag_offset=True):
 
         filters.append(trans_curve)
         flux_maggies.append(mJy_to_maggies(flux_mwcorr * 10 ** (-0.4 * mag_offset)))
-        flux_maggies_error.append(
-            mJy_to_maggies(fluxerr_mwcorr * 10 ** (-0.4 * mag_offset))
-        )
-
+        if mag_offset > 0:
+            toy_noise_x, toy_noise_y, toy_noise_std = np.loadtxt(
+                f"host/SBI/snrfiles/{filter.name}_magvsnr.txt", dtype=float, unpack=True
+            )
+            meds_sigs = \
+                interp1d(
+                    toy_noise_x,
+                    1.0857 * 1 / toy_noise_y,
+		    kind="slinear",
+                    fill_value="extrapolate",  # (0.01,1.0),
+                    bounds_error=False,
+                )
+            
+            magerr_off = meds_sigs(-2.5*np.log10(mJy_to_maggies(flux_mwcorr))+mag_offset) - \
+                meds_sigs(-2.5*np.log10(mJy_to_maggies(flux_mwcorr)))
+            magerr = 1.0857*fluxerr_mwcorr/flux_mwcorr + magerr_off
+            flux_maggies_error.append(
+                mJy_to_maggies(0.4*np.log(10)*magerr*flux_mwcorr * 10 ** (-0.4 * mag_offset))
+            )
+        else:
+            flux_maggies_error.append(
+                mJy_to_maggies(fluxerr_mwcorr * 10 ** (-0.4 * mag_offset))
+            )
+            
     obs_data = dict(
         wavelength=None,
         spectrum=None,
@@ -743,7 +764,7 @@ def build_model(observations):
 
 
 def fit_model(
-    observations, model_components, fitting_kwargs, sbipp=False, fit_type="global"
+    observations, model_components, fitting_kwargs, sbipp=False, fit_type="standard"
 ):
     """Fit the model"""
 

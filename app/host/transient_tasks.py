@@ -996,12 +996,16 @@ class HostSEDFitting(TransientTaskRunner):
         if transient.best_redshift is None or transient.best_redshift > 1.0:
             # training sample doesn't work here
             return "redshift too high"
-
+        if transient.best_redshift < 0.015:
+            fit_type = 'lowz'
+        else:
+            fit_type = 'standard'
+        
         aperture = Aperture.objects.filter(**query)
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")
 
-        observations = build_obs(transient, aperture_type)
+        observations = build_obs(transient, aperture_type, use_mag_offset=False)
         model_components = build_model(observations)
 
         if mode == "test" and not sbipp:
@@ -1039,7 +1043,7 @@ class HostSEDFitting(TransientTaskRunner):
             model_components,
             fitting_settings,
             sbipp=sbipp,
-            fit_type=aperture_type,
+            fit_type=fit_type,
         )
         if errflag:
             return "not enough filters"

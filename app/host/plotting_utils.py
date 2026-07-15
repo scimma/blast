@@ -344,7 +344,7 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
         model_data = np.load(sed_modeldata_file, allow_pickle=True)
 
         # best = result["bestfit"]
-        if transient.best_redshift < 0.015:
+        if not 'hi': #transient.best_redshift < 0.015:
             a = result["obs"]["redshift"] - 0.015 + 1
             mag_off = (
                 cosmo.distmod(result["obs"]["redshift"]).value
@@ -397,7 +397,8 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
             except Exception:
                 pwave = [f.wave_effective for f in obs["filters"]]
 
-            if transient.best_redshift < 0.015:
+            if not 'hi':
+                #transient.best_redshift < 0.015:
                 fig.scatter(
                     pwave,
                     maggies_to_mJy(model_data["phot"]) * 10 ** (0.4 * mag_off),

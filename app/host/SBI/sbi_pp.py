@@ -287,15 +287,16 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
             for j, idx in enumerate(not_valid_idx):
                 x[not_valid_idx[j]] = np.random.choice(guess_ndata.T[j])
                 # let's just randomly sample the neighbors instead of unpredictable toy noise model
-                x[22:][not_valid_idx[j]] = y_train[idx_chi2_selected][
-                    np.random.choice(range(len(guess_ndata.T[j])))
-                ][22:][not_valid_idx[j]]
-                # x[not_valid_idx_unc[j]] = toy_noise(
-                #    flux=x[not_valid_idx[j]],
-                #    meds_sigs=sbi_params["toynoise_meds_sigs"][idx],
-                #    stds_sigs=sbi_params["toynoise_stds_sigs"][idx],
-                #    verbose=run_params["verbose"],
-                # )[1]
+                #x[22:][not_valid_idx[j]] = y_train[idx_chi2_selected][
+                #    np.random.choice(range(len(guess_ndata.T[j])))
+                #][22:][not_valid_idx[j]]
+                # D. Jones - 7/11/26 -- re-trying toy noise
+                x[not_valid_idx_unc[j]] = toy_noise(
+                   flux=x[not_valid_idx[j]],
+                   meds_sigs=sbi_params["toynoise_meds_sigs"][idx],
+                   stds_sigs=sbi_params["toynoise_stds_sigs"][idx],
+                   verbose=run_params["verbose"],
+                )[1]
 
             # the noise model in the training isn't quite right
             # Pan-STARRS in particular seems a little off
@@ -833,9 +834,10 @@ def sbi_pp(obs, run_params, sbi_params, max_neighbors=10):
             stds_sigs=sbi_params["toynoise_stds_sigs"][j],
             verbose=run_params["verbose"],
         )
-        noisy_mask[j] = (sig_obs[j] - _toynoise[1]) / _toynoise[2] >= run_params[
+        noisy_mask[j] = abs((sig_obs[j] - _toynoise[1]) / _toynoise[2]) >= run_params[
             "noisy_sig"
         ]
+
         # if noisy_mask[j]:
         #    import pdb; pdb.set_trace()
     noisy_mask &= np.isfinite(y_obs)  # idx of noisy bands

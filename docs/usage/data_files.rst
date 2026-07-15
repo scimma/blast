@@ -48,7 +48,7 @@ Description
 
 This file is broadly the same as the parameter chains file above, but each parameter has an array of three elements (or sometimes three columns) corresponding to the 16th, 50th, and 84th percentiles from the posterior samples.  Additionally, these files include confidence intervals for the model spectra and model photometry, in :code:`modspec` and :code:`modphot`, respectively.  The :code:`theta_lbs` key contains the full set of prospector model parameters for reference.
 
-Note: for transients at z < 0.015, an offset is applied in the model spectra and photometry due to practical considerations.  See :ref:`low_z` below for help interpreting these data.
+Note: for previous versions of blast in the case of transients at z < 0.015, an offset is applied in the model spectra and photometry due to practical considerations.  See :ref:`low_z` below for help interpreting these data.
 
 
 .. _model_file:
@@ -182,6 +182,9 @@ Finally, to plot the observed photometry alongside the SED model above, we just 
     
 Low-Redshift Transients
 -----------------------
+
+*Note*: We have updated our models such that this section is no longer
+needed for SED fitting with Blast version x.x.x and later.
 
 In the local volume, small changes in redshift equate to large differences in predicted magnitude,
 making it impractical to generate a sufficiently large training set for the SBI approach in this regime.  Instead,
