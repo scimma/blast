@@ -1,6 +1,7 @@
 import math
 import os
 from math import pi
+from packaging.version import Version
 
 import numpy as np
 import pandas as pd
@@ -252,7 +253,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     return generate_plot(fig, image_data=image_data)
 
 
-def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None):
+def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None, offset_sed_model=False):
     """
     Plot SED from aperture photometry.
     """
@@ -344,7 +345,7 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
         model_data = np.load(sed_modeldata_file, allow_pickle=True)
 
         # best = result["bestfit"]
-        if not 'hi': #transient.best_redshift < 0.015:
+        if transient.best_redshift < 0.015 and offset_sed_model:
             a = result["obs"]["redshift"] - 0.015 + 1
             mag_off = (
                 cosmo.distmod(result["obs"]["redshift"]).value
@@ -397,8 +398,7 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
             except Exception:
                 pwave = [f.wave_effective for f in obs["filters"]]
 
-            if not 'hi':
-                #transient.best_redshift < 0.015:
+            if transient.best_redshift < 0.015 and offset_sed_model:
                 fig.scatter(
                     pwave,
                     maggies_to_mJy(model_data["phot"]) * 10 ** (0.4 * mag_off),
@@ -586,6 +586,7 @@ def render_sed_plot(transient, scope):
     sed_results_tmp_filepath = None
     sed_modeldata_tmp_filepath = None
     sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+    offset_sed_model = False
     if sed_obj.exists():
         canonical_path = sed_obj[0].posterior.name
         sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)
@@ -593,12 +594,15 @@ def render_sed_plot(transient, scope):
         sed_modeldata_object_key = sed_results_object_key.replace(".h5", "_modeldata.npz")
         download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
         download_file_from_s3(sed_modeldata_tmp_filepath, sed_modeldata_object_key)
+        if sed_obj[0].software_version is None or Version(sed_obj[0].software_version) <= Version('1.13.1'):
+            offset_sed_model = True
     # Generate a SED plot using Bokeh
     plot = plot_sed(
         transient=transient,
         type=scope,
         sed_results_file=sed_results_tmp_filepath,
         sed_modeldata_file=sed_modeldata_tmp_filepath,
+        offset_sed_model=offset_sed_model
     )
     # Purge temporary cached files
     delete_cached_file(sed_results_tmp_filepath)
