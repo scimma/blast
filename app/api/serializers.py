@@ -2,10 +2,12 @@ from host import models
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 
+
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Status
         fields = ["id", "message", "type"]
+
 
 class CutoutField(serializers.RelatedField):
     def to_representation(self, value):
@@ -31,6 +33,7 @@ class TransientSerializer(serializers.ModelSerializer):
         aliases = models.Alias.objects.filter(transient=obj)
         return [alias.alias for alias in aliases]
 
+
 class FilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Filter
@@ -42,7 +45,8 @@ class FilterSerializer(serializers.ModelSerializer):
             "wavelength_eff_angstrom",
             "ab_offset",
         ]
-        
+
+
 class CutoutSerializer(serializers.ModelSerializer):
     filter = FilterSerializer(read_only=True)
     transient = TransientSerializer(read_only=True)
@@ -51,6 +55,7 @@ class CutoutSerializer(serializers.ModelSerializer):
         model = models.Cutout
         depth = 1
         exclude = ["fits"]
+
 
 class HostSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -128,11 +133,11 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
         exclude = ["log_tau_16", "log_tau_50", "log_tau_84", "posterior"]
 
 
-
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Task
         fields = ["name"]
+
 
 class TaskRegisterSerializer(serializers.ModelSerializer):
     task = TaskSerializer(read_only=True)
@@ -143,5 +148,3 @@ class TaskRegisterSerializer(serializers.ModelSerializer):
         model = models.TaskRegister
         depth = 1
         fields = "__all__"
-
-
