@@ -27,6 +27,16 @@ Types of changes:
 
 - Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
 
+## [1.13.1]
+
+### Fixed
+
+- Fixed bug and corrected name of unit test `test_add_transients_by_definition()`.
+- Fixed broken unit test `test_transient_export_no_files()` by updating the expected data to
+  match the updated Host and Transient models.
+- Fixed broken unit test `test_alias()`.
+- Rename unit test to `test_update_tansient()`.
+
 ## [1.13.0]
 
 ### Added

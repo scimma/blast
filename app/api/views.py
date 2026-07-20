@@ -136,12 +136,6 @@ class SEDFittingResultFilter(django_filters.FilterSet):
         fields = ()
 
 
-class AliasFilter(django_filters.FilterSet):
-    class Meta:
-        model = Alias
-        fields = ("alias",)
-
-
 ############################################################
 # ViewSets
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -204,12 +198,6 @@ class HostViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = HostFilter
     lookup_value_regex = r"[^/]+[/]?"
-
-
-class AliasViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Alias.objects.all()
-    serializer_class = AliasSerializer
-    filterset_class = AliasFilter
 
 
 def transient_exists(transient_name: str) -> bool:
