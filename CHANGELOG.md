@@ -13,6 +13,17 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [Unreleased]
+
+### Changed
+- Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
+- Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for compiling Fortran-based dependencies
+
+### Added
+- Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
+- Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
+- Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
+
 ## [1.13.1]
 
 ### Fixed
