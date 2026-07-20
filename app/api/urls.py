@@ -18,8 +18,8 @@ urlpatterns = [
         base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.export_transient_view,
     ),
-    path(base_path + 'alias/<str:alias>/', views.alias_handler),
-    path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler),
+    path(base_path + 'alias/<str:alias>/', views.alias_handler_get_delete, ),
+    path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler_post),
 ]
 
 # if os.environ.get("ALLOW_API_POST") == "YES":
