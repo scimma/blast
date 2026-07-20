@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.decorators import login_required, permission_required
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -41,9 +42,6 @@ from api.serializers import TaskRegisterSerializer
 from api.serializers import TaskSerializer
 from api.serializers import HostSerializer
 from api.serializers import AliasSerializer
-from api.datamodel import unpack_component_groups
-from api.datamodel import serialize_blast_science_data
-from api.components import data_model_components
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -237,89 +235,56 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
     return valid
 
 
-# def alias_exists(object_type: str, alias_name: str) -> bool:
-#     """
-#     Checks if an alias exists in the database.
+# @api_view(["POST"])
+# def post_transient(request, transient_name, transient_ra, transient_dec):
+#     if transient_exists(transient_name):
+#         return Response(
+#             {"message": f"{transient_name} already in database"},
+#             status=status.HTTP_409_CONFLICT,
+#         )
 
-#     Parameters:
-#         object_type (str): whether the object is a transient or a host
-#         alias_name (str): alias_name.
-#     Returns:
-#         exisit (bool): True if the transient exists false otherwise.
-#     """
-#     try:
-#         if object_type == "host":
-#             Alias.objects.get(alias__exact=alias_name)
-#             exists = True
-#         elif object_type == "transient":
-#             AliasTransient.objects.get(alias__exact=alias_name)
-#             exists = True
-#         else:
-#             exists = False
-#     except AliasHost.DoesNotExist or AliasTransient.DoesNotExist:
-#         exists = False
-#     return exists
+#     if not ra_dec_valid(transient_ra, transient_dec):
+#         return Response(
+#             {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
+#             status.HTTP_400_BAD_REQUEST,
+#         )
+
+#     data_string = (
+#         f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
+#     )
+#     Transient.objects.create(
+#         name=transient_name,
+#         ra_deg=float(transient_ra),
+#         dec_deg=float(transient_dec),
+#         tns_id=1,
+#     )
+#     return Response(
+#         {"message": f"transient successfully posted: {data_string}"},
+#         status=status.HTTP_201_CREATED,
+#     )
 
 
-@api_view(["GET"])
+@extend_schema_view(
+    get=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=None,
+        responses={
+            200: AliasSerializer,
+            404: OpenApiResponse(description="Alias not found"),
+        }
+    ),
+    delete=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=None,
+        responses={
+            204: OpenApiResponse(description="Alias deleted"),
+            404: OpenApiResponse(description="Alias not found"),
+        }
+    ),
+)
+@api_view(["GET", "DELETE"])
 @log_usage_metric()
-def get_transient_science_payload(request, transient_name):
-    if not transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} not in database"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    component_groups = [
-        component_group(transient_name) for component_group in data_model_components
-    ]
-    components = unpack_component_groups(component_groups)
-    data = serialize_blast_science_data(components)
-
-    return Response(data, status=status.HTTP_200_OK)
-
-
-@api_view(["POST"])
-def post_transient(request, transient_name, transient_ra, transient_dec):
-    if transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} already in database"},
-            status=status.HTTP_409_CONFLICT,
-        )
-
-    if not ra_dec_valid(transient_ra, transient_dec):
-        return Response(
-            {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
-            status.HTTP_400_BAD_REQUEST,
-        )
-
-    data_string = (
-        f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
-    )
-    Transient.objects.create(
-        name=transient_name,
-        ra_deg=float(transient_ra),
-        dec_deg=float(transient_dec),
-        tns_id=1,
-    )
-    return Response(
-        {"message": f"transient successfully posted: {data_string}"},
-        status=status.HTTP_201_CREATED,
-    )
-
-
-@api_view(["GET", "POST", "DELETE"])
-@log_usage_metric()
-def alias_handler(request, alias: str, object_type: str = None, name: str = None):
-    """Create a new alias for a transient or host. Aliases must be globally
-       unique: the same alias may not be associated with both a transient
-       and a host.
-    """
-    # Validate inputs
-    try:
-        assert isinstance(alias, str) and alias
-    except AssertionError:
-        return Response({'message': 'Alias string value must be provided'}, status=status.HTTP_400_BAD_REQUEST)
+def alias_handler_get_delete(request, alias: str):
     user_permissions = request.user.get_all_permissions()
     if request.method == 'GET':
         try:
@@ -333,41 +298,6 @@ def alias_handler(request, alias: str, object_type: str = None, name: str = None
                 {"message": f'''Alias with name "{alias}" does not exist.'''},
                 status=status.HTTP_404_NOT_FOUND,
             )
-    if request.method == 'POST':
-        # Validate inputs
-        try:
-            assert object_type in ['transient', 'host']
-            assert isinstance(name, str) and name
-        except AssertionError:
-            return Response({'message': 'Object type (transient or host) and name of object must be provided'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        # Enforce authorization
-        if "host.add_alias" not in user_permissions:
-            return Response(
-                {"message": f"User does not have permissions to add aliases for {object_type}"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        # Do not overwrite existing alias
-        if Alias.objects.filter(alias__exact=alias).exists():
-            return Response(
-                {"message": f"{alias} is already in the database."},
-                status=status.HTTP_409_CONFLICT
-            )
-        try:
-            if object_type == 'transient':
-                target = Transient.objects.get(name__exact=name)
-            else:
-                target = Host.objects.get(name__exact=name)
-        except (Transient.DoesNotExist, Host.DoesNotExist):
-            return Response(
-                {"message": f"{object_type} with name {name} does not exist."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        new_alias = Alias.objects.create(**{'alias': alias, object_type: target})
-        return Response(
-            {"message": f"Alias successfully created: {str(new_alias)}"},
-            status=status.HTTP_201_CREATED,
-        )
     if request.method == 'DELETE':
         # Validate inputs
         try:
@@ -377,7 +307,7 @@ def alias_handler(request, alias: str, object_type: str = None, name: str = None
         # Enforce authorization
         if "host.delete_alias" not in user_permissions:
             return Response(
-                {"message": f"User does not have permissions to delete aliases for {object_type}"},
+                {"message": "User does not have permissions to delete aliases"},
                 status=status.HTTP_403_FORBIDDEN,
             )
         try:
@@ -385,7 +315,58 @@ def alias_handler(request, alias: str, object_type: str = None, name: str = None
         except Alias.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         alias.delete()
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@extend_schema_view(
+    post=extend_schema(
+        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
+        request=AliasSerializer,
+        responses={
+            201: AliasSerializer,
+            409: OpenApiResponse(description="Alias already exists"),
+        }
+    ),
+)
+@api_view(["POST"])
+@log_usage_metric()
+def alias_handler_post(request, alias: str, object_type: str = None, name: str = None):
+    user_permissions = request.user.get_all_permissions()
+    # Validate inputs
+    try:
+        assert object_type in ['transient', 'host']
+        assert isinstance(name, str) and name
+    except AssertionError:
+        return Response({'message': 'Object type (transient or host) and name of object must be provided'},
+                        status=status.HTTP_400_BAD_REQUEST)
+    # Enforce authorization
+    if "host.add_alias" not in user_permissions:
+        return Response(
+            {"message": f"User does not have permissions to add aliases for {object_type}"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    # Do not overwrite existing alias
+    if Alias.objects.filter(alias__exact=alias).exists():
+        return Response(
+            {"message": f"{alias} is already in the database."},
+            status=status.HTTP_409_CONFLICT
+        )
+    try:
+        if object_type == 'transient':
+            target = Transient.objects.get(name__exact=name)
+        else:
+            target = Host.objects.get(name__exact=name)
+    except (Transient.DoesNotExist, Host.DoesNotExist):
+        return Response(
+            {"message": f"{object_type} with name {name} does not exist."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    new_alias = Alias.objects.create(**{'alias': alias, object_type: target})
+    return Response(
+        {"message": f"Alias successfully created: {str(new_alias)}"},
+        status=status.HTTP_201_CREATED,
+    )
+
 
 # TODO: Secure this endpoint with Django REST Framework permission_classes
 # @api_view(["PUT"])

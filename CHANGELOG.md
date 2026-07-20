@@ -13,6 +13,28 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.y.z]
+
+### Added
+
+- Incorporated new `drf-spectacular` package to dynamically render OpenAPI spec and an interactive
+  Swagger UI for the Blast API.
+
+### Changed
+
+- Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
+
+### Removed
+
+- Removed POST request handling from results view function rendered obsolete in v1.8.0.
+- Removed the obsolete, optional transient creation API endpoint
+  `/api/transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>` controlled
+  by the `ALLOW_API_POST` environment variable.
+
+### Fixed
+
+- Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
+
 ## [1.13.1]
 
 ### Fixed

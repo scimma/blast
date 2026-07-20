@@ -36,7 +36,7 @@ class ModifyTransientTest(TestCase):
         with open('''/data/transient_datasets/2026dgt.tar.gz''', 'rb') as dataset_fileobj:
             import_transient_info(dataset_fileobj)
 
-    def test_update_tansient(self):
+    def test_update_transient(self):
         # TODO: This test is fragile due to the explicit HTML string search.
         response = self.client.post("/add/", data={
             'update_info': dedent("""

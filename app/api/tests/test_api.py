@@ -166,7 +166,7 @@ class APITest(TestCase):
         # Delete the alias
         response = self.client.delete(f'/api/alias/{alias}/')
         # print(f'[{response.status_code}] {response.content}')
-        self.assertTrue(response.status_code == status.HTTP_200_OK)
+        self.assertTrue(response.status_code == status.HTTP_204_NO_CONTENT)
         # Attempt to delete a non-existent alias
         alias = 'foo'
         response = self.client.delete(f'/api/alias/{alias}/')
