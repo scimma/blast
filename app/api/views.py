@@ -235,30 +235,6 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
     return valid
 
 
-# def alias_exists(object_type: str, alias_name: str) -> bool:
-#     """
-#     Checks if an alias exists in the database.
-
-#     Parameters:
-#         object_type (str): whether the object is a transient or a host
-#         alias_name (str): alias_name.
-#     Returns:
-#         exisit (bool): True if the transient exists false otherwise.
-#     """
-#     try:
-#         if object_type == "host":
-#             Alias.objects.get(alias__exact=alias_name)
-#             exists = True
-#         elif object_type == "transient":
-#             AliasTransient.objects.get(alias__exact=alias_name)
-#             exists = True
-#         else:
-#             exists = False
-#     except AliasHost.DoesNotExist or AliasTransient.DoesNotExist:
-#         exists = False
-#     return exists
-
-
 # @api_view(["POST"])
 # def post_transient(request, transient_name, transient_ra, transient_dec):
 #     if transient_exists(transient_name):
