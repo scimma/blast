@@ -22,13 +22,13 @@ urlpatterns = [
     path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler),
 ]
 
-if os.environ.get("ALLOW_API_POST") == "YES":
-    urlpatterns.append(
-        path(
-            f"""{base_path}transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>""",
-            views.post_transient,
-        )
-    )
+# if os.environ.get("ALLOW_API_POST") == "YES":
+#     urlpatterns.append(
+#         path(
+#             f"""{base_path}transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>""",
+#             views.post_transient,
+#         )
+#     )
 
 urlpatterns += [
     path('schema/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML

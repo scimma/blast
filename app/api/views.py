@@ -259,33 +259,33 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
 #     return exists
 
 
-@api_view(["POST"])
-def post_transient(request, transient_name, transient_ra, transient_dec):
-    if transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} already in database"},
-            status=status.HTTP_409_CONFLICT,
-        )
+# @api_view(["POST"])
+# def post_transient(request, transient_name, transient_ra, transient_dec):
+#     if transient_exists(transient_name):
+#         return Response(
+#             {"message": f"{transient_name} already in database"},
+#             status=status.HTTP_409_CONFLICT,
+#         )
 
-    if not ra_dec_valid(transient_ra, transient_dec):
-        return Response(
-            {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
-            status.HTTP_400_BAD_REQUEST,
-        )
+#     if not ra_dec_valid(transient_ra, transient_dec):
+#         return Response(
+#             {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
+#             status.HTTP_400_BAD_REQUEST,
+#         )
 
-    data_string = (
-        f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
-    )
-    Transient.objects.create(
-        name=transient_name,
-        ra_deg=float(transient_ra),
-        dec_deg=float(transient_dec),
-        tns_id=1,
-    )
-    return Response(
-        {"message": f"transient successfully posted: {data_string}"},
-        status=status.HTTP_201_CREATED,
-    )
+#     data_string = (
+#         f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
+#     )
+#     Transient.objects.create(
+#         name=transient_name,
+#         ra_deg=float(transient_ra),
+#         dec_deg=float(transient_dec),
+#         tns_id=1,
+#     )
+#     return Response(
+#         {"message": f"transient successfully posted: {data_string}"},
+#         status=status.HTTP_201_CREATED,
+#     )
 
 
 @extend_schema_view(
