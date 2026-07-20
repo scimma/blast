@@ -11,7 +11,7 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
 RUN pip install --upgrade pip
 COPY ./requirements.txt /requirements.txt
 RUN echo "scikit-build-core<0.8" > /build-constraints.txt && \
-    PIP_CONSTRAINT=/build-constraints.txt pip install -r /requirements.txt --no-cache-dir
+    PIP_BUILD_CONSTRAINT=/build-constraints.txt pip install -r /requirements.txt --no-cache-dir
 
 FROM python:3.13.14
 ENV PYTHONUNBUFFERED=1
