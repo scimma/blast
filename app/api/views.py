@@ -42,9 +42,6 @@ from api.serializers import TaskRegisterSerializer
 from api.serializers import TaskSerializer
 from api.serializers import HostSerializer
 from api.serializers import AliasSerializer
-from api.datamodel import unpack_component_groups
-from api.datamodel import serialize_blast_science_data
-from api.components import data_model_components
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -140,12 +137,6 @@ class SEDFittingResultFilter(django_filters.FilterSet):
         fields = ()
 
 
-class AliasFilter(django_filters.FilterSet):
-    class Meta:
-        model = Alias
-        fields = ("alias",)
-
-
 ############################################################
 # ViewSets
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -210,12 +201,6 @@ class HostViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_value_regex = r"[^/]+[/]?"
 
 
-class AliasViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Alias.objects.all()
-    serializer_class = AliasSerializer
-    filterset_class = AliasFilter
-
-
 def transient_exists(transient_name: str) -> bool:
     """
     Checks if a transient exists in the database.
@@ -274,29 +259,6 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
 #     return exists
 
 
-@api_view(["GET"])
-@log_usage_metric()
-def get_transient_science_payload(request, transient_name):
-    if not transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} not in database"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-
-    component_groups = [
-        component_group(transient_name) for component_group in data_model_components
-    ]
-    components = unpack_component_groups(component_groups)
-    data = serialize_blast_science_data(components)
-
-    return Response(data, status=status.HTTP_200_OK)
-
-
-@extend_schema(request=None, responses={
-    201: OpenApiResponse(description="Transient successfully posted"),
-    400: OpenApiResponse(description="Invalid RA/Dec values"),
-    409: OpenApiResponse(description="Transient already exists in database"),
-})
 @api_view(["POST"])
 def post_transient(request, transient_name, transient_ra, transient_dec):
     if transient_exists(transient_name):

@@ -37,7 +37,7 @@
         {% if item.user_warning %}
             <a href="#" type="button" title="Issue reported. Click to clear. (requires authorization)"><span class="report" 
                 {% if is_auth %}
-                onclick="window.open('{% url 'resolve_issue' item.pk %}','_self')"
+                onclick="window.open('{% url 'issue_handling' action='resolve' item_id=item.pk %}','_self')"
                 {% else %}
                 onclick="return false;"
                 {% endif %}
@@ -45,7 +45,7 @@
         {% else %}
             <a href="#" type="button" title="No issues reported. Click to report an issue. (requires authorization)"><span class="report" 
                 {% if is_auth %}
-                onclick="window.open('{% url 'report_issue' item.pk %}','_self')"
+                onclick="window.open('{% url 'issue_handling' action='report' item_id=item.pk %}','_self')"
                 {% else %}
                 onclick="return false;"
                 {% endif %}

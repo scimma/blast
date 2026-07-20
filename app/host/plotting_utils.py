@@ -93,14 +93,14 @@ def plot_position(object, wcs, plotting_kwargs=None, plotting_func=None):
 
 def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
     aperture = aperture.to_pixel(wcs)
-    theta_rad = aperture.theta
+    theta_rad = aperture.theta.rad
     x, y = aperture.positions
     plot_dict = {
         "x": x,
         "y": y,
         "width": aperture.a * 2,
         "height": aperture.b * 2,
-        "angle": theta_rad.value,
+        "angle": theta_rad,
         "fill_color": "#cab2d6",
         "fill_alpha": 0.1,
         "line_width": 4,
@@ -292,8 +292,8 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
         min_border=0,
         #    toolbar_location=None,
         x_axis_type="log",
-        x_axis_label="Wavelength [Angstrom]",
-        y_axis_label="Flux",
+        x_axis_label="Wavelength [angstrom]",
+        y_axis_label="Flux [microjansky]",
     )
 
     if len(flux):

@@ -162,6 +162,8 @@ class Transient(SkyObject):
     added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     progress = models.IntegerField(default=0)
     software_version = models.CharField(max_length=50, blank=True, null=True)
+    update_comment = models.CharField(max_length=500, blank=True, null=True)
+    update_fields = models.CharField(max_length=500, blank=True, null=True)
 
     @property
     def best_redshift(self):
