@@ -43,7 +43,7 @@ COPY --from=deps /usr/local/bin/ /usr/local/bin/
 # Install Prost from source
 # TODO: Remove this when astro-prost package is updated
 RUN git clone https://github.com/manning-ncsa/Prost.git /tmp/prost && cd /tmp/prost && \
-    git checkout 4bdbdc7 && \
+    git checkout fb238fa && \
     pip uninstall --yes astro-prost && pip install --no-cache-dir . && \
     cd / && rm -rf /tmp/prost
 
