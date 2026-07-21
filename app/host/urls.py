@@ -50,14 +50,9 @@ urlpatterns = [
         name="retrigger_transient",
     ),
     path(
-        f"""{base_path}report_issue/<item_id>""",
-        views.report_issue,
-        name="report_issue",
-    ),
-    path(
-        f"""{base_path}resolve_issue/<item_id>""",
-        views.resolve_issue,
-        name="resolve_issue",
+        f"""{base_path}issue_handling/<str:action>/<int:item_id>""",
+        views.issue_handling,
+        name="issue_handling",
     ),
     path(f"""{base_path}privacy""", views.privacy_policy, name='privacy'),
     path(f"""{base_path}healthz""", views.healthz, name='healthz'),
@@ -76,7 +71,6 @@ router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet)
 router.register(r"taskregister", api.views.TaskRegisterViewSet)
 router.register(r"task", api.views.TaskViewSet)
 router.register(r"host", api.views.HostViewSet)
-router.register(r"alias", api.views.AliasViewSet)
 
 # Login/Logout
 api_url_patterns = [

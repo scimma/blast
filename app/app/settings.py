@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     "django_filters",
     'django_celery_results',  # TODO: This can be removed if using Redis as Celery backend
     "latexify",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -230,6 +231,18 @@ REST_FRAMEWORK = {
         f'rest_framework.permissions.{os.environ.get("API_AUTHENTICATION")}',
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+######################################################################
+# DRF Spectacular Config
+#
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Blast API',
+    'DESCRIPTION': 'API Schema view for the Blast Transient Catalog',
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 ######################################################################

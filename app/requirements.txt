@@ -16,6 +16,7 @@ django-latexify==0.3
 django-silk==5.4.3
 django-tables2==2.7.5
 djangorestframework==3.16.1
+drf-spectacular==0.29.0 
 dustmaps==1.0.14
 dynesty==2.1.5
 extinction==0.4.7

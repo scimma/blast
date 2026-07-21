@@ -285,7 +285,7 @@ class HostMatchRunnerTest(TestCase):
         )
 
     def test_failed_status(self):
-        self.assertTrue(self.host_match_runner._failed_status_message() == "no host match")
+        self.assertTrue(self.host_match_runner._failed_status_message() == "failed")
 
 
 class InitializeTaskRegisterTest(TestCase):
