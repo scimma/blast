@@ -291,7 +291,7 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
                    stds_sigs=sbi_params["toynoise_stds_sigs"][idx],
                    verbose=run_params["verbose"],
                 )[1]
-            
+            all_x.append(x)
             # if we can't get one posterior sample in one second, we should move along
             # to the next MC sample
             do_continue = False
