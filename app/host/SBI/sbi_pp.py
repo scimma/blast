@@ -219,8 +219,6 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
     cnt = 0
     use_res = True
     while _chi2_thres <= run_params["max_chi2"]:
-        # idx_chi2_selected = np.where(chi2_nei[redshift_idx] <= _chi2_thres)[0]
-        # if len(idx_chi2_selected) >= 100 and np.abs(np.median(chi_nei[redshift_idx][idx_chi2_selected])) < 0.25:
 
         # let's not allow any matches with giant overall offsets
         idx_chi2_selected = np.where(chi2_nei <= _chi2_thres)[
@@ -270,6 +268,7 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
     nbands = y_train.shape[1] // 2  # total number of bands
     not_valid_idx_unc = not_valid_idx + nbands
 
+    
     all_x = []
     cnt = 0
     cnt_timeout = 0
@@ -286,28 +285,13 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
 
             for j, idx in enumerate(not_valid_idx):
                 x[not_valid_idx[j]] = np.random.choice(guess_ndata.T[j])
-                # let's just randomly sample the neighbors instead of unpredictable toy noise model
-                x[22:][not_valid_idx[j]] = y_train[idx_chi2_selected][
-                    np.random.choice(range(len(guess_ndata.T[j])))
-                ][22:][not_valid_idx[j]]
-                # D. Jones - 7/11/26 -- re-trying toy noise
-                #x[not_valid_idx_unc[j]] = toy_noise(
-                #   flux=x[not_valid_idx[j]],
-                #   meds_sigs=sbi_params["toynoise_meds_sigs"][idx],
-                #   stds_sigs=sbi_params["toynoise_stds_sigs"][idx],
-                #   verbose=run_params["verbose"],
-                #)[1]
-
-            # the noise model in the training isn't quite right
-            # Pan-STARRS in particular seems a little off
-            # we'll have to re-train at some point, but for now just pull
-            # uncertainties from the training sample
-            #for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
-            #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-            #    x[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][idx]
-
-            all_x.append(x)
-
+                x[not_valid_idx_unc[j]] = toy_noise(
+                   flux=x[not_valid_idx[j]],
+                   meds_sigs=sbi_params["toynoise_meds_sigs"][idx],
+                   stds_sigs=sbi_params["toynoise_stds_sigs"][idx],
+                   verbose=run_params["verbose"],
+                )[1]
+            
             # if we can't get one posterior sample in one second, we should move along
             # to the next MC sample
             do_continue = False
@@ -332,7 +316,7 @@ def sbi_missingband(obs, run_params, sbi_params, seconditer=False):
             signal.alarm(0)
 
             noiseless_theta = noiseless_theta.detach().numpy()
-
+            
             ave_theta.append(noiseless_theta)
 
             cnt += 1
@@ -501,13 +485,6 @@ def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=10):
                     stds_sigs=sbi_params["toynoise_stds_sigs"][ii],
                     verbose=run_params["verbose"],
                 )[1]
-                # signal.alarm(run_params["tmax_per_obj"])
-
-                #for idx, fname in enumerate(obs["filternames"]):
-                #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-                #    samp_y_guess[22:-1][idx] = y_train[idx_chi2_selected][chc][22:-1][
-                #        idx
-                #    ]
 
                 do_continue = False
                 for tmax, npost in zip(
@@ -537,9 +514,6 @@ def sbi_mcnoise(obs, run_params, sbi_params, max_neighbors=10):
                     if cnt % 10 == 0:
                         print("mc samples:", cnt)
 
-            # except TimeoutException:
-            #    cnt_timeout += 1
-            # else:
             signal.alarm(0)
 
         # end time
@@ -610,79 +584,53 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
 
         # first, fill in the missing bands
         for j in range(len(not_valid_idx)):
-            # samp_y_guess[not_valid_idx[j]] = kdes[j].resample(size=1)
-            # samp_y_guess[not_valid_idx_unc[j]] = toy_noise(
-            #    flux=samp_y_guess[not_valid_idx[j]],
-            #    meds_sigs=sbi_params["toynoise_meds_sigs"][not_valid_idx[j]],
-            #    stds_sigs=sbi_params["toynoise_stds_sigs"][not_valid_idx[j]],
-            #    verbose=run_params["verbose"],
-            # )[1]
-            samp_y_guess[not_valid_idx[j]] = y_train[idx_chi2_selected][
-                np.random.choice(range(len(idx_chi2_selected)))
-            ][not_valid_idx[j]]
-            samp_y_guess[not_valid_idx_unc[j]] = y_train[idx_chi2_selected][
-                np.random.choice(range(len(idx_chi2_selected)))
-            ][not_valid_idx_unc[j]]
+            samp_y_guess[not_valid_idx[j]] = kdes[j].resample(size=1)
+            samp_y_guess[not_valid_idx_unc[j]] = toy_noise(
+               flux=samp_y_guess[not_valid_idx[j]],
+               meds_sigs=sbi_params["toynoise_meds_sigs"][not_valid_idx[j]],
+               stds_sigs=sbi_params["toynoise_stds_sigs"][not_valid_idx[j]],
+               verbose=run_params["verbose"],
+            )[1]
 
         # second, deal with OOD noise
         samp_y_guess[noisy_idx] = stats.norm.rvs(loc=loc, scale=scale)
-        _nnflag = True
         for ii, this_noisy_flux in enumerate(samp_y_guess[noisy_idx]):
-            if this_noisy_flux > lims[0][ii] and this_noisy_flux < lims[1][ii]:
-                _nnflag &= True
-            else:
-                _nnflag &= False
+            _toynoise = toy_noise(
+                flux=y_obs[ii],
+                meds_sigs=sbi_params["toynoise_meds_sigs"][ii],
+	        stds_sigs=sbi_params["toynoise_stds_sigs"][ii],
+                verbose=run_params["verbose"],
+            )
+            samp_y_guess[noisy_idx[ii]+nbands] = stats.norm.rvs(loc=_toynoise[1], scale=_toynoise[2])
 
-            if _nnflag:
-                samp_y_guess[noisy_idx[ii] + nbands] = y_train[idx_chi2_selected][
-                    np.random.choice(range(len(idx_chi2_selected)))
-                ][noisy_idx[ii] + nbands]
-                # samp_y_guess[noisy_idx + nbands] = toy_noise(
-                #    flux=samp_y_guess[noisy_idx[ii]],
-                #    meds_sigs=sbi_params["toynoise_meds_sigs"][noisy_idx[ii]],
-                #    stds_sigs=sbi_params["toynoise_stds_sigs"][noisy_idx[ii]],
-                #    verbose=run_params["verbose"],
-                # )[1]
+        do_continue = False
+        for tmax, npost in zip(
+            [1, run_params["tmax_per_iter"]], [1, run_params["nposterior"]]
+        ):
+            signal.alarm(tmax)  # max time spent on one object in sec
+            try:
+                noiseless_theta = hatp_x_y.sample(
+                    (npost,),
+                    x=torch.as_tensor(samp_y_guess).to(device),
+                    show_progress_bars=False,
+                )
+            except TimeoutException:
+                signal.alarm(0)
+                do_continue = True
+                break
 
-            # the noise model in the training isn't quite right
-            # Pan-STARRS in particular seems a little off
-            # we'll have to re-train at some point, but for now just pull
-            # uncertainties from the training sample
-            #for idx, fname in zip(valid_idx, obs["filternames"][valid_idx]):
-                # if 'PanSTARRS' in fname or '2MASS' in fname or 'SDSS' in fname or 'DES' in fname:
-            #    chc = np.random.choice(range(len(y_train[idx_chi2_selected])))
-            #    samp_y_guess[22:][idx] = y_train[idx_chi2_selected][chc][22:][idx]
+        if do_continue:
+            continue
 
-            # if we can't get one posterior sample in one second, we should move along
-            # to the next MC sample
-            do_continue = False
-            for tmax, npost in zip(
-                [1, run_params["tmax_per_iter"]], [1, run_params["nposterior"]]
-            ):
-                signal.alarm(tmax)  # max time spent on one object in sec
-                try:
-                    noiseless_theta = hatp_x_y.sample(
-                        (npost,),
-                        x=torch.as_tensor(samp_y_guess).to(device),
-                        show_progress_bars=False,
-                    )
-                except TimeoutException:
-                    signal.alarm(0)
-                    do_continue = True
-                    break
+        signal.alarm(0)
+        noiseless_theta = noiseless_theta.detach().numpy()
 
-            if do_continue:
-                continue
+        ave_theta.append(noiseless_theta)
 
-            signal.alarm(0)
-            noiseless_theta = noiseless_theta.detach().numpy()
-
-            ave_theta.append(noiseless_theta)
-
-            cnt += 1
-            if run_params["verbose"]:
-                if cnt % 10 == 0:
-                    print("mc samples:", cnt)
+        cnt += 1
+        if run_params["verbose"]:
+            if cnt % 10 == 0:
+                print("mc samples:", cnt)
 
         # end time
         et = time.time()
@@ -838,8 +786,6 @@ def sbi_pp(obs, run_params, sbi_params, max_neighbors=10):
             "noisy_sig"
         ]
 
-        # if noisy_mask[j]:
-        #    import pdb; pdb.set_trace()
     noisy_mask &= np.isfinite(y_obs)  # idx of noisy bands
     obs["noisy_mask"] = noisy_mask
 

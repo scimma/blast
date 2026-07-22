@@ -998,6 +998,8 @@ class HostSEDFitting(TransientTaskRunner):
             return "redshift too high"
         if transient.best_redshift < 0.015:
             fit_type = 'lowz'
+        elif transient.best_redshift < 0.2:
+            fit_type = 'midz'
         else:
             fit_type = 'standard'
         
