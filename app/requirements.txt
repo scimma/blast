@@ -28,12 +28,13 @@ mysqlclient==2.2.8
 psycopg2-binary==2.9.12
 git+https://github.com/astropy/photutils.git@2573ef4
 redis==8.0.1
-sbi==0.26.1
+sbi==0.22.0
 scikit-image==0.26.0
 selenium==4.46.0
 watchdog==6.0.0
 influxdb-client==1.50.0
-pandas==3.0.3
+pandas==2.3.3
 ipython==9.15.0
 sparclclient==1.3.0
 ppxf==9.4.8
+arviz==0.23.4
