@@ -584,7 +584,7 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
 
         # first, fill in the missing bands
         for j in range(len(not_valid_idx)):
-            samp_y_guess[not_valid_idx[j]] = kdes[j].resample(size=1)
+            samp_y_guess[not_valid_idx[j]] = kdes[j].resample(size=1)[0][0]
             samp_y_guess[not_valid_idx_unc[j]] = toy_noise(
                flux=samp_y_guess[not_valid_idx[j]],
                meds_sigs=sbi_params["toynoise_meds_sigs"][not_valid_idx[j]],
@@ -596,7 +596,7 @@ def sbi_missing_and_noisy(obs, run_params, sbi_params):
         samp_y_guess[noisy_idx] = stats.norm.rvs(loc=loc, scale=scale)
         for ii, this_noisy_flux in enumerate(samp_y_guess[noisy_idx]):
             _toynoise = toy_noise(
-                flux=y_obs[ii],
+                flux=samp_y_guess[ii],
                 meds_sigs=sbi_params["toynoise_meds_sigs"][ii],
 	        stds_sigs=sbi_params["toynoise_stds_sigs"][ii],
                 verbose=run_params["verbose"],
