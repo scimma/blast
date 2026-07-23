@@ -1,6 +1,7 @@
 from host import models
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
+from django.urls import reverse
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -24,6 +25,7 @@ class TransientSerializer(serializers.ModelSerializer):
             "photometric_class",
             "processing_status",
             "added_by"
+            # "host",
         ]
 
     aliases = serializers.SerializerMethodField()
@@ -50,11 +52,29 @@ class FilterSerializer(serializers.ModelSerializer):
 class CutoutSerializer(serializers.ModelSerializer):
     filter = FilterSerializer(read_only=True)
     transient = TransientSerializer(read_only=True)
+    cutout_file = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Cutout
         depth = 1
         exclude = ["fits"]
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['cutout_file'] = self.get_cutout_file(instance)
+        return ret
+
+    def get_cutout_file(self, obj):
+        request = self.context["request"]
+        if not obj.fits:
+            return None
+
+        return request.build_absolute_uri(
+            reverse(
+                "cutout-download",
+                kwargs={"pk": obj.pk, }
+            )
+        )
 
 
 class HostSerializer(serializers.HyperlinkedModelSerializer):

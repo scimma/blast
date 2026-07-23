@@ -22,6 +22,7 @@ Types of changes:
 - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
 - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
 - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
+- Added new cutout download function to CutoutViewSet
 
 ### Changed
 
@@ -33,6 +34,8 @@ Types of changes:
   was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
   The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
   addressed in a later release.
+- Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
+- Transient results page now has download links next to each available filter under 'Cutout Download Report'
 
 ### Removed
 
