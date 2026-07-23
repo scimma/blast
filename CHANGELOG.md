@@ -13,6 +13,16 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [1.13.1]
+
+### Fixed
+
+- Fixed bug and corrected name of unit test `test_add_transients_by_definition()`.
+- Fixed broken unit test `test_transient_export_no_files()` by updating the expected data to
+  match the updated Host and Transient models.
+- Fixed broken unit test `test_alias()`.
+- Rename unit test to `test_update_tansient()`.
+
 ## [1.13.0]
 
 ### Added
@@ -36,7 +46,6 @@ Types of changes:
 - Incorporated photutils fix for misaligned apertures in DES legacy survey images that caused offset
   apertures in the plotting and photometry.
 - Added the missing microjansky unit label to the flux axis label of the SED plots.
-
 
 ## [1.12.0]
 
