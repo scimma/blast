@@ -23,6 +23,8 @@ Types of changes:
 - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
 - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
 - Added new cutout download function to CutoutViewSet
+- New image download URL: `/api/sedfittingresult/{id}/download/{download-type}/`
+- Added new download functions to `/api/sedfittingresult`, replacing view functions: `download_chains`, `download_modelfit`, `download_percentiles`.
 
 ### Changed
 
@@ -36,6 +38,7 @@ Types of changes:
   addressed in a later release.
 - Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
 - Transient results page now has download links next to each available filter under 'Cutout Download Report'
+- Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned by `/api/sedfittingresult` such that they will download the associated files. The transient result page download links now use these values.
 
 ### Removed
 
