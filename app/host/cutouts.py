@@ -243,7 +243,7 @@ def panstarrs_image_filename(position, image_size=None, filter=None):
     ### optionally, can edit to do this in an unsafe way
     r = requests.get(url, stream=True)
     r.raw.decode_content = True
-    filename_table = pd.read_csv(r.raw, sep="\s+")["filename"]
+    filename_table = pd.read_csv(r.raw, sep=r"\s+")["filename"]
     return filename_table[0] if len(filename_table) > 0 else None
 
 
@@ -612,7 +612,7 @@ def SDSS_cutout(position, image_size=None, filter=None):
 
 
 
-    regex = "<dt>run<\/dt>.*<dd>.*<\/dd>"
+    regex = r"<dt>run<\/dt>.*<dd>.*<\/dd>"
     run = xid['run'][iSep][0] #re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
     rerun = xid['rerun'][iSep][0] #re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
     camcol = xid['camcol'][iSep][0] #re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
