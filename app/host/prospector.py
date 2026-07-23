@@ -291,8 +291,8 @@ def build_model_nonparam(obs=None, **extras):
     def logsfr_ratios_to_masses(
         logmass=None, logsfr_ratios=None, agebins=None, **extras
     ):
-        """This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
-        log10(\Sum_i M_i) to values of M_i.  j=0 is the most recent bin in lookback
+        r"""This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
+        log10(\\Sum_i M_i) to values of M_i.  j=0 is the most recent bin in lookback
         time.
         """
         nbins = agebins.shape[0]
@@ -558,8 +558,8 @@ def build_model_nonparam_bkp(obs=None, **extras):
     def logsfr_ratios_to_masses(
         logmass=None, logsfr_ratios=None, agebins=None, **extras
     ):
-        """This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
-        log10(\Sum_i M_i) to values of M_i.  j=0 is the most recent bin in lookback
+        r"""This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
+        log10(\\Sum_i M_i) to values of M_i.  j=0 is the most recent bin in lookback
         time.
         """
         nbins = agebins.shape[0]

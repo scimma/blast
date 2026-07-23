@@ -340,7 +340,7 @@ class Filter(models.Model):
         curve_name = f"{settings.TRANSMISSION_CURVES_ROOT}/{self.name}.txt"
 
         try:
-            transmission_curve = pd.read_csv(curve_name, sep="\s+", header=None)  # noqa
+            transmission_curve = pd.read_csv(curve_name, sep=r"\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter transmission curve from {curve_name}: {err}"
@@ -363,7 +363,7 @@ class Filter(models.Model):
             return None, None
 
         try:
-            corr_model = pd.read_csv(corr_model_name, sep="\s+", header=None)  # noqa
+            corr_model = pd.read_csv(corr_model_name, sep=r"\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter correlation model from {corr_model_name}: {err}"
