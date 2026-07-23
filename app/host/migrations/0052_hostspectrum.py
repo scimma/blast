@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('host', '0050_add_alias_alter_host_name'),
+        ('host', '0051_transient_update_comment_transient_update_fields'),
     ]
 
     operations = [
