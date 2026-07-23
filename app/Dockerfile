@@ -1,4 +1,8 @@
-FROM python:3.11.13 AS deps
+FROM python:3.13.14 AS deps
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
     -o /usr/local/bin/mc && \
@@ -6,9 +10,10 @@ RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
 
 RUN pip install --upgrade pip
 COPY ./requirements.txt /requirements.txt
-RUN pip install -r /requirements.txt --no-cache-dir
+RUN echo "scikit-build-core<0.8" > /build-constraints.txt && \
+    PIP_BUILD_CONSTRAINT=/build-constraints.txt pip install -r /requirements.txt --no-cache-dir
 
-FROM python:3.11.13
+FROM python:3.13.14
 ENV PYTHONUNBUFFERED=1
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \
@@ -32,13 +37,13 @@ RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckod
     mv geckodriver /usr/local/bin/
 
 COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
-COPY --from=deps /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --from=deps /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
 COPY --from=deps /usr/local/bin/ /usr/local/bin/
 
 # Install Prost from source
 # TODO: Remove this when astro-prost package is updated
 RUN git clone https://github.com/manning-ncsa/Prost.git /tmp/prost && cd /tmp/prost && \
-    git checkout 4bdbdc7 && \
+    git checkout fb238fa && \
     pip uninstall --yes astro-prost && pip install --no-cache-dir . && \
     cd / && rm -rf /tmp/prost
 

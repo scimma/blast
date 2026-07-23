@@ -575,20 +575,20 @@ def add_transient(request):
 def results(request, transient_name):
     param_var_ptype = (
         [
-            "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
+            "{\\rm log}_{10}(M_{\\ast}/M_{\\odot})\\,",  # noqa
             "{\\rm log}_{10}({\\rm SFR})",  # noqa
             "{\\rm log}_{10}({\\rm sSFR})",  # noqa
-            "{\\rm stellar\ age}",  # noqa
-            "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})",  # noqa
-            "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",  # noqa
+            "{\\rm stellar\\ age}",  # noqa
+            "{\\rm log}_{10}(Z_{\\ast}/Z_{\\odot})",  # noqa
+            "{\\rm log}_{10}(Z_{gas}/Z_{\\odot})\\,",  # noqa
             "\\tau_2",
-            "\delta",  # noqa
+            "\\delta",  # noqa
             "\\tau_1/\\tau_2",
             "Q_{PAH}",
             "U_{min}",
-            "{\\rm log}_{10}(\gamma_e)\,",  # noqa
-            "{\\rm log}_{10}(f_{AGN})\,",  # noqa
-            "{\\rm log}_{10}(\\tau_{AGN})\,"  # noqa
+            "{\\rm log}_{10}(\\gamma_e)\\,",  # noqa
+            "{\\rm log}_{10}(f_{AGN})\\,",  # noqa
+            "{\\rm log}_{10}(\\tau_{AGN})\\,"  # noqa
         ],
         [
             "log_mass",
