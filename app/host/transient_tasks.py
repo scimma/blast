@@ -1,6 +1,7 @@
 import math
 import os
 from shutil import rmtree
+import io
 
 import numpy as np
 from astropy.io import fits
@@ -30,6 +31,7 @@ from host.task_prereqs import GenerateThumbnail_prerequisites
 from host.task_prereqs import GenerateThumbnailFinal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
 
 from host.cutouts import download_and_save_cutouts
 from host.prost import run_prost
@@ -47,6 +49,7 @@ from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
+from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
@@ -59,6 +62,7 @@ from host.models import Cutout
 from host.models import SEDFittingResult
 from host.models import StarFormationHistoryResult
 from host.models import Transient
+from host.models import HostSpectrum
 from host.prospector import build_model
 from host.prospector import build_obs
 from host.prospector import fit_model
@@ -1415,6 +1419,132 @@ class CropTransientImages(TransientTaskRunner):
         status_message = "processed"
         crop_images(transient)
         return status_message
+    
+
+def _save_spectrum_to_s3(hdulist, s3_key):
+    """
+    Write an astropy HDUList to bytes and upload to the object store.
+
+    Parameters
+    ----------
+    :hdulist : :class:`~astropy.io.fits.HDUList`
+        The spectrum FITS object to upload.
+    :s3_key : str
+        Full S3 object key including base path.
+
+    Returns
+    -------
+    :success : bool
+        True if upload succeeded, False otherwise.
+    """
+    s3 = ObjectStore()
+    try:
+        buf = io.BytesIO()
+        hdulist.writeto(buf, overwrite=True)
+        buf.seek(0)
+        s3.put_object(path=s3_key, data_bytes_obj=buf.read())
+        return True
+    except Exception as err:
+        logger.error(f'''Error saving spectrum to S3 key "{s3_key}": {err}''')
+        return False
+
+
+class HostSpectrumDownload(TransientTaskRunner):
+    """
+    TaskRunner to download a host galaxy spectrum from public spectroscopic
+    archives using a unified hierarchical function (DESI -> SDSS -> BOSS -> NED).
+    """
+
+    def _prerequisites(self):
+        """
+        Need both the Cutout and Host match to be processed
+        """
+        return HostSpectrumDownload_prerequisites
+
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Host spectrum download.
+        """
+        return 'Host spectrum download'
+
+    def _failed_status_message(self):
+        """
+        Emit status message for failure consistent with the available Status objects
+        """
+        return 'failed'
+    
+    def _run_process(self, transient):
+        """
+        Execute the hierarchical spectrum fetcher and save the resulting
+        dataset to the S3 store and local database.
+        """
+        if transient.host is None:
+            logger.info(f'''No host for transient "{transient.name}" — skipping spectrum download.''')
+            return 'no host spectrum'
+
+        # Call the single unified fetching function
+        try:
+            spectrum_data = fetch_host_spectrum(transient.host.sky_coord)
+        except Exception as err:
+            logger.warning(f'''Error executing unified host spectrum fetcher: {err}''')
+            return 'failed'
+
+        if spectrum_data is None:
+            return 'no host spectrum'
+
+        # Dynamically inspect the FITS header to identify which source succeeded
+        hdulist = spectrum_data['hdulist']
+        data_release = hdulist[0].header.get('DATA_RELEASE', '').upper()
+        origin = hdulist[0].header.get('ORIGIN', '').upper()
+
+        if 'DESI' in data_release or 'DESI' in origin:
+            source_name = 'DESI'
+        elif 'BOSS' in data_release or 'BOSS' in origin:
+            source_name = 'BOSS'
+        elif 'SDSS' in data_release or 'SDSS' in origin:
+            source_name = 'SDSS'
+        else:
+            source_name = 'NED'
+
+        # Initialize the database object placeholder to resolve the upload path
+        spectrum_obj = HostSpectrum(host=transient.host, source=source_name)
+        canonical_path = HostSpectrum._meta.get_field('spectrum_file').upload_to(spectrum_obj)
+        s3_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+
+        if not _save_spectrum_to_s3(hdulist, s3_key):
+            logger.error(f'''Failed to save {source_name} spectrum to S3 for host "{transient.host.name}".''')
+            return 'failed'
+
+        # Store or overwrite the spectrum info in your database
+        query = {'host': transient.host, 'source': source_name}
+        data = {
+            'host': transient.host,
+            'transient': transient,
+            'source': source_name,
+            'spectrum_file': canonical_path,
+            'wavelength_min_angstrom': spectrum_data['wavelength_min_angstrom'],
+            'wavelength_max_angstrom': spectrum_data['wavelength_max_angstrom'],
+            'redshift': spectrum_data['redshift'],
+            'ra_deg': spectrum_data.get('ra_deg'),
+            'dec_deg': spectrum_data.get('dec_deg'),
+            'spectrum_id': spectrum_data['spectrum_id']
+        }
+        self._overwrite_or_create_object(HostSpectrum, query, data)
+
+        # Enforce priority overrides: Delete lower-tier spectrum assets if they exist
+        priority_order = ['DESI', 'SDSS', 'BOSS', 'NED']
+        if source_name in priority_order:
+            idx = priority_order.index(source_name)
+            lower_priority_sources = priority_order[idx + 1:]
+            if lower_priority_sources:
+                HostSpectrum.objects.filter(host=transient.host, source__in=lower_priority_sources).delete()
+
+        logger.info(
+            f'''{source_name} spectrum saved for host "{transient.host.name}": '''
+            f'''id={spectrum_data["spectrum_id"]}, z={spectrum_data["redshift"]}'''
+        )
+        return 'processed'
 
 
 # Transient workflow tasks
@@ -1584,3 +1714,13 @@ def final_progress(transient_name):
             rmtree(os.path.join(base_path, transient.name))
         except FileNotFoundError:
             pass
+
+
+@shared_task(
+    name="Host Spectrum Download",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def host_spectrum_download(transient_name):
+    HostSpectrumDownload(transient_name).run_process()
+

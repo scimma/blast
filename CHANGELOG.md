@@ -13,6 +13,28 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [Unreleased]
+
+### Changed
+
+- Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
+- Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for
+  compiling Fortran-based dependencies
+- Updated most of the dependencies specified in `app/requirements.txt`. In the process, `arviz==0.23.4`
+  was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
+  The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
+  addressed in a later release.
+
+### Added
+
+- Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
+- Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
+- Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
+
+### Fixed
+
+- Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
+
 ## [1.13.1]
 
 ### Fixed

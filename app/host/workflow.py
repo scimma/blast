@@ -9,6 +9,7 @@ from host.transient_tasks import global_aperture_photometry
 from host.transient_tasks import global_host_sed_fitting
 from host.transient_tasks import host_information
 from host.transient_tasks import host_match
+from host.transient_tasks import host_spectrum_download
 from host.transient_tasks import image_download
 from host.transient_tasks import local_aperture_photometry
 from host.transient_tasks import local_host_sed_fitting
@@ -103,6 +104,7 @@ def transient_workflow(transient_name=None):
                 host_information.si(transient_name),
                 group(
                     mwebv_host.si(transient_name),
+                    host_spectrum_download.si(transient_name),
                     chain(
                         global_aperture_construction.si(transient_name),
                         global_aperture_photometry.si(transient_name),

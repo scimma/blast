@@ -340,7 +340,7 @@ class Filter(models.Model):
         curve_name = f"{settings.TRANSMISSION_CURVES_ROOT}/{self.name}.txt"
 
         try:
-            transmission_curve = pd.read_csv(curve_name, sep="\s+", header=None)  # noqa
+            transmission_curve = pd.read_csv(curve_name, sep=r"\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter transmission curve from {curve_name}: {err}"
@@ -363,7 +363,7 @@ class Filter(models.Model):
             return None, None
 
         try:
-            corr_model = pd.read_csv(corr_model_name, sep="\s+", header=None)  # noqa
+            corr_model = pd.read_csv(corr_model_name, sep=r"\s+", header=None)  # noqa
         except Exception as err:
             raise ValueError(
                 f"{self.name}: Problem loading filter correlation model from {corr_model_name}: {err}"
@@ -407,6 +407,13 @@ def npz_model_file_path(instance):
     Constructs a file path for a npz file
     """
     return f"{instance.transient.name}/{instance.transient.name}_{instance.aperture.type}_modeldata.npz"
+
+
+def spectrum_file_path(instance):
+    """
+    Constructs a file path for a host galaxy spectrum FITS file
+    """
+    return f"{instance.host.name}/spectra/{instance.source.lower()}_spectrum.fits"
 
 
 class Cutout(models.Model):
@@ -679,3 +686,62 @@ class UsageMetricsLog(models.Model):
 
     def __str__(self):
         return f'''({self.request_time}, {self.request_user}) [{self.request_method}] {self.request_url}'''
+
+
+class HostSpectrum(models.Model):
+    """
+    Model to store an archival spectrum of a host galaxy fetched from a
+    public spectroscopic survey.
+
+    Attributes:
+        host (django.db.model.ForeignKey): ForeignKey pointing to a
+            :class:`Host` representing the transient's host galaxy.
+        transient (django.db.model.ForeignKey): ForeignKey pointing to a
+            :class:`Transient`.
+        source (django.db.model.CharField): Name of the spectroscopic
+            survey the spectrum was obtained from.
+        spectrum_file (django.db.model.FileField): Path to the spectrum
+            FITS file in the object store.
+        wavelength_min_angstrom (django.db.model.FloatField): Minimum
+            wavelength of the spectrum in Angstroms.
+        wavelength_max_angstrom (django.db.model.FloatField): Maximum
+            wavelength of the spectrum in Angstroms.
+        redshift (django.db.model.FloatField): Spectroscopic redshift
+            from the source survey.
+        ra_deg (django.db.model.FloatField): Right Ascension of the 
+            fiber/spectrum in decimal degrees.
+        dec_deg (django.db.model.FloatField): Declination of the 
+            fiber/spectrum in decimal degrees.
+        spectrum_id (django.db.model.CharField): Source-specific
+            identifier
+        message (django.db.model.CharField): Optional status message.
+        software_version (django.db.model.CharField): Blast software
+            version used when the spectrum was fetched.
+    """
+
+    SOURCE_CHOICES = [
+        ('DESI', 'DESI'),
+        ('SDSS', 'SDSS'),
+        ('BOSS', 'BOSS'),
+        ('NED', 'NED'),
+    ]
+
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, null=True, blank=True)
+    transient = models.ForeignKey(Transient, on_delete=models.CASCADE, null=True, blank=True)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    spectrum_file = models.FileField(upload_to=spectrum_file_path, null=True, blank=True)
+    wavelength_min_angstrom = models.FloatField(null=True, blank=True)
+    wavelength_max_angstrom = models.FloatField(null=True, blank=True)
+    redshift = models.FloatField(null=True, blank=True)
+    ra_deg = models.FloatField(null=True, blank=True)
+    dec_deg = models.FloatField(null=True, blank=True)
+    spectrum_id = models.CharField(max_length=200, null=True, blank=True)
+    message = models.CharField(max_length=100, null=True, blank=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(HostSpectrum, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f'''source: {self.source}, host: "{self.host.name}"'''
