@@ -122,7 +122,7 @@ def compare_data(t1, t2):
                     continue
                 val1 = val
                 val2 = t2_aperturephotometry['fields'][key]
-                compare_vals(val1, val2, key, label=f'aperturephotometry "{filter_name}"')
+                compare_vals(val1, val2, key, label=f'aperturephotometry "{aperture_name}" "{filter_name}"')
         # SEDFittingResults
         if not t1_aperture['sedfittingresults']:
             continue
