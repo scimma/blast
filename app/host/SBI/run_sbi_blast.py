@@ -40,10 +40,12 @@ run_params = {
 }
 
 sbi_params = {
-    "anpe_fname_global": f"{settings.SBIPP_ROOT}/SBI_model_global.pt",  # trained sbi model
-    "train_fname_global": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_global.h5",  # training set
-    "anpe_fname_local": f"{settings.SBIPP_ROOT}/SBI_model_local.pt",  # trained sbi model
-    "train_fname_local": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_local.h5",  # training set
+    "anpe_fname_standard": f"{settings.SBIPP_ROOT}/SBI_model_standard.pt",  # trained sbi model
+    "train_fname_standard": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_standard.h5",  # training set
+    "anpe_fname_midz": f"{settings.SBIPP_ROOT}/SBI_model_midz.pt",  # trained sbi model
+    "train_fname_midz": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_midz.h5",  # training set
+    "anpe_fname_lowz": f"{settings.SBIPP_ROOT}/SBI_model_lowz.pt",  # trained sbi model
+    "train_fname_lowz": f"{settings.SBIPP_PHOT_ROOT}/sbi_phot_lowz.h5",  # training set
     "nhidden": 500,  # architecture of the trained density estimator
     "nblocks": 15,  # architecture of the trained density estimator
 }
@@ -76,7 +78,7 @@ ir_filters = [
 
 # training set
 def run_training_set():
-    for _fit_type in ["global", "local"]:
+    for _fit_type in ["standard", "midz", "lowz"]:
         data = h5py.File(sbi_params[f"train_fname_{_fit_type}"], "r")
         x_train = np.array(data["theta"])  # physical parameters
         y_train = np.array(data["phot"])  # fluxes & uncertainties
@@ -109,72 +111,102 @@ def run_training_set():
             )
         )
         anpe._x_shape = Ut.x_shape_from_simulation(y_tensor)
-        if _fit_type == "global":
-            hatp_x_y_global = anpe.build_posterior(
+        if _fit_type == "standard":
+            hatp_x_y_standard = anpe.build_posterior(
                 p_x_y_estimator, sample_with="rejection"
             )
-            y_train_global = y_train[:]
-            x_train_global = x_train[:]
-        elif _fit_type == "local":
-            hatp_x_y_local = anpe.build_posterior(
+            y_train_standard = y_train[:]
+            x_train_standard = x_train[:]
+        elif _fit_type == "midz":
+            hatp_x_y_midz = anpe.build_posterior(
                 p_x_y_estimator, sample_with="rejection"
             )
-            y_train_local = y_train[:]
-            x_train_local = x_train[:]
+            y_train_midz = y_train[:]
+            x_train_midz = x_train[:]
+        elif _fit_type == "lowz":
+            hatp_x_y_lowz = anpe.build_posterior(
+                p_x_y_estimator, sample_with="rejection"
+            )
+            y_train_lowz = y_train[:]
+            x_train_lowz = x_train[:]
 
     print("""Storing training sets as data files...""")
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_standard.pkl"), "wb"
     ) as handle:
-        pickle.dump(hatp_x_y_global, handle)
+        pickle.dump(hatp_x_y_standard, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_standard.pkl"), "wb"
     ) as handle:
-        pickle.dump(y_train_global, handle)
+        pickle.dump(y_train_standard, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_global.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_standard.pkl"), "wb"
     ) as handle:
-        pickle.dump(x_train_global, handle)
+        pickle.dump(x_train_standard, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_midz.pkl"), "wb"
     ) as handle:
-        pickle.dump(hatp_x_y_local, handle)
+        pickle.dump(hatp_x_y_midz, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_midz.pkl"), "wb"
     ) as handle:
-        pickle.dump(y_train_local, handle)
+        pickle.dump(y_train_midz, handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_local.pkl"), "wb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_midz.pkl"), "wb"
     ) as handle:
-        pickle.dump(x_train_local, handle)
+        pickle.dump(x_train_midz, handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_lowz.pkl"), "wb"
+    ) as handle:
+        pickle.dump(hatp_x_y_lowz, handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_lowz.pkl"), "wb"
+    ) as handle:
+        pickle.dump(y_train_lowz, handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_lowz.pkl"), "wb"
+    ) as handle:
+        pickle.dump(x_train_lowz, handle)
 
 
 try:
     print("""Loading training sets from data files...""")
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_standard.pkl"), "rb"
     ) as handle:
-        hatp_x_y_global = pickle.load(handle)
+        hatp_x_y_standard = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_standard.pkl"), "rb"
     ) as handle:
-        y_train_global = pickle.load(handle)
+        y_train_standard = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_global.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_standard.pkl"), "rb"
     ) as handle:
-        x_train_global = pickle.load(handle)
+        x_train_standard = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_midz.pkl"), "rb"
     ) as handle:
-        hatp_x_y_local = pickle.load(handle)
+        hatp_x_y_midz = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_midz.pkl"), "rb"
     ) as handle:
-        y_train_local = pickle.load(handle)
+        y_train_midz = pickle.load(handle)
     with open(
-        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_local.pkl"), "rb"
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_midz.pkl"), "rb"
     ) as handle:
-        x_train_local = pickle.load(handle)
+        x_train_midz = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "hatp_x_y_lowz.pkl"), "rb"
+    ) as handle:
+        hatp_x_y_lowz = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "y_train_lowz.pkl"), "rb"
+    ) as handle:
+        y_train_lowz = pickle.load(handle)
+    with open(
+        os.path.join(settings.SBI_TRAINING_ROOT, "x_train_lowz.pkl"), "rb"
+    ) as handle:
+        x_train_lowz = pickle.load(handle)
     print("""Training sets loaded.""")
 except Exception as err:
     print(f"""Error loading training sets: {err}. Regenerating...""")
@@ -189,14 +221,14 @@ def maggies_to_asinh(x):
     return -a * math.asinh((x / 2.0) * np.exp(mu / a)) + mu
 
 
-def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
+def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="standard"):
     np.random.seed(100)  # make results reproducible
 
     # toy noise model
     meds_sigs, stds_sigs = [], []
 
     for f in all_filters:
-        toy_noise_x, toy_noise_y = np.loadtxt(
+        toy_noise_x, toy_noise_y, toy_noise_std = np.loadtxt(
             f"host/SBI/snrfiles/{f.name}_magvsnr.txt", dtype=float, unpack=True
         )
         meds_sigs += [
@@ -211,7 +243,7 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         stds_sigs += [
             interp1d(
                 toy_noise_x,
-                1.0857 * 1 / toy_noise_y,
+                (1.0857 * 1 / toy_noise_y)*(toy_noise_std/toy_noise_y),
                 kind="slinear",
                 fill_value="extrapolate",  # (0.01,1.0),
                 bounds_error=False,
@@ -268,14 +300,18 @@ def fit_sbi_pp(observations, n_filt_cuts=True, fit_type="global"):
         return {}, 1
 
     # prepare to pass the reconstructed model to sbi_pp
-    if fit_type == "global":
-        sbi_params["y_train"] = y_train_global
-        sbi_params["theta_train"] = x_train_global
-        sbi_params["hatp_x_y"] = hatp_x_y_global
-    elif fit_type == "local":
-        sbi_params["y_train"] = y_train_local
-        sbi_params["hatp_x_y"] = hatp_x_y_local
-        sbi_params["theta_train"] = x_train_local
+    if fit_type == "standard":
+        sbi_params["y_train"] = y_train_standard
+        sbi_params["theta_train"] = x_train_standard
+        sbi_params["hatp_x_y"] = hatp_x_y_standard
+    elif fit_type == "midz":
+        sbi_params["y_train"] = y_train_midz
+        sbi_params["theta_train"] = x_train_midz
+        sbi_params["hatp_x_y"] = hatp_x_y_midz
+    elif fit_type == "lowz":
+        sbi_params["y_train"] = y_train_lowz
+        sbi_params["hatp_x_y"] = hatp_x_y_lowz
+        sbi_params["theta_train"] = x_train_lowz
 
     # Run SBI++
     chain, obs, flags = sbi_pp.sbi_pp(

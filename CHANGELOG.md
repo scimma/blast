@@ -13,6 +13,21 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [x.x.x]
+
+### Added
+- New SBI models with redshift coverage up to z = 1
+- Improved S/N distributions for training and SED parameter estimation
+- New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
+
+### Changed
+- Improved treatment of out-of-distribution photometric noise
+- Fewer "neighbors" used to characterize missing bands, resulting in improved performance
+
+### Fixed
+- Fixed longstanding bug where S/N estimates did not include dispersion
+- Correctly identifies out-of-distribution photometric noise
+
 ## [1.13.1]
 
 ### Fixed
