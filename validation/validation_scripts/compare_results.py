@@ -108,36 +108,6 @@ def compare_data(t1, t2):
             val1 = val
             val2 = t2_aperture['fields'][key]
             compare_vals(val1, val2, key, label=f'aperture "{aperture_name}"')
-        for idx, t1_sed in enumerate(t1_aperture['sedfittingresults']):
-            try:
-                t2_aperture['sedfittingresults'][idx]
-            except IndexError:
-                logger.warning(f'''[sedfittingresults "{aperture_name}"] mismatch for sedfittingresults[{idx}]''')
-                continue
-            for key, val in t1_sed['fields'].items():
-                # Ignored keys
-                if key in ['software_version', 'aperture', 'transient', 'logsfh']:
-                    continue
-                val1 = val
-                val2 = t2_aperture['sedfittingresults'][idx]['fields'][key]
-                compare_vals(val1, val2, key, label=f'sedfittingresults "{aperture_name}"')
-            # Relying on the ordering of the SFH result lists
-            t2_sfh_results = []
-            for sfh_result_idx in t2_aperture['sedfittingresults'][idx]['fields']['logsfh']:
-                t2_sfh_results.extend([sfh for sfh in t2_aperture['starformationhistoryresult']
-                                       if sfh['pk'] == sfh_result_idx])
-            t1_sfh_results = []
-            for sfh_result_idx in t1_aperture['sedfittingresults'][idx]['fields']['logsfh']:
-                t1_sfh_results.extend([sfh for sfh in t1_aperture['starformationhistoryresult']
-                                       if sfh['pk'] == sfh_result_idx])
-            for sfh_idx, t1_sfh_result in enumerate(t1_sfh_results):
-                for key, val in t1_sfh_result['fields'].items():
-                    # Ignored keys
-                    if key in ['software_version', 'aperture', 'transient']:
-                        continue
-                    val1 = val
-                    val2 = t2_sfh_results[sfh_idx]['fields'][key]
-                    compare_vals(val1, val2, key, label=f'sfh_result idx {t1_sfh_results[sfh_idx]['pk']}')
         for t1_aperturephotometry in t1_aperture['aperturephotometry']:
             t1_filter = [f for f in t1['filters'] if f['pk'] == t1_aperturephotometry['fields']['filter']][0]
             t1_filter_name = t1_filter['fields']['name']
@@ -153,6 +123,65 @@ def compare_data(t1, t2):
                 val1 = val
                 val2 = t2_aperturephotometry['fields'][key]
                 compare_vals(val1, val2, key, label=f'aperturephotometry "{filter_name}"')
+        # SEDFittingResults
+        if not t1_aperture['sedfittingresults']:
+            continue
+        # TODO: This will not notice if t2 has sedfittingresults but t1 lacks them. Need to check both directions.
+        t1_sedfittingresult = t1_aperture['sedfittingresults'][0]
+        if t1_aperture['fields']['type'] == 'local':
+            t2_sedfittingresult = t2_aperture['sedfittingresults']
+            if t2_sedfittingresult:
+                t2_sedfittingresult = t2_sedfittingresult[0]
+            else:
+                logger.warning('''[sedfittingresults] missing local sedfittingresults''')
+                continue
+        elif t1_aperture['fields']['type'] == 'global':
+            t2_aperture = [ap for ap in t2['apertures']
+                           if ap['fields']['type'] == 'global' and ap['sedfittingresults']]
+            if t2_aperture:
+                t2_aperture = t2_aperture[0]
+                t2_sedfittingresult = t2_aperture['sedfittingresults'][0]
+            else:
+                logger.warning('''[sedfittingresults] missing global sedfittingresults''')
+                continue
+        else:
+            logger.error(f'''Aperture type invalid: "{t1_aperture['fields']['type']}"''')
+            continue
+        # Star formation history
+        for key, val in t1_sedfittingresult['fields'].items():
+            # Ignored keys
+            if key in ['software_version', 'aperture', 'transient', 'logsfh']:
+                continue
+            val1 = val
+            val2 = t2_sedfittingresult['fields'][key]
+            compare_vals(val1, val2, key, label=f'sedfittingresults "{aperture_name}"')
+        # Relying on the ordering of the SFH result lists
+        sfh_labels = [
+            '0.00-0.03 Gyr',
+            '0.03-0.10 Gyr',
+            '0.10-0.33 Gyr',
+            '0.33-1.11 Gyr',
+            '1.11-3.70 Gyr',
+            '3.70-12.34 Gyr',
+            '12.34-13.71 Gyr',
+        ]
+        t2_sfh_results = []
+        for sfh_result_idx in t2_sedfittingresult['fields']['logsfh']:
+            t2_sfh_results.extend([sfh for sfh in t2_aperture['starformationhistoryresult']
+                                   if sfh['pk'] == sfh_result_idx])
+        t1_sfh_results = []
+        for sfh_result_idx in t1_sedfittingresult['fields']['logsfh']:
+            t1_sfh_results.extend([sfh for sfh in t1_aperture['starformationhistoryresult']
+                                   if sfh['pk'] == sfh_result_idx])
+        for sfh_idx, t1_sfh_result in enumerate(t1_sfh_results):
+            for key, val in t1_sfh_result['fields'].items():
+                # Ignored keys
+                if key in ['software_version', 'aperture', 'transient']:
+                    continue
+                val1 = val
+                val2 = t2_sfh_results[sfh_idx]['fields'][key]
+                compare_vals(val1, val2, key,
+                             label=f'sedfittingresults "{aperture_name}" sfh_result "{sfh_labels[sfh_idx]}"')
 
 
 def main():
