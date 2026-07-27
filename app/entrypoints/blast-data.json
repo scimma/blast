@@ -1578,70 +1578,94 @@
     "size": 4368
   },
   {
-    "path": "sbi_training_sets/hatp_x_y_global.pkl",
-    "version_id": "t7be7U7pCQp1bUmi9dwsErXyMSLGThk",
-    "etag": "8abae565ffc324af5810113e6f37c9cd-4",
-    "size": 65019321
+    "path": "sbi_training_sets/hatp_x_y_lowz.pkl",
+    "version_id": "seM1NRDQhhFQHdXuxjTPzrHIDA39XV9",
+    "etag": "539f324667637bc40f4341392d1bba03-4",
+    "size": 65018190
   },
   {
-    "path": "sbi_training_sets/hatp_x_y_local.pkl",
-    "version_id": "452l19e9KCJL8HWJBRFAHUdIqxJXFNJ",
-    "etag": "31a7ef62820a7806677f2b17589620c7-4",
-    "size": 65019321
+    "path": "sbi_training_sets/hatp_x_y_midz.pkl",
+    "version_id": "SnjxqYMeUTP2TUcPhgpdmj8ENh.jJMF",
+    "etag": "fc61daae9b748fe261de3354575026b7-4",
+    "size": 65018190
   },
   {
-    "path": "sbi_training_sets/x_train_global.pkl",
-    "version_id": "o3EX8X79tt8gHIssyBveP-ztEvaiBzD",
-    "etag": "55e186633144bb150f1f9be741857df7-1",
-    "size": 288000164
+    "path": "sbi_training_sets/hatp_x_y_standard.pkl",
+    "version_id": "2ziwqvdlhDH7ijKhbgtFyAciuQGY6VX",
+    "etag": "ca590ec274b50d97e82dd033119ebd09-4",
+    "size": 65018190
   },
   {
-    "path": "sbi_training_sets/x_train_local.pkl",
-    "version_id": "od3Z0I3egrBUblLjS.SZAeQmU0i6n3i",
-    "etag": "9ccdc4fb33cfb76c67fa58c7c90c4623-1",
-    "size": 288000164
+    "path": "sbi_training_sets/y_train_lowz.pkl",
+    "version_id": "B6vx.YCWzJOq-j24hynDaiR2pEDT4Vb",
+    "etag": "9ac9d639fa792ba2bae66a42b4563508-33",
+    "size": 540000165
   },
   {
-    "path": "sbi_training_sets/y_train_global.pkl",
-    "version_id": "FDyoMC10L0AcrjZw25CgO4bKdVRb7.i",
-    "etag": "f1f60ea5e8b2a1d1178c686857e40c56-2",
-    "size": 720000164
+    "path": "sbi_training_sets/y_train_midz.pkl",
+    "version_id": "J9CAsCJzY.qVYakCfZJ1UPq5wae6JHN",
+    "etag": "c57c70db0dcc765ab86892df7181bf78-33",
+    "size": 540000165
   },
   {
-    "path": "sbi_training_sets/y_train_local.pkl",
-    "version_id": "DEGlGbWxYWic1fJYGERCSD9sxepf-P.",
-    "etag": "9b280ff4f26421b1da6a5faa5e4ee93d-2",
-    "size": 720000164
+    "path": "sbi_training_sets/y_train_standard.pkl",
+    "version_id": "QwBeaFsx-lAZ2xbxMb5G3jFu3kCjg-m",
+    "etag": "f3e123f1c4ec15ae7093b2e79ba0eb5d-33",
+    "size": 540000165
   },
   {
-    "path": "sbipp/SBI_model.pt",
-    "version_id": "bGgAnrSKwAqAodKHhuUncVEKLs7M0pt",
-    "etag": "cbf5690b49ca21cddacae4ddf24f146f-4",
+    "path": "sbi_training_sets/x_train_lowz.pkl",
+    "version_id": ".ELg6ygN2hZT6EddSWmkDnabfdTrxIB",
+    "etag": "5cef4d760e8e50cc24dd49f9aace5fb0-13",
+    "size": 216000165
+  },
+  {
+    "path": "sbi_training_sets/x_train_midz.pkl",
+    "version_id": "Zk9-LNs.s4xUPyAJN2ZUaDvvZJUo4Ft",
+    "etag": "b758b99b776e52a84002836ce57f61eb-13",
+    "size": 216000165
+  },
+  {
+    "path": "sbi_training_sets/x_train_standard.pkl",
+    "version_id": "OJllpjI-1.uczTrhHhKtTf0baIw01ZV",
+    "etag": "a80fcf980d7bf3081cddffc91abdb8db-13",
+    "size": 216000165
+  },
+  {
+    "path": "sbipp_phot/sbi_phot_lowz.h5",
+    "version_id": "Qn.AY8cWAgY7OyIO-W1uCsAXFXByuMz",
+    "etag": "57c032faa0c504a16c352df15d8de800-46",
+    "size": 768005856
+  },
+  {
+    "path": "sbipp_phot/sbi_phot_midz.h5",
+    "version_id": "7Yqu4h8HpzzSw1YdC1KlHvgaeS9yThL",
+    "etag": "605de75502ccba4bed7387325498ff03-46",
+    "size": 768005856
+  },
+  {
+    "path": "sbipp_phot/sbi_phot_standard.h5",
+    "version_id": "Ht5k-OVXrZNSJCdPilMaYjOcW89p9sF",
+    "etag": "7ef344343dc0e6e548448c01f23dcced-46",
+    "size": 768005856
+  },
+  {
+    "path": "sbipp/SBI_model_lowz.pt",
+    "version_id": "LWfecOFeQywsq1AM0wWHRWuWhOf79fV",
+    "etag": "f0866e2fd106fa20d87e4690439e907e-4",
     "size": 65007493
   },
   {
-    "path": "sbipp/SBI_model_global.pt",
-    "version_id": "TqYFph0y083LP9FqdP1bBDpbnQ5G9ye",
-    "etag": "255f5a086f7e5dbbb322faac659f6673-4",
+    "path": "sbipp/SBI_model_midz.pt",
+    "version_id": "y7H2NXBgsUOdQS7JOx1i4QwO4bMX.la",
+    "etag": "c447ee8af7a1475131e822765e54f456-4",
     "size": 65007493
   },
   {
-    "path": "sbipp/SBI_model_local.pt",
-    "version_id": "FtKKE82y1UkrQ1dhXkFc3HebczNWISP",
-    "etag": "22b59e91fa47e87f0e688f46e4d31242-4",
-    "size": 65009239
-  },
-  {
-    "path": "sbipp_phot/sbi_phot_global.h5",
-    "version_id": "TKLSBpdYgHXIg1J8js.XoTKXoRPd8RP",
-    "etag": "cb5e6fd738694f4da1541e4b1fa717d5-2",
-    "size": 1024005856
-  },
-  {
-    "path": "sbipp_phot/sbi_phot_local.h5",
-    "version_id": "jZiVHZ6wMlO1PLbhQbr1OA-0H-j8mqI",
-    "etag": "37a90f8b01643a4699b01d027c34256c-2",
-    "size": 1024005856
+    "path": "sbipp/SBI_model_standard.pt",
+    "version_id": "YpugRG-Hwg22qmc7lA1tEKRoXD8KMRD",
+    "etag": "75bd0bd2f1be10a0aec2bffa98609b94-4",
+    "size": 65007493
   },
   {
     "path": "transmission/2MASS_H.txt",

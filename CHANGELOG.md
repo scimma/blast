@@ -17,6 +17,9 @@ Types of changes:
 
 ### Added
 
+- New SBI models with redshift coverage up to z = 1
+- Improved S/N distributions for training and SED parameter estimation
+- New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
 - Incorporated new `drf-spectacular` package to dynamically render OpenAPI spec and an interactive
   Swagger UI for the Blast API.
 - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
@@ -28,6 +31,8 @@ Types of changes:
 
 ### Changed
 
+- Improved treatment of out-of-distribution photometric noise
+- Fewer "neighbors" used to characterize missing bands, resulting in improved performance
 - Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
 - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
 - Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for
@@ -49,6 +54,8 @@ Types of changes:
 
 ### Fixed
 
+- Fixed longstanding bug where S/N estimates did not include dispersion
+- Correctly identifies out-of-distribution photometric noise
 - Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
 - Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
 
