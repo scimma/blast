@@ -788,9 +788,11 @@ def results(request, transient_name):
     global_aperture = select_aperture(transient)
     local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
 
-    image_data = b''
     # Generate filter selection form and choose cutout to display
     cutout = select_best_cutout(transient.name)
+    image_data = b''
+    image_data_encoded = ''
+    bokeh_cutout_context = {}
     if request.method == "GET":
         filter_select_form = ImageGetForm(filter_choices=filters)
         # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
@@ -807,7 +809,19 @@ def results(request, transient_name):
                 logger.debug(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
                 image_data = b''
             image_data_encoded = base64.b64encode(image_data).decode()
-            bokeh_cutout_context = {}
+        # If the thumbnail is not available, display the Bokeh cutout plot
+        if image_data == b'':
+            try:
+                bokeh_cutout_context = plot_cutout_image(
+                    cutout=cutout,
+                    transient=transient,
+                    global_aperture=global_aperture.prefetch_related(),
+                    local_aperture=local_aperture.prefetch_related(),
+                )
+            except Exception as err:
+                logger.error(f'''Error rendering cutout plot: {err}''')
+                bokeh_cutout_context = {}
+            image_data_encoded = base64.b64encode(image_data).decode()
 
     # Download the SED thumbnails if they exist
     s3 = ObjectStore()

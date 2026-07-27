@@ -13,7 +13,7 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [Unreleased]
+## [2.0.0]
 
 ### Added
 
@@ -27,7 +27,8 @@ Types of changes:
 - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
 - Added new cutout download function to CutoutViewSet
 - New image download URL: `/api/sedfittingresult/{id}/download/{download-type}/`
-- Added new download functions to `/api/sedfittingresult`, replacing view functions: `download_chains`, `download_modelfit`, `download_percentiles`.
+- Added new download functions to `/api/sedfittingresult`, replacing view functions: `download_chains`,
+  `download_modelfit`, `download_percentiles`.
 
 ### Changed
 
@@ -43,7 +44,9 @@ Types of changes:
   addressed in a later release.
 - Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
 - Transient results page now has download links next to each available filter under 'Cutout Download Report'
-- Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned by `/api/sedfittingresult` such that they will download the associated files. The transient result page download links now use these values.
+- Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned
+  by `/api/sedfittingresult` such that they will download the associated files. The transient result page
+  download links now use these values.
 
 ### Removed
 
@@ -58,6 +61,7 @@ Types of changes:
 - Correctly identifies out-of-distribution photometric noise
 - Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
 - Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
+- Fix bug related to uninitialized variables in result page rendering
 
 ## [1.13.1]
 
