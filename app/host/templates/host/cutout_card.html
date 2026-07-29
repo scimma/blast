@@ -28,12 +28,65 @@
         <div class="input-group-append">
             <button class="btn btn-primary" type="button"
                 onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
+            <button class="btn btn-outline-secondary" type="button" id="edit-aperture-btn"
+                onclick="toggleApertureEdit('{{ transient.name }}')">Enable Aperture Editing</button>
+            <button class="btn btn-success" type="button" id="save-aperture-btn"
+                onclick="saveApertureChanges('{{ transient.name }}')" disabled>Save Aperture Changes</button>
         </div>
     </div>
 </form>
 <script>
+    // tracks whether aperture-editing mode is currently on, so the toggle button knows what to switch to and re-request on the next click
     document.getElementById('loading-indicator').style.display = "none";
-    function cutoutImgClick(transient, filter) {
+    var apertureEditable = false;
+    
+    // caches unsaved edits fired by EDITABLE_APERTURE_HANDLE_JS, keyed by apertureId+apertureType
+    var pendingApertureChanges = {};
+
+    window.addEventListener('blast:aperture-change', function (evt) {
+        var d = evt.detail;
+        pendingApertureChanges[d.apertureId + ':' + d.apertureType] = d;
+
+        var saveBtn = document.getElementById('save-aperture-btn');
+        if (saveBtn) {
+            saveBtn.disabled = Object.keys(pendingApertureChanges).length === 0;
+        }
+    });
+
+    function toggleApertureEdit(transient) {
+        apertureEditable = !apertureEditable;
+        var btn = document.getElementById('edit-aperture-btn');
+        btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
+        btn.classList.toggle('btn-outline-secondary', !apertureEditable);
+        btn.classList.toggle('btn-secondary', apertureEditable);
+        var filter = document.getElementById('id_filters').value;
+        cutoutImgClick(transient, filter, apertureEditable);
+    }
+
+    function saveApertureChanges(transient) {
+        var changes = Object.values(pendingApertureChanges);
+        if (!changes.length) return;
+        $.ajax({
+            url: "{% url 'save_aperture_changes' %}",
+            type: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            contentType: "application/json",
+            data: JSON.stringify({ transient_name: transient, apertures: changes }),
+            success: function (resp) {
+                pendingApertureChanges = {};
+                var saveBtn = document.getElementById('save-aperture-btn');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                }
+            },
+            error: function (xhr) {
+                console.error("Failed to save aperture changes:", xhr.responseText);
+            },
+        });
+    }
+
+    document.getElementById('loading-indicator').style.display = "none";
+    function cutoutImgClick(transient, filter, editable) {
         document.getElementById('loading-indicator').style.display = "block";
         $("#cutout-loader-mask").show();
         $.ajax({
@@ -41,7 +94,8 @@
             type: "GET",
             data: {
                 transient_name: transient,
-                filter: filter
+                filter: filter,
+                editable: editable
             },
             success: function (resp) {
                 document.getElementById("cutout-img-bokeh").innerHTML = resp.bokeh_cutout_div;
