@@ -516,6 +516,14 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
             plotting_kwargs=host_kwargs,
             plotting_func=fig.scatter,
         )
+        
+    add_apertures(
+        fig,
+        global_aperture,
+        local_aperture,
+        wcs,
+        editable=editable,
+    )
     return generate_plot(fig, image_data=image_data)
 
 
