@@ -53,7 +53,10 @@
                             sed_local_script.type = 'text/javascript';
                             var raw_script = resp.bokeh_sed_local_script;
                             var raw_script_trimmed = raw_script.trim();
-                            var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
+                            var closeMarker = "<" + "/script>";
+                            var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                            var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                            var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
                             sed_local_script.text = script_trimmed;
                             document.body.appendChild(sed_local_script);
                             $("#loading-indicator-sed-local").hide()
@@ -110,7 +113,10 @@
                             sed_global_script.type = 'text/javascript';
                             var raw_script = resp.bokeh_sed_global_script;
                             var raw_script_trimmed = raw_script.trim();
-                            var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
+                            var closeMarker = "<" + "/script>";
+                            var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                            var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                            var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
                             sed_global_script.text = script_trimmed;
                             document.body.appendChild(sed_global_script);
                             $("#loading-indicator-sed-global").hide()
