@@ -24,6 +24,8 @@ Types of changes:
   was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
   The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
   addressed in a later release.
+- Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
+  in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
 
 ### Added
 
@@ -34,6 +36,9 @@ Types of changes:
 ### Fixed
 
 - Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
+- Fixed interactive Bokeh plots silently failing to render when clicked. JavaScript that strips the 
+  `<script>` wrapper from Bokeh's components() output matched a hardcoded `<script type="text/javascript">`
+  string; Bokeh 3.9+ omits that attribute. Replaced with version-agnostic tag-boundary parsing.
 
 ## [1.13.1]
 
