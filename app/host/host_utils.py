@@ -72,6 +72,7 @@ from host.task_prereqs import GenerateThumbnailFinal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
 from host.task_prereqs import HostSpectrumDownload_prerequisites
+from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
 
 from .object_store import ObjectStore
 from .models import TaskLock
@@ -1404,6 +1405,7 @@ def get_all_task_prerequisites(transient_name):
         'Generate thumbnail SED local': GenerateThumbnailSEDLocal_prerequisites,
         'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
         'Host spectrum download': HostSpectrumDownload_prerequisites,
+        'Generate thumbnail host spectrum': GenerateThumbnailHostSpec_prerequisites,
     }
 
 

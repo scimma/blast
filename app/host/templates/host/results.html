@@ -3,7 +3,7 @@
 
 {% block title %} {{transient.get_display_name}} results {% endblock %}
 {% block script %}
-{{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }}
+{{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }} {{ bokeh_host_spec_script | safe }}
 
 
 <script>
@@ -83,6 +83,7 @@ Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderEle
             <div class="col-lg-7 col-md-6">
                 {% include "host/cutout_card.html" %}
                 {% include "host/sed_card.html" %}
+                {% include "host/host_spectrum_card.html" %}
             </div>
         </div>
         <div class="row">

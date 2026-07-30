@@ -165,53 +165,53 @@ def fetch_host_spectrum(position):
                 }
                 logger.info(f'''Spectrum successfully fetched via SPARCL from {getattr(record, 'data_release', 'unknown')}.''')
 
-        # Fallback to NED as a last resort if SPARCL yields nothing
-        if result is None:
-            logger.debug('''No matching spectrum found in SPARCL. Falling back to NED...''')
-            ned_results = Ned.query_region(position, radius=3.0 * u.arcsec)
+        # # Fallback to NED as a last resort if SPARCL yields nothing
+        # if result is None:
+        #     logger.debug('''No matching spectrum found in SPARCL. Falling back to NED...''')
+        #     ned_results = Ned.query_region(position, radius=3.0 * u.arcsec)
             
-            if ned_results is not None and len(ned_results) > 0:
-                ned_results = ned_results[ned_results['Redshift'].mask == False]  # noqa: E712
+        #     if ned_results is not None and len(ned_results) > 0:
+        #         ned_results = ned_results[ned_results['Redshift'].mask == False]  # noqa: E712
                 
-                if len(ned_results) > 0:
-                    pos_results = SkyCoord(
-                        ned_results['RA'].value, ned_results['DEC'].value, unit=u.deg
-                    )
-                    sep = position.separation(pos_results).arcsec
-                    best_idx = int(np.argmin(sep))
-                    object_name = str(ned_results[best_idx]['Object Name'])
-                    redshift = float(ned_results[best_idx]['Redshift'])
+        #         if len(ned_results) > 0:
+        #             pos_results = SkyCoord(
+        #                 ned_results['RA'].value, ned_results['DEC'].value, unit=u.deg
+        #             )
+        #             sep = position.separation(pos_results).arcsec
+        #             best_idx = int(np.argmin(sep))
+        #             object_name = str(ned_results[best_idx]['Object Name'])
+        #             redshift = float(ned_results[best_idx]['Redshift'])
 
-                    spectra = Ned.get_spectra(object_name)
-                    if spectra:
-                        hdulist = spectra[0]
-                        try:
-                            crval1 = hdulist[0].header['CRVAL1']
-                            cdelt1 = (hdulist[0].header.get('CD1_1') or
-                                      hdulist[0].header.get('CDELT1'))
-                            naxis1 = hdulist[0].header['NAXIS1']
-                            wavelengths = 10 ** (crval1 + cdelt1 * np.arange(naxis1))
-                            wl_min = float(wavelengths[0])
-                            wl_max = float(wavelengths[-1])
-                        except Exception:
-                            wl_min, wl_max = None, None
+        #             spectra = Ned.get_spectra(object_name)
+        #             if spectra:
+        #                 hdulist = spectra[0]
+        #                 try:
+        #                     crval1 = hdulist[0].header['CRVAL1']
+        #                     cdelt1 = (hdulist[0].header.get('CD1_1') or
+        #                               hdulist[0].header.get('CDELT1'))
+        #                     naxis1 = hdulist[0].header['NAXIS1']
+        #                     wavelengths = 10 ** (crval1 + cdelt1 * np.arange(naxis1))
+        #                     wl_min = float(wavelengths[0])
+        #                     wl_max = float(wavelengths[-1])
+        #                 except Exception:
+        #                     wl_min, wl_max = None, None
 
-                        result = {
-                            'hdulist': hdulist,
-                            'spectrum_id': object_name,
-                            'redshift': redshift,
-                            'wavelength_min_angstrom': wl_min,
-                            'wavelength_max_angstrom': wl_max,
-                            'ra_deg': float(ned_results[best_idx]['RA']),
-                            'dec_deg': float(ned_results[best_idx]['DEC']),
-                        }
-                        logger.debug(f'''NED spectrum found for "{object_name}", z={redshift}''')
-                    else:
-                        logger.debug(f'''No NED spectra available for object "{object_name}".''')
-                else:
-                    logger.debug('''NED objects found but none have a valid redshift.''')
-            else:
-                logger.debug('''No NED objects found at position.''')
+        #                 result = {
+        #                     'hdulist': hdulist,
+        #                     'spectrum_id': object_name,
+        #                     'redshift': redshift,
+        #                     'wavelength_min_angstrom': wl_min,
+        #                     'wavelength_max_angstrom': wl_max,
+        #                     'ra_deg': float(ned_results[best_idx]['RA']),
+        #                     'dec_deg': float(ned_results[best_idx]['DEC']),
+        #                 }
+        #                 logger.debug(f'''NED spectrum found for "{object_name}", z={redshift}''')
+        #             else:
+        #                 logger.debug(f'''No NED spectra available for object "{object_name}".''')
+        #         else:
+        #             logger.debug('''NED objects found but none have a valid redshift.''')
+        #     else:
+        #         logger.debug('''No NED objects found at position.''')
 
     except Exception as err:
         logger.warning(f'''Error fetching host spectrum: {err}''')

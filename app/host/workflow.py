@@ -22,6 +22,7 @@ from host.transient_tasks import validate_global_photometry
 from host.transient_tasks import validate_local_photometry
 from host.transient_tasks import generate_thumbnail_sed_local
 from host.transient_tasks import generate_thumbnail_sed_global
+from host.transient_tasks import generate_thumbnail_host_spec
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 
@@ -104,7 +105,10 @@ def transient_workflow(transient_name=None):
                 host_information.si(transient_name),
                 group(
                     mwebv_host.si(transient_name),
-                    host_spectrum_download.si(transient_name),
+                    chain(
+                        host_spectrum_download.si(transient_name),
+                        generate_thumbnail_host_spec.si(transient_name),
+                    ),
                     chain(
                         global_aperture_construction.si(transient_name),
                         global_aperture_photometry.si(transient_name),
