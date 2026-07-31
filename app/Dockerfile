@@ -4,9 +4,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gfortran \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl https://dl.min.io/client/mc/release/linux-amd64/mc \
+# Run "mc version" to ensure that the client executes without error
+RUN curl -L https://dl.min.io/client/mc/release/linux-amd64/mc \
     -o /usr/local/bin/mc && \
-    chmod +x /usr/local/bin/mc
+    chmod +x /usr/local/bin/mc && \
+    mc version > /dev/null
 
 RUN pip install --upgrade pip
 COPY ./requirements.txt /requirements.txt
