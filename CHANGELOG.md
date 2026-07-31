@@ -47,6 +47,8 @@ Types of changes:
 - Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned
   by `/api/sedfittingresult` such that they will download the associated files. The transient result page
   download links now use these values.
+- Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
+  in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
 
 ### Removed
 
