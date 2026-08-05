@@ -44,7 +44,7 @@ case "${PURGE_OPTION}" in
   ;;
   "--purge-data")
     COMPOSE_ARGS=""
-    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-data"
+    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_init-data"
     echo "Purging astro data volume..."
   ;;
   *)

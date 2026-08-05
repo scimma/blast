@@ -15,6 +15,10 @@ urlpatterns = [
         views.delete_transient_view,
     ),
     re_path(
+        base_path + r"^transient/get/(?P<transient_name>[a-zA-Z0-9_-]+)/(.*)$",
+        views.export_transient_view,
+    ),
+    re_path(
         base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
         views.export_transient_view,
     ),

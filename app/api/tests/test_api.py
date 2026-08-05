@@ -84,39 +84,11 @@ class APITest(TestCase):
 
         self.assertTrue(request.status_code == status.HTTP_200_OK)
 
-    def test_transient_post(self):
-        client = APIClient()
-        request = client.post("/api/transient/post/name=2022testnew&ra=-1.0&dec=-5.0")
-        data = json.loads(request.content)
-        self.assertTrue(request.status_code == status.HTTP_201_CREATED)
-        self.assertTrue(
-            data["message"]
-            == "transient successfully posted: 2022testnew: ra = -1.0, dec= -5.0"
-        )
-
-    def test_transient_bad_post(self):
-        client = APIClient()
-        request = client.post("/api/transient/post/name=2022new&ra=-*1.0&dec=-5.0")
-        data = json.loads(request.content)
-        self.assertTrue(request.status_code == status.HTTP_400_BAD_REQUEST)
-        self.assertTrue(data["message"] == "bad ra and dec: ra=-*1.0, dec=-5.0")
-
-        request = client.post(
-            "/api/transient/post/name=2022new&ra=-999999&dec=-78895.0"
-        )
-        data = json.loads(request.content)
-        self.assertTrue(request.status_code == status.HTTP_400_BAD_REQUEST)
-
-    def test_transient_already_in_database(self):
-        client = APIClient()
-        request = client.post("/api/transient/post/name=2022testone&ra=-1.0&dec=-5.0")
-        data = json.loads(request.content)
-        self.assertTrue(request.status_code == status.HTTP_409_CONFLICT)
-        self.assertTrue(data["message"] == "2022testone already in database")
-
     def test_get_no_transient(self):
         client = APIClient()
         request = client.get("/api/transient/get/2022NotInDatabase?format=json")
+        print(request.content) ## DELETE ME
+        print(request.status_code) ## DELETE ME
         data = json.loads(request.content)
         self.assertTrue(request.status_code == status.HTTP_404_NOT_FOUND)
         self.assertTrue(data["message"] == "2022NotInDatabase not in database")

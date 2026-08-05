@@ -1,15 +1,8 @@
-name: blast-ci
+name: blast-ci-$USER
 
 networks:
   internal:
     external: false
-
-volumes:
-  blast-db: {}
-  django-static: {}
-  blast-data:
-    name: "blast-data"
-    external: true
 
 services:
 
