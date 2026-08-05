@@ -158,10 +158,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Webserver config
 #
 WSGI_APPLICATION = "app.wsgi.application"
-HOSTNAMES = os.environ.get("DJANGO_HOSTNAMES", "localhost").split(",")
+HOSTNAMES = os.getenv("DJANGO_HOSTNAMES", "localhost").split(",")
+WEB_SERVER_PORT = os.getenv("WEB_SERVER_PORT", "4000")
+WEB_APP_PORT = os.getenv("WEB_APP_PORT", "8000")
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_WHITELIST = ["*"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://localhost:8000", "http://localhost:4000"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    f"http://localhost:{WEB_SERVER_PORT}",
+    f"http://localhost:{WEB_APP_PORT}"
+]
 for hostname in HOSTNAMES:
     CSRF_TRUSTED_ORIGINS.append(f"""https://{hostname}""")
 CSRF_COOKIE_SECURE = True
