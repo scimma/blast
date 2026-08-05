@@ -594,29 +594,26 @@ def SDSS_cutout(position, image_size=None, filter=None):
     """
 
     sdss_baseurl = "https://data.sdss.org/sas"
-    print(position)
-
+    logger.debug(f'''SDSS position: {position}''')
     xid = SDSS.query_region(position, radius=0.05 * u.deg)
+    logger.debug(f'''SDSS response: {xid}''')
     if xid is None or len(xid) == 0:
         return None
-    
-    image_pos = SkyCoord(xid['ra'],xid['dec'],unit=u.deg)
+
+    image_pos = SkyCoord(xid['ra'], xid['dec'], unit=u.deg)
     sep = position.separation(image_pos)
     iSep = np.where(sep == np.min(sep))[0]
-    
 
     # old (better, but deprecated) version
-    #url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
-    #print(url)
-    #rt = requests.get(url)
+    # url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
+    # print(url)
+    # rt = requests.get(url)
 
-
-
-    regex = r"<dt>run<\/dt>.*<dd>.*<\/dd>"
-    run = xid['run'][iSep][0] #re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    rerun = xid['rerun'][iSep][0] #re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    camcol = xid['camcol'][iSep][0] #re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    field = xid['field'][iSep][0] #re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    # regex = r"<dt>run<\/dt>.*<dd>.*<\/dd>"
+    run = xid['run'][iSep][0]  # re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    rerun = xid['rerun'][iSep][0]  # re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    camcol = xid['camcol'][iSep][0]  # re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    field = xid['field'][iSep][0]  # re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
 
     # a little latency so that we don't look like a bot to SDSS?
     time.sleep(1)
