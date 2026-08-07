@@ -375,7 +375,8 @@ def galex_cutout(position, image_size=None, filter=None):
 
 def WISE_cutout(position, image_size=None, filter=None):
     """
-    Download WISE image cutout from IRSA
+    Download WISE image cutout from IRSA.
+    API documentation: https://irsa.ipac.caltech.edu/ibe/sia.html
 
     Parameters
     ----------
