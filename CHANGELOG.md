@@ -49,13 +49,18 @@ Types of changes:
   download links now use these values.
 - Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
   in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
-- Development environment: Renamed the Docker volume "blast-data" to "blast-init-data".
-  Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
-  from one another, for example when developing code on a shared host.
 - Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
   the `export_transient_view()` function. This changed the schema of the returned transient data object.
 - Replaced the API endpoint `/api/transient/export/[transient_name]/[all]` with `/api/transient/export/[transient_name]`
   now that the previous response where "all" is omitted now corresponds to `/api/transient/get/[transient_name]`.
+- Development environment: Renamed the Docker volume "blast-data" to "blast-init-data".
+  Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
+  from one another, for example when developing code on a shared host. Moved data initialization routine to
+  the celery-beat container to better support multiple webserver replicas and more efficient restarts of those
+  replicas. Added healthchecks and dependencies to Compose specs for celery-beat, the webserver and the
+  NGINX proxy services, such that the webserver waits to start until data initialization completes in
+  celery-beat. Also this fixes the bug in the Compose deployment where restarting the webserver would sometimes
+  break the proxy connection, requiring a manual proxy restart.
 
 ### Removed
 
