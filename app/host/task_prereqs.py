@@ -134,3 +134,18 @@ GenerateThumbnailSEDGlobal_prerequisites = {
     "Global host SED inference": "processed",
     "Generate thumbnail SED global": "not processed",
 }
+HostSpectrumDownload_prerequisites = {
+    "Cutout download": "processed",
+    "Transient MWEBV": "processed",
+    "Host match": "processed",
+    "Host information": "processed",
+    "Host spectrum download": "not processed",
+}
+GenerateThumbnailHostSpec_prerequisites = {
+    "Cutout download": "processed",
+    "Transient MWEBV": "processed",
+    "Host match": "processed",
+    "Host information": "processed",
+    "Host spectrum download": "processed",
+    "Generate thumbnail host spectrum": "not processed",
+}

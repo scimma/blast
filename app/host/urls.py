@@ -43,6 +43,7 @@ urlpatterns = [
     path(f"""{base_path}healthz""", views.healthz, name='healthz'),
     path(f"""{base_path}cutout_fits_plot""", views.cutout_fits_plot, name='cutout_fits_plot'),
     path(f"""{base_path}fetch_sed_plot""", views.fetch_sed_plot, name='fetch_sed_plot'),
+    path(f"""{base_path}fetch_host_spectrum_plot""", views.fetch_host_spectrum_plot, name='fetch_host_spectrum_plot'),
 ]
 
 router = DefaultRouter()

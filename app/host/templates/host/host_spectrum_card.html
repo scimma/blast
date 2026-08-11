@@ -1,0 +1,64 @@
+{% extends "host/card_template.html" %}
+
+<!-- title -->
+{% block title %}
+<h4>Host Galaxy Spectrum</h4>
+{% endblock %}
+
+<!-- body -->
+{% block body %}
+<div>
+    {% if host_spectrum %}
+    <p><small>Source: {{ host_spectrum.source }} (ID: {{ host_spectrum.spectrum_id }}){% if host_spectrum.redshift %}, z={{ host_spectrum.redshift|floatformat:5 }}{% endif %}</small></p>
+    {% endif %}
+
+    {% if bokeh_host_spec_div %}
+    <div id="spectrum-div" class="d-flex justify-content-center align-items-center">
+        {{ bokeh_host_spec_div | safe }}
+    </div>
+    {% else %}
+    <div id="spectrum-div" class="d-flex justify-content-center align-items-center">
+        <div id="spectrum-loader-mask" class="loader-mask"></div>
+        <div id="loading-indicator-spectrum" class="loader"></div>
+        {% if image_data_encoded_host_spec %}
+        <button title="Click the image to load the interactive plot." id="spectrum-button" onclick="spectrumImgClick('{{ transient.name }}')">
+            <img id="spectrum-img" src="data:image/png;base64,{{ image_data_encoded_host_spec }}" style="width: 100%;"/>
+        </button>
+        {% else %}
+        <p>No archival host spectrum available.</p>
+        {% endif %}
+        <br>
+    </div>
+
+    <script>
+        $("#loading-indicator-spectrum").hide()
+        function spectrumImgClick(transient) {
+            $("#loading-indicator-spectrum").show();
+            $("#spectrum-loader-mask").show();
+            $.ajax({
+                url: "{% url 'fetch_host_spectrum_plot' %}",
+                type: "GET",
+                data: {
+                    transient_name: transient
+                },
+                success: function (resp) {
+                    $("#spectrum-div").replaceWith(resp.bokeh_host_spec_div);
+                    var spectrum_script = document.createElement("script");
+                    spectrum_script.type = 'text/javascript';
+                    var raw_script = resp.bokeh_host_spec_script;
+                    var raw_script_trimmed = raw_script.trim();
+                    var closeMarker = "<" + "/script>";
+                    var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                    var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                    var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
+                    spectrum_script.text = script_trimmed;
+                    document.body.appendChild(spectrum_script);
+                    $("#loading-indicator-spectrum").hide()
+                    $("#spectrum-loader-mask").hide();
+                },
+            });
+        }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

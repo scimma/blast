@@ -26,6 +26,7 @@ from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
 from host.prospector import build_obs
 from host.models import SEDFittingResult
+from host.models import HostSpectrum
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
@@ -610,4 +611,88 @@ def render_sed_plot(transient, scope):
     return {
         **plot,
         'canonical_path': canonical_path,
+    }
+
+
+def _read_host_spectrum_fits(local_fits_path):
+    """
+    Read a host spectrum FITS file saved by fetch_host_spectrum(): a
+    SPARCL-derived binary table (extension "SPECTRUM" with wavelength/
+    flux columns).
+    """
+    with fits.open(local_fits_path) as hdulist:
+        flux_unit = hdulist[0].header.get('BUNIT', '1e-17 erg cm-2 s-1 AA-1')
+        table = hdulist['SPECTRUM']
+        wavelength = np.asarray(table.data['wavelength'], dtype=np.float64)
+        flux = np.asarray(table.data['flux'], dtype=np.float64)
+        wave_unit = table.columns['wavelength'].unit or 'AA'
+
+    return {
+        'wavelength': wavelength,
+        'flux': flux,
+        'wave_unit': wave_unit,
+        'flux_unit': flux_unit,
+    }
+
+
+def plot_host_spectrum(host_spectrum=None, spectrum_file=None):
+    """
+    Plot the host galaxy spectrum downloaded by fetch_host_spectrum().
+    """
+    fig = figure(
+        title="",
+        sizing_mode="stretch_width",
+        max_height=400,
+        min_border=0,
+        x_axis_label="Wavelength [Angstrom]",
+        y_axis_label="Flux",
+    )
+
+    if spectrum_file is not None and os.path.exists(spectrum_file):
+        spec = _read_host_spectrum_fits(spectrum_file)
+        fig.yaxis.axis_label = f"Flux [{spec['flux_unit']}]"
+
+        source = ColumnDataSource(data=dict(x=spec['wavelength'], y=spec['flux']))
+        legend_label = f"{host_spectrum.source} spectrum" if host_spectrum else "spectrum"
+        line = fig.line('x', 'y', source=source, legend_label=legend_label)
+
+        TOOLTIPS = [
+            ("wavelength", "$x"),
+            ("flux", "$y"),
+        ]
+        hover = HoverTool(renderers=[line], tooltips=TOOLTIPS)
+        fig.add_tools(hover)
+
+        fig.legend.location = "top_left"
+    else:
+        fig.title = "Data Not Available"
+
+    script, div = components(fig)
+    return {"bokeh_host_spec_script": script, "bokeh_host_spec_div": div, "fig": fig}
+
+
+def render_host_spectrum_plot(transient):
+    '''Generate a Bokeh plot of the archival host galaxy spectrum'''
+
+    canonical_path = None
+    spectrum_tmp_filepath = None
+    host_spectrum = None
+    if transient.host is not None:
+        host_spectrum_qs = HostSpectrum.objects.filter(host=transient.host)
+        if host_spectrum_qs.exists():
+            host_spectrum = host_spectrum_qs[0]
+    if host_spectrum is not None and host_spectrum.spectrum_file:
+        canonical_path = host_spectrum.spectrum_file.name
+        spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
+        download_file_from_s3(spectrum_tmp_filepath, spectrum_object_key)
+    plot = plot_host_spectrum(
+        host_spectrum=host_spectrum,
+        spectrum_file=spectrum_tmp_filepath,
+    )
+    # Purge temporary cached file
+    delete_cached_file(spectrum_tmp_filepath)
+    return {
+        **plot,
+        'canonical_path': canonical_path,
+        'host_spectrum': host_spectrum,
     }
