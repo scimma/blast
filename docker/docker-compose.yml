@@ -138,7 +138,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
-    #  - "batch"
+      - "ci"
 
   redis:
     platform: linux/amd64
