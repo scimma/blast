@@ -39,6 +39,8 @@ echo "Running database initialization script..."
 python init_app.py
 echo "Django database initialization complete."
 
+touch /tmp/celery-beat-ready
+
 if [[ $DISABLE_CELERY_BEAT == "true" ]]; then
     echo "Celery Beat is disabled. Suspending."
     sleep infinity

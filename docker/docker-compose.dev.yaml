@@ -16,7 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 2
-      start_period: 30s
+      start_period: 10s
     depends_on:
       app:
         condition: service_healthy
@@ -36,12 +36,15 @@ services:
       file: docker-compose.yml
       service: app
     restart: on-failure
+    depends_on:
+      celery-beat:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${WEB_APP_PORT}/healthz"]
       interval: 10s
       timeout: 5s
       retries: 2
-      start_period: 30s
+      start_period: 10s
     build:
       context: ../app/
     ports:
@@ -100,6 +103,13 @@ services:
     extends:
       file: docker-compose.yml
       service: celery-beat
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "bash", "-c", "[ -f /tmp/celery-beat-ready ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 600s
     build:
       context: ../app/
     env_file:
