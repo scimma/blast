@@ -49,7 +49,7 @@ Types of changes:
   download links now use these values.
 - Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
   in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
-- Development environment: Renamed the Docker volume "blast-data" to "init-data".
+- Development environment: Renamed the Docker volume "blast-data" to "blast-init-data".
   Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
   from one another, for example when developing code on a shared host.
 - Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
