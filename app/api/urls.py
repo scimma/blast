@@ -15,11 +15,11 @@ urlpatterns = [
         views.delete_transient_view,
     ),
     re_path(
-        base_path + r"^transient/get/(?P<transient_name>[a-zA-Z0-9_-]+)/(.*)$",
-        views.export_transient_view,
+        base_path + r"^transient/get/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
+        views.get_transient_view,
     ),
     re_path(
-        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
+        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
         views.export_transient_view,
     ),
     path(base_path + 'alias/<str:alias>/', views.alias_handler_get_delete, ),

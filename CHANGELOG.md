@@ -52,6 +52,10 @@ Types of changes:
 - Development environment: Renamed the Docker volume "blast-data" to "init-data".
   Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
   from one another, for example when developing code on a shared host.
+- Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
+  the `export_transient_view()` function. This changed the schema of the returned transient data object.
+- Replaced the API endpoint `/api/transient/export/[transient_name]/[all]` with `/api/transient/export/[transient_name]`
+  now that the previous response where "all" is omitted now corresponds to `/api/transient/get/[transient_name]`.
 
 ### Removed
 

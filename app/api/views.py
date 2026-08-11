@@ -403,81 +403,88 @@ def alias_handler_post(request, alias: str, object_type: str = None, name: str =
 
 
 @log_usage_metric()
+def get_transient_view(request=None, transient_name=''):
+    # get_transient_view(request=request, transient_name=transient_name, all=True)
+    transient_info = export_transient_info(transient_name)
+    if not transient_info:
+        return render(request, "transient_404.html", status=404)
+    logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
+    logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
+    return JsonResponse(transient_info)
+
+
+@log_usage_metric()
 def export_transient_view(request=None, transient_name='', all=''):
     transient_info = export_transient_info(transient_name)
     if not transient_info:
         return render(request, "transient_404.html", status=404)
-    logger.debug(f'''Exported transient dataset object:\n{json.dumps(transient_info, indent=2)}''')
-    if not all:
-        logger.info(f'Exporting only database objects for "{transient_name}", no data files.')
-        return JsonResponse(transient_info)
-    else:
-        logger.info(f'Exporting all data for "{transient_name}", including files.')
-        s3 = ObjectStore()
-        tar_bytes_io = BytesIO()
-        # Generate in-memory compressed archive file object of all data to stream
-        with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
-            # Add transient dataset document to archive
-            transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
-            transient_info_fileobj.seek(0)
-            # Assign standard generic filename to ease parsing of metadata upon import
-            tarinfo = tarfile.TarInfo(name='transient.json')
-            tarinfo.size = transient_info_fileobj.getbuffer().nbytes
-            tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
-            # Download cutout FITS image files into memory
-            for cutout in transient_info['cutouts']:
-                canonical_path = cutout['fields']['fits']
-                if not canonical_path:
-                    continue
+    logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
+    logger.info(f'Exporting all data for "{transient_name}", including files.')
+    s3 = ObjectStore()
+    tar_bytes_io = BytesIO()
+    # Generate in-memory compressed archive file object of all data to stream
+    with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
+        # Add transient dataset document to archive
+        transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
+        transient_info_fileobj.seek(0)
+        # Assign standard generic filename to ease parsing of metadata upon import
+        tarinfo = tarfile.TarInfo(name='transient.json')
+        tarinfo.size = transient_info_fileobj.getbuffer().nbytes
+        tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
+        # Download cutout FITS image files into memory
+        for cutout in transient_info['cutouts']:
+            canonical_path = cutout['fields']['fits']
+            if not canonical_path:
+                continue
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+            cutout_fileobj = BytesIO(s3.get_object(path=object_key))
+            # This assumes that the canonical paths for each cutout file are unique
+            tarinfo = tarfile.TarInfo(
+                name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
+            tarinfo.size = cutout_fileobj.getbuffer().nbytes
+            tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
+            # Include thumbnail images
+            thumbnail_object_key = object_key.replace('.fits', '.jpg')
+            if not s3.object_exists(path=thumbnail_object_key):
+                continue
+            thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+            thumbnail_tar_path = canonical_path.replace(
+                os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
+            tarinfo = tarfile.TarInfo(
+                name=thumbnail_tar_path)
+            tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+            tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+
+        # Collect SED fit files into memory
+        sedfittingresults = []
+        for aperture in transient_info['apertures']:
+            if aperture['sedfittingresults']:
+                sedfittingresults.extend(aperture['sedfittingresults'])
+        for sedfittingresult in sedfittingresults:
+            for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                canonical_path = sedfittingresult['fields'][sed_file]
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
-                cutout_fileobj = BytesIO(s3.get_object(path=object_key))
-                # This assumes that the canonical paths for each cutout file are unique
+                sed_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each sed file are unique
                 tarinfo = tarfile.TarInfo(
-                    name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
-                tarinfo.size = cutout_fileobj.getbuffer().nbytes
-                tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
+                    name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
+                tarinfo.size = sed_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
                 # Include thumbnail images
-                thumbnail_object_key = object_key.replace('.fits', '.jpg')
+                thumbnail_object_key = object_key.replace('.h5', '.jpg')
                 if not s3.object_exists(path=thumbnail_object_key):
                     continue
                 thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
                 thumbnail_tar_path = canonical_path.replace(
-                    os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
+                    os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
                 tarinfo = tarfile.TarInfo(
                     name=thumbnail_tar_path)
                 tarinfo.size = thumbail_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
-
-            # Collect SED fit files into memory
-            sedfittingresults = []
-            for aperture in transient_info['apertures']:
-                if aperture['sedfittingresults']:
-                    sedfittingresults.extend(aperture['sedfittingresults'])
-            for sedfittingresult in sedfittingresults:
-                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                    canonical_path = sedfittingresult['fields'][sed_file]
-                    object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
-                    sed_fileobj = BytesIO(s3.get_object(path=object_key))
-                    # This assumes that the canonical paths for each sed file are unique
-                    tarinfo = tarfile.TarInfo(
-                        name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
-                    tarinfo.size = sed_fileobj.getbuffer().nbytes
-                    tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
-                    # Include thumbnail images
-                    thumbnail_object_key = object_key.replace('.h5', '.jpg')
-                    if not s3.object_exists(path=thumbnail_object_key):
-                        continue
-                    thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
-                    thumbnail_tar_path = canonical_path.replace(
-                        os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
-                    tarinfo = tarfile.TarInfo(
-                        name=thumbnail_tar_path)
-                    tarinfo.size = thumbail_fileobj.getbuffer().nbytes
-                    tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
-        tar_bytes_io.seek(0)
-        response = StreamingHttpResponse(streaming_content=tar_bytes_io)
-        response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
-        return response
+    tar_bytes_io.seek(0)
+    response = StreamingHttpResponse(streaming_content=tar_bytes_io)
+    response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
+    return response
 
 
 @login_required

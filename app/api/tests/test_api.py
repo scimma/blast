@@ -87,8 +87,6 @@ class APITest(TestCase):
     def test_get_no_transient(self):
         client = APIClient()
         request = client.get("/api/transient/get/2022NotInDatabase?format=json")
-        print(request.content) ## DELETE ME
-        print(request.status_code) ## DELETE ME
         data = json.loads(request.content)
         self.assertTrue(request.status_code == status.HTTP_404_NOT_FOUND)
         self.assertTrue(data["message"] == "2022NotInDatabase not in database")
@@ -148,11 +146,11 @@ class APITest(TestCase):
     def test_transient_export_no_files(self):
         client = APIClient()
         # Load expected data
-        with open(os.path.join(Path(__file__).resolve().parent, '2022testone_export_test.json')) as fp:
+        with open(os.path.join(Path(__file__).resolve().parent, '2022testone_get_test.json')) as fp:
             expected_data = json.load(fp)
         expected_data.pop('metadata')
         # Fetch data from API
-        request = client.get("/api/transient/export/2022testone/")
+        request = client.get("/api/transient/get/2022testone/")
         data = json.loads(request.content)
         # Remove the metadata content that contains the generation timestamp
         data.pop('metadata')
