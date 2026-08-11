@@ -4,67 +4,8 @@ set -eo pipefail
 
 bash entrypoints/install_dustmaps_config.sh
 
-INIT_STARTED_DATA="${DATA_ROOT_DIR}/.initializing_data"
-INIT_STARTED_DB="${DATA_ROOT_DIR}/.initializing_db"
-
-if [[ "${FORCE_INITIALIZATION}" == "true" ]]; then
-  rm -f "${INIT_STARTED_DATA}"
-  rm -f "${INIT_STARTED_DB}"
-fi
-
-# Migrations should be created manually by developers and committed with the source code repo.
-# Set the MAKE_MIGRATIONS env var to a non-empty string to create migration scripts
-# after changes are made to the Django ORM models.
-if [ -n "$MAKE_MIGRATIONS" ]; then
-  echo "Generating database migration scripts..."
-  python manage.py makemigrations --no-input
-  exit 0
-fi
-
-## Initialize astro data
-##
-
-if [[ -f "${INIT_STARTED_DATA}" ]]
-then
-  echo "Astro data is currently being initialized (\"${INIT_STARTED_DATA}\" exists)."
-  sleep 10
-  exit 1
-else
-  echo "\"${INIT_STARTED_DATA}\" not found. Running astro data initialization script..."
-  touch "${INIT_STARTED_DATA}"
-
-  # Create data folders on persistent volume and symlink to expected paths
-  bash entrypoints/initialize_data_dirs.sh
-  # Verify and download missing and invalid files
-  if [[ "${SKIP_INITIALIZATION}" != "true" ]]
-  then
-    python entrypoints/initialize_data.py
-  else
-    echo "Skipping data initialization."
-  fi
-
-  rm -f "${INIT_STARTED_DATA}"
-  echo "Data initialization complete."
-fi
-
-## Initialize Django database and static files
-##
 bash entrypoints/wait-for-it.sh ${DB_HOST}:${DB_PORT} --timeout=0
-
-if [[ -f "${INIT_STARTED_DB}" ]]
-then
-  echo "Django database and static files are currently being initialized (\"${INIT_STARTED_DB}\" exists)."
-  sleep 10
-  exit 1
-else
-  echo "\"${INIT_STARTED_DB}\" not found. Running database initialization script..."
-  touch "${INIT_STARTED_DB}"
-
-  python init_app.py
-
-  rm -f "${INIT_STARTED_DB}"
-  echo "Django database initialization complete."
-fi
+bash entrypoints/wait-for-it.sh ${MESSAGE_BROKER_HOST}:${MESSAGE_BROKER_PORT} --timeout=0
 
 # If test mode, run tests and exit
 if [[ $TEST_MODE == 1 ]]; then
@@ -77,6 +18,7 @@ if [[ $TEST_MODE == 1 ]]; then
   coverage xml -i
   exit 0
 fi
+
 
 # Start server
 if [[ $DEV_MODE == 1 ]]; then
