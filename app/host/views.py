@@ -656,6 +656,7 @@ def results(request, transient_name):
             'Host match',
             'Host information',
             'Host MWEBV',
+            'Host spectrum download',
             'Global aperture construction',
             'Global aperture photometry',
             'Validate global photometry',
