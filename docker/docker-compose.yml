@@ -8,7 +8,7 @@ volumes:
   blast-db: {}
   django-static: {}
   init-data:
-    name: "init-data-$USER"
+    name: "blast-init-data-$USER"
   object-data: {}
   influxdb-data: {}
   influxdb-config: {}
