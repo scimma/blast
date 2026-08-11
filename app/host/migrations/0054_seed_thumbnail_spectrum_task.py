@@ -24,7 +24,7 @@ def add_thumbnail_spectrum_taskregisters(apps, schema_editor):
     all_trs = TaskRegister.objects.select_related('transient').select_related('task').all()
     num_transients = len(all_transients)
     for idx, transient in enumerate(all_transients):
-        print(f'[{idx + 1}/{num_transients}] Adding thumbnail spectrum task register for transient "{transient.name}"...')
+        print(f'[{idx + 1}/{num_transients}] Adding thumbnail spectrum task register for "{transient.name}"...')
         if not all_trs.filter(transient=transient, task=task):
             TaskRegister.objects.create(
                 transient=transient,

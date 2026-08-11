@@ -164,7 +164,7 @@ class Transient(SkyObject):
     software_version = models.CharField(max_length=50, blank=True, null=True)
     update_comment = models.CharField(max_length=500, blank=True, null=True)
     update_fields = models.CharField(max_length=500, blank=True, null=True)
-    
+
     @property
     def best_redshift(self):
         """get the best redshift for a transient"""
@@ -708,9 +708,9 @@ class HostSpectrum(models.Model):
             wavelength of the spectrum in Angstroms.
         redshift (django.db.model.FloatField): Spectroscopic redshift
             from the source survey.
-        ra_deg (django.db.model.FloatField): Right Ascension of the 
+        ra_deg (django.db.model.FloatField): Right Ascension of the
             fiber/spectrum in decimal degrees.
-        dec_deg (django.db.model.FloatField): Declination of the 
+        dec_deg (django.db.model.FloatField): Declination of the
             fiber/spectrum in decimal degrees.
         spectrum_id (django.db.model.CharField): Source-specific
             identifier

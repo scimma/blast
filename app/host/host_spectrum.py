@@ -1,9 +1,6 @@
 import time
-import astropy.units as u
 import numpy as np
-from astropy.coordinates import SkyCoord
 from astropy.io import fits
-from astroquery.ipac.ned import Ned
 from django.conf import settings
 from sparcl.client import SparclClient
 
@@ -17,10 +14,10 @@ def fetch_host_spectrum(position):
     """
     Fetch a spectrum for a galaxy at the given sky position using a hierarchical approach.
 
-    Queries SPARCL first with top priority given to DESI-DR1, followed by SDSS-DR17, 
-    and BOSS-DR17 as a third choice. If multiple records exist for the same specid, 
-    prefers the 'main' survey. If no match is found in SPARCL, falls back to querying NED 
-    as a last resort. All downloaded scalar metadata and physical units are dynamically 
+    Queries SPARCL first with top priority given to DESI-DR1, followed by SDSS-DR17,
+    and BOSS-DR17 as a third choice. If multiple records exist for the same specid,
+    prefers the 'main' survey. If no match is found in SPARCL, falls back to querying NED
+    as a last resort. All downloaded scalar metadata and physical units are dynamically
     injected into the final FITS structure.
 
     Parameters
@@ -69,13 +66,13 @@ def fetch_host_spectrum(position):
 
             # Filter to the highest available priority tier
             best_priority = min(priority_map.get(r['data_release'], 999) for r in records)
-            
+
             # Deduplicate by specid (preferring 'main') and calculate distance
             specid_map = {}
             for r in records:
                 if priority_map.get(r['data_release'], 999) != best_priority:
                     continue
-                
+
                 specid = r['specid']
                 if specid not in specid_map:
                     specid_map[specid] = r
@@ -92,7 +89,7 @@ def fetch_host_spectrum(position):
 
             # Expand include list to pull down all common science and catalog metadata
             include = [
-                'sparcl_id', 'specid', 'data_release', 'redshift', 'flux', 'wavelength', 
+                'sparcl_id', 'specid', 'data_release', 'redshift', 'flux', 'wavelength',
                 'ivar', 'mask', 'spectype', 'ra', 'dec', 'survey', 'wavemin', 'wavemax',
                 'datasetgroup', 'dateobs', 'dateobs_center', 'exptime', 'instrument',
                 'redshift_err', 'redshift_warning', 'site', 'specprimary', 'targetid',
@@ -121,7 +118,7 @@ def fetch_host_spectrum(position):
                 primary_hdr = fits.Header()
                 primary_hdr['BUNIT'] = (flux_unit, 'Physical units of the flux array')
                 primary_hdr['ORIGIN'] = (f"{getattr(record, 'data_release', 'SPARCL')} (via SPARCL)", 'Data source')
-                
+
                 # Loop through all downloaded metadata fields and push scalars into the header
                 array_fields = {'flux', 'wavelength', 'ivar', 'mask', 'model', 'wave_sigma'}
                 for field in include:
@@ -135,8 +132,8 @@ def fetch_host_spectrum(position):
                 # Dynamically construct columns list based on returned arrays
                 fits_columns = [
                     fits.Column(name='wavelength', format='D', array=wavelength, unit=wave_unit),
-                    fits.Column(name='flux',       format='E', array=flux,       unit=flux_unit),
-                    fits.Column(name='ivar',       format='E', array=ivar,       unit=ivar_unit),
+                    fits.Column(name='flux',       format='E', array=flux,       unit=flux_unit),  # noqa: E241
+                    fits.Column(name='ivar',       format='E', array=ivar,       unit=ivar_unit),  # noqa: E241
                 ]
 
                 # Append model spectrum if available
@@ -163,16 +160,15 @@ def fetch_host_spectrum(position):
                     'ra_deg': float(record.ra) if record.ra is not None else None,
                     'dec_deg': float(record.dec) if record.dec is not None else None
                 }
-                logger.info(f'''Spectrum successfully fetched via SPARCL from {getattr(record, 'data_release', 'unknown')}.''')
+                logger.info('''Spectrum successfully fetched via SPARCL from '''
+                            f'''{getattr(record, 'data_release', 'unknown')}.''')
 
         # # Fallback to NED as a last resort if SPARCL yields nothing
         # if result is None:
         #     logger.debug('''No matching spectrum found in SPARCL. Falling back to NED...''')
         #     ned_results = Ned.query_region(position, radius=3.0 * u.arcsec)
-            
         #     if ned_results is not None and len(ned_results) > 0:
         #         ned_results = ned_results[ned_results['Redshift'].mask == False]  # noqa: E712
-                
         #         if len(ned_results) > 0:
         #             pos_results = SkyCoord(
         #                 ned_results['RA'].value, ned_results['DEC'].value, unit=u.deg

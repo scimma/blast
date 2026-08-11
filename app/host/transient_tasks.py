@@ -1460,7 +1460,7 @@ class CropTransientImages(TransientTaskRunner):
         status_message = "processed"
         crop_images(transient)
         return status_message
-    
+
 
 def _save_spectrum_to_s3(hdulist, s3_key):
     """
@@ -1514,7 +1514,7 @@ class HostSpectrumDownload(TransientTaskRunner):
         Emit status message for failure consistent with the available Status objects
         """
         return 'failed'
-    
+
     def _run_process(self, transient):
         """
         Execute the hierarchical spectrum fetcher and save the resulting
@@ -1773,4 +1773,3 @@ def final_progress(transient_name):
 )
 def host_spectrum_download(transient_name):
     HostSpectrumDownload(transient_name).run_process()
-
