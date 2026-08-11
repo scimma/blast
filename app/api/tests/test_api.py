@@ -18,77 +18,23 @@ class APITest(TestCase):
 
     def test_transient_get(self):
         client = APIClient()
-        request = client.get("/api/transient/get/2022testone?format=json")
+        # Load expected data
+        with open(os.path.join(Path(__file__).resolve().parent, '2022testone_get_test.json')) as fp:
+            expected_data = json.load(fp)
+        expected_data.pop('metadata')
+        # Fetch data from API
+        request = client.get("/api/transient/get/2022testone/")
         data = json.loads(request.content)
-
-        self.assertTrue(data["local_aperture_2MASS_H_flux"] == 2183.8)
-        self.assertTrue(data["local_aperture_2MASS_H_flux_error"] == 224.97)
-        self.assertTrue(data["local_aperture_2MASS_H_magnitude"] == 0.0)
-        self.assertTrue(data["local_aperture_2MASS_H_magnitude_error"] == 0.0)
-
-        self.assertTrue(data["local_aperture_2MASS_J_flux"] == 1091.48)
-        self.assertTrue(data["local_aperture_2MASS_J_flux_error"] == 130.38)
-        self.assertTrue(data["local_aperture_2MASS_J_magnitude"] == 0.0)
-        self.assertTrue(data["local_aperture_2MASS_J_magnitude_error"] == 0.0)
-
-        self.assertTrue(data["global_aperture_2MASS_J_flux"] == 99.0)
-        self.assertTrue(data["global_aperture_2MASS_J_flux_error"] == 99.0)
-        self.assertTrue(data["global_aperture_2MASS_J_magnitude"] == 0.0)
-        self.assertTrue(data["global_aperture_2MASS_J_magnitude_error"] == 0.0)
-
-        self.assertTrue(data["global_aperture_2MASS_H_flux"] == 1.0)
-        self.assertTrue(data["global_aperture_2MASS_H_flux_error"] == 1.0)
-        self.assertTrue(data["global_aperture_2MASS_H_magnitude"] == 10.0)
-        self.assertTrue(data["global_aperture_2MASS_H_magnitude_error"] == 0.2)
-
-        self.assertTrue(data["local_aperture_ra_deg"] == 121.6015)
-        self.assertTrue(data["local_aperture_dec_deg"] == 1.03586)
-        self.assertTrue(data["local_aperture_semi_major_axis_arcsec"] == 1.0)
-        self.assertTrue(data["local_aperture_semi_minor_axis_arcsec"] == 1.0)
-        self.assertTrue(data["local_aperture_cutout"] is None)
-
-        self.assertTrue(data["global_aperture_ra_deg"] == 11.6015)
-        self.assertTrue(data["global_aperture_dec_deg"] == 10.03586)
-        self.assertTrue(data["global_aperture_semi_major_axis_arcsec"] == 0.4)
-        self.assertTrue(data["global_aperture_semi_minor_axis_arcsec"] == 0.5)
-        self.assertTrue(data["global_aperture_cutout"]["name"] == "2022testone_2MASS_J")
-
-        self.assertTrue(data["transient_name"] == "2022testone")
-        self.assertTrue(data["host_name"] == "PSO J080624.103+010209.859")
-
-        self.assertTrue(data["local_aperture_host_log_mass_16"] == 10.0)
-        self.assertTrue(data["local_aperture_host_log_mass_50"] == 20.0)
-        self.assertTrue(data["local_aperture_host_log_mass_84"] == 30.0)
-        self.assertTrue(data["local_aperture_host_log_sfr_16"] == 123.4546)
-        self.assertTrue(data["local_aperture_host_log_sfr_50"] == 123.4566)
-        self.assertTrue(data["local_aperture_host_log_sfr_84"] == 56.564565)
-        self.assertTrue(data["local_aperture_host_log_ssfr_16"] == 15.676)
-        self.assertTrue(data["local_aperture_host_log_ssfr_50"] == 12.34343)
-        self.assertTrue(data["local_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["local_aperture_host_age_16"] == 1.0)
-        self.assertTrue(data["local_aperture_host_age_50"] == 0.1)
-        self.assertTrue(data["local_aperture_host_age_84"] == 5.0)
-
-        self.assertTrue(data["global_aperture_host_log_mass_16"] == 1.0)
-        self.assertTrue(data["global_aperture_host_log_mass_50"] == 2.0)
-        self.assertTrue(data["global_aperture_host_log_mass_84"] == 3.0)
-        self.assertTrue(data["global_aperture_host_log_sfr_16"] == 123.4546)
-        self.assertTrue(data["global_aperture_host_log_sfr_50"] == 123.4566)
-        self.assertTrue(data["global_aperture_host_log_sfr_84"] == 56.564565)
-        self.assertTrue(data["global_aperture_host_log_ssfr_16"] == 15.676)
-        self.assertTrue(data["global_aperture_host_log_ssfr_50"] == 12.34343)
-        self.assertTrue(data["global_aperture_host_log_ssfr_84"] == 12)
-        self.assertTrue(data["global_aperture_host_age_16"] == 1.0)
-        self.assertTrue(data["global_aperture_host_age_50"] == 0.1)
-        self.assertTrue(data["global_aperture_host_age_84"] == 5.0)
-
+        # Remove the metadata content that contains the generation timestamp
+        data.pop('metadata')
+        self.assertTrue(data == expected_data)
         self.assertTrue(request.status_code == status.HTTP_200_OK)
 
     def test_get_no_transient(self):
         client = APIClient()
-        request = client.get("/api/transient/get/2022NotInDatabase?format=json")
-        data = json.loads(request.content)
+        request = client.get("/api/transient/get/2022NotInDatabase/")
         self.assertTrue(request.status_code == status.HTTP_404_NOT_FOUND)
+        data = json.loads(request.content)
         self.assertTrue(data["message"] == "2022NotInDatabase not in database")
 
     def test_alias(self):
@@ -142,16 +88,3 @@ class APITest(TestCase):
         response = self.client.delete(f'/api/alias/{alias}/')
         self.assertTrue(response.status_code == status.HTTP_404_NOT_FOUND)
         # print(f'[{response.status_code}] {response.content}')
-
-    def test_transient_export_no_files(self):
-        client = APIClient()
-        # Load expected data
-        with open(os.path.join(Path(__file__).resolve().parent, '2022testone_get_test.json')) as fp:
-            expected_data = json.load(fp)
-        expected_data.pop('metadata')
-        # Fetch data from API
-        request = client.get("/api/transient/get/2022testone/")
-        data = json.loads(request.content)
-        # Remove the metadata content that contains the generation timestamp
-        data.pop('metadata')
-        self.assertTrue(data == expected_data)

@@ -407,7 +407,7 @@ def get_transient_view(request=None, transient_name=''):
     # get_transient_view(request=request, transient_name=transient_name, all=True)
     transient_info = export_transient_info(transient_name)
     if not transient_info:
-        return render(request, "transient_404.html", status=404)
+        return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
     logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
     logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
     return JsonResponse(transient_info)
@@ -417,7 +417,7 @@ def get_transient_view(request=None, transient_name=''):
 def export_transient_view(request=None, transient_name='', all=''):
     transient_info = export_transient_info(transient_name)
     if not transient_info:
-        return render(request, "transient_404.html", status=404)
+        return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
     logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
     logger.info(f'Exporting all data for "{transient_name}", including files.')
     s3 = ObjectStore()
