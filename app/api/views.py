@@ -168,6 +168,12 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = CutoutFilter
 
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(description="Successful file download"),
+            404: OpenApiResponse(description="File not found"),
+        }
+    )
     @action(methods=['get'], detail=True, url_path="download")
     def download(self, request, pk=None):
         cutout = self.get_object()
