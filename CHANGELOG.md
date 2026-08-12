@@ -55,6 +55,7 @@ Types of changes:
   `DELETE /api/dataset/[transient_name]/?files=false`. By default, only database objects associated with
   a transient dataset are deleted; setting query parameter `files` to `true` will also delete the associated
   files.
+- The schema for `GET /api/transient/[transient_name]/` was modified to include the associated `Host` object.
 - Improved treatment of out-of-distribution photometric noise
 - Fewer "neighbors" used to characterize missing bands, resulting in improved performance
 - Issue report and resolve condensed to a single API endpoint `GET /issue_handling/[action]/[item_id]/`;

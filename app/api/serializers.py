@@ -15,7 +15,47 @@ class CutoutField(serializers.RelatedField):
         return value.filter.name
 
 
+class FilterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Filter
+        depth = 0
+        fields = "__all__"
+
+
+class SurveySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Survey
+        depth = 1
+        fields = "__all__"
+
+
+class HostSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = models.Host
+        depth = 1
+        fields = [
+            "name",
+            "ra_deg",
+            "dec_deg",
+            "redshift",
+            "milkyway_dust_reddening",
+            "object_id",
+            "catalog_name",
+            "catalog_release",
+            "aliases",
+        ]
+
+    aliases = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+    def get_aliases(self, obj):
+        aliases = models.Alias.objects.filter(host=obj)
+        return [alias.alias for alias in aliases]
+
+
 class TransientSerializer(serializers.ModelSerializer):
+    host = HostSerializer(read_only=True)
+
     class Meta:
         model = models.Transient
         depth = 1
@@ -34,20 +74,6 @@ class TransientSerializer(serializers.ModelSerializer):
     def get_aliases(self, obj):
         aliases = models.Alias.objects.filter(transient=obj)
         return [alias.alias for alias in aliases]
-
-
-class FilterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Filter
-        depth = 0
-        fields = "__all__"
-
-
-class SurveySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.Survey
-        depth = 1
-        fields = "__all__"
 
 
 class CutoutSerializer(serializers.ModelSerializer):
@@ -76,30 +102,6 @@ class CutoutSerializer(serializers.ModelSerializer):
                 kwargs={"pk": obj.pk, }
             )
         )
-
-
-class HostSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = models.Host
-        depth = 1
-        fields = [
-            "name",
-            "ra_deg",
-            "dec_deg",
-            "redshift",
-            "milkyway_dust_reddening",
-            "object_id",
-            "catalog_name",
-            "catalog_release",
-            "aliases",
-        ]
-
-    aliases = serializers.SerializerMethodField()
-
-    @extend_schema_field(serializers.ListField(child=serializers.CharField()))
-    def get_aliases(self, obj):
-        aliases = models.Alias.objects.filter(host=obj)
-        return [alias.alias for alias in aliases]
 
 
 class ApertureSerializer(serializers.ModelSerializer):
