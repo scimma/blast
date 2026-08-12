@@ -1567,7 +1567,6 @@ class HostSpectrumDownload(TransientTaskRunner):
         query = {'host': transient.host, 'source': source_name}
         data = {
             'host': transient.host,
-            'transient': transient,
             'source': source_name,
             'spectrum_file': canonical_path,
             'wavelength_min_angstrom': spectrum_data['wavelength_min_angstrom'],

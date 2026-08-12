@@ -696,8 +696,6 @@ class HostSpectrum(models.Model):
     Attributes:
         host (django.db.model.ForeignKey): ForeignKey pointing to a
             :class:`Host` representing the transient's host galaxy.
-        transient (django.db.model.ForeignKey): ForeignKey pointing to a
-            :class:`Transient`.
         source (django.db.model.CharField): Name of the spectroscopic
             survey the spectrum was obtained from.
         spectrum_file (django.db.model.FileField): Path to the spectrum
@@ -727,7 +725,6 @@ class HostSpectrum(models.Model):
     ]
 
     host = models.ForeignKey(Host, on_delete=models.CASCADE, null=True, blank=True)
-    transient = models.ForeignKey(Transient, on_delete=models.CASCADE, null=True, blank=True)
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
     spectrum_file = models.FileField(upload_to=spectrum_file_path, null=True, blank=True)
     wavelength_min_angstrom = models.FloatField(null=True, blank=True)

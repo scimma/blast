@@ -78,7 +78,6 @@ class Migration(migrations.Migration):
                 ('message', models.CharField(blank=True, max_length=100, null=True)),
                 ('software_version', models.CharField(blank=True, max_length=50, null=True)),
                 ('host', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='host.host')),  # noqa
-                ('transient', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='host.transient')),  # noqa
             ],
         ),
         migrations.RunPython(add_host_spectrum_task),
