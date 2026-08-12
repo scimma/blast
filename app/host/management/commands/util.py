@@ -266,7 +266,7 @@ def api_test():
         # Download basic transient data
         url = f'https://blast.scimma.org/api/transient/?name={transient_name}&format=json'
         # Download all transient data
-        url = f'https://blast.scimma.org/api/transient/get/{transient_name}?format=json'
+        url = f'https://blast.scimma.org/api/dataset/{transient_name}'
         # Download all transients
         url = 'https://blast.scimma.org/api/transient'
         # print(url)

@@ -10,7 +10,7 @@ if base_path != "":
 
 urlpatterns = [
     re_path(
-        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/export$",
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/export/$",
         views.DatasetExportView.as_view(),
     ),
     re_path(
