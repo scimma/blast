@@ -496,6 +496,32 @@ class DatasetExportView(APIView):
                         name=thumbnail_tar_path)
                     tarinfo.size = thumbail_fileobj.getbuffer().nbytes
                     tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+
+            # Download host spectra FITS file into memory
+            for spectrum in dataset['host_spectra']:
+                canonical_path = spectrum['fields']['spectrum_file']
+                if not canonical_path:
+                    continue
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                spectrum_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each spectrum file are unique
+                tarinfo = tarfile.TarInfo(
+                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
+                                                os.path.join('host_spectra', dataset['host']['fields']['name'])))
+                tarinfo.size = spectrum_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=spectrum_fileobj)
+                # Include thumbnail images
+                thumbnail_object_key = object_key.replace('.fits', '.jpg')
+                if not s3.object_exists(path=thumbnail_object_key):
+                    continue
+                thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                thumbnail_tar_path = canonical_path.replace(os.path.join(
+                    settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
+                    os.path.join('host_spectra', dataset['host']['fields']['name'])).replace('.fits', '.jpg')
+                tarinfo = tarfile.TarInfo(
+                    name=thumbnail_tar_path)
+                tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
         tar_bytes_io.seek(0)
         response = StreamingHttpResponse(streaming_content=tar_bytes_io)
         response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"

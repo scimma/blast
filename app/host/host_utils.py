@@ -45,6 +45,7 @@ from .photometric_calibration import fluxerr_to_mJy_fluxerr
 from host.models import Aperture
 from host.models import Alias
 from host.models import Host
+from host.models import HostSpectrum
 from host.models import AperturePhotometry
 from host.models import Cutout
 from host.models import Filter
@@ -891,6 +892,7 @@ def export_dataset(transient_name=''):
         },
         'transient': {},
         'host': None,
+        'host_spectra': [],
         'apertures': [],
         'cutouts': [],
         'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
@@ -918,6 +920,9 @@ def export_dataset(transient_name=''):
         aliases = HostSerializer(transient_obj.host).data['aliases']
         assert isinstance(aliases, list)
         transient_data['host']['fields']['aliases'] = aliases
+        # Export host_spectrum information
+        for spectrum in HostSpectrum.objects.filter(host=transient_obj.host):
+            transient_data['host_spectra'].append(json.loads(serializers.serialize("json", [spectrum]))[0])
     # Export cutout image data
     cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
     assert isinstance(cutouts, list)
