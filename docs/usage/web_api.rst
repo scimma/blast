@@ -5,6 +5,8 @@ Web API
 
 Blast provides an HTTP application programming interface (API) for fetching data programmatically.  The API allows queries on :ref:`individual data objects associated with a transient<api_individual>`, as well as :ref:`fetching all data for a given transient<api_all>`.
 
+An interactive Blast API explorer is accessible at :code:`/swagger-ui/`. The OpenAPI spec for the Blast API can be downloaded from :code:`/api/schema/openapi/` (also linked at the top of the interactive page).
+
 .. _api_all:
 
 Downloading *all* Blast data for a given transient
@@ -12,27 +14,10 @@ Downloading *all* Blast data for a given transient
 
 A **transient dataset** is the complete set of information associated with a transient: it consists of the information stored in :ref:`Blast database objects<models>` and associated :ref:`data files<data_files>`, such as the cutout images and the SED fit files. 
 
-A **full transient dataset** can be exported using :code:`/api/transient/export/<transient_name>/all`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads.
+A **full transient dataset** can be exported using :code:`/api/dataset/<transient_name>/export/`, which packages the data into a compressed archive file (standard ``.tar.gz`` format) that the user downloads.
 
-There are currently two API endpoints that return **all tabular data** associated with a transient (i.e. data stored as text instead of as binary files) as a JSON-formatted document:
-
-1. :code:`/api/transient/get/<transient_name>?format=json`
-
-   The structure, or schema, of the document returned by this endpoint is detailed in the :ref:`science_payload_schema` section below. It is a relatively flat hierarchy.
-
-   Here is an example Python snippet to load data as a Python dictionary for the transient 2026dix.
-   
-   .. code:: python
-   
-       from urllib.request import urlopen
-       import json
-   
-       response = urlopen('<base_blast_url>/api/transient/get/2026dix?format=json')
-       data = json.loads(response.read())
-
-2. :code:`/api/transient/export/<transient_name>`
-
-   The schema of the document returned by this endpoint serializes transient-associated objects more closely to the internal models (see :ref:`models`). It was designed is to capture a transient dataset in a self-contained way amenable to import into any Blast instance. The result is a more hierarchical structure, but one with static keys and less redundancy that also supports simpler parsing algorithms. The schema includes additional related objects: cutouts, surveys, and filters. Although the surveys and filters exist independently of a particular transient, they are included because transient cutout objects are associated with filters associated with surveys.
+**All tabular data** associated with a transient (i.e. data stored as text instead of as binary files) can be fetched as a JSON document using :code:`/api/dataset/<transient_name>/`.
+The schema of the document returned by this endpoint serializes transient-associated objects more closely to the internal models (see :ref:`models`). It was designed to capture a transient dataset in a self-contained way amenable to import into any Blast instance. The result is a more hierarchical structure, but one with static keys and less redundancy that also supports simpler parsing algorithms. The schema includes additional related objects including apertures, cutouts, surveys, and filters. Although the surveys and filters exist independently of a particular transient, they are included because transient cutout objects are associated with filters that are themselves associated with surveys.
 
 .. _api_individual:
 
