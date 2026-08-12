@@ -9,6 +9,7 @@ APP_VERSION = '2.0.0'
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
 SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")
+SPECTRA_ROOT = os.environ.get("SPECTRA_ROOT", "/data/spectra")
 SBI_TRAINING_ROOT = os.environ.get("SBI_TRAINING_ROOT", "/data/sbi_training_sets")
 PROST_OUTPUT_ROOT = os.environ.get("PROST_OUTPUT_ROOT", "/tmp/prost_output")
 SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")

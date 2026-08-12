@@ -413,7 +413,7 @@ def spectrum_file_path(instance):
     """
     Constructs a file path for a host galaxy spectrum FITS file
     """
-    return f"{instance.host.name}/spectra/{instance.source.lower()}_spectrum.fits"
+    return os.path.join(settings.SPECTRA_ROOT, instance.host.name, f"{instance.source.lower()}_spectrum.fits")
 
 
 class Cutout(models.Model):
