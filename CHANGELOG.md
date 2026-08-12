@@ -20,21 +20,41 @@ Types of changes:
 - New SBI models with redshift coverage up to z = 1
 - Improved S/N distributions for training and SED parameter estimation
 - New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
-- Incorporated new `drf-spectacular` package to dynamically render OpenAPI spec and an interactive
-  Swagger UI for the Blast API.
+- Added host galaxy spectrum download functionality to the transient workflow. Archival spectra are fetched
+  from SPARCL (DESI-DR1, SDSS-DR17, BOSS-DR17) with a NED fallback, stored as FITS files via a new
+  `HostSpectrum` model. The downstream goal is to feed these spectra into STARLIGHT for stellar population
+  fitting (something like `HostSpectrumFitting`).
+  - New model: `HostSpectrum`.
+    - Stores one spectrum per host galaxy as a FITS file in ObjectStore
+    - Linked to `Host` via ForeignKey
+    - Tracks source (DESI/SDSS/BOSS/NED), retrieval status, and other metadata
+  - New pipeline: `fetch_host_spectrum()` (`app/host/host_spectrum.py`)
+    - Queries SPARCL with a unified interface across DESI-DR1, SDSS-DR17, BOSS-DR17 in priority order
+    - Falls back to NED if SPARCL returns no results
+  - New task: `host_spectrum_download`
+    - Wired into the main workflow after `host_information` and alongside `mwebv_host`,
+      `global_aperture_construction`, `local_aperture_photometry`
+- Added an API endpoint to download the OpenAPI spec for the Blast API: `/api/schema/openapi/`,  dynamically
+  rendered by the `drf-spectacular` package.
+- Added a webpage to interactively explore the Blast API, powered by Swagger: `/api/schema/swagger-ui/`.
+- Added new SED fit data download endpoints to `/api/sedfittingresult` of the form
+  `/api/sedfittingresult/{id}/download/{download_type}/`, where `download_type` can be `chains`, `model`,
+  or `percentiles` (replacing view functions `download_chains`, `download_modelfit`, and `download_percentiles`).
 - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
 - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
 - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
-- Added new cutout download function to CutoutViewSet
-- New image download URL: `/api/sedfittingresult/{id}/download/{download-type}/`
-- Added new download functions to `/api/sedfittingresult`, replacing view functions: `download_chains`,
-  `download_modelfit`, `download_percentiles`.
 
 ### Changed
 
+- Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
+  a handler that returns the output of the `export_transient_info()` function. **This changed the schema of
+  the returned transient data object.**
+- Replaced the API endpoint `/api/transient/export/[transient_name]/[all]` with
+  `/api/transient/export/[transient_name]`; now "export" means "the entire transient dataset including files".
 - Improved treatment of out-of-distribution photometric noise
 - Fewer "neighbors" used to characterize missing bands, resulting in improved performance
-- Issue report and resolve condensed to a single endpoint named `issue_handling`, functionality preserved.
+- Issue report and resolve condensed to a single API endpoint `/issue_handling/[action]/[item_id]/`;
+  functionality preserved.
 - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
 - Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for
   compiling Fortran-based dependencies
@@ -49,18 +69,16 @@ Types of changes:
   download links now use these values.
 - Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
   in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
-- Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
-  the `export_transient_view()` function. This changed the schema of the returned transient data object.
-- Replaced the API endpoint `/api/transient/export/[transient_name]/[all]` with `/api/transient/export/[transient_name]`
-  now that the previous response where "all" is omitted now corresponds to `/api/transient/get/[transient_name]`.
-- Development environment: Renamed the Docker volume "blast-data" to "blast-init-data".
-  Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
-  from one another, for example when developing code on a shared host. Moved data initialization routine to
-  the celery-beat container to better support multiple webserver replicas and more efficient restarts of those
-  replicas. Added healthchecks and dependencies to Compose specs for celery-beat, the webserver and the
-  NGINX proxy services, such that the webserver waits to start until data initialization completes in
-  celery-beat. Also this fixes the bug in the Compose deployment where restarting the webserver would sometimes
-  break the proxy connection, requiring a manual proxy restart.
+- Development environment:
+  - Renamed the Docker volume "blast-data" to "blast-init-data".
+  - Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
+    from one another, for example when developing code on a shared host.
+  - Moved data initialization routine to the celery-beat container to better support multiple webserver
+    replicas and more efficient restarts of those replicas.
+  - Added healthchecks and dependencies to Compose specs for celery-beat, the webserver and the
+    NGINX proxy services, such that the webserver waits to start until data initialization completes in
+    celery-beat. Also this fixes the bug in the Compose deployment where restarting the webserver would
+    sometimes break the proxy connection, requiring a manual proxy restart.
 
 ### Removed
 
@@ -75,7 +93,8 @@ Types of changes:
 - Correctly identifies out-of-distribution photometric noise
 - Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
 - Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
-- Fix bug related to uninitialized variables in result page rendering
+- Fixed bug related to uninitialized variables in result page rendering
+- Properly released TaskLock for SDSS downloads by correcting a typo
 
 ## [1.13.1]
 
