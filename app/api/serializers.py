@@ -226,6 +226,17 @@ class HostEntitySerializer(serializers.Serializer):
     fields = HostSerializer()
 
 
+class HostSpectrumEntitySerializer(serializers.Serializer):
+    class HostSpectrumSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.HostSpectrum
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = HostSpectrumSerializerWithoutId()
+
+
 class SEDFittingResultEntitySerializer(serializers.Serializer):
     class SEDFittingResultSerializerWithoutId(serializers.ModelSerializer):
         class Meta:
@@ -319,7 +330,7 @@ class TransientDatasetSerializer(serializers.Serializer):
     metadata = MetadataSerializer()
     transient = TransientEntitySerializer()
     host = HostEntitySerializer()
-
+    host_spectra = serializers.ListField(child=HostSpectrumEntitySerializer())
     apertures = serializers.ListField(child=ApertureEntitySerializer())
     cutouts = serializers.ListField(child=CutoutEntitySerializer())
     filters = serializers.ListField(child=FilterEntitySerializer())
