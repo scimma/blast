@@ -7,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 from host.workflow import reprocess_transient_view
 from host.tasks import retrigger_transient_view
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 schema_view = get_schema_view(title="Blast API")
 
@@ -68,6 +69,11 @@ api_url_patterns = [
 ]
 
 urlpatterns += api_url_patterns
+
+urlpatterns += [
+    path('api/schema/openapi/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
+    path('swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
 
 if os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true":
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

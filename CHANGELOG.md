@@ -36,7 +36,7 @@ Types of changes:
       `global_aperture_construction`, `local_aperture_photometry`
 - Added an API endpoint to download the OpenAPI spec for the Blast API: `/api/schema/openapi/`,  dynamically
   rendered by the `drf-spectacular` package.
-- Added a webpage to interactively explore the Blast API, powered by Swagger: `/api/schema/swagger-ui/`.
+- Added a webpage to interactively explore the Blast API, powered by Swagger: `/swagger-ui/`.
 - Added new SED fit data download endpoints to `GET /api/sedfittingresult` of the form
   `GET /api/sedfittingresult/{id}/download/{download_type}/`, where `download_type` can be `chains`, `model`,
   or `percentiles` (replacing view functions `download_chains`, `download_modelfit`, and `download_percentiles`).

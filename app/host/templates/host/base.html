@@ -189,12 +189,13 @@
               <img src="{% static 'images/blast_logo.png' %}" style="max-height: 2rem;" />
             </a>
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-              <a class="dropdown-item" title="Home" href="/"><i class="bi bi-house"></i> Home</a>
-              <a class="dropdown-item" title="Acknowledgements" href="{% url 'acknowledgements' %}"><i class="bi bi-mortarboard-fill"></i> Acknowledgements</a>
-              <a class="dropdown-item" title="Team members" href="{% url 'team' %}"><i class="bi bi-people"></i> Team members</a>
+              <a class="dropdown-item" title="Home" href="/"><i class="bi bi-house"></i>&nbsp;&nbsp; Home</a>
+              <a class="dropdown-item" title="Acknowledgements" href="{% url 'acknowledgements' %}"><i class="bi bi-mortarboard-fill"></i>&nbsp;&nbsp; Acknowledgements</a>
+              <a class="dropdown-item" title="Team members" href="{% url 'team' %}"><i class="bi bi-people"></i>&nbsp;&nbsp; Team members</a>
               <div class="dropdown-divider"></div>
-              <a class="dropdown-item" target="_blank" title="Docs" href="https://blast.readthedocs.io/en/latest/"><i class="bi bi-book-half"></i> Docs</a>
-              <a class="dropdown-item" target="_blank" title="Source code" href="https://github.com/scimma/blast"><i class="bi-github" role="img" aria-label="GitHub"></i> Source Code</a>
+              <a class="dropdown-item" target="_blank" title="Docs" href="https://blast.readthedocs.io/en/latest/"><i class="bi bi-book-half"></i>&nbsp;&nbsp; Docs</a>
+              <a class="dropdown-item" target="_blank" title="Source code" href="https://github.com/scimma/blast"><i class="bi-github" role="img" aria-label="GitHub"></i>&nbsp;&nbsp; Source Code</a>
+              <a class="dropdown-item" target="_blank" title="API explorer" href="{% url 'swagger-ui' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;&nbsp; API explorer</a>
             </div>
           </li>
           <li class="nav-item">
