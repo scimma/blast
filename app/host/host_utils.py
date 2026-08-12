@@ -1109,6 +1109,26 @@ def import_transient_info(transient_data_archive):
                 if 'aliases' in dataset['host']['fields']:
                     for alias in dataset['host']['fields']['aliases']:
                         Alias.objects.create(alias=alias, host=host)
+            # host_spectra added in v2.0.0
+            if 'host_spectra' in dataset:
+                for spectrum in dataset['host_spectra']:
+                    if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['fields']['spectrum_id']):
+                        logger.info('''An existing host spectrum was found with ID '''
+                                    f'''"{spectrum['fields']['spectrum_id']}"''')
+                        continue
+                    HostSpectrum.objects.create(
+                        host=host,
+                        source=spectrum['fields']['source'],
+                        spectrum_file=spectrum['fields']['spectrum_file'],
+                        wavelength_min_angstrom=spectrum['fields']['wavelength_min_angstrom'],
+                        wavelength_max_angstrom=spectrum['fields']['wavelength_max_angstrom'],
+                        redshift=spectrum['fields']['redshift'],
+                        ra_deg=spectrum['fields']['ra_deg'],
+                        dec_deg=spectrum['fields']['dec_deg'],
+                        spectrum_id=spectrum['fields']['spectrum_id'],
+                        message=spectrum['fields']['message'],
+                        software_version=spectrum['fields']['software_version'],
+                    )
         # Verify that the Cutout objects do not exist (by name).
         for cutout in dataset['cutouts']:
             cutout_name = cutout['fields']['name']
