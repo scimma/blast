@@ -39,14 +39,15 @@ class TransientSerializer(serializers.ModelSerializer):
 class FilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Filter
+        depth = 0
+        fields = "__all__"
+
+
+class SurveySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Survey
         depth = 1
-        fields = [
-            "name",
-            "pixel_size_arcsec",
-            "image_fwhm_arcsec",
-            "wavelength_eff_angstrom",
-            "ab_offset",
-        ]
+        fields = "__all__"
 
 
 class CutoutSerializer(serializers.ModelSerializer):
@@ -123,6 +124,17 @@ class AperturePhotometrySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class StarFormationHistoryResultSerializer(serializers.ModelSerializer):
+
+    aperture = ApertureSerializer(read_only=True)
+    transient = TransientSerializer(read_only=True)
+
+    class Meta:
+        model = models.StarFormationHistoryResult
+        depth = 1
+        fields = "__all__"
+
+
 class AliasSerializer(serializers.ModelSerializer):
     transient = TransientSerializer(read_only=True)
     host = HostSerializer(read_only=True)
@@ -193,3 +205,121 @@ class TaskRegisterSerializer(serializers.ModelSerializer):
         model = models.TaskRegister
         depth = 1
         fields = "__all__"
+
+
+class MetadataSerializer(serializers.Serializer):
+    app_version = serializers.CharField()
+    export_time = serializers.DateTimeField()
+
+
+class TransientEntitySerializer(serializers.Serializer):
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = TransientSerializer()
+
+
+class HostEntitySerializer(serializers.Serializer):
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = HostSerializer()
+
+
+class SEDFittingResultEntitySerializer(serializers.Serializer):
+    class SEDFittingResultSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.SEDFittingResult
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = SEDFittingResultSerializerWithoutId()
+
+
+class AperturePhotometryEntitySerializer(serializers.Serializer):
+    class AperturePhotometrySerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.AperturePhotometry
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = AperturePhotometrySerializerWithoutId()
+
+
+class StarFormationHistoryResultEntitySerializer(serializers.Serializer):
+    class StarFormationHistoryResultSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.StarFormationHistoryResult
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = StarFormationHistoryResultSerializerWithoutId()
+
+
+class ApertureEntitySerializer(serializers.Serializer):
+    class ApertureSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.Aperture
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = ApertureSerializerWithoutId()
+    sedfittingresults = serializers.ListField(child=SEDFittingResultEntitySerializer())
+    aperturephotometry = serializers.ListField(child=AperturePhotometryEntitySerializer())
+    starformationhistoryresult = serializers.ListField(child=StarFormationHistoryResultEntitySerializer())
+
+
+class CutoutEntitySerializer(serializers.Serializer):
+    class CutoutSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.Cutout
+            depth = 0
+            exclude = ["id"]
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = CutoutSerializerWithoutId()
+
+
+class FilterEntitySerializer(serializers.Serializer):
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = FilterSerializer()
+
+
+class SurveyEntitySerializer(serializers.Serializer):
+    class SurveySerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.Survey
+            depth = 1
+            exclude = ["id"]
+
+    model = serializers.CharField()
+    pk = serializers.IntegerField()
+    fields = SurveySerializerWithoutId()
+
+
+class WorkflowTaskSerializer(serializers.Serializer):
+    class StatusSerializerWithoutId(serializers.ModelSerializer):
+        class Meta:
+            model = models.Status
+            exclude = ["id"]
+
+    task_name = serializers.CharField()
+    status = StatusSerializerWithoutId()
+    user_warning = serializers.BooleanField()
+    last_modified = serializers.DateTimeField()
+    last_processing_time_seconds = serializers.FloatField()
+
+
+class TransientDatasetSerializer(serializers.Serializer):
+    metadata = MetadataSerializer()
+    transient = TransientEntitySerializer()
+    host = HostEntitySerializer()
+
+    apertures = serializers.ListField(child=ApertureEntitySerializer())
+    cutouts = serializers.ListField(child=CutoutEntitySerializer())
+    filters = serializers.ListField(child=FilterEntitySerializer())
+    surveys = serializers.ListField(child=SurveyEntitySerializer())
+    workflow_tasks = serializers.ListField(child=WorkflowTaskSerializer())

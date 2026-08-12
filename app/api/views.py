@@ -5,19 +5,17 @@ from io import BytesIO
 from astropy.coordinates import SkyCoord
 import django_filters
 from django.conf import settings
-from django.urls import reverse_lazy
 from django.http import StreamingHttpResponse
-from django.http import HttpResponse
-from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth.decorators import login_required, permission_required
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
+from rest_framework.permissions import BasePermission
 from host.object_store import ObjectStore
 from host.models import Aperture
 from host.models import AperturePhotometry
@@ -30,8 +28,9 @@ from host.models import Transient
 from host.models import Host
 from host.models import Alias
 from host.decorators import log_usage_metric
-from host.host_utils import export_transient_info
+from host.host_utils import export_dataset
 from host.host_utils import delete_transient
+from api.serializers import TransientDatasetSerializer
 from api.serializers import TransientSerializer
 from api.serializers import ApertureSerializer
 from api.serializers import CutoutSerializer
@@ -402,112 +401,153 @@ def alias_handler_post(request, alias: str, object_type: str = None, name: str =
 #     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'})
 
 
-@log_usage_metric()
-def get_transient_view(request=None, transient_name=''):
-    # get_transient_view(request=request, transient_name=transient_name, all=True)
-    transient_info = export_transient_info(transient_name)
-    if not transient_info:
-        return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-    logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
-    logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
-    return JsonResponse(transient_info)
+class HasPermissionDeleteTransient(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.delete_transient")
 
 
-@log_usage_metric()
-def export_transient_view(request=None, transient_name='', all=''):
-    transient_info = export_transient_info(transient_name)
-    if not transient_info:
-        return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-    logger.debug(f'''Exported transient tabular data:\n{json.dumps(transient_info, indent=2)}''')
-    logger.info(f'Exporting all data for "{transient_name}", including files.')
-    s3 = ObjectStore()
-    tar_bytes_io = BytesIO()
-    # Generate in-memory compressed archive file object of all data to stream
-    with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
-        # Add transient dataset document to archive
-        transient_info_fileobj = BytesIO(bytes(json.dumps(transient_info), 'utf-8'))
-        transient_info_fileobj.seek(0)
-        # Assign standard generic filename to ease parsing of metadata upon import
-        tarinfo = tarfile.TarInfo(name='transient.json')
-        tarinfo.size = transient_info_fileobj.getbuffer().nbytes
-        tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
-        # Download cutout FITS image files into memory
-        for cutout in transient_info['cutouts']:
-            canonical_path = cutout['fields']['fits']
-            if not canonical_path:
-                continue
-            object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
-            cutout_fileobj = BytesIO(s3.get_object(path=object_key))
-            # This assumes that the canonical paths for each cutout file are unique
-            tarinfo = tarfile.TarInfo(
-                name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
-            tarinfo.size = cutout_fileobj.getbuffer().nbytes
-            tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
-            # Include thumbnail images
-            thumbnail_object_key = object_key.replace('.fits', '.jpg')
-            if not s3.object_exists(path=thumbnail_object_key):
-                continue
-            thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
-            thumbnail_tar_path = canonical_path.replace(
-                os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
-            tarinfo = tarfile.TarInfo(
-                name=thumbnail_tar_path)
-            tarinfo.size = thumbail_fileobj.getbuffer().nbytes
-            tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
-
-        # Collect SED fit files into memory
-        sedfittingresults = []
-        for aperture in transient_info['apertures']:
-            if aperture['sedfittingresults']:
-                sedfittingresults.extend(aperture['sedfittingresults'])
-        for sedfittingresult in sedfittingresults:
-            for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                canonical_path = sedfittingresult['fields'][sed_file]
+class DatasetExportView(APIView):
+    def get(self, request, transient_name=''):
+        dataset = export_dataset(transient_name)
+        if not dataset:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
+        logger.info(f'Exporting all data for "{transient_name}", including files.')
+        s3 = ObjectStore()
+        tar_bytes_io = BytesIO()
+        # Generate in-memory compressed archive file object of all data to stream
+        with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
+            # Add transient dataset document to archive
+            transient_info_fileobj = BytesIO(bytes(json.dumps(dataset), 'utf-8'))
+            transient_info_fileobj.seek(0)
+            # Assign standard generic filename to ease parsing of metadata upon import
+            tarinfo = tarfile.TarInfo(name='transient.json')
+            tarinfo.size = transient_info_fileobj.getbuffer().nbytes
+            tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
+            # Download cutout FITS image files into memory
+            for cutout in dataset['cutouts']:
+                canonical_path = cutout['fields']['fits']
+                if not canonical_path:
+                    continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
-                sed_fileobj = BytesIO(s3.get_object(path=object_key))
-                # This assumes that the canonical paths for each sed file are unique
+                cutout_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each cutout file are unique
                 tarinfo = tarfile.TarInfo(
-                    name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
-                tarinfo.size = sed_fileobj.getbuffer().nbytes
-                tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
+                    name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
+                tarinfo.size = cutout_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
                 # Include thumbnail images
-                thumbnail_object_key = object_key.replace('.h5', '.jpg')
+                thumbnail_object_key = object_key.replace('.fits', '.jpg')
                 if not s3.object_exists(path=thumbnail_object_key):
                     continue
                 thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
                 thumbnail_tar_path = canonical_path.replace(
-                    os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
+                    os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
                 tarinfo = tarfile.TarInfo(
                     name=thumbnail_tar_path)
                 tarinfo.size = thumbail_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
-    tar_bytes_io.seek(0)
-    response = StreamingHttpResponse(streaming_content=tar_bytes_io)
-    response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
-    return response
+
+            # Collect SED fit files into memory
+            sedfittingresults = []
+            for aperture in dataset['apertures']:
+                if aperture['sedfittingresults']:
+                    sedfittingresults.extend(aperture['sedfittingresults'])
+            for sedfittingresult in sedfittingresults:
+                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                    canonical_path = sedfittingresult['fields'][sed_file]
+                    object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                    sed_fileobj = BytesIO(s3.get_object(path=object_key))
+                    # This assumes that the canonical paths for each sed file are unique
+                    tarinfo = tarfile.TarInfo(
+                        name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
+                    tarinfo.size = sed_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
+                    # Include thumbnail images
+                    thumbnail_object_key = object_key.replace('.h5', '.jpg')
+                    if not s3.object_exists(path=thumbnail_object_key):
+                        continue
+                    thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                    thumbnail_tar_path = canonical_path.replace(
+                        os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
+                    tarinfo = tarfile.TarInfo(
+                        name=thumbnail_tar_path)
+                    tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+        tar_bytes_io.seek(0)
+        response = StreamingHttpResponse(streaming_content=tar_bytes_io)
+        response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
+        return response
 
 
-@login_required
-@permission_required("host.delete_transient", raise_exception=True)
-@log_usage_metric()
-def delete_transient_view(request=None, transient_name='', all=''):
-    if all.startswith('all'):
-        # Attempt to delete files even if transient does not exist in the database
-        s3 = ObjectStore()
-        cutout_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
-                                        settings.CUTOUT_ROOT.strip('/'), transient_name)
-        logger.debug(f'Deleting files in "{cutout_file_path}"...')
-        s3.delete_directory(root_path=cutout_file_path)
-        sed_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
-                                     settings.SED_OUTPUT_ROOT.strip('/'), transient_name)
-        logger.debug(f'Deleting files in "{sed_file_path}"...')
-        s3.delete_directory(root_path=sed_file_path)
-    # Acquire the transient object or return 404 not found
-    try:
-        transient = Transient.objects.get(name__exact=transient_name)
-    except Transient.DoesNotExist:
-        return render(request, "transient_404.html", status=404)
-    err_msg = delete_transient(transient=transient)
-    if err_msg:
-        return HttpResponse(status=500, content=err_msg)
-    return HttpResponseRedirect(reverse_lazy("transient_list"))
+# TODO: add log_usage_metric decorator
+class DatasetView(APIView):
+    def get_permissions(self):
+        method = self.request.method
+        if method == "DELETE":
+            return [HasPermissionDeleteTransient()]
+        return []
+
+    @extend_schema(
+        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),],
+        request=None,
+        responses={
+            200: TransientDatasetSerializer,
+            404: OpenApiResponse(description="Transient not found"),
+        }
+    )
+    def get(self, request, transient_name=''):
+        # get_transient_view(request=request, transient_name=transient_name, all=True)
+        dataset = export_dataset(transient_name)
+        if not dataset:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
+        logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
+        return JsonResponse(dataset)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="transient_name",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True,
+                description="Dataset/Transient name",
+            ),
+            OpenApiParameter(
+                name="files",
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Delete dataset files",
+            ),
+        ],
+        responses={
+            204: OpenApiResponse(description="Dataset deleted"),
+            404: OpenApiResponse(description="Dataset not found"),
+        }
+    )
+    def delete(self, request, transient_name=''):
+        files = request.query_params.get('files', "false").lower() == "true"
+        # Acquire the transient object or return 404 not found
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        # Delete database objects associated with the transient dataset
+        logger.debug(f'Deleting objects assocated with transient "{transient_name}"...')
+        err_msg = delete_transient(transient=transient)
+        if files:
+            # Delete files in transient dataset
+            s3 = ObjectStore()
+            cutout_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                            settings.CUTOUT_ROOT.strip('/'), transient_name)
+            logger.debug(f'Deleting files in "{cutout_file_path}"...')
+            s3.delete_directory(root_path=cutout_file_path)
+            sed_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                         settings.SED_OUTPUT_ROOT.strip('/'), transient_name)
+            logger.debug(f'Deleting files in "{sed_file_path}"...')
+            s3.delete_directory(root_path=sed_file_path)
+        if err_msg:
+            return JsonResponse(data={"message": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(data={}, status=status.HTTP_204_NO_CONTENT)

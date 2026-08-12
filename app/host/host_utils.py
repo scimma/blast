@@ -877,7 +877,7 @@ def delete_transient(transient_name='', transient=None):
     return err_msg
 
 
-def export_transient_info(transient_name=''):
+def export_dataset(transient_name=''):
     '''Export all data associated with a transient sufficient to import into another Blast instance.'''
     def prune_fields(data_object, model_name):
         if model_name == 'transient':

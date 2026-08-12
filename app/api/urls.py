@@ -11,16 +11,12 @@ if base_path != "":
 
 urlpatterns = [
     re_path(
-        base_path + r"^transient/delete/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
-        views.delete_transient_view,
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/export$",
+        views.DatasetExportView.as_view(),
     ),
     re_path(
-        base_path + r"^transient/get/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
-        views.get_transient_view,
-    ),
-    re_path(
-        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
-        views.export_transient_view,
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
+        views.DatasetView.as_view(),
     ),
     path(base_path + 'alias/<str:alias>/', views.alias_handler_get_delete, ),
     path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler_post),
@@ -35,6 +31,6 @@ urlpatterns = [
 #     )
 
 urlpatterns += [
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
+    path('schema/openapi', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
     path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
