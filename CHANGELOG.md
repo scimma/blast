@@ -37,8 +37,8 @@ Types of changes:
 - Added an API endpoint to download the OpenAPI spec for the Blast API: `/api/schema/openapi/`,  dynamically
   rendered by the `drf-spectacular` package.
 - Added a webpage to interactively explore the Blast API, powered by Swagger: `/api/schema/swagger-ui/`.
-- Added new SED fit data download endpoints to `/api/sedfittingresult` of the form
-  `/api/sedfittingresult/{id}/download/{download_type}/`, where `download_type` can be `chains`, `model`,
+- Added new SED fit data download endpoints to `GET /api/sedfittingresult` of the form
+  `GET /api/sedfittingresult/{id}/download/{download_type}/`, where `download_type` can be `chains`, `model`,
   or `percentiles` (replacing view functions `download_chains`, `download_modelfit`, and `download_percentiles`).
 - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
 - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
@@ -46,14 +46,18 @@ Types of changes:
 
 ### Changed
 
-- Removed the original handler for API endpoint `/api/transient/get/[transient_name]` and replaced it with
-  a handler that returns the output of the `export_transient_info()` function. **This changed the schema of
-  the returned transient data object.**
-- Replaced the API endpoint `/api/transient/export/[transient_name]/[all]` with
-  `/api/transient/export/[transient_name]`; now "export" means "the entire transient dataset including files".
+- Replaced API endpoint `GET /api/transient/get/[transient_name]` with `GET /api/dataset/[transient_name]`
+  that returns the output of the `export_dataset()` function. **This changed the schema of
+  the returned transient data object.** (See the new OpenAPI spec generator described above.)
+- Replaced the API endpoint `GET /api/transient/export/[transient_name]/[all]` with
+  `GET /api/dataset/[transient_name]/export/`; now "export" means "the entire transient dataset including files".
+- Replaced API endpoint `GET /api/transient/delete/[transient_name]/` with
+  `DELETE /api/dataset/[transient_name]/?files=false`. By default, only database objects associated with
+  a transient dataset are deleted; setting query parameter `files` to `true` will also delete the associated
+  files.
 - Improved treatment of out-of-distribution photometric noise
 - Fewer "neighbors" used to characterize missing bands, resulting in improved performance
-- Issue report and resolve condensed to a single API endpoint `/issue_handling/[action]/[item_id]/`;
+- Issue report and resolve condensed to a single API endpoint `GET /issue_handling/[action]/[item_id]/`;
   functionality preserved.
 - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
 - Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for
@@ -65,7 +69,7 @@ Types of changes:
 - Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
 - Transient results page now has download links next to each available filter under 'Cutout Download Report'
 - Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned
-  by `/api/sedfittingresult` such that they will download the associated files. The transient result page
+  by `GET /api/sedfittingresult` such that they will download the associated files. The transient result page
   download links now use these values.
 - Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
   in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
