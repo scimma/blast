@@ -196,8 +196,22 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
 
     allowed_file_types = {'chains', 'model', 'percentiles'}
 
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            name="file_type",
+            type=str,
+            location=OpenApiParameter.PATH,
+            enum=list(allowed_file_types),
+            required=True,
+            description='File type to download',
+        )],
+        responses={
+            200: OpenApiResponse(description="Successful file download"),
+            400: OpenApiResponse(description="Unknown file type"),
+        }
+    )
     @action(methods=['get'], detail=True, url_path=r"download/(?P<file_type>[^/.]+)")
-    def download(self, request, pk=None, file_type=None):
+    def download(self, request, pk=None, file_type: str = None):
         if file_type not in self.allowed_file_types:
             return Response({'error': "unknown file type"}, status=400)
         sed_result = self.get_object()
@@ -407,6 +421,8 @@ class HasPermissionDeleteTransient(BasePermission):
 
 
 class DatasetExportView(APIView):
+    serializer_class = TransientDatasetSerializer
+
     def get(self, request, transient_name=''):
         dataset = export_dataset(transient_name)
         if not dataset:

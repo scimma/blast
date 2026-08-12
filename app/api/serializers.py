@@ -91,7 +91,7 @@ class CutoutSerializer(serializers.ModelSerializer):
         ret['cutout_file'] = self.get_cutout_file(instance)
         return ret
 
-    def get_cutout_file(self, obj):
+    def get_cutout_file(self, obj) -> str:
         request = self.context["request"]
         if not obj.fits:
             return None
@@ -185,7 +185,7 @@ class SEDFittingResultSerializer(serializers.ModelSerializer):
         ret['percentiles_file'] = self.get_download_file(instance, "percentiles")
         return ret
 
-    def get_download_file(self, obj, file_type):
+    def get_download_file(self, obj, file_type) -> str:
         request = self.context["request"]
         return request.build_absolute_uri(
             reverse("sedfittingresult-download", kwargs={"pk": obj.pk, "file_type": file_type})
