@@ -18,6 +18,7 @@ class CutoutField(serializers.RelatedField):
 class TransientSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transient
+        depth = 1
         exclude = [
             "tns_id",
             "tns_prefix",
