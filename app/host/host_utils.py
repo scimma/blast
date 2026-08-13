@@ -1352,11 +1352,13 @@ def import_transient_info(transient_data_archive):
         logger.debug(f'Installing "{file_type}" files...')
         if file_type == 'cutout':
             canonical_path_root = settings.CUTOUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'cutouts/'
             thumbnail_extension = '.fits'
             canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
         elif file_type == 'sed':
             canonical_path_root = settings.SED_OUTPUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'sed_data/'
             thumbnail_extension = '.h5'
             canonical_paths = []
@@ -1364,6 +1366,12 @@ def import_transient_info(transient_data_archive):
                                      if aperture['sedfittingresults']]:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
                     canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+        elif file_type == 'host_spectra':
+            canonical_path_root = settings.SPECTRA_ROOT
+            path_prefix_replacement = f'{canonical_path_root}/'
+            tar_root_path = 'host_spectra/'
+            thumbnail_extension = '.fits'
+            canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
         # Include possible thumbnail paths
         thumbail_paths = []
         for canonical_path in canonical_paths:
@@ -1375,8 +1383,7 @@ def import_transient_info(transient_data_archive):
                 logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
                 continue
             # Verify that the file is listed in the transient metadata
-            expected_canonical_path = tarinfo.name.replace(tar_root_path,
-                                                           f'{os.path.join(canonical_path_root, transient_name)}/')
+            expected_canonical_path = tarinfo.name.replace(tar_root_path, path_prefix_replacement)
             # logger.debug(f'Archive file canonical path: {expected_canonical_path}')
             if not [path for path in canonical_paths if path == expected_canonical_path]:
                 logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
@@ -1402,6 +1409,9 @@ def import_transient_info(transient_data_archive):
         install_files('cutout')
         # Import SED fit files
         install_files('sed')
+        # Import host spectra fit files
+        if transient_info['host']:
+            install_files('host_spectra')
 
     # Delete database objects associated with failed imports
     for import_failure in import_failures:
