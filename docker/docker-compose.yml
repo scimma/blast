@@ -33,7 +33,7 @@ services:
 
   app:
     platform: linux/amd64
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.app.sh
     networks:
       internal:
@@ -102,7 +102,7 @@ services:
 
   celery-worker:
     platform: linux/amd64
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery.sh
     networks:
       - internal
@@ -127,7 +127,7 @@ services:
 
   celery-beat:
     platform: linux/amd64
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery_beat.sh
     networks:
       - internal
@@ -154,7 +154,7 @@ services:
 
   flower:
     platform: linux/amd64
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.flower.sh
     networks:
       - internal
