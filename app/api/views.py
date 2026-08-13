@@ -7,7 +7,6 @@ import django_filters
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.http import JsonResponse
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
 from rest_framework import status

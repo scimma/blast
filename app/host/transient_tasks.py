@@ -1008,7 +1008,7 @@ class HostSEDFitting(TransientTaskRunner):
             fit_type = 'midz'
         else:
             fit_type = 'standard'
-        
+
         aperture = Aperture.objects.filter(**query)
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")

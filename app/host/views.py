@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
-from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse_lazy
@@ -326,7 +325,7 @@ def add_transient(request):
             'name',
         ]
         fields_updated = [key for key, value in transient.items()
-                            if key not in ignored_fields and value is not None]
+                          if key not in ignored_fields and value is not None]
         existing_transient.update_fields = ','.join(fields_updated)
 
         # if we made it all the way to the end, we can save
@@ -381,12 +380,12 @@ def add_transient(request):
                 'Global host SED inference',
             ]
             mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                            task__name='Host MWEBV')
+                                                           task__name='Host MWEBV')
             mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
             mwebv_task_register.status = Status.objects.get(message=mwebv_status)
             mwebv_task_register.save()
             host_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                            task__name='Host information')
+                                                          task__name='Host information')
             host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
             host_task_register.status = Status.objects.get(message=host_status)
             host_task_register.save()
@@ -992,6 +991,7 @@ def update_home_page_statistics():
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
         fp.write(html_body)
 
+
 @login_required
 @log_usage_metric()
 def issue_handling(request, item_id, action):
@@ -1004,6 +1004,7 @@ def issue_handling(request, item_id, action):
     return HttpResponseRedirect(
         reverse_lazy("results", kwargs={"transient_name": item.transient.name})
     )
+
 
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):

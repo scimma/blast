@@ -28,4 +28,3 @@ urlpatterns = [
 #             views.post_transient,
 #         )
 #     )
-

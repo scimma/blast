@@ -38,6 +38,7 @@ class TestValidatePhotometry(TestCase):
         vgp_cls = ValidateGlobalPhotometry(transient_name=transient.name)
 
         status_message = vgp_cls._run_process(transient)
+        assert status_message == "processed"
 
         not_validated_global_aperture_photometry = AperturePhotometry.objects.filter(
             transient=transient, aperture__type="global", is_validated=False

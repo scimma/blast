@@ -1,7 +1,6 @@
 import os
 
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from django.test import TestCase
 from django.test import tag
 from concurrent.futures import ThreadPoolExecutor, as_completed
