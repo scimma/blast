@@ -17,10 +17,10 @@ Types of changes:
 
 ### Added
 
-- New SBI models with redshift coverage up to z = 1
+- **New SBI models with redshift coverage up to z = 1**
 - Improved S/N distributions for training and SED parameter estimation
 - New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
-- Added host galaxy spectrum download functionality to the transient workflow. Archival spectra are fetched
+- **Added host galaxy spectrum download functionality to the transient workflow.** Archival spectra are fetched
   from SPARCL (DESI-DR1, SDSS-DR17, BOSS-DR17), stored as FITS files via a new `HostSpectrum` model.
   The downstream goal is to feed these spectra into pPXF for stellar population fitting
   (something like `HostSpectrumFitting`).
@@ -33,46 +33,47 @@ Types of changes:
   - New task: `host_spectrum_download`
     - Wired into the main workflow after `host_information` and alongside `mwebv_host`,
       `global_aperture_construction`, `local_aperture_photometry`
-- Added an API endpoint to download the OpenAPI spec for the Blast API: `/api/schema/openapi/`,  dynamically
-  rendered by the `drf-spectacular` package.
-- Added a webpage to interactively explore the Blast API, powered by Swagger: `/swagger-ui/`.
-- Added new SED fit data download endpoints to `GET /api/sedfittingresult` of the form
-  `GET /api/sedfittingresult/{id}/download/{download_type}/`, where `download_type` can be `chains`, `model`,
-  or `percentiles` (replacing view functions `download_chains`, `download_modelfit`, and `download_percentiles`).
-- Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
-- Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
-- Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
 
 ### Changed
 
-- Replaced API endpoint `GET /api/transient/get/[transient_name]` with `GET /api/dataset/[transient_name]`
-  that returns the output of the `export_dataset()` function. **This changed the schema of
-  the returned transient data object.** (See the new OpenAPI spec generator described above.)
-- Replaced the API endpoint `GET /api/transient/export/[transient_name]/[all]` with
-  `GET /api/dataset/[transient_name]/export/`; now "export" means "the entire transient dataset including files".
-- Replaced API endpoint `GET /api/transient/delete/[transient_name]/` with
-  `DELETE /api/dataset/[transient_name]/?files=false`. By default, only database objects associated with
-  a transient dataset are deleted; setting query parameter `files` to `true` will also delete the associated
-  files.
-- The schema for `GET /api/transient/[transient_name]/` was modified to include the associated `Host` object.
+- **Blast API endpoints and schema**
+  - **Added a webpage to interactively explore the Blast API, powered by Swagger: `/swagger-ui/`**, complementing
+    another new API endpoint `GET /api/schema/openapi/` that renders the OpenAPI spec for the entire Blast API.
+  - **Added a new API endpoint `GET /api/cutout/[id]/download/` to download image cutouts**. The download URLs
+    are now included in the `GET /api/cutout/{id}/` API response. Transient results pages now include direct
+    download links next to each available filter under "Cutout Download Report".
+  - **Replaced API endpoint `GET /api/transient/get/[transient_name]` with `GET /api/dataset/[transient_name]`
+    that returns the output of the `export_dataset()` function. *This changed the schema of
+    the returned transient data object*.** (See the new OpenAPI spec generator described above.)
+  - **Replaced the API endpoint `GET /api/transient/export/[transient_name]/[all]` with
+    `GET /api/dataset/[transient_name]/export/`; now "export" means "the entire transient dataset including files".**
+  - Replaced API endpoint `GET /api/transient/delete/[transient_name]/` with
+    `DELETE /api/dataset/[transient_name]/?files=false`. By default, only database objects associated with
+    a transient dataset are deleted; setting query parameter `files` to `true` will also delete the associated
+    files.
+  - Replaced the three SED fit data download endpoints `/download_chains`, `/download_modelfit`, and
+    `/download_percentiles` with `GET /api/sedfittingresult/{id}/download/{download_type}/`, where
+    `download_type` can be `chains`, `model`, or `percentiles`. These download URLs are now included in the
+    `GET /api/sedfittingresult/{id}/` response.
+  - The schema for `GET /api/transient/[transient_name]/` was modified to include the associated `Host` object.
+  - Issue report and resolve condensed to a single API endpoint `GET /issue_handling/[action]/[item_id]/`;
+    functionality preserved.
 - Improved treatment of out-of-distribution photometric noise
 - Fewer "neighbors" used to characterize missing bands, resulting in improved performance
-- Issue report and resolve condensed to a single API endpoint `GET /issue_handling/[action]/[item_id]/`;
-  functionality preserved.
-- Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
-- Now installing `gfortran` before all pip installs in the Docker `deps` build stage, required for
-  compiling Fortran-based dependencies
-- Updated most of the dependencies specified in `app/requirements.txt`. In the process, `arviz==0.23.4`
-  was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
-  The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
-  addressed in a later release.
-- Cutout serialization in `/api/cutout` has added field with download URL for available cutouts
-- Transient results page now has download links next to each available filter under 'Cutout Download Report'
-- Modified the URL values of `chains_file`, `model_file`, `percentiles_file` in the data objects returned
-  by `GET /api/sedfittingresult` such that they will download the associated files. The transient result page
-  download links now use these values.
-- Upgraded bokeh from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
-  in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
+- Dependencies:
+  - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
+  - Updated most of the dependencies specified in `app/requirements.txt`. In the process, `arviz==0.23.4`
+    was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
+  - The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
+    addressed in a later release.
+  - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
+  - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
+  - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
+  - Added the `drf-spectacular` package for OpenAPI spec generation
+  - Now installing `gfortran` before all pip installs in the Dockerfile `deps` build stage, required for
+    compiling Fortran-based dependencies
+  - Upgraded `bokeh` from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
+    in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
 - Development environment:
   - Renamed the Docker volume "blast-data" to "blast-init-data".
   - Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
@@ -108,7 +109,7 @@ Types of changes:
 - Fixed broken unit test `test_transient_export_no_files()` by updating the expected data to
   match the updated Host and Transient models.
 - Fixed broken unit test `test_alias()`.
-- Rename unit test to `test_update_tansient()`.
+- Rename unit test to `test_update_transient()`.
 
 ## [1.13.0]
 
