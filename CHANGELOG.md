@@ -21,16 +21,15 @@ Types of changes:
 - Improved S/N distributions for training and SED parameter estimation
 - New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
 - Added host galaxy spectrum download functionality to the transient workflow. Archival spectra are fetched
-  from SPARCL (DESI-DR1, SDSS-DR17, BOSS-DR17) with a NED fallback, stored as FITS files via a new
-  `HostSpectrum` model. The downstream goal is to feed these spectra into STARLIGHT for stellar population
-  fitting (something like `HostSpectrumFitting`).
+  from SPARCL (DESI-DR1, SDSS-DR17, BOSS-DR17), stored as FITS files via a new `HostSpectrum` model.
+  The downstream goal is to feed these spectra into pPXF for stellar population fitting
+  (something like `HostSpectrumFitting`).
   - New model: `HostSpectrum`.
     - Stores one spectrum per host galaxy as a FITS file in ObjectStore
     - Linked to `Host` via ForeignKey
-    - Tracks source (DESI/SDSS/BOSS/NED), retrieval status, and other metadata
+    - Tracks source (DESI/SDSS/BOSS), retrieval status, and other metadata
   - New pipeline: `fetch_host_spectrum()` (`app/host/host_spectrum.py`)
     - Queries SPARCL with a unified interface across DESI-DR1, SDSS-DR17, BOSS-DR17 in priority order
-    - Falls back to NED if SPARCL returns no results
   - New task: `host_spectrum_download`
     - Wired into the main workflow after `host_information` and alongside `mwebv_host`,
       `global_aperture_construction`, `local_aperture_photometry`
