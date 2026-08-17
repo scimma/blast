@@ -9,6 +9,9 @@ from host.models import Transient
 from host.object_store import ObjectStore
 from host.transient_tasks import generate_thumbnail_sed_global
 from host.transient_tasks import generate_thumbnail_sed_local
+from sparcl.client import SparclClient
+from sparcl.exceptions import TooManyRequests
+from time import sleep
 
 
 def render_homepage():
@@ -438,3 +441,40 @@ def generate_all_sed_thumbnails(dry_run=True, prefix='', batch_size=0, force=Fal
                 task_func.delay(trans_name)
             else:
                 print(f'''{dry_run_msg}DEBUG: "{trans_name}" thumbnail already generated.''')
+
+
+def test_sparcl_rate_limit(transient_name='2026dix'):
+    '''Test SPARCL query rate limit logic in host.host_spectrum.fetch_host_spectrum().'''
+    transient = Transient.objects.get(name=transient_name)
+    position = transient.host.sky_coord
+    ra = position.ra.deg
+    dec = position.dec.deg
+    radius_deg = 3.0 / 3600.0
+    ra_min, ra_max = ra - radius_deg, ra + radius_deg
+    dec_min, dec_max = dec - radius_deg, dec + radius_deg
+
+    # Query SPARCL for DESI or SDSS or BOSS spectrum
+    client = SparclClient(announcement=False, read_timeout=5500, connect_timeout=5600)
+    outfields = ['sparcl_id', 'specid', 'data_release', 'survey', 'ra', 'dec']
+    constraints = {
+        'ra': [ra_min, ra_max],
+        'dec': [dec_min, dec_max],
+        'data_release': ['DESI-DR1', 'SDSS-DR17', 'BOSS-DR17'],
+    }
+    max_requests = 100
+    request_idx = 0
+    while max_requests - request_idx > 0:
+        request_idx += 1
+        try:
+            print(f'''[{request_idx}/{request_idx}] Querying SPARCL...''')
+            found = client.find(outfields=outfields, constraints=constraints, fmt='pandas')
+            records = found.to_dict('records')
+            print(records)
+        except TooManyRequests:
+            print('Too many requests. Waiting')
+            print(found)
+            wait_time_sec = 2
+            sleep(wait_time_sec)
+        except Exception as err:
+            print(err)
+            break

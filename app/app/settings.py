@@ -19,6 +19,7 @@ TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 # Email address for support requests
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
 # Workflow task options
+SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 QUERY_TIMEOUT = int(os.environ.get("QUERY_TIMEOUT", "60"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]

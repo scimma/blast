@@ -3,6 +3,7 @@ import numpy as np
 from astropy.io import fits
 from django.conf import settings
 from sparcl.client import SparclClient
+from sparcl.exceptions import TooManyRequests
 
 from host.log import get_logger
 from host.models import TaskLock
@@ -57,7 +58,17 @@ def fetch_host_spectrum(position):
             'data_release': ['DESI-DR1', 'SDSS-DR17', 'BOSS-DR17'],
         }
 
-        found = client.find(outfields=outfields, constraints=constraints, fmt='pandas')
+        while True:
+            try:
+                logger.debug('Querying SPARCL ...')
+                found = client.find(outfields=outfields, constraints=constraints, fmt='pandas')
+            except TooManyRequests:
+                # TODO: Determine from the response the exact duration to wait, if possible.
+                wait_time_sec = settings.SPARCL_WAIT_TIME_SEC
+                logger.warning(f'SPARCL error: too many requests. Sleeping {wait_time_sec} seconds ...')
+                time.sleep(wait_time_sec)
+            else:
+                break
 
         if found is not None and not found.empty:
             # Convert to native dicts for ultra-fast priority and deduplication processing
