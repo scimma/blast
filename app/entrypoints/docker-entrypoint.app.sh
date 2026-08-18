@@ -8,7 +8,6 @@ bash entrypoints/install_dustmaps_config.sh
 bash entrypoints/initialize_data_dirs.sh
 
 bash entrypoints/wait-for-it.sh ${DB_HOST}:${DB_PORT} --timeout=0
-bash entrypoints/wait-for-it.sh ${MESSAGE_BROKER_HOST}:${MESSAGE_BROKER_PORT} --timeout=0
 
 # If test mode, run tests and exit
 if [[ $TEST_MODE == 1 ]]; then
