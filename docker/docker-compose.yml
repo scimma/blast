@@ -138,6 +138,7 @@ services:
     profiles:
       - "full_prod"
       - "full_dev"
+      - "slim_dev"
       - "ci"
 
   redis:
