@@ -60,6 +60,7 @@ Types of changes:
     functionality preserved.
 - Improved treatment of out-of-distribution photometric noise
 - Fewer "neighbors" used to characterize missing bands, resulting in improved performance
+- Updated team member page
 - Dependencies:
   - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
   - Updated most of the dependencies specified in `app/requirements.txt`. In the process, `arviz==0.23.4`
