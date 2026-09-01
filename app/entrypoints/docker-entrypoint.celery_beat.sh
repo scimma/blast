@@ -39,6 +39,7 @@ echo "Running database initialization script..."
 python init_app.py
 echo "Django database initialization complete."
 
+# Create semaphore file checked by the Docker Compose healthcheck
 touch /tmp/celery-beat-ready
 
 if [[ $DISABLE_CELERY_BEAT == "true" ]]; then

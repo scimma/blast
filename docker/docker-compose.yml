@@ -160,7 +160,7 @@ services:
     networks:
       - internal
     ports:
-      - 127.0.0.1:${FLOWER_PORT}:8888
+      - 127.0.0.1:${FLOWER_PORT:-8888}:${FLOWER_PORT:-8888}
     profiles:
       - "full_prod"
       - "full_dev"

@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [2.0.1]
+
+### Fixed
+
+- Fixed bug in Flower port spec in Docker Compose config
+- Fixed misspelling of Manuguri on team member page
+
 ## [2.0.0]
 
 ### Added
