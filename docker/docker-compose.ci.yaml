@@ -1,15 +1,8 @@
-name: blast-ci
+name: blast-ci-$USER
 
 networks:
   internal:
     external: false
-
-volumes:
-  blast-db: {}
-  django-static: {}
-  blast-data:
-    name: "blast-data"
-    external: true
 
 services:
 
@@ -17,6 +10,9 @@ services:
     extends:
       file: docker-compose.yml
       service: app
+    depends_on:
+      celery-beat:
+        condition: service_healthy
     environment:
       - "TEST_MODE=1"
     env_file:
@@ -30,3 +26,26 @@ services:
     env_file:
       - ../env/.env.default
       - ../env/.env.ci
+
+  celery-beat:
+    extends:
+      file: docker-compose.yml
+      service: celery-beat
+    healthcheck:
+      test: ["CMD", "bash", "-c", "[ -f /tmp/celery-beat-ready ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 600s
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+
+  object-store:
+    extends:
+      file: docker-compose.yml
+      service: object-store
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+

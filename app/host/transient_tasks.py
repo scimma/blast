@@ -1,6 +1,7 @@
 import math
 import os
 from shutil import rmtree
+import io
 
 import numpy as np
 from astropy.io import fits
@@ -30,6 +31,8 @@ from host.task_prereqs import GenerateThumbnail_prerequisites
 from host.task_prereqs import GenerateThumbnailFinal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
+from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
 
 from host.cutouts import download_and_save_cutouts
 from host.prost import run_prost
@@ -47,10 +50,12 @@ from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
+from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
 from host.plotting_utils import plot_image
 from host.plotting_utils import render_sed_plot
+from host.plotting_utils import render_host_spectrum_plot
 from host.plotting_utils import temp_results_paths_from_canonical_path
 from host.plotting_utils import download_file_from_s3
 from host.models import Aperture
@@ -59,6 +64,7 @@ from host.models import Cutout
 from host.models import SEDFittingResult
 from host.models import StarFormationHistoryResult
 from host.models import Transient
+from host.models import HostSpectrum
 from host.prospector import build_model
 from host.prospector import build_obs
 from host.prospector import fit_model
@@ -518,7 +524,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         data = {
             "name": f"{aperture_cutout[0].name}_global",
             "cutout": aperture_cutout[0],
-            "orientation_deg": (180 / np.pi) * aperture.theta.value,
+            "orientation_deg": (180 / np.pi) * aperture.theta.rad,
             "ra_deg": aperture.positions.ra.degree,
             "dec_deg": aperture.positions.dec.degree,
             "semi_major_axis_arcsec": aperture.a.value,
@@ -993,15 +999,21 @@ class HostSEDFitting(TransientTaskRunner):
         #     logger.warning('All SED output files exist. Skipping SED fitting calculation...')
         #     return "processed"
 
-        if transient.best_redshift is None or transient.best_redshift > 0.2:
+        if transient.best_redshift is None or transient.best_redshift > 1.0:
             # training sample doesn't work here
             return "redshift too high"
+        if transient.best_redshift < 0.015:
+            fit_type = 'lowz'
+        elif transient.best_redshift < 0.2:
+            fit_type = 'midz'
+        else:
+            fit_type = 'standard'
 
         aperture = Aperture.objects.filter(**query)
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")
 
-        observations = build_obs(transient, aperture_type)
+        observations = build_obs(transient, aperture_type, use_mag_offset=False)
         model_components = build_model(observations)
 
         if mode == "test" and not sbipp:
@@ -1039,7 +1051,7 @@ class HostSEDFitting(TransientTaskRunner):
             model_components,
             fitting_settings,
             sbipp=sbipp,
-            fit_type=aperture_type,
+            fit_type=fit_type,
         )
         if errflag:
             return "not enough filters"
@@ -1207,7 +1219,7 @@ class GenerateThumbnail(TransientTaskRunner):
 
         try:
             status_message = "processed"
-            assert widget in ['cutout', 'local', 'global']
+            assert widget in ['cutout', 'local', 'global', 'host_spec']
             # Generate a thumbnail for a SED plot
             if widget in ['local', 'global']:
                 render = render_sed_plot(transient, scope=widget)
@@ -1345,6 +1357,29 @@ class GenerateThumbnail(TransientTaskRunner):
                 generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800,
                                              thumbnail_object_key)
 
+            # Generate a thumbnail for a host spectrum plot
+            elif widget == 'host_spec':
+                render = render_host_spectrum_plot(transient)
+                fig = render['fig']
+                fig.sizing_mode = "fixed"
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                fig.legend.label_text_font_size = "16px"
+                fig.legend.label_text_font = "sans serif"
+                fig.legend.label_text_font_style = "normal"
+                # Export plot to thumbnail
+                canonical_path = render['canonical_path']
+                spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
+                download_file_from_s3(spectrum_tmp_filepath, spectrum_object_key)
+                thumbnail_filepath = spectrum_tmp_filepath.replace(".fits", ".jpg")
+                thumbnail_object_key = spectrum_object_key.replace(".fits", ".jpg")
+                thumbnail_filepath_png = spectrum_tmp_filepath.replace(".fits", ".png")
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400,
+                                             thumbnail_object_key)
+
         except Exception as err:
             logger.error(f'Error generating thumbnail: {err}')
             status_message = "failed"
@@ -1396,6 +1431,22 @@ class GenerateThumbnailSEDGlobal(GenerateThumbnail):
         return super()._run_process(transient, widget='global')
 
 
+class GenerateThumbnailHostSpec(GenerateThumbnail):
+    """
+    Generate a thumbnail of the host galaxy spectrum
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnailHostSpec_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail host spectrum"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='host_spec')
+
+
 class CropTransientImages(TransientTaskRunner):
     """
     TaskRunner to crop cutout images to save disk space.
@@ -1415,6 +1466,131 @@ class CropTransientImages(TransientTaskRunner):
         status_message = "processed"
         crop_images(transient)
         return status_message
+
+
+def _save_spectrum_to_s3(hdulist, s3_key):
+    """
+    Write an astropy HDUList to bytes and upload to the object store.
+
+    Parameters
+    ----------
+    :hdulist : :class:`~astropy.io.fits.HDUList`
+        The spectrum FITS object to upload.
+    :s3_key : str
+        Full S3 object key including base path.
+
+    Returns
+    -------
+    :success : bool
+        True if upload succeeded, False otherwise.
+    """
+    s3 = ObjectStore()
+    try:
+        buf = io.BytesIO()
+        hdulist.writeto(buf, overwrite=True)
+        buf.seek(0)
+        s3.put_object(path=s3_key, data_bytes_obj=buf.read())
+        return True
+    except Exception as err:
+        logger.error(f'''Error saving spectrum to S3 key "{s3_key}": {err}''')
+        return False
+
+
+class HostSpectrumDownload(TransientTaskRunner):
+    """
+    TaskRunner to download a host galaxy spectrum from public spectroscopic
+    archives using a unified hierarchical function (DESI -> SDSS -> BOSS -> NED).
+    """
+
+    def _prerequisites(self):
+        """
+        Need both the Cutout and Host match to be processed
+        """
+        return HostSpectrumDownload_prerequisites
+
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Host spectrum download.
+        """
+        return 'Host spectrum download'
+
+    def _failed_status_message(self):
+        """
+        Emit status message for failure consistent with the available Status objects
+        """
+        return 'failed'
+
+    def _run_process(self, transient):
+        """
+        Execute the hierarchical spectrum fetcher and save the resulting
+        dataset to the S3 store and local database.
+        """
+        if transient.host is None:
+            logger.info(f'''No host for transient "{transient.name}" — skipping spectrum download.''')
+            return 'no host spectrum'
+
+        # Call the single unified fetching function
+        try:
+            spectrum_data = fetch_host_spectrum(transient.host.sky_coord)
+        except Exception as err:
+            logger.warning(f'''Error executing unified host spectrum fetcher: {err}''')
+            return 'failed'
+
+        if spectrum_data is None:
+            return 'processed'
+
+        # Dynamically inspect the FITS header to identify which source succeeded
+        hdulist = spectrum_data['hdulist']
+        data_release = hdulist[0].header.get('DATA_RELEASE', '').upper()
+        origin = hdulist[0].header.get('ORIGIN', '').upper()
+
+        if 'DESI' in data_release or 'DESI' in origin:
+            source_name = 'DESI'
+        elif 'BOSS' in data_release or 'BOSS' in origin:
+            source_name = 'BOSS'
+        elif 'SDSS' in data_release or 'SDSS' in origin:
+            source_name = 'SDSS'
+        else:
+            source_name = 'NED'
+
+        # Initialize the database object placeholder to resolve the upload path
+        spectrum_obj = HostSpectrum(host=transient.host, source=source_name)
+        canonical_path = HostSpectrum._meta.get_field('spectrum_file').upload_to(spectrum_obj)
+        s3_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+
+        if not _save_spectrum_to_s3(hdulist, s3_key):
+            logger.error(f'''Failed to save {source_name} spectrum to S3 for host "{transient.host.name}".''')
+            return 'failed'
+
+        # Store or overwrite the spectrum info in your database
+        query = {'host': transient.host, 'source': source_name}
+        data = {
+            'host': transient.host,
+            'source': source_name,
+            'spectrum_file': canonical_path,
+            'wavelength_min_angstrom': spectrum_data['wavelength_min_angstrom'],
+            'wavelength_max_angstrom': spectrum_data['wavelength_max_angstrom'],
+            'redshift': spectrum_data['redshift'],
+            'ra_deg': spectrum_data.get('ra_deg'),
+            'dec_deg': spectrum_data.get('dec_deg'),
+            'spectrum_id': spectrum_data['spectrum_id']
+        }
+        self._overwrite_or_create_object(HostSpectrum, query, data)
+
+        # Enforce priority overrides: Delete lower-tier spectrum assets if they exist
+        priority_order = ['DESI', 'SDSS', 'BOSS', 'NED']
+        if source_name in priority_order:
+            idx = priority_order.index(source_name)
+            lower_priority_sources = priority_order[idx + 1:]
+            if lower_priority_sources:
+                HostSpectrum.objects.filter(host=transient.host, source__in=lower_priority_sources).delete()
+
+        logger.info(
+            f'''{source_name} spectrum saved for host "{transient.host.name}": '''
+            f'''id={spectrum_data["spectrum_id"]}, z={spectrum_data["redshift"]}'''
+        )
+        return 'processed'
 
 
 # Transient workflow tasks
@@ -1442,6 +1618,15 @@ def generate_thumbnail_sed_local(transient_name):
 )
 def generate_thumbnail_sed_global(transient_name):
     GenerateThumbnailSEDGlobal(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate host spectrum thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_host_spec(transient_name):
+    GenerateThumbnailHostSpec(transient_name).run_process()
 
 
 @shared_task(
@@ -1584,3 +1769,12 @@ def final_progress(transient_name):
             rmtree(os.path.join(base_path, transient.name))
         except FileNotFoundError:
             pass
+
+
+@shared_task(
+    name="Host Spectrum Download",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def host_spectrum_download(transient_name):
+    HostSpectrumDownload(transient_name).run_process()

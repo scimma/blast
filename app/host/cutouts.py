@@ -243,7 +243,7 @@ def panstarrs_image_filename(position, image_size=None, filter=None):
     ### optionally, can edit to do this in an unsafe way
     r = requests.get(url, stream=True)
     r.raw.decode_content = True
-    filename_table = pd.read_csv(r.raw, sep="\s+")["filename"]
+    filename_table = pd.read_csv(r.raw, sep=r"\s+")["filename"]
     return filename_table[0] if len(filename_table) > 0 else None
 
 
@@ -345,8 +345,7 @@ def galex_cutout(position, image_size=None, filter=None):
     # avoid masked regions
     center = SkyCoord(obs["s_ra"], obs["s_dec"], unit=u.deg)
     sep = position.separation(center).deg
-    obs = obs[sep < 0.55]
-
+    obs = obs[(sep < 0.55) & ~np.char.endswith(obs["dataURL"], ".jpeg")]
     if len(obs) > 1:
         obs = obs[obs["t_exptime"] == max(obs["t_exptime"])]
 
@@ -376,7 +375,8 @@ def galex_cutout(position, image_size=None, filter=None):
 
 def WISE_cutout(position, image_size=None, filter=None):
     """
-    Download WISE image cutout from IRSA
+    Download WISE image cutout from IRSA.
+    API documentation: https://irsa.ipac.caltech.edu/ibe/sia.html
 
     Parameters
     ----------
@@ -449,10 +449,40 @@ def DES_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    DEF_ACCESS_URL = "https://datalab.noirlab.edu/sia/ls_dr9"
-    svc_ls_dr9 = sia.SIAService(DEF_ACCESS_URL)
+    # Try DR10 first, fall back to DR9 if data is not returned.
+    for url in ["https://datalab.noirlab.edu/sia/ls_dr10",
+                "https://datalab.noirlab.edu/sia/ls_dr9"]:
+        fits_image = DES_cutout_single_version(
+            position, image_size=image_size, filter=filter,
+            access_url=url
+        )
+        if fits_image is not None:
+            break
 
-    imgTable = svc_ls_dr9.search(
+    return fits_image
+
+
+def DES_cutout_single_version(
+    position, image_size=None, filter=None,
+    access_url="https://datalab.noirlab.edu/sia/ls_dr10"
+):
+    """
+    Download DES image cutout from NOIRLab
+
+    Parameters
+    ----------
+    :position : :class:`~astropy.coordinates.SkyCoord`
+        Target centre position of the cutout image to be downloaded.
+    :image_size: int: size of cutout image in pixels
+    :filter: str: Panstarrs filter (g r i z y)
+    Returns
+    -------
+    :cutout : :class:`~astropy.io.fits.HDUList` or None
+    """
+
+    svc_ls = sia.SIAService(access_url)
+
+    imgTable = svc_ls.search(
         (position.ra.deg, position.dec.deg),
         (image_size / np.cos(position.dec.deg * np.pi / 180), image_size),
         verbosity=2,
@@ -464,44 +494,47 @@ def DES_cutout(position, image_size=None, filter=None):
             valid_urls += [img["access_url"]]
             logger.debug(f'''DES image URL: {valid_urls[-1]}''')
 
-    if len(valid_urls):
-        # we need both the depth and the image
-        time.sleep(1)
-        try:
-            fits_image = fits.open(
-                valid_urls[0].replace("-depth-", "-image-"), cache=None
-            )
-        except Exception as e:
-            ### found some bad links...
-            return None
-        if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
-            # no idea what's happening here but this is a mess
-            return None
-        try:
-            depth_image = fits.open(valid_urls[0])
-        except Exception as e:
-            # wonder if there's some issue with other tasks clearing the cache
-            time.sleep(5)
-            depth_image = fits.open(valid_urls[0])
-        wcs_depth = WCS(depth_image[0].header)
-        xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
+    if not len(valid_urls):
+        return None
+    # we need both the depth and the image
+    time.sleep(1)
+    try:
+        req = requests.get(valid_urls[0].replace("-depth-", "-image-"), stream=True)
+        fits_image = fits.open(BytesIO(req.content))
+    except Exception:
+        print(f'opening the URL {valid_urls[0].replace("-depth-", "-image-")} failed')
+        # found some bad links...
+        return None
 
-        # this is ugly - just assuming the exposure time at the
-        # location of interest is uniform across the image
-        if np.shape(depth_image[0].data) == (1, 1):
-            exptime = depth_image[0].data[0][0]
-        else:
-            exptime = depth_image[0].data[int(yc), int(xc)]
-        if exptime == 0:
-            fits_image = None
-        else:
-            wcs = WCS(fits_image[0].header)
-            cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
-            fits_image[0].data = cutout.data
-            fits_image[0].header.update(cutout.wcs.to_header())
-            fits_image[0].header["EXPTIME"] = exptime
+    if np.shape(fits_image[0].data)[0] == 1 or np.shape(fits_image[0].data)[1] == 1:
+        # no idea what's happening here but this is a mess
+        return None
+    try:
+        req = requests.get(valid_urls[0], stream=True)
+        depth_image = fits.open(BytesIO(req.content))
+    except Exception:
+        # wonder if there's some issue with other tasks clearing the cache
+        time.sleep(5)
+        req = requests.get(valid_urls[0], stream=True)
+        depth_image = fits.open(BytesIO(req.content))
+
+    wcs_depth = WCS(depth_image[0].header)
+    xc, yc = wcs_depth.wcs_world2pix(position.ra.deg, position.dec.deg, 0)
+
+    # this is ugly - just assuming the exposure time at the
+    # location of interest is uniform across the image
+    if np.shape(depth_image[0].data) == (1, 1):
+        exptime = depth_image[0].data[0][0]
     else:
+        exptime = depth_image[0].data[int(yc), int(xc)]
+    if exptime == 0:
         fits_image = None
+    else:
+        wcs = WCS(fits_image[0].header)
+        cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
+        fits_image[0].data = cutout.data
+        fits_image[0].header.update(cutout.wcs.to_header())
+        fits_image[0].header["EXPTIME"] = exptime
 
     return fits_image
 
@@ -521,7 +554,7 @@ def TWOMASS_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    irsaquery = f"https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS={position.ra.deg},{position.dec.deg}&SIZE=0.01"
+    irsaquery = f"https://irsa.ipac.caltech.edu/cgi-bin/2MASS/IM/nph-im_sia?POS={position.ra.deg},{position.dec.deg}&SIZE=0.01"  # noqa
     response = requests.get(url=irsaquery)
 
     fits_image = None
@@ -562,29 +595,26 @@ def SDSS_cutout(position, image_size=None, filter=None):
     """
 
     sdss_baseurl = "https://data.sdss.org/sas"
-    print(position)
-
+    logger.debug(f'''SDSS position: {position}''')
     xid = SDSS.query_region(position, radius=0.05 * u.deg)
+    logger.debug(f'''SDSS response: {xid}''')
     if xid is None or len(xid) == 0:
         return None
-    
-    image_pos = SkyCoord(xid['ra'],xid['dec'],unit=u.deg)
+
+    image_pos = SkyCoord(xid['ra'], xid['dec'], unit=u.deg)
     sep = position.separation(image_pos)
     iSep = np.where(sep == np.min(sep))[0]
-    
 
     # old (better, but deprecated) version
-    #url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
-    #print(url)
-    #rt = requests.get(url)
+    # url = f"https://dr12.sdss.org/fields/raDec?ra={position.ra.deg}&dec={position.dec.deg}"
+    # print(url)
+    # rt = requests.get(url)
 
-
-
-    regex = "<dt>run<\/dt>.*<dd>.*<\/dd>"
-    run = xid['run'][iSep][0] #re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    rerun = xid['rerun'][iSep][0] #re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    camcol = xid['camcol'][iSep][0] #re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
-    field = xid['field'][iSep][0] #re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    # regex = r"<dt>run<\/dt>.*<dd>.*<\/dd>"
+    run = xid['run'][iSep][0]  # re.findall("<dt>run</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    rerun = xid['rerun'][iSep][0]  # re.findall("<dt>rerun</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    camcol = xid['camcol'][iSep][0]  # re.findall("<dt>camcol</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
+    field = xid['field'][iSep][0]  # re.findall("<dt>field</dt>\n.*<dd>([0-9]+)</dd>", rt.text)[0]
 
     # a little latency so that we don't look like a bot to SDSS?
     time.sleep(1)

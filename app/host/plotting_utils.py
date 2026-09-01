@@ -1,6 +1,7 @@
 import math
 import os
 from math import pi
+from packaging.version import Version
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,7 @@ from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
 from host.prospector import build_obs
 from host.models import SEDFittingResult
+from host.models import HostSpectrum
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
@@ -189,14 +191,14 @@ def plot_position(object, wcs, plotting_kwargs=None, plotting_func=None):
 
 def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
     aperture = aperture.to_pixel(wcs)
-    theta_rad = aperture.theta
+    theta_rad = aperture.theta.rad
     x, y = aperture.positions
     plot_dict = {
         "x": x,
         "y": y,
         "width": aperture.a * 2,
         "height": aperture.b * 2,
-        "angle": theta_rad.value,
+        "angle": theta_rad,
         "fill_color": "#cab2d6",
         "fill_alpha": 0.1,
         "line_width": 4,
@@ -527,7 +529,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
     return generate_plot(fig, image_data=image_data)
 
 
-def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None):
+def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None, offset_sed_model=False):
     """
     Plot SED from aperture photometry.
     """
@@ -567,8 +569,8 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
         min_border=0,
         #    toolbar_location=None,
         x_axis_type="log",
-        x_axis_label="Wavelength [Angstrom]",
-        y_axis_label="Flux",
+        x_axis_label="Wavelength [angstrom]",
+        y_axis_label="Flux [microjansky]",
     )
 
     if len(flux):
@@ -619,7 +621,7 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
         model_data = np.load(sed_modeldata_file, allow_pickle=True)
 
         # best = result["bestfit"]
-        if transient.best_redshift < 0.015:
+        if transient.best_redshift < 0.015 and offset_sed_model:
             a = result["obs"]["redshift"] - 0.015 + 1
             mag_off = (
                 cosmo.distmod(result["obs"]["redshift"]).value
@@ -672,7 +674,7 @@ def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=
             except Exception:
                 pwave = [f.wave_effective for f in obs["filters"]]
 
-            if transient.best_redshift < 0.015:
+            if transient.best_redshift < 0.015 and offset_sed_model:
                 fig.scatter(
                     pwave,
                     maggies_to_mJy(model_data["phot"]) * 10 ** (0.4 * mag_off),
@@ -860,6 +862,7 @@ def render_sed_plot(transient, scope):
     sed_results_tmp_filepath = None
     sed_modeldata_tmp_filepath = None
     sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+    offset_sed_model = False
     if sed_obj.exists():
         canonical_path = sed_obj[0].posterior.name
         sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)
@@ -867,12 +870,15 @@ def render_sed_plot(transient, scope):
         sed_modeldata_object_key = sed_results_object_key.replace(".h5", "_modeldata.npz")
         download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
         download_file_from_s3(sed_modeldata_tmp_filepath, sed_modeldata_object_key)
+        if sed_obj[0].software_version is None or Version(sed_obj[0].software_version) <= Version('1.13.1'):
+            offset_sed_model = True
     # Generate a SED plot using Bokeh
     plot = plot_sed(
         transient=transient,
         type=scope,
         sed_results_file=sed_results_tmp_filepath,
         sed_modeldata_file=sed_modeldata_tmp_filepath,
+        offset_sed_model=offset_sed_model
     )
     # Purge temporary cached files
     delete_cached_file(sed_results_tmp_filepath)
@@ -880,4 +886,88 @@ def render_sed_plot(transient, scope):
     return {
         **plot,
         'canonical_path': canonical_path,
+    }
+
+
+def _read_host_spectrum_fits(local_fits_path):
+    """
+    Read a host spectrum FITS file saved by fetch_host_spectrum(): a
+    SPARCL-derived binary table (extension "SPECTRUM" with wavelength/
+    flux columns).
+    """
+    with fits.open(local_fits_path) as hdulist:
+        flux_unit = hdulist[0].header.get('BUNIT', '1e-17 erg cm-2 s-1 AA-1')
+        table = hdulist['SPECTRUM']
+        wavelength = np.asarray(table.data['wavelength'], dtype=np.float64)
+        flux = np.asarray(table.data['flux'], dtype=np.float64)
+        wave_unit = table.columns['wavelength'].unit or 'AA'
+
+    return {
+        'wavelength': wavelength,
+        'flux': flux,
+        'wave_unit': wave_unit,
+        'flux_unit': flux_unit,
+    }
+
+
+def plot_host_spectrum(host_spectrum=None, spectrum_file=None):
+    """
+    Plot the host galaxy spectrum downloaded by fetch_host_spectrum().
+    """
+    fig = figure(
+        title="",
+        sizing_mode="stretch_width",
+        max_height=400,
+        min_border=0,
+        x_axis_label="Wavelength [Angstrom]",
+        y_axis_label="Flux",
+    )
+
+    if spectrum_file is not None and os.path.exists(spectrum_file):
+        spec = _read_host_spectrum_fits(spectrum_file)
+        fig.yaxis.axis_label = f"Flux [{spec['flux_unit']}]"
+
+        source = ColumnDataSource(data=dict(x=spec['wavelength'], y=spec['flux']))
+        legend_label = f"{host_spectrum.source} spectrum" if host_spectrum else "spectrum"
+        line = fig.line('x', 'y', source=source, legend_label=legend_label)
+
+        TOOLTIPS = [
+            ("wavelength", "$x"),
+            ("flux", "$y"),
+        ]
+        hover = HoverTool(renderers=[line], tooltips=TOOLTIPS)
+        fig.add_tools(hover)
+
+        fig.legend.location = "top_left"
+    else:
+        fig.title = "Data Not Available"
+
+    script, div = components(fig)
+    return {"bokeh_host_spec_script": script, "bokeh_host_spec_div": div, "fig": fig}
+
+
+def render_host_spectrum_plot(transient):
+    '''Generate a Bokeh plot of the archival host galaxy spectrum'''
+
+    canonical_path = None
+    spectrum_tmp_filepath = None
+    host_spectrum = None
+    if transient.host is not None:
+        host_spectrum_qs = HostSpectrum.objects.filter(host=transient.host)
+        if host_spectrum_qs.exists():
+            host_spectrum = host_spectrum_qs[0]
+    if host_spectrum is not None and host_spectrum.spectrum_file:
+        canonical_path = host_spectrum.spectrum_file.name
+        spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
+        download_file_from_s3(spectrum_tmp_filepath, spectrum_object_key)
+    plot = plot_host_spectrum(
+        host_spectrum=host_spectrum,
+        spectrum_file=spectrum_tmp_filepath,
+    )
+    # Purge temporary cached file
+    delete_cached_file(spectrum_tmp_filepath)
+    return {
+        **plot,
+        'canonical_path': canonical_path,
+        'host_spectrum': host_spectrum,
     }

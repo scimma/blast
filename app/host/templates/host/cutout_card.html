@@ -104,7 +104,10 @@
                 cutout_script.type = 'text/javascript';
                 var raw_script = resp.bokeh_cutout_script;
                 var raw_script_trimmed = raw_script.trim();
-                var script_trimmed = raw_script_trimmed.replace('<script type="text/javascript">', "").replace("</scr", "").replace("ipt>", "");
+                var closeMarker = "<" + "/script>";
+                var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
                 cutout_script.text = script_trimmed;
                 document.getElementById("bokeh-cutout-script-wrapper").appendChild(cutout_script);
                 document.getElementById('cutout-img-div').style.display = "block";

@@ -4,11 +4,12 @@ from pathlib import Path
 ######################################################################
 # Blast application config
 #
-APP_VERSION = '1.12.0'
+APP_VERSION = '2.0.1'
 # Data paths
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
 SED_OUTPUT_ROOT = os.environ.get("SED_OUTPUT_ROOT", "/data/sed_output")
+SPECTRA_ROOT = os.environ.get("SPECTRA_ROOT", "/data/spectra")
 SBI_TRAINING_ROOT = os.environ.get("SBI_TRAINING_ROOT", "/data/sbi_training_sets")
 PROST_OUTPUT_ROOT = os.environ.get("PROST_OUTPUT_ROOT", "/tmp/prost_output")
 SBIPP_ROOT = os.environ.get("SBIPP_ROOT", "/data/sbipp")
@@ -18,6 +19,7 @@ TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 # Email address for support requests
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
 # Workflow task options
+SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 QUERY_TIMEOUT = int(os.environ.get("QUERY_TIMEOUT", "60"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]
@@ -67,6 +69,7 @@ INSTALLED_APPS = [
     "django_filters",
     'django_celery_results',  # TODO: This can be removed if using Redis as Celery backend
     "latexify",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -157,10 +160,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Webserver config
 #
 WSGI_APPLICATION = "app.wsgi.application"
-HOSTNAMES = os.environ.get("DJANGO_HOSTNAMES", "localhost").split(",")
+HOSTNAMES = os.getenv("DJANGO_HOSTNAMES", "localhost").split(",")
+WEB_SERVER_PORT = os.getenv("WEB_SERVER_PORT", "4000")
+WEB_APP_PORT = os.getenv("WEB_APP_PORT", "8000")
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_WHITELIST = ["*"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://localhost:8000", "http://localhost:4000"]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    f"http://localhost:{WEB_SERVER_PORT}",
+    f"http://localhost:{WEB_APP_PORT}"
+]
 for hostname in HOSTNAMES:
     CSRF_TRUSTED_ORIGINS.append(f"""https://{hostname}""")
 CSRF_COOKIE_SECURE = True
@@ -230,6 +239,18 @@ REST_FRAMEWORK = {
         f'rest_framework.permissions.{os.environ.get("API_AUTHENTICATION")}',
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+######################################################################
+# DRF Spectacular Config
+#
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Blast API',
+    'DESCRIPTION': 'API Schema view for the Blast Transient Catalog',
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    # OTHER SETTINGS
 }
 
 ######################################################################

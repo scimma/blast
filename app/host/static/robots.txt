@@ -1,15 +1,12 @@
 User-agent: *
 Disallow: /transient/
 Disallow: /add/
-Disallow: /download_chains/
-Disallow: /download_modelfit/
-Disallow: /download_percentiles/
 Disallow: /retrigger_transient/
 Disallow: /reprocess_transient/
-Disallow: /report_issue/
-Disallow: /resolve_issue/
+Disallow: /issue_handling/
 Disallow: /healthz/
 Disallow: /cutout_fits_plot/
 Disallow: /fetch_sed_plot/
+Disallow: /fetch_host_spectrum_plot/
 Disallow: /api/
 Disallow: /admin/

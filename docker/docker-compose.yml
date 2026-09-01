@@ -7,8 +7,8 @@ networks:
 volumes:
   blast-db: {}
   django-static: {}
-  blast-data:
-    name: "blast-data"
+  init-data:
+    name: "blast-init-data-$USER"
   object-data: {}
   influxdb-data: {}
   influxdb-config: {}
@@ -16,16 +16,15 @@ volumes:
 
 services:
   nginx:
-    image: nginx:1.21-alpine
-    restart: always
-    depends_on:
-      - app
+    platform: linux/amd64
+    image: nginx:1.26-alpine
     networks:
       - internal
     volumes:
       - django-static:/static
-      - blast-data:/data
-      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - init-data:/data
+      - ../nginx/default.conf.tpl:/etc/nginx/conf.d/default.conf.tpl:ro
+      - ../nginx/nginx_init.sh:/docker-entrypoint.d/nginx_init.sh:ro
     profiles:
       - "full_prod"
       - "slim_prod"
@@ -33,14 +32,15 @@ services:
       - "slim_dev"
 
   app:
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    platform: linux/amd64
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.app.sh
     networks:
       internal:
         aliases:
           - ${WEB_APP_HOST}
     volumes:
-      - blast-data:/mnt/data
+      - init-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
     profiles:
@@ -52,8 +52,8 @@ services:
       - "batch"
 
   database:
+    platform: linux/amd64
     image: postgres:16
-    platform: linux/x86_64
     restart: always
     volumes:
       - blast-db:/var/lib/postgresql/data
@@ -74,8 +74,8 @@ services:
       - "batch"
 
   influxdb:
+    platform: linux/amd64
     image: influxdb:2
-    platform: linux/x86_64
     restart: unless-stopped
     networks:
       - internal
@@ -87,12 +87,13 @@ services:
       - "full_dev"
 
   grafana:
+    platform: linux/amd64
     image: grafana/grafana-enterprise
     restart: unless-stopped
     networks:
       - internal
     ports:
-      - 127.0.0.1:${GRAFANA_PORT:-3000}:${GRAFANA_PORT:-3000}
+      - 127.0.0.1:${GRAFANA_PORT:-3000}:3000
     volumes:
       - grafana-storage:/var/lib/grafana
     profiles:
@@ -100,7 +101,8 @@ services:
       - "full_dev"
 
   celery-worker:
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    platform: linux/amd64
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery.sh
     networks:
       - internal
@@ -115,7 +117,7 @@ services:
           cpus: "${CELERY_WORKER_LIMIT_CPUS:-4.0}"
           memory: ${CELERY_WORKER_LIMIT_MEMORY:-4G}
     volumes:
-      - blast-data:/mnt/data
+      - init-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
     profiles:
@@ -124,24 +126,25 @@ services:
       - "batch"
 
   celery-beat:
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    platform: linux/amd64
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.celery_beat.sh
     networks:
       - internal
     volumes:
-      - blast-data:/mnt/data
+      - init-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
     profiles:
       - "full_prod"
       - "full_dev"
-    #  - "batch"
+      - "slim_dev"
+      - "ci"
 
   redis:
+    platform: linux/amd64
     image: redis:alpine
     restart: always
-    ports:
-      - 127.0.0.1:${REDIS_PORT:-6379}:6379
     networks:
       - internal
     profiles:
@@ -151,18 +154,20 @@ services:
       - "ci"
 
   flower:
-    image: ${BLAST_IMAGE:-registry.gitlab.com/ncsa-blast/kubernetes/blast:latest}
+    platform: linux/amd64
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.flower.sh
     networks:
       - internal
     ports:
-      - 127.0.0.1:8888:${FLOWER_PORT}
+      - 127.0.0.1:${FLOWER_PORT:-8888}:${FLOWER_PORT:-8888}
     profiles:
       - "full_prod"
       - "full_dev"
       - "batch"
 
   batch:
+    platform: linux/amd64
     image: python:3.9-buster
     command: bash docker-entrypoint.batch.sh
     networks:
@@ -171,12 +176,13 @@ services:
       - ../batch/run_batch.py:/run_batch.py:ro
       - ../app/entrypoints/wait-for-it.sh:/wait-for-it.sh:ro
       - ../batch/docker-entrypoint.batch.sh:/docker-entrypoint.batch.sh:ro
-      - ${BATCH_CSV}:/input.csv:ro
-      - ${OUTPUT_DIR}:/results
+      - ${BATCH_CSV:-.}/input.csv:ro
+      - ${OUTPUT_DIR:-.}/results
     profiles:
       - "batch"
 
   object-store:
+    platform: linux/amd64
     image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
     ports:
       - 127.0.0.1:${S3_CONSOLE_PORT:-9001}:${S3_CONSOLE_PORT:-9001}
@@ -186,10 +192,13 @@ services:
     command:
     - server
     - /data
+    - --address
+    - ":${S3_SERVER_PORT:-9000}"
     - --console-address
     - ":${S3_CONSOLE_PORT:-9001}"
     volumes:
       - object-data:/data
+      - init-data:/init_data
     profiles:
       - "full_prod"
       - "slim_prod"

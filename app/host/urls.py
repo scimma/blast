@@ -7,6 +7,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 from host.workflow import reprocess_transient_view
 from host.tasks import retrigger_transient_view
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 schema_view = get_schema_view(title="Blast API")
 
@@ -21,21 +22,6 @@ urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
     path(f"""{base_path}transients/<slug:transient_name>/""", views.results, name="results"),
-    path(
-        f"""{base_path}download_chains/<slug:slug>/<str:aperture_type>/""",
-        views.download_chains,
-        name="download_chains",
-    ),
-    path(
-        f"""{base_path}download_modelfit/<slug:slug>/<str:aperture_type>/""",
-        views.download_modelfit,
-        name="download_modelfit",
-    ),
-    path(
-        f"""{base_path}download_percentiles/<slug:slug>/<str:aperture_type>/""",
-        views.download_percentiles,
-        name="download_percentiles",
-    ),
     path(f"""{base_path}acknowledgements/""", views.acknowledgements, name="acknowledgements"),
     path(f"""{base_path}team/""", views.team, name="team"),
     path(f"""{base_path}""", views.home),
@@ -50,34 +36,29 @@ urlpatterns = [
         name="retrigger_transient",
     ),
     path(
-        f"""{base_path}report_issue/<item_id>""",
-        views.report_issue,
-        name="report_issue",
-    ),
-    path(
-        f"""{base_path}resolve_issue/<item_id>""",
-        views.resolve_issue,
-        name="resolve_issue",
+        f"""{base_path}issue_handling/<str:action>/<int:item_id>""",
+        views.issue_handling,
+        name="issue_handling",
     ),
     path(f"""{base_path}privacy""", views.privacy_policy, name='privacy'),
     path(f"""{base_path}healthz""", views.healthz, name='healthz'),
     path(f"""{base_path}cutout_fits_plot""", views.cutout_fits_plot, name='cutout_fits_plot'),
     path(f"""{base_path}save_aperture_changes""", views.save_aperture_changes, name='save_aperture_changes'),
     path(f"""{base_path}fetch_sed_plot""", views.fetch_sed_plot, name='fetch_sed_plot'),
+    path(f"""{base_path}fetch_host_spectrum_plot""", views.fetch_host_spectrum_plot, name='fetch_host_spectrum_plot'),
 ]
 
 router = DefaultRouter()
 
 router.register(r"transient", api.views.TransientViewSet)
 router.register(r"aperture", api.views.ApertureViewSet)
-router.register(r"cutout", api.views.CutoutViewSet)
+router.register(r"cutout", api.views.CutoutViewSet, basename="cutout")
 router.register(r"filter", api.views.FilterViewSet)
 router.register(r"aperturephotometry", api.views.AperturePhotometryViewSet)
-router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet)
+router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet, basename="sedfittingresult")
 router.register(r"taskregister", api.views.TaskRegisterViewSet)
 router.register(r"task", api.views.TaskViewSet)
 router.register(r"host", api.views.HostViewSet)
-router.register(r"alias", api.views.AliasViewSet)
 
 # Login/Logout
 api_url_patterns = [
@@ -89,6 +70,11 @@ api_url_patterns = [
 ]
 
 urlpatterns += api_url_patterns
+
+urlpatterns += [
+    path('api/schema/openapi/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
+    path('swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
 
 if os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true":
     urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]

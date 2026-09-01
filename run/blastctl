@@ -17,25 +17,25 @@ case "$PROFILE" in
   "full_dev")
     COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
-    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_PROJECT_NAME="blast-dev-${USER}"
     COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} -d"
     ;;
   "slim_dev")
     COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
-    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_PROJECT_NAME="blast-dev-${USER}"
     COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP}"
     ;;
   "slim_prod" | "full_prod")
     COMPOSE_FILE="docker-compose.prod.yaml"
     ENV_FILE=".env.prod"
-    COMPOSE_PROJECT_NAME="blast-prod"
+    COMPOSE_PROJECT_NAME="blast-prod-${USER}"
     ;;
   "ci")
     COMPOSE_FILE="docker-compose.ci.yaml"
     ENV_FILE=".env.ci"
     COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --exit-code-from app"
-    COMPOSE_PROJECT_NAME="blast-ci"
+    COMPOSE_PROJECT_NAME="blast-ci-${USER}"
     ;;
   "docs")
     COMPOSE_FILE="docker-compose.docs.yaml"
@@ -44,7 +44,7 @@ case "$PROFILE" in
   "batch")
     COMPOSE_FILE="docker-compose.dev.yaml"
     ENV_FILE=".env.dev"
-    COMPOSE_PROJECT_NAME="blast-dev"
+    COMPOSE_PROJECT_NAME="blast-dev-${USER}"
     COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --abort-on-container-exit"
     ;;
   *)
@@ -115,7 +115,8 @@ case "$ACTION" in
         down \
         ${COMPOSE_ARGS_DOWN}
     set +x
-    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-db ${COMPOSE_PROJECT_NAME:-blast}_django-static"
+    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-db"
+    PURGE_VOLUMES="${PURGE_VOLUMES} ${COMPOSE_PROJECT_NAME:-blast}_django-static"
     echo "Purging Django database and static file volumes..."
     set -x
     docker volume rm ${PURGE_VOLUMES}
@@ -128,7 +129,11 @@ case "$ACTION" in
         down \
         ${COMPOSE_ARGS_DOWN}
     set +x
-    PURGE_VOLUMES="${COMPOSE_PROJECT_NAME:-blast}_blast-data"
+    PURGE_VOLUMES="init-data-${USER}"
+    PURGE_VOLUMES="${PURGE_VOLUMES} ${COMPOSE_PROJECT_NAME:-blast}_object-data"
+    PURGE_VOLUMES="${PURGE_VOLUMES} ${COMPOSE_PROJECT_NAME:-blast}_influxdb-data"
+    PURGE_VOLUMES="${PURGE_VOLUMES} ${COMPOSE_PROJECT_NAME:-blast}_influxdb-config"
+    PURGE_VOLUMES="${PURGE_VOLUMES} ${COMPOSE_PROJECT_NAME:-blast}_grafana-storage"
     echo "Purging astro data volume..."
     set -x
     docker volume rm ${PURGE_VOLUMES}

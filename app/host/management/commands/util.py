@@ -3,6 +3,16 @@ This module contains functions designed to be invoked as arguments to the `dev`
 custom Django management command. See the `dev.py` module docstring for usage instructions.
 """
 
+from host.models import Status
+from host.models import TaskRegister
+from host.models import Transient
+from host.object_store import ObjectStore
+from host.transient_tasks import generate_thumbnail_sed_global
+from host.transient_tasks import generate_thumbnail_sed_local
+from sparcl.client import SparclClient
+from sparcl.exceptions import TooManyRequests
+from time import sleep
+
 
 def render_homepage():
     from host.views import update_home_page_statistics
@@ -259,7 +269,7 @@ def api_test():
         # Download basic transient data
         url = f'https://blast.scimma.org/api/transient/?name={transient_name}&format=json'
         # Download all transient data
-        url = f'https://blast.scimma.org/api/transient/get/{transient_name}?format=json'
+        url = f'https://blast.scimma.org/api/dataset/{transient_name}'
         # Download all transients
         url = 'https://blast.scimma.org/api/transient'
         # print(url)
@@ -375,3 +385,96 @@ def export_logs_to_influxdb():
         write_api.close()
 
     main()
+
+
+def generate_all_sed_thumbnails(dry_run=True, prefix='', batch_size=0, force=False):
+    s3 = ObjectStore()
+    dry_run_msg = '[dry-run] ' if dry_run else ''
+    thumbnail_tasks = [
+        ('Generate thumbnail SED local', generate_thumbnail_sed_local),
+        ('Generate thumbnail SED global', generate_thumbnail_sed_global),
+    ]
+    transients = []
+    print(f'''{dry_run_msg}DEBUG: Querying Transient objects...''')
+    transients = Transient.objects.filter(name__startswith=prefix)
+    if batch_size:
+        transients = transients[:batch_size]
+    print(f'''{dry_run_msg}DEBUG: Querying TaskRegister objects...''')
+    trs = TaskRegister.objects.all()
+    print(f'''{dry_run_msg}DEBUG: Iterating TaskRegister objects...''')
+    print(f'''{dry_run_msg}DEBUG: {len(transients)} transients found.''')
+    for transient in transients:
+        trans_name = transient.name
+        print(f'''{dry_run_msg}DEBUG: Analyzing {trans_name}...''')
+        for task_name, task_func in thumbnail_tasks:
+            try:
+                thumb_tr = trs.get(transient__name=trans_name, task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                print(f'''{dry_run_msg}WARNING: "{trans_name}" missing task "{task_name}"''')
+                continue
+            print(f'''{dry_run_msg}DEBUG: "{trans_name}" status "{task_name}" : {thumb_tr.status.message}''')
+            run_task = False
+            if thumb_tr.status.message != 'processed':
+                run_task = True
+                print(f'''{dry_run_msg}DEBUG: "{trans_name}" status is "{thumb_tr.status.message}".''')
+            else:
+                # exists = s3.object_exists(thumbnail_object_key)
+                trans_obj_keys = s3.list_directory(f'apps/blast/astro-data/data/sed_output/{trans_name}/')
+                # print(trans_obj_keys)
+                # If there are any JPEGs in the transient directory, assume one is the thumbnail
+                for scope in ['local', 'global']:
+                    jpg_obj_keys = [key for key in trans_obj_keys if key.lower().endswith(f'_{scope}.jpg')]
+                    exists = True if jpg_obj_keys else False
+                    print(f'''{dry_run_msg}DEBUG: "{trans_name}" JPEG files ({scope}): {jpg_obj_keys}''')
+                    # Run the task if the thumbnail is missing or if the force option is set to true
+                    run_task = force or not exists
+                    if run_task:
+                        print(f'''{dry_run_msg} DEBUG: "{trans_name}
+                                " marked "processed" but {scope} JPG is missing. Resetting task status...''')
+                        if not dry_run:
+                            thumb_tr.status = Status.objects.get(message='not processed')
+                            thumb_tr.save()
+            if run_task:
+                print(f'''{dry_run_msg}WARNING: "{trans_name}" needs to run "{task_name}".''')
+                if dry_run:
+                    continue
+                task_func.delay(trans_name)
+            else:
+                print(f'''{dry_run_msg}DEBUG: "{trans_name}" thumbnail already generated.''')
+
+
+def test_sparcl_rate_limit(transient_name='2026dix'):
+    '''Test SPARCL query rate limit logic in host.host_spectrum.fetch_host_spectrum().'''
+    transient = Transient.objects.get(name=transient_name)
+    position = transient.host.sky_coord
+    ra = position.ra.deg
+    dec = position.dec.deg
+    radius_deg = 3.0 / 3600.0
+    ra_min, ra_max = ra - radius_deg, ra + radius_deg
+    dec_min, dec_max = dec - radius_deg, dec + radius_deg
+
+    # Query SPARCL for DESI or SDSS or BOSS spectrum
+    client = SparclClient(announcement=False, read_timeout=5500, connect_timeout=5600)
+    outfields = ['sparcl_id', 'specid', 'data_release', 'survey', 'ra', 'dec']
+    constraints = {
+        'ra': [ra_min, ra_max],
+        'dec': [dec_min, dec_max],
+        'data_release': ['DESI-DR1', 'SDSS-DR17', 'BOSS-DR17'],
+    }
+    max_requests = 100
+    request_idx = 0
+    while max_requests - request_idx > 0:
+        request_idx += 1
+        try:
+            print(f'''[{request_idx}/{request_idx}] Querying SPARCL...''')
+            found = client.find(outfields=outfields, constraints=constraints, fmt='pandas')
+            records = found.to_dict('records')
+            print(records)
+        except TooManyRequests:
+            print('Too many requests. Waiting')
+            print(found)
+            wait_time_sec = 2
+            sleep(wait_time_sec)
+        except Exception as err:
+            print(err)
+            break

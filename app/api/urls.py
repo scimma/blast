@@ -9,26 +9,22 @@ if base_path != "":
     base_path = f"""{base_path}/"""
 
 urlpatterns = [
-    path(
-        f"""{base_path}transient/get/<str:transient_name>""",
-        views.get_transient_science_payload,
+    re_path(
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/export/$",
+        views.DatasetExportView.as_view(),
     ),
     re_path(
-        base_path + r"^transient/delete/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
-        views.delete_transient_view,
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
+        views.DatasetView.as_view(),
     ),
-    re_path(
-        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
-        views.export_transient_view,
-    ),
-    path(base_path + 'alias/<str:alias>/', views.alias_handler),
-    path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler),
+    path(base_path + 'alias/<str:alias>/', views.alias_handler_get_delete, ),
+    path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler_post),
 ]
 
-if os.environ.get("ALLOW_API_POST") == "YES":
-    urlpatterns.append(
-        path(
-            f"""{base_path}transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>""",
-            views.post_transient,
-        )
-    )
+# if os.environ.get("ALLOW_API_POST") == "YES":
+#     urlpatterns.append(
+#         path(
+#             f"""{base_path}transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>""",
+#             views.post_transient,
+#         )
+#     )
