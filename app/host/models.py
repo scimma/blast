@@ -672,14 +672,16 @@ class UsageMetricsLog(models.Model):
         request_url (models.CharField): The requested URL
         request_method (models.CharField): The HTTP method of the request
         request_time (models.DateTimeField): Time of request.
-        submitted_data (models.TextField): The data submitted in the request
+        submitted_data (models.JSONField): The data submitted in the request
+        query_params (models.JSONField): The query parameters submitted in the request
         request_user (models.CharField): The user that made the request (if authenticated).
         request_ip (models.CharField): The source IP that made the request.
     """
     request_url = models.CharField(max_length=100, blank=False)
     request_method = models.CharField(max_length=10, blank=False)
     request_time = models.DateTimeField(auto_now_add=True, blank=False)
-    submitted_data = models.TextField(blank=True, default='')
+    submitted_data = models.JSONField(blank=True, default=dict)
+    query_params = models.JSONField(blank=True, default=dict)
     request_user = models.CharField(max_length=150, blank=False)
     request_ip = models.CharField(max_length=45, blank=True, default='')
     request_user_agent = models.CharField(max_length=400, blank=True, default='')

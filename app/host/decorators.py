@@ -6,7 +6,6 @@ from django.conf import settings
 
 # from .models import ExternalResourceCall
 from .models import UsageMetricsLog
-import json
 from textwrap import shorten
 
 # def log_resource_call(resource_name):
@@ -38,12 +37,7 @@ from textwrap import shorten
 
 
 def log_usage_metric():
-    """
-    Decorator to log a usage metric based on the request.
-
-    Returns:
-        Decorator function.
-    """
+    """Decorator to log a usage metric based on the request"""
     def decorator_save(func):
         @functools.wraps(func)
         def wrapper_save(*args, **kwargs):
@@ -66,7 +60,11 @@ def log_usage_metric():
                 if 'full_info' in post_data:
                     full_info = re.split(r'\r\n|\n|\r', post_data['full_info'])
                     post_data['full_info'] = full_info
-                submitted_data = json.dumps(post_data)
+                submitted_data = post_data
+            try:
+                query_params = request.GET
+            except AttributeError:
+                query_params = {}
             # Create and save the data to a new usage metric log object
             try:
                 request_ip = request.META["REMOTE_ADDR"]
@@ -81,6 +79,7 @@ def log_usage_metric():
                 request_method=shorten(request.method, width=10, placeholder="..."),
                 request_time=timezone.now(),
                 submitted_data=submitted_data,
+                query_params=query_params,
                 request_user=request.user.username[:150],
                 request_ip=request_ip,
                 request_user_agent=request_user_agent,

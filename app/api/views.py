@@ -7,6 +7,7 @@ import django_filters
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from django.http import JsonResponse
+from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
 from rest_framework import status
@@ -147,6 +148,7 @@ class SEDFittingResultFilter(django_filters.FilterSet):
 
 ############################################################
 # ViewSets
+@method_decorator(log_usage_metric(), name="dispatch")
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transient.objects.all()
     serializer_class = TransientSerializer
@@ -154,6 +156,7 @@ class TransientViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = TransientFilter
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Aperture.objects.all()
     serializer_class = ApertureSerializer
@@ -161,6 +164,7 @@ class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = ApertureFilter
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Cutout.objects.all()
     serializer_class = CutoutSerializer
@@ -173,12 +177,14 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
             404: OpenApiResponse(description="File not found"),
         }
     )
+    @method_decorator(log_usage_metric(), name="dispatch")
     @action(methods=['get'], detail=True, url_path="download")
     def download(self, request, pk=None):
         cutout = self.get_object()
         return stream_download_file(cutout.fits.name)
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Filter.objects.all()
     serializer_class = FilterSerializer
@@ -186,6 +192,7 @@ class FilterViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = FilterFilter
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AperturePhotometry.objects.all()
     serializer_class = AperturePhotometrySerializer
@@ -193,6 +200,7 @@ class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = AperturePhotometryFilter
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SEDFittingResult.objects.all()
     serializer_class = SEDFittingResultSerializer
@@ -215,6 +223,7 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
             400: OpenApiResponse(description="Unknown file type"),
         }
     )
+    @method_decorator(log_usage_metric(), name="dispatch")
     @action(methods=['get'], detail=True, url_path=r"download/(?P<file_type>[^/.]+)")
     def download(self, request, pk=None, file_type: str = None):
         if file_type not in self.allowed_file_types:
@@ -224,6 +233,7 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
         return stream_download_file(file_field.name)
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TaskRegister.objects.all()
     serializer_class = TaskRegisterSerializer
@@ -231,11 +241,13 @@ class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_class = TaskRegisterFilter
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class TaskViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class HostViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Host.objects.all()
     serializer_class = HostSerializer
