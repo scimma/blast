@@ -437,6 +437,7 @@ class HasPermissionDeleteTransient(BasePermission):
         return request.user.has_perm("host.delete_transient")
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
 class DatasetExportView(APIView):
     serializer_class = TransientDatasetSerializer
 
@@ -539,7 +540,7 @@ class DatasetExportView(APIView):
         return response
 
 
-# TODO: add log_usage_metric decorator
+@method_decorator(log_usage_metric(), name="dispatch")
 class DatasetView(APIView):
     def get_permissions(self):
         method = self.request.method
