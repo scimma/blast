@@ -13,6 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [2.0.2]
+
+### Changed
+
+- Improved the usage metrics logging system to handle class-based views, including the individual Blast data object endpoints and the transient dataset download endpoints.
+
 ## [2.0.1]
 
 ### Fixed
