@@ -10,7 +10,7 @@
   <div class="dropdown-menu" aria-labelledby="export-dropdown">
     <a class="dropdown-item" title="Download with all files" href="/api/dataset/{{transient.name}}/export/"><i class="bi bi-file-earmark-zip"></i> Download with all files (.tar.gz)</a>
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Download without files" href="/api/dataset/{{transient.name}}/"><i class="bi bi-filetype-json"></i> Download without files (.json)</a>
+    <a class="dropdown-item" title="Download without files" target="_blank" href="/api/dataset/{{transient.name}}/"><i class="bi bi-filetype-json"></i> Download without files (.json)</a>
     
     {% if local_sed_results %}
     <div class="dropdown-divider"></div>
