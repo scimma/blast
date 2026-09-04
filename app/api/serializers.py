@@ -138,15 +138,13 @@ class StarFormationHistoryResultSerializer(serializers.ModelSerializer):
 
 
 class AliasSerializer(serializers.ModelSerializer):
-    transient = TransientSerializer(read_only=True)
-    host = HostSerializer(read_only=True)
+    transient = serializers.SerializerMethodField()
+    host = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Alias
         fields = ["alias", "transient", "host"]
-
-    transient = serializers.SerializerMethodField()
-    host = serializers.SerializerMethodField()
+        depth = 1
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_transient(self, obj):

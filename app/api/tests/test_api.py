@@ -92,9 +92,10 @@ class APITest(TestCase):
         name = '2022testone'
         alias = '2022testone-alias-test!'
         # Attempt to create an alias without permission
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
-        # print(f'[{response.status_code}] {response.content}')
-        data = json.loads(response.content)
+        response = self.client.post('/api/alias/', json={
+            'alias': alias,
+            object_type: name,
+        })
         self.assertTrue(response.status_code == status.HTTP_403_FORBIDDEN)
         # Grant the user permission
         add_permission = Permission.objects.get(
@@ -103,10 +104,11 @@ class APITest(TestCase):
         )
         user.user_permissions.add(add_permission)
         assert user.has_perm('host.add_alias')
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
+        response = self.client.post('/api/alias/', data={
+            'alias': alias,
+            object_type: name,
+        })
         self.assertTrue(response.status_code == status.HTTP_201_CREATED)
-        data = json.loads(response.content)
-        self.assertTrue(data["message"].startswith("Alias successfully created:"))
         # Fetch information about the alias anonymously
         self.client.logout()
         response = self.client.get(f'/api/alias/{alias}/')
@@ -114,11 +116,13 @@ class APITest(TestCase):
         # Fail when attempting to create another alias with the same name
         self.client.force_login(user)
         object_type = 'host'
-        response = self.client.post(f'/api/alias/{alias}/{object_type}/{name}/')
-        self.assertTrue(response.status_code == status.HTTP_409_CONFLICT)
+        response = self.client.post('/api/alias/', data={
+            'alias': alias,
+            object_type: name,
+        })
+        self.assertTrue(response.status_code == status.HTTP_400_BAD_REQUEST)
         # Attempt to delete an alias without permission
         response = self.client.delete(f'/api/alias/{alias}/')
-        # print(f'[{response.status_code}] {response.content}')
         self.assertTrue(response.status_code == status.HTTP_403_FORBIDDEN)
         # Grant the user delete permission
         delete_permission = Permission.objects.get(
@@ -128,10 +132,8 @@ class APITest(TestCase):
         user.user_permissions.add(delete_permission)
         # Delete the alias
         response = self.client.delete(f'/api/alias/{alias}/')
-        # print(f'[{response.status_code}] {response.content}')
         self.assertTrue(response.status_code == status.HTTP_204_NO_CONTENT)
         # Attempt to delete a non-existent alias
         alias = 'foo'
         response = self.client.delete(f'/api/alias/{alias}/')
         self.assertTrue(response.status_code == status.HTTP_404_NOT_FOUND)
-        # print(f'[{response.status_code}] {response.content}')

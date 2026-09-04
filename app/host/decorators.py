@@ -1,5 +1,6 @@
 import functools
 import re
+import json
 
 from django.utils import timezone
 from django.conf import settings
@@ -50,7 +51,10 @@ def log_usage_metric():
             # Filter the submitted data object for POST requests
             submitted_data = ''
             if (request.method == "POST"):
-                post_data = {k: v for k, v in request.POST.copy().items() if v}
+                try:
+                    post_data = json.loads(request.body.decode("utf-8"))
+                except Exception:
+                    post_data = {k: v for k, v in request.POST.copy().items() if v}
                 post_data.pop("csrfmiddlewaretoken", None)
                 tns_names = []
                 if 'tns_names' in post_data:

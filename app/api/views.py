@@ -9,13 +9,15 @@ from django.http import StreamingHttpResponse
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework import viewsets
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import NotFound
 from host.object_store import ObjectStore
 from host.models import Aperture
 from host.models import AperturePhotometry
@@ -93,6 +95,16 @@ class HostFilter(django_filters.FilterSet):
     class Meta:
         model = Host
         fields = ("name",)
+
+
+class AliasFilter(django_filters.FilterSet):
+    alias = django_filters.Filter(field_name="alias")
+    transient = django_filters.Filter(field_name="transient")
+    host = django_filters.Filter(field_name="host")
+
+    class Meta:
+        model = Alias
+        fields = ()
 
 
 class ApertureFilter(django_filters.FilterSet):
@@ -256,6 +268,73 @@ class HostViewSet(viewsets.ReadOnlyModelViewSet):
     lookup_value_regex = r"[^/]+[/]?"
 
 
+@method_decorator(log_usage_metric(), name="dispatch")
+class AliasViewSet(viewsets.ModelViewSet):
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [HasPermissionDeleteAlias()]
+        elif self.request.method == "POST":
+            return [HasPermissionCreateAlias()]
+        return []
+    queryset = Alias.objects.select_related("transient", "host")
+    serializer_class = AliasSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = AliasFilter
+
+    # Disable the PUT method
+    http_method_names = [
+        "get",
+        "post",
+        "patch",
+        "delete",
+        "head",
+        "options",
+    ]
+
+    # Create a serializer solely to support the drf_spectacular "extend_schema" decorator
+    # for the sake of OpenAPI spec generation.
+    class AliasCreateRequestSerializer(serializers.Serializer):
+        alias = serializers.CharField()
+        transient = serializers.CharField(required=False, allow_blank=False)
+        host = serializers.CharField(required=False, allow_blank=False)
+
+        def validate(self, attrs):
+            transient = attrs.get("transient")
+            host = attrs.get("host")
+            if not transient and not host:
+                raise serializers.ValidationError("Provide either 'transient' or 'host'.")
+            return attrs
+
+    @extend_schema(
+        request=AliasCreateRequestSerializer,
+        responses={
+            201: AliasSerializer,
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        transient_name = self.request.data.get("transient")
+        host_name = self.request.data.get("host")
+
+        if bool(transient_name) == bool(host_name):
+            raise serializers.ValidationError("Specify EITHER 'transient' or 'host'.")
+
+        if transient_name:
+            try:
+                transient = Transient.objects.get(name__exact=transient_name)
+            except Transient.DoesNotExist:
+                raise NotFound({"transient": f"No transient found with name '{transient_name}'."})
+            serializer.save(transient=transient)
+        else:
+            try:
+                host = Host.objects.get(name__exact=host_name)
+            except Host.DoesNotExist:
+                raise NotFound({"host": f"No host found with name '{host_name}'."})
+            serializer.save(host=host)
+
+
 def transient_exists(transient_name: str) -> bool:
     """
     Checks if a transient exists in the database.
@@ -318,111 +397,6 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
 #         status=status.HTTP_201_CREATED,
 #     )
 
-
-@extend_schema_view(
-    get=extend_schema(
-        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
-        request=None,
-        responses={
-            200: AliasSerializer,
-            404: OpenApiResponse(description="Alias not found"),
-        }
-    ),
-    delete=extend_schema(
-        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
-        request=None,
-        responses={
-            204: OpenApiResponse(description="Alias deleted"),
-            404: OpenApiResponse(description="Alias not found"),
-        }
-    ),
-)
-@api_view(["GET", "DELETE"])
-@log_usage_metric()
-def alias_handler_get_delete(request, alias: str):
-    user_permissions = request.user.get_all_permissions()
-    if request.method == 'GET':
-        try:
-            alias = Alias.objects.get(alias__exact=alias)
-            return Response(
-                {"message": str(alias)},
-                status=status.HTTP_200_OK,
-            )
-        except Alias.DoesNotExist:
-            return Response(
-                {"message": f'''Alias with name "{alias}" does not exist.'''},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-    if request.method == 'DELETE':
-        # Validate inputs
-        try:
-            assert alias
-        except AssertionError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        # Enforce authorization
-        if "host.delete_alias" not in user_permissions:
-            return Response(
-                {"message": "User does not have permissions to delete aliases"},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        try:
-            alias = Alias.objects.get(alias__exact=alias)
-        except Alias.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        alias.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-@extend_schema_view(
-    post=extend_schema(
-        parameters=[OpenApiParameter("alias", str, OpenApiParameter.PATH),],
-        request=AliasSerializer,
-        responses={
-            201: AliasSerializer,
-            409: OpenApiResponse(description="Alias already exists"),
-        }
-    ),
-)
-@api_view(["POST"])
-@log_usage_metric()
-def alias_handler_post(request, alias: str, object_type: str = None, name: str = None):
-    user_permissions = request.user.get_all_permissions()
-    # Validate inputs
-    try:
-        assert object_type in ['transient', 'host']
-        assert isinstance(name, str) and name
-    except AssertionError:
-        return Response({'message': 'Object type (transient or host) and name of object must be provided'},
-                        status=status.HTTP_400_BAD_REQUEST)
-    # Enforce authorization
-    if "host.add_alias" not in user_permissions:
-        return Response(
-            {"message": f"User does not have permissions to add aliases for {object_type}"},
-            status=status.HTTP_403_FORBIDDEN,
-        )
-    # Do not overwrite existing alias
-    if Alias.objects.filter(alias__exact=alias).exists():
-        return Response(
-            {"message": f"{alias} is already in the database."},
-            status=status.HTTP_409_CONFLICT
-        )
-    try:
-        if object_type == 'transient':
-            target = Transient.objects.get(name__exact=name)
-        else:
-            target = Host.objects.get(name__exact=name)
-    except (Transient.DoesNotExist, Host.DoesNotExist):
-        return Response(
-            {"message": f"{object_type} with name {name} does not exist."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
-    new_alias = Alias.objects.create(**{'alias': alias, object_type: target})
-    return Response(
-        {"message": f"Alias successfully created: {str(new_alias)}"},
-        status=status.HTTP_201_CREATED,
-    )
-
-
 # TODO: Secure this endpoint with Django REST Framework permission_classes
 # @api_view(["PUT"])
 # @permission_classes([IsAuthenticated])
@@ -430,6 +404,16 @@ def alias_handler_post(request, alias: str, object_type: str = None, name: str =
 #     print(f'Launching transient workflow for "{transient_name}"...')
 #     result = transient_workflow.delay(transient_name)
 #     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'})
+
+
+class HasPermissionCreateAlias(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.add_alias")
+
+
+class HasPermissionDeleteAlias(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.delete_alias")
 
 
 class HasPermissionDeleteTransient(BasePermission):

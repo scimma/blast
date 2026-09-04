@@ -34,15 +34,25 @@
       alert(`Alias is too short. Must be at least 5 characters.`)
       return;
     }
-    let url = `/api/alias/${newAlias}/${objectType}/${objectName}/`;
+    let url = `/api/alias/`;
     const csrfToken = getCookie('csrftoken');
     let headers = new Headers({
       "X-CSRFToken": csrfToken,
       // Note: User-Agent header is not mutable on all browsers and so
       //       is not guaranteed to include this custom suffix.
-      "User-Agent": `${navigator.userAgent} web app`
+      "User-Agent": `${navigator.userAgent} web app`,
+      "Content-Type": "application/json",
+      "Accept": "application/json"
     });
-    await fetch(url, { method: "POST", headers: headers })
+    let data = {
+      "alias": newAlias,
+    }
+    if (objectType == "transient") {
+      data["transient"] = objectName
+    } else {
+      data["host"] = objectName
+    }
+    await fetch(url, { method: "POST", headers: headers, body: JSON.stringify(data)})
     // success handling
       .then((result) => {
         console.log(JSON.stringify(result));
