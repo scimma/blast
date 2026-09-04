@@ -250,7 +250,10 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API Schema view for the Blast Transient Catalog',
     'VERSION': '2.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # OTHER SETTINGS
+    "SWAGGER_UI_SETTINGS": {
+        # Expand response/request model schemas to this depth
+        "defaultModelExpandDepth": 3,
+    },
 }
 
 ######################################################################
