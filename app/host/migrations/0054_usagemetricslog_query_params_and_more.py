@@ -1,11 +1,15 @@
-"""UsageMetricsLog model migration script
+"""UsageMetricsLog and Alias model update migration script
 
 Add a new JSONField query_params field to the the UsageMetricsLog model and convert the submitted_data field
 from TextField to JSONField.
+
+Replaces original Alias primary key with alias string itself. Should not need conversion logic because the
+alias values are already unique.
 """
 
 from django.db import migrations, models
 import json
+import host.models
 
 
 def convert_submitted_data(apps, schema_editor):
@@ -59,5 +63,15 @@ class Migration(migrations.Migration):
             model_name='usagemetricslog',
             name='query_params',
             field=models.JSONField(blank=True, default=dict),
+        ),
+        migrations.RemoveField(
+            model_name='alias',
+            name='id',
+        ),
+        migrations.AlterField(
+            model_name='alias',
+            name='alias',
+            field=models.CharField(max_length=64, primary_key=True, serialize=False, unique=True,
+                                   validators=[host.models.Alias.validate_name]),
         ),
     ]

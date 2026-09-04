@@ -650,7 +650,7 @@ class Alias(models.Model):
         Alias validation.
         :param alias: Alias value
         '''
-        max_length = Transient._meta.get_field('alias').max_length
+        max_length = Alias._meta.get_field('alias').max_length
         if len(alias) > max_length:
             raise ValidationError(f'''Invalid alias: "{alias}" is longer than the max length '''
                                   f'''of {max_length} characters.''')
@@ -659,7 +659,7 @@ class Alias(models.Model):
         return (f'''"{self.alias}" is an alias for {'transient' if self.transient else 'host'} '''
                 f'''"{self.transient.name if self.transient else self.host.name}"''')
 
-    alias = models.CharField(max_length=64, unique=True, validators=[validate_name])
+    alias = models.CharField(max_length=64, unique=True, validators=[validate_name], primary_key=True)
     transient = models.ForeignKey(Transient, null=True, blank=True, on_delete=models.CASCADE)
     host = models.ForeignKey(Host, null=True, blank=True, on_delete=models.CASCADE)
     objects = AliasManager()
