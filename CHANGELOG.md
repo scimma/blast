@@ -13,11 +13,12 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [2.0.2]
+## [2.1.0]
 
 ### Changed
 
 - Improved the usage metrics logging system to handle class-based views, including the individual Blast data object endpoints and the transient dataset download endpoints.
+- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible, the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation of semantic versioning.)
 
 ## [2.0.1]
 
