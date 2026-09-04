@@ -10,3 +10,4 @@ Disallow: /fetch_sed_plot/
 Disallow: /fetch_host_spectrum_plot/
 Disallow: /api/
 Disallow: /admin/
+Disallow: /swagger-ui/
