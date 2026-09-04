@@ -81,8 +81,23 @@ The alias itself must be unique across both types of target objects.
 
 * :code:`GET /api/alias/<alias>/` - Fetch information about an existing :code:`alias`
 * :code:`DELETE /api/alias/<alias>/` - Delete existing :code:`alias`
-* :code:`POST /api/alias/<alias>/(transient|host)/<name>/` - Create a new :code:`alias` by specifying 
-    the :code:`name` of the target object and whether the target object is a "transient" or a "host".
+* :code:`POST /api/alias/` - Create a new :code:`alias` by specifying the :code:`name` of the target object and whether the target object is a "transient" or a "host". The request body should be:
+
+   .. code-block:: json
+
+      {
+          "alias": "<alias>",
+          "transient": "<name>"
+      }
+
+   or:
+
+   .. code-block:: json
+
+      {
+          "alias": "<alias>",
+          "host": "<name>"
+      }
 
 .. _api_data_schema:
 
