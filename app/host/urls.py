@@ -2,8 +2,6 @@ import os
 
 from django.urls import include
 from django.urls import path
-from django.urls import re_path
-from rest_framework.routers import DefaultRouter
 from rest_framework.schemas import get_schema_view
 from host.workflow import reprocess_transient_view
 from host.tasks import retrigger_transient_view
@@ -12,7 +10,6 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 schema_view = get_schema_view(title="Blast API")
 
 from . import views
-import api.views
 
 base_path = os.environ.get("BASE_PATH", "").strip("/")
 if base_path != "":
@@ -47,28 +44,6 @@ urlpatterns = [
     path(f"""{base_path}fetch_host_spectrum_plot""", views.fetch_host_spectrum_plot, name='fetch_host_spectrum_plot'),
 ]
 
-router = DefaultRouter()
-
-router.register(r"transient", api.views.TransientViewSet)
-router.register(r"aperture", api.views.ApertureViewSet)
-router.register(r"cutout", api.views.CutoutViewSet, basename="cutout")
-router.register(r"filter", api.views.FilterViewSet)
-router.register(r"aperturephotometry", api.views.AperturePhotometryViewSet)
-router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet, basename="sedfittingresult")
-router.register(r"taskregister", api.views.TaskRegisterViewSet)
-router.register(r"task", api.views.TaskViewSet)
-router.register(r"host", api.views.HostViewSet)
-
-# Login/Logout
-api_url_patterns = [
-    re_path(r"^api/", include(router.urls)),
-    # TODO: As of v1.5.7, this api/schema endpoint is broken:
-    #       "AssertionError: `inflection` must be installed for OpenAPI schema support."
-    # re_path(r"^api/schema/$", schema_view),
-    re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-]
-
-urlpatterns += api_url_patterns
 
 urlpatterns += [
     path('api/schema/openapi/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
