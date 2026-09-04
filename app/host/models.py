@@ -3,7 +3,7 @@ This modules contains the django code used to create tables in the database
 backend.
 """
 import os
-
+from textwrap import dedent
 import pandas as pd
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -41,8 +41,8 @@ class SkyObject(models.Model):
             of the host
     """
 
-    ra_deg = models.FloatField()
-    dec_deg = models.FloatField()
+    ra_deg = models.FloatField(help_text='Right Ascension in decimal degrees e.g., 132.34564')
+    dec_deg = models.FloatField(help_text='Declination in decimal degrees e.g., 60.123424')
 
     class Meta:
         abstract = True
@@ -87,16 +87,23 @@ class Host(SkyObject):
     """
 
     name = models.CharField(max_length=100, blank=True, null=True, unique=True)
-    redshift = models.FloatField(null=True, blank=True)
-    redshift_err = models.FloatField(null=True, blank=True)
-    photometric_redshift = models.FloatField(null=True, blank=True)
-    photometric_redshift_err = models.FloatField(null=True, blank=True)
-    milkyway_dust_reddening = models.FloatField(null=True, blank=True)
+    redshift = models.FloatField(null=True, blank=True,
+                                 help_text='redshift e.g., 0.01')
+    # TODO: Clarify value range and example value
+    redshift_err = models.FloatField(null=True, blank=True,
+                                     help_text='redshift error')
+    photometric_redshift = models.FloatField(null=True, blank=True,
+                                             help_text='photometric redshift')
+    photometric_redshift_err = models.FloatField(null=True, blank=True,
+                                                 help_text='photometric redshift error')
+    milkyway_dust_reddening = models.FloatField(null=True, blank=True,
+                                                help_text='transient E(B-V) e.g, 0.2')
     object_id = models.CharField(max_length=100, blank=True, null=True)
     catalog_name = models.CharField(max_length=100, blank=False, null=True)
     catalog_release = models.CharField(max_length=100, blank=False, null=True)
     objects = HostManager()
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
 
 class Transient(SkyObject):
@@ -146,24 +153,39 @@ class Transient(SkyObject):
                 raise ValidationError(f'''Invalid transient identifier: "{name}" may not contain consecutive '''
                                       f'''"{nonconsecutive_char}" characters.''')
 
-    name = models.CharField(max_length=64, unique=True, validators=[validate_name])
+    name = models.CharField(max_length=64, unique=True, validators=[validate_name],
+                            help_text='unique transient name, e.g., 2022abc')
     display_name = models.CharField(null=True, blank=True)
     tns_id = models.IntegerField()
     tns_prefix = models.CharField(max_length=20)
     public_timestamp = models.DateTimeField(null=True, blank=True)
-    host = models.ForeignKey(Host, on_delete=models.SET_NULL, null=True, blank=True)
+    host = models.ForeignKey(Host, on_delete=models.SET_NULL, null=True, blank=True,
+                             help_text='host associated with the transient')
     objects = TransientManager()
     tasks_initialized = models.CharField(max_length=20, default="False")
     redshift = models.FloatField(null=True, blank=True)
-    spectroscopic_class = models.CharField(max_length=20, null=True, blank=True)
+    spectroscopic_class = models.CharField(max_length=20, null=True, blank=True,
+                                           help_text='spectroscopic classification, if any')
     photometric_class = models.CharField(max_length=20, null=True, blank=True)
     milkyway_dust_reddening = models.FloatField(null=True, blank=True)
-    processing_status = models.CharField(max_length=20, default="processing")
+    processing_status = models.CharField(
+        max_length=20,
+        default="processing",
+        help_text=dedent('''processing status of the transient dataset.
+                        * "processed" - transient has been complement processed and all data
+                          should be present in the science payload.
+                        * "processing" - transient is still processing this transient and
+                          some parts of the science payload may not be populated at the current time.
+                        * "blocked" - this transient has not been successfully fully processed
+                          and some parts of the science payload will not be populated.'''))
     added_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
-    progress = models.IntegerField(default=0)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
-    update_comment = models.CharField(max_length=500, blank=True, null=True)
-    update_fields = models.CharField(max_length=500, blank=True, null=True)
+    progress = models.IntegerField(default=0, help_text='Percentage of the transient workflow that has been completed.')
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
+    update_comment = models.CharField(max_length=500, blank=True, null=True,
+                                      help_text='A brief explanation for why the transient data were updated')
+    update_fields = models.CharField(max_length=500, blank=True, null=True,
+                                     help_text='Transient database fields that were last updated.')
 
     @property
     def best_redshift(self):
@@ -428,7 +450,8 @@ class Cutout(models.Model):
     )
     fits = models.FileField(upload_to=fits_file_path, null=True, blank=True)
     message = models.CharField(max_length=50, null=True, blank=True)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
     cropped = models.BooleanField(default=False, blank=True, null=False)
 
     # used if some downloads fail
@@ -457,7 +480,8 @@ class Aperture(SkyObject):
     semi_major_axis_arcsec = models.FloatField()
     semi_minor_axis_arcsec = models.FloatField()
     type = models.CharField(max_length=20)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
     objects = ApertureManager()
 
@@ -502,7 +526,8 @@ class AperturePhotometry(models.Model):
     magnitude = models.FloatField(blank=True, null=True)
     magnitude_error = models.FloatField(blank=True, null=True)
     is_validated = models.CharField(blank=True, null=True, max_length=40)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
     @property
     def flux_rounded(self):
@@ -532,7 +557,8 @@ class StarFormationHistoryResult(models.Model):
     logsfr_tmin = models.FloatField(null=True, blank=True)
     logsfr_tmax = models.FloatField(null=True, blank=True)
 
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION
@@ -620,7 +646,8 @@ class SEDFittingResult(models.Model):
         upload_to=npz_percentiles_file_path, null=True, blank=True
     )
     model_file = models.FileField(upload_to=npz_model_file_path, null=True, blank=True)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION
@@ -736,7 +763,8 @@ class HostSpectrum(models.Model):
     dec_deg = models.FloatField(null=True, blank=True)
     spectrum_id = models.CharField(max_length=200, null=True, blank=True)
     message = models.CharField(max_length=100, null=True, blank=True)
-    software_version = models.CharField(max_length=50, blank=True, null=True)
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
 
     def save(self, *args, **kwargs):
         self.software_version = settings.APP_VERSION

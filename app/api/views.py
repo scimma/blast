@@ -62,18 +62,27 @@ def stream_download_file(file_path):
 ############################################################
 # Filter Sets
 class TransientFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(
+        field_name="name", lookup_expr="exact",
+        help_text="Find specific transient by name")
     redshift_lte = django_filters.NumberFilter(
-        field_name="redshift", lookup_expr="lte")
+        field_name="redshift", lookup_expr="lte",
+        help_text="Find transients with redshift less than value")
     redshift_gte = django_filters.NumberFilter(
-        field_name="redshift", lookup_expr="gte")
+        field_name="redshift", lookup_expr="gte",
+        help_text="Find transients with redshift greater than value")
     host_redshift_lte = django_filters.NumberFilter(
-        field_name="host__redshift", lookup_expr="lte")
+        field_name="host__redshift", lookup_expr="lte",
+        help_text="Find transients with host redshift less than value")
     host_redshift_gte = django_filters.NumberFilter(
-        field_name="host__redshift", lookup_expr="gte")
+        field_name="host__redshift", lookup_expr="gte",
+        help_text="Find transients with host redshift greater than value")
     host_photometric_redshift_lte = django_filters.NumberFilter(
-        field_name="host__photometric_redshift", lookup_expr="lte")
+        field_name="host__photometric_redshift", lookup_expr="lte",
+        help_text="Find transients with host photometric redshift less than value")
     host_photometric_redshift_gte = django_filters.NumberFilter(
-        field_name="host__photometric_redshift", lookup_expr="gte")
+        field_name="host__photometric_redshift", lookup_expr="gte",
+        help_text="Find transients with host photometric redshift greater than value")
 
     class Meta:
         model = Transient
@@ -161,6 +170,10 @@ class SEDFittingResultFilter(django_filters.FilterSet):
 ############################################################
 # ViewSets
 @method_decorator(log_usage_metric(), name="dispatch")
+@extend_schema(
+    summary="Transient search",
+    # description=dedent('''''')
+)
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Transient.objects.all()
     serializer_class = TransientSerializer
