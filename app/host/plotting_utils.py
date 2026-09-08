@@ -33,28 +33,9 @@ from host.object_store import ObjectStore
 from django.conf import settings
 from bokeh.io import curdoc
 
-# import extinction
-# from bokeh.models import Circle
-# from bokeh.models import Cross
-# from bokeh.models import Ellipse
-# from bokeh.models import Grid
-# from bokeh.models import Legend
-# from bokeh.models import LinearAxis
-# from bokeh.models import LogColorMapper
-# from bokeh.models import Plot
-# from bokeh.models import Scatter
-# from bokeh.plotting import show
-# from host.catalog_photometry import filter_information
-# from host.host_utils import survey_list
-# from host.photometric_calibration import mJy_to_maggies
-# from host.prospector import build_model
-
-# from .models import Aperture
-
 from host.log import get_logger
 logger = get_logger(__name__)
 
-########################################## MY ADDED CUSTOMJS ##########################################
 EDITABLE_APERTURES_HANDLE_JS = """
 const ellipses = ellipse_source.data;
 const handles = handle_source.data;
@@ -147,8 +128,73 @@ try {
 }
 """
 
+EDITABLE_APERTURE_CENTER_JS = """
+const center = center_source.data;
+const prev = center_prev_source.data;
+const ellipses = ellipse_source.data;
+const handles = handle_source.data;
+const state = callback_state.data;
 
-########################################## ORIGINAL CODE ###############################################################
+// share guard with EDITABLE_APERTURES_HANDLE_JS. 
+// this writes to ellipse_source/handle_source,
+// rotation must not recompute geometry on top of it
+
+if (state.updating[0]) {
+return;
+}
+
+state.updating[0] = true;
+
+try {
+    for (let n = 0; n < center.x.length; n++) {
+        const dx = center.x[n] - prev.x[n];
+        const dy = center.y[n] - prev.y[n];
+
+        if (dx === 0. && dy === 0) {
+            continue;
+        }
+
+        // move ellipse by distance "grab region" was moved
+
+        ellipses.x[n] += dx;
+        ellipses.y[n] += dy;
+
+        // move both handles by same delta 
+        const majorIdx = 2 * n;
+        const minorIdx = 2 * n + 1;
+        handles.x[majorIdx] += dx;
+        handles.y[majorIdx] += dy;
+        handles.x[minorIdx] += dx;
+        handles.y[minorIdx] += dy;
+
+        prev.x[n] = center.x[n];
+        prev.y[n] = center.y[n];
+
+        window.dispatchEvent(
+            new CustomEvent("blast:aperture-translate", {
+                detail: {
+                    apertureId: aperture_ids[n],
+                    apertureType: aperture_types[n],
+                    x: ellipses.x[n],
+                    y: ellipses.y[n],
+                    semiMajor: ellipses.width[n] / 2.0,
+                    semiMinor: ellipses.height[n] / 2.0,
+                    thetaRadians: ellipses.angle[n],                    
+                },
+            })    
+        );
+
+    }
+
+    ellipse_source.change.emit();
+    handle_source.change.emit();
+
+} finally {
+    state.updating[0] = false;
+    callback_state.change.emit();
+}
+
+"""
 
 def scale_image(image_data):
     transform = AsinhStretch() + PercentileInterval(99.5)
@@ -199,7 +245,7 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
         "width": aperture.a * 2,
         "height": aperture.b * 2,
         "angle": theta_rad,
-        "fill_color": "#cab2d6",
+        "fill_color": "#231f25", 
         "fill_alpha": 0.1,
         "line_width": 4,
     }
@@ -208,7 +254,7 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
     figure.ellipse(**plot_dict)
     return figure
 
-def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
+def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_grab_multiplier=0.1):
     """
     Draw one or more editable apertures sharing a single PointDrawTool.
 
@@ -223,8 +269,17 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
     ellipse_w, ellipse_h, ellipse_angle = [], [], []
     ellipse_line_color, ellipse_legend = [], []
 
+    GHOST_COLORS = {
+        "local": "#56c4ff",   # light blue
+        "global": "#b2df8a",  # light green
+    }
+    ghost_color = []
+
+
     handle_x, handle_y, handle_color, handle_axis = [], [], [], []
     aperture_ids, aperture_types = [], []
+
+    grab_x, grab_y, grab_radius = [], [], []
 
     for ap in apertures:
         pixel_aperture = ap["sky_aperture"].to_pixel(wcs)
@@ -253,6 +308,7 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
         ellipse_angle.append(theta)
         ellipse_line_color.append(ap["line_color"])
         ellipse_legend.append(ap["legend_label"])
+        ghost_color.append(GHOST_COLORS.get(ap["aperture_type"], ""))
 
         major_handle_x = center_x + semi_major * math.cos(theta)
         major_handle_y = center_y + semi_major * math.sin(theta)
@@ -268,6 +324,21 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
 
         aperture_ids.append(ap["aperture_id"])
         aperture_types.append(ap["aperture_type"])
+
+        grab_x.append(center_x)
+        grab_y.append(center_y)
+        grab_radius.append(semi_major*center_grab_multiplier)
+
+    ghost_source = ColumnDataSource(
+        data={
+            "x": ellipse_x,
+            "y": ellipse_y,
+            "width": ellipse_w,
+            "height": ellipse_h,
+            "angle": ellipse_angle,
+            "line_color":ghost_color,
+        }
+    )
 
     ellipse_source = ColumnDataSource(
         data={
@@ -290,9 +361,38 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
         }
     )
 
+    center_source = ColumnDataSource(
+        data={
+            "x": list(grab_x),
+            "y": list(grab_y),
+            "radius": grab_radius,
+        }
+    )
+    center_prev_source=ColumnDataSource(
+        data={
+            "x": list(grab_x),
+            "y": list(grab_y),
+        }
+    )
+
     # Used only to prevent an infinite callback loop when the JavaScript
     # callback snaps the handles back onto their exact axes.
     callback_state = ColumnDataSource(data={"updating": [False]})
+
+    ghost_renderer = figure.ellipse(
+        x="x",
+        y="y",
+        width="width",
+        height="height",
+        angle="angle",
+        source=ghost_source,
+        # fill_color="#AAFBAB",
+        fill_alpha=0,
+        line_color="line_color",
+        line_alpha=0.6,
+        line_dash="dashed",
+        line_width=4
+    )
 
     ellipse_renderer = figure.ellipse(
         x="x",
@@ -301,8 +401,8 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
         height="height",
         angle="angle",
         source=ellipse_source,
-        fill_color="#cab2d6",
-        fill_alpha=0.1,
+        # fill_color="#cab2d6",
+        fill_alpha=0,
         line_width=4,
         line_color="line_color",
         legend_field="legend_label",
@@ -324,10 +424,27 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
         nonselection_fill_alpha=1.0,
         nonselection_line_color="line_color",
         nonselection_line_alpha=1.0,
+        name="aperture_handle_renderer",
+    )
+
+    center_renderer=figure.circle(
+        x="x", 
+        y="y",
+        radius="radius",
+        source=center_source,
+        fill_alpha=1,
+        line_alpha=0,
+        line_color="line_color",
+        line_width=3,
+        selection_fill_alpha=0,
+        selection_line_alpha=0,
+        nonselection_fill_alpha=0,
+        nonselection_line_alpha=0,
+        name="aperture_center_renderer",
     )
 
     # A single shared tool drives every editable aperture on this figure.
-    handle_tool = PointDrawTool(renderers=[handle_renderer], add=False)
+    handle_tool = PointDrawTool(renderers=[handle_renderer, center_renderer], add=False, name="aperture_handle_tool")
     figure.add_tools(handle_tool)
 
     handle_callback = CustomJS(
@@ -346,16 +463,31 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0):
     # moves, so this callback runs repeatedly throughout each drag.
     handle_source.js_on_change("data", handle_callback)
 
+    center_callback = CustomJS(
+        args={
+            "center_source":center_source, 
+            "center_prev_source":center_prev_source,
+            "ellipse_source": ellipse_source,
+            "handle_source": handle_source,
+            "callback_state": callback_state,
+            "aperture_ids": aperture_ids,
+            "aperture_types": aperture_types,
+        },
+        code=EDITABLE_APERTURE_CENTER_JS,
+    )
+
+    center_source.js_on_change("data", center_callback)
+
     return {
         "ellipse_source": ellipse_source,
         "handle_source": handle_source,
+        "center_source": center_source,
         "ellipse_renderer": ellipse_renderer,
         "handle_renderer": handle_renderer,
         "handle_tool": handle_tool,
     }
 
 
-########################################## ORIGINAL CODE ###############################################################
 def plot_image_grid(image_dict, apertures=None):
     figures = []
     for survey, image in image_dict.items():

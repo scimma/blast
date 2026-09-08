@@ -53,14 +53,66 @@
         }
     });
 
+    // Cache of the latest, unsaved aperture geometry per aperture ID, populated live as the user drags an editable aperture.
+    window.blastApertureCache = window.blastApertureCache || {};
+
+    window.addEventListener('blast:aperture-change', function (e) {
+        const { apertureId, apertureType, x, y, semiMajor, semiMinor, thetaRadians } = e.detail;
+        window.blastApertureCache[apertureId] = {
+            apertureType, x, y, semiMajor, semiMinor, thetaRadians,
+        };
+    });
+
+    // function toggleApertureEdit(transient) {
+    //     apertureEditable = !apertureEditable;
+    //     var btn = document.getElementById('edit-aperture-btn');
+    //     btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
+    //     btn.classList.toggle('btn-outline-secondary', !apertureEditable);
+    //     btn.classList.toggle('btn-secondary', apertureEditable);
+    //     var filter = document.getElementById('id_filters').value;
+    //     cutoutImgClick(transient, filter, apertureEditable);
+    // }
+
     function toggleApertureEdit(transient) {
         apertureEditable = !apertureEditable;
         var btn = document.getElementById('edit-aperture-btn');
         btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
         btn.classList.toggle('btn-outline-secondary', !apertureEditable);
         btn.classList.toggle('btn-secondary', apertureEditable);
+
+        if (!apertureEditable) {
+            // Turning editing off: freeze the plot exactly as it is instead of
+            // re-fetching from the server. A re-fetch pulls pristine geometry
+            // from the DB and wipes out any local, unsaved drag edits.
+            if (freezeApertureEditing()) {
+                return;
+            }
+            // If the Bokeh models weren't found for some reason, fall back to
+            // a normal refetch so the button doesn't just do nothing.
+        }
+
         var filter = document.getElementById('id_filters').value;
         cutoutImgClick(transient, filter, apertureEditable);
+    }
+
+    function freezeApertureEditing() {
+        if (typeof Bokeh === 'undefined' || !Bokeh.documents || !Bokeh.documents.length) {
+            return false;
+        }
+        var found = false;
+        Bokeh.documents.forEach(function (doc) {
+            var tool = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_tool');
+            var handles = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_renderer');
+            if (tool) {
+                tool.active = false;
+                found = true;
+            }
+            if (handles) {
+                handles.visible = false;
+                found = true;
+            }
+        });
+        return found;
     }
 
     function saveApertureChanges(transient) {
