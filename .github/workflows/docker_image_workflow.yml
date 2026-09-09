@@ -1,7 +1,9 @@
 name: Publish Docker image
 
-on: []
-# on:
+on:
+  # Disable the event automatic event triggers until this action is fixed.
+  # Retain ability to manually trigger the action if needed.
+  workflow_dispatch:
   # push:
   #   tags:
   #     - "v[0-9]+.[0-9]+.[0-9]+"
