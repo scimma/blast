@@ -34,44 +34,43 @@
                 onclick="saveApertureChanges('{{ transient.name }}')" disabled>Save Aperture Changes</button>
         </div>
     </div>
+    <div id="aperture-save-status" role="status" aria-live="assertive"></div>
 </form>
 <script>
     // tracks whether aperture-editing mode is currently on, so the toggle button knows what to switch to and re-request on the next click
     document.getElementById('loading-indicator').style.display = "none";
     var apertureEditable = false;
     
-    // caches unsaved edits fired by EDITABLE_APERTURE_HANDLE_JS, keyed by apertureId+apertureType
     var pendingApertureChanges = {};
 
-    window.addEventListener('blast:aperture-change', function (evt) {
-        var d = evt.detail;
-        pendingApertureChanges[d.apertureId + ':' + d.apertureType] = d;
+    function recordApertureChange(evt) {
+        pendingApertureChanges[evt.detail.apertureId] = evt.detail;
+        setSaveButtonState("Save Aperture Changes",
+            Object.keys(pendingApertureChanges).length === 0,
+        );
+        setApertureSaveStatus('', false);
+    }
 
+    window.addEventListener('blast:aperture-change', recordApertureChange);
+    window.addEventListener('blast:aperture-translate', recordApertureChange);
+
+    function setSaveButtonState(label, disabled) {
         var saveBtn = document.getElementById('save-aperture-btn');
-        if (saveBtn) {
-            saveBtn.disabled = Object.keys(pendingApertureChanges).length === 0;
+        if (!saveBtn) {
+            return;
         }
-    });
+        saveBtn.textContent = label;
+        saveBtn.disabled = disabled;
+    }
 
-    // Cache of the latest, unsaved aperture geometry per aperture ID, populated live as the user drags an editable aperture.
-    window.blastApertureCache = window.blastApertureCache || {};
-
-    window.addEventListener('blast:aperture-change', function (e) {
-        const { apertureId, apertureType, x, y, semiMajor, semiMinor, thetaRadians } = e.detail;
-        window.blastApertureCache[apertureId] = {
-            apertureType, x, y, semiMajor, semiMinor, thetaRadians,
-        };
-    });
-
-    // function toggleApertureEdit(transient) {
-    //     apertureEditable = !apertureEditable;
-    //     var btn = document.getElementById('edit-aperture-btn');
-    //     btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
-    //     btn.classList.toggle('btn-outline-secondary', !apertureEditable);
-    //     btn.classList.toggle('btn-secondary', apertureEditable);
-    //     var filter = document.getElementById('id_filters').value;
-    //     cutoutImgClick(transient, filter, apertureEditable);
-    // }
+    function setApertureSaveStatus(message, isError) {
+        var element = document.getElementById('aperture-save-status');
+        if(!element) {
+            return;
+        }
+        element.textContent = message || '';
+        element.className = message ? (isError ? 'text-danger small mt-1' : 'text-success small mt-1') : '';
+    }
 
     function toggleApertureEdit(transient) {
         apertureEditable = !apertureEditable;
@@ -131,21 +130,40 @@
     function saveApertureChanges(transient) {
         var changes = Object.values(pendingApertureChanges);
         if (!changes.length) return;
+        setSaveButtonState("Saving...", true);
+        setApertureSaveStatus('', false);
+
         $.ajax({
             url: "{% url 'save_aperture_changes' %}",
             type: "POST",
             headers: { "X-CSRFToken": "{{ csrf_token }}" },
             contentType: "application/json",
-            data: JSON.stringify({ transient_name: transient, apertures: changes }),
+            data: JSON.stringify({ 
+                transient_name: transient, 
+                filter:document.getElementById('id_filters').value, 
+                apertures: changes 
+            }),
             success: function (resp) {
                 pendingApertureChanges = {};
-                var saveBtn = document.getElementById('save-aperture-btn');
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                }
+                var written = (resp.apertures || []).filter(function (ap) {
+                    return ap.changed && ap.changed.length;
+                });
+                setSaveButtonState("Save Aperture Changes", true);
+                setApertureSaveStatus(
+                    written.length
+                        ? "Saved " + written.length + " aperture(s)."
+                        : "No geometry changes to save.",
+                    false
+                );
             },
             error: function (xhr) {
-                console.error("Failed to save aperture changes:", xhr.responseText);
+                var message = "Failed to save aperture changes.";
+                try {
+                    message = JSON.parse(xhr.responseText).message || message;
+                } catch (err) { /* non-JSON body (500 page, proxy error): keep default */ }
+                 console.error("Failed to save aperture changes:", xhr.responseText);
+                setSaveButtonState("Save Aperture Changes", false);
+                setApertureSaveStatus(message, true);
             },
         });
     }

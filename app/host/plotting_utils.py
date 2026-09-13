@@ -589,6 +589,17 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         "handle_tool": handle_tool,
     }
 
+def normalize_pixel_axes(semi_major, semi_minor, theta):
+    semi_major = float(semi_major)
+    semi_minor = float(semi_minor)
+    theta = float(theta)
+
+    if (semi_minor > semi_major):
+        semi_major, semi_minor = semi_minor, semi_major
+        theta += math.pi / 2.0
+    return semi_major, semi_minor, theta
+
+
 def _pixel_to_arcsec_matrix(wcs):
     """
     Linear pixel -> sky transform in arcsec/pixel, flattened for CustomJS.
@@ -627,13 +638,7 @@ def _arcsec_per_kpc(redshift):
 def _pixel_geometry(sky_aperture, wcs):
     """(semi_major_px, semi_minor_px, theta_rad), normalised so a >= b."""
     pixel_aperture = sky_aperture.to_pixel(wcs)
-    semi_major = float(pixel_aperture.a)
-    semi_minor = float(pixel_aperture.b)
-    theta = float(pixel_aperture.theta.value)
-    if semi_minor > semi_major:
-        semi_major, semi_minor = semi_minor, semi_major
-        theta += math.pi / 2.0
-    return semi_major, semi_minor, theta
+    return normalize_pixel_axes(pixel_aperture.a, pixel_aperture.b, pixel_aperture.theta.value)
 
 
 def _aperture_readout_text(label, semi_major, semi_minor, theta, cd, arcsec_per_kpc):
@@ -667,22 +672,6 @@ def add_aperture_readout(
     top_margin=10.0,
     line_height=17.0,
 ):
-    """
-    Pin one line of aperture geometry per aperture to the top-left of ``fig``.
-
-    Each line reports the semi-major and semi-minor axes converted from plot
-    (pixel) coordinates into arcsec on the sky via the WCS CD matrix, the same
-    quantities in kpc at ``redshift``, and the major-axis position angle east
-    of north.
-
-    Pass ``ellipse_source`` (the source returned by plot_editable_apertures) to
-    make the readout track drags live; pass ``static_geometry`` — a list of
-    (semi_major_px, semi_minor_px, theta_rad) — for the non-editable plot.
-
-    One Label per aperture rather than one multi-line Label: Label text wrapping
-    is version-dependent, separate Labels are not, and it lets each line take
-    its aperture's colour.
-    """
     cd = _pixel_to_arcsec_matrix(wcs)
     arcsec_per_kpc = _arcsec_per_kpc(redshift)
 
