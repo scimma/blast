@@ -1068,6 +1068,8 @@ def cutout_fits_plot(request):
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')
         filter = request.GET.get('filter')
+        editable = request.GET.get("editable", "false").lower() == "true"
+
 
         # Acquire the transient object or return 404 not found
         try:
@@ -1087,5 +1089,37 @@ def cutout_fits_plot(request):
             transient=transient,
             global_aperture=global_aperture.prefetch_related(),
             local_aperture=local_aperture.prefetch_related(),
+            editable=editable
         )
         return JsonResponse(bokeh_context)
+
+@login_required
+def save_aperture_changes(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {"success": False, "message": "Only POST requests are allowed."},
+            status=405,
+        )
+
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {"success": False, "message": "Invalid JSON payload."},
+            status=400,
+        )
+
+    transient_name = payload.get("transient_name")
+    apertures = payload.get("apertures", [])
+
+    if not transient_name:
+        return JsonResponse(
+            {"success": False, "message": "Missing transient_name."},
+            status=400,
+        )
+
+    return JsonResponse({
+        "success": True,
+        "transient_name": transient_name,
+        "apertures": apertures,
+    })

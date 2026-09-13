@@ -28,12 +28,148 @@
         <div class="input-group-append">
             <button class="btn btn-primary" type="button"
                 onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
+            <button class="btn btn-outline-secondary" type="button" id="edit-aperture-btn"
+                onclick="toggleApertureEdit('{{ transient.name }}')">Enable Aperture Editing</button>
+            <button class="btn btn-success" type="button" id="save-aperture-btn"
+                onclick="saveApertureChanges('{{ transient.name }}')" disabled>Save Aperture Changes</button>
         </div>
     </div>
+    <div id="aperture-save-status" role="status" aria-live="assertive"></div>
 </form>
 <script>
+    // tracks whether aperture-editing mode is currently on, so the toggle button knows what to switch to and re-request on the next click
     document.getElementById('loading-indicator').style.display = "none";
-    function cutoutImgClick(transient, filter) {
+    var apertureEditable = false;
+    
+    var pendingApertureChanges = {};
+
+    function recordApertureChange(evt) {
+        pendingApertureChanges[evt.detail.apertureId] = evt.detail;
+        setSaveButtonState("Save Aperture Changes",
+            Object.keys(pendingApertureChanges).length === 0,
+        );
+        setApertureSaveStatus('', false);
+    }
+
+    window.addEventListener('blast:aperture-change', recordApertureChange);
+    window.addEventListener('blast:aperture-translate', recordApertureChange);
+
+    function setSaveButtonState(label, disabled) {
+        var saveBtn = document.getElementById('save-aperture-btn');
+        if (!saveBtn) {
+            return;
+        }
+        saveBtn.textContent = label;
+        saveBtn.disabled = disabled;
+    }
+
+    function setApertureSaveStatus(message, isError) {
+        var element = document.getElementById('aperture-save-status');
+        if(!element) {
+            return;
+        }
+        element.textContent = message || '';
+        element.className = message ? (isError ? 'text-danger small mt-1' : 'text-success small mt-1') : '';
+    }
+
+    function toggleApertureEdit(transient) {
+        apertureEditable = !apertureEditable;
+        var btn = document.getElementById('edit-aperture-btn');
+        btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
+        btn.classList.toggle('btn-outline-secondary', !apertureEditable);
+        btn.classList.toggle('btn-secondary', apertureEditable);
+
+        if (!apertureEditable) {
+            // Turning editing off: freeze the plot exactly as it is instead of
+            // re-fetching from the server. A re-fetch pulls pristine geometry
+            // from the DB and wipes out any local, unsaved drag edits.
+            if (freezeApertureEditing()) {
+                return;
+            }
+            // If the Bokeh models weren't found for some reason, fall back to
+            // a normal refetch so the button doesn't just do nothing.
+        }
+
+        var filter = document.getElementById('id_filters').value;
+        cutoutImgClick(transient, filter, apertureEditable);
+    }
+
+    var APERTURE_EDIT_RENDERER_NAMES = [
+        'aperture_handle_renderer',
+        'aperture_center_renderer',
+        'ghost_aperture_renderer',
+    ];
+
+    function freezeApertureEditing() {
+        if (typeof Bokeh === 'undefined' || !Bokeh.documents || !Bokeh.documents.length) {
+            return false;
+        }
+        var found = false;
+        Bokeh.documents.forEach(function (doc) {
+            var tool = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_tool');
+            // var handles = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_renderer') && doc.get_model_by_name('aperture_center_renderer');
+            if (tool) {
+                tool.active = false;
+                found = true;
+            }
+            APERTURE_EDIT_RENDERER_NAMES.forEach(function (name) {
+                var handle = doc.get_model_by_name && doc.get_model_by_name(name);
+                if (handle) {
+                    handle.visible = false;
+                    found = true;
+                }
+            });
+            // if (handles) {
+            //     handles.visible = false;
+            //     found = true;
+            // }
+        });
+        return found;
+    }
+
+    function saveApertureChanges(transient) {
+        var changes = Object.values(pendingApertureChanges);
+        if (!changes.length) return;
+        setSaveButtonState("Saving...", true);
+        setApertureSaveStatus('', false);
+
+        $.ajax({
+            url: "{% url 'save_aperture_changes' %}",
+            type: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            contentType: "application/json",
+            data: JSON.stringify({ 
+                transient_name: transient, 
+                filter:document.getElementById('id_filters').value, 
+                apertures: changes 
+            }),
+            success: function (resp) {
+                pendingApertureChanges = {};
+                var written = (resp.apertures || []).filter(function (ap) {
+                    return ap.changed && ap.changed.length;
+                });
+                setSaveButtonState("Save Aperture Changes", true);
+                setApertureSaveStatus(
+                    written.length
+                        ? "Saved " + written.length + " aperture(s)."
+                        : "No geometry changes to save.",
+                    false
+                );
+            },
+            error: function (xhr) {
+                var message = "Failed to save aperture changes.";
+                try {
+                    message = JSON.parse(xhr.responseText).message || message;
+                } catch (err) { /* non-JSON body (500 page, proxy error): keep default */ }
+                 console.error("Failed to save aperture changes:", xhr.responseText);
+                setSaveButtonState("Save Aperture Changes", false);
+                setApertureSaveStatus(message, true);
+            },
+        });
+    }
+
+    document.getElementById('loading-indicator').style.display = "none";
+    function cutoutImgClick(transient, filter, editable) {
         document.getElementById('loading-indicator').style.display = "block";
         $("#cutout-loader-mask").show();
         $.ajax({
@@ -41,7 +177,8 @@
             type: "GET",
             data: {
                 transient_name: transient,
-                filter: filter
+                filter: filter,
+                editable: editable
             },
             success: function (resp) {
                 document.getElementById("cutout-img-bokeh").innerHTML = resp.bokeh_cutout_div;
