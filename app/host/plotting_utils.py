@@ -16,6 +16,7 @@ from bokeh.embed import components
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.models import HoverTool
+from bokeh.models import Label
 from bokeh.models import LabelSet
 from bokeh.models import PointDrawTool
 from bokeh.models import Range1d
@@ -32,6 +33,8 @@ from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
 from bokeh.io import curdoc
+
+from host.host_utils import get_local_aperture_size
 
 from host.log import get_logger
 logger = get_logger(__name__)
@@ -53,8 +56,11 @@ try {
     // Each ellipse n owns exactly two handles, laid out at fixed
     // positions 2n (major) and 2n+1 (minor) in the shared handle source.
     for (let n = 0; n < ellipses.x.length; n++) {
-        const majorIdx = 2 * n;
-        const minorIdx = 2 * n + 1;
+        // const majorIdx = 2 * n;
+        // const minorIdx = 2 * n + 1;
+
+        const majorIdx = major_handle_indices[n];
+        const minorIdx = minor_handle_indices[n];
 
         const cx = ellipses.x[n];
         const cy = ellipses.y[n];
@@ -70,25 +76,34 @@ try {
 
         // Bokeh ellipse angles are measured in radians.
         const theta = Math.atan2(majorDy, majorDx);
+        
+        let semiMinor = semiMajor;
 
-        const minorUnitX = -Math.sin(theta);
-        const minorUnitY = Math.cos(theta);
+        // if the aperture handle for minor axis exists
+        if (minorIdx !== null && minorIdx !== undefined) {
+            const minorUnitX = -Math.sin(theta);
+            const minorUnitY = Math.cos(theta);
+    
+            const minorDx = handles.x[minorIdx] - cx;
+            const minorDy = handles.y[minorIdx] - cy;
+    
+            // Project the dragged minor handle onto the true minor axis so it can't drift away from a perpendicular position.
+            const projectedMinorRadius = Math.abs(
+                minorDx * minorUnitX +
+                minorDy * minorUnitY
+            );
 
-        const minorDx = handles.x[minorIdx] - cx;
-        const minorDy = handles.y[minorIdx] - cy;
+            // Keep the aperture mathematically consistent: semi-major >= semi-minor.
+            semiMinor = Math.min(
+                semiMajor,
+                Math.max(minimum_radius, projectedMinorRadius),
+            );
 
-        // Project the dragged minor handle onto the true minor axis so it
-        // can't drift away from a perpendicular position.
-        const projectedMinorRadius = Math.abs(
-            minorDx * minorUnitX +
-            minorDy * minorUnitY
-        );
-
-        // Keep the aperture mathematically consistent: semi-major >= semi-minor.
-        const semiMinor = Math.min(
-            semiMajor,
-            Math.max(minimum_radius, projectedMinorRadius),
-        );
+            // Snap control back onto axes
+            handles.x[minorIdx] = cx + semiMinor * minorUnitX;
+            handles.y[minorIdx] = cy + semiMinor * minorUnitY;
+    
+        }
 
         ellipses.width[n] = 2.0 * semiMajor;
         ellipses.height[n] = 2.0 * semiMinor;
@@ -97,9 +112,6 @@ try {
         // Snap both controls back onto their exact axes.
         handles.x[majorIdx] = cx + semiMajor * Math.cos(theta);
         handles.y[majorIdx] = cy + semiMajor * Math.sin(theta);
-
-        handles.x[minorIdx] = cx + semiMinor * minorUnitX;
-        handles.y[minorIdx] = cy + semiMinor * minorUnitY;
 
         // Publish the latest unsaved geometry for this ellipse to the
         // surrounding page. Fired for every ellipse on every callback run;
@@ -160,12 +172,14 @@ try {
         ellipses.y[n] += dy;
 
         // move both handles by same delta 
-        const majorIdx = 2 * n;
-        const minorIdx = 2 * n + 1;
+        const majorIdx = major_handle_indices[n];
+        const minorIdx = minor_handle_indices[n];
         handles.x[majorIdx] += dx;
         handles.y[majorIdx] += dy;
-        handles.x[minorIdx] += dx;
-        handles.y[minorIdx] += dy;
+        if (minorIdx !== null && minorIdx !== undefined) {
+            handles.x[minorIdx] += dx;
+            handles.y[minorIdx] += dy;
+        }
 
         prev.x[n] = center.x[n];
         prev.y[n] = center.y[n];
@@ -195,6 +209,68 @@ try {
 }
 
 """
+
+APERTURE_LIVE_READOUT_JS = """
+// recompute readout from current ellips egeometry. 
+
+// Registered on ellipse_source, which is single source that both the handle callback and center callback  write to
+
+// `cd` is WCS CD matrix flattened in arsec/pixel
+
+for (let n = 0; n < ellipses.x.length; n++) {
+    const semiMajor = ellipses.width[n] / 2.0;
+    const semiMinor = ellipses.height[n] / 2.0;
+    const theta = ellipses.angle[n];
+
+    // Axis end-point offsets from center in pixels
+    const majDx = semiMajor * Math.cos(theta);
+    const majDy = semiMajor * Math.sin(theta);
+    const minDx = -semiMinor * Math.sin(theta);
+    const minDy = semiMinor * Math.cos(theta);
+
+    // Pixels -> arcsec
+    const majEast  = cd[0] * majDx + cd[1] * majDy;
+    const majNorth = cd[2] * majDx + cd[3] * majDy;
+    const minEast  = cd[0] * minDx + cd[1] * minDy;
+    const minNorth = cd[2] * minDx + cd[3] * minDy;
+
+    const aArcsec = Math.hypot(majEast, majNorth);
+    const bArcsec = Math.hypot(minEast, minNorth);
+
+    // position angle of major axis folded to [0, 180) 
+    let pa = Math.atan2(majEast, majNorth) * 180.0 / Math.PI;
+    pa = ((pa % 180.0) + 180.0) % 180.0;
+
+    let text = aperture_labels[n] + ":  a = " + aArcsec.toFixed(2) + "\\u2033";
+    if (arcsec_per_kpc) {
+        text += " (" + (aArcsec / arcsec_per_kpc).toFixed(2) + " kpc)";
+    }
+    text += ",  b = " + bArcsec.toFixed(2) + "\\u2033";
+    if (arcsec_per_kpc) {
+        text += " (" + (bArcsec / arcsec_per_kpc).toFixed(2) + " kpc)";
+    }
+    text += ",  PA = " + pa.toFixed(1) + "\\u00B0 E of N";
+
+    readout_labels[n].text = text;
+
+    }
+"""
+
+APERTURE_READOUT_POS_JS = """
+// bokeh coords measured upward from bottom of plot frame, 
+
+// pin to top left by trackign frame height, only known client-side after layout
+
+const h = fig.inner_height;
+if (h == null || h <= 0) {
+    return;
+}
+for (let n = 0; n < readout_labels.length; n++) {
+    readout_labels[n].y = h - top_margin - n * line_height;
+}
+
+"""
+
 
 def scale_image(image_data):
     transform = AsinhStretch() + PercentileInterval(99.5)
@@ -254,7 +330,7 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
     figure.ellipse(**plot_dict)
     return figure
 
-def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_grab_multiplier=0.1):
+def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_grab_multiplier=0.1, min_center_grab_radius=4.0):
     """
     Draw one or more editable apertures sharing a single PointDrawTool.
 
@@ -281,6 +357,8 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
 
     grab_x, grab_y, grab_radius = [], [], []
 
+    major_handle_indices, minor_handle_indices = [], []
+
     for ap in apertures:
         pixel_aperture = ap["sky_aperture"].to_pixel(wcs)
         position = np.asarray(pixel_aperture.positions, dtype=float)
@@ -290,6 +368,10 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         semi_major = float(pixel_aperture.a)
         semi_minor = float(pixel_aperture.b)
         theta = float(pixel_aperture.theta.value)
+
+        # guard forcing local aperture to render as circular even before edits begin, remove later.
+        if ap["aperture_type"] == "local":
+            semi_minor = semi_major
 
         if semi_major <= 0:
             raise ValueError("The aperture semi-major radius must be positive.")
@@ -310,24 +392,37 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         ellipse_legend.append(ap["legend_label"])
         ghost_color.append(GHOST_COLORS.get(ap["aperture_type"], ""))
 
+        has_minor_handle = ap["aperture_type"] == "global"
+
         major_handle_x = center_x + semi_major * math.cos(theta)
         major_handle_y = center_y + semi_major * math.sin(theta)
-        minor_handle_x = center_x - semi_minor * math.sin(theta)
-        minor_handle_y = center_y + semi_minor * math.cos(theta)
 
-        # Handles inherit the color of their own aperture so it's visually
-        # obvious which pair of handles controls which ellipse.
-        handle_x += [major_handle_x, minor_handle_x]
-        handle_y += [major_handle_y, minor_handle_y]
-        handle_color += [ap["line_color"], ap["line_color"]]
-        handle_axis += ["major", "minor"]
-
+        major_idx = len(handle_x)
+        handle_x.append(major_handle_x)
+        handle_y.append(major_handle_y)
+        handle_color.append(ap["line_color"])
+        handle_axis.append("major")
+        major_handle_indices.append(major_idx)
+ 
+        if has_minor_handle:
+            minor_handle_x = center_x - semi_minor * math.sin(theta)
+            minor_handle_y = center_y + semi_minor * math.cos(theta)
+ 
+            minor_idx = len(handle_x)
+            handle_x.append(minor_handle_x)
+            handle_y.append(minor_handle_y)
+            handle_color.append(ap["line_color"])
+            handle_axis.append("minor")
+            minor_handle_indices.append(minor_idx)
+        else:
+            minor_handle_indices.append(None)
+ 
         aperture_ids.append(ap["aperture_id"])
         aperture_types.append(ap["aperture_type"])
-
+ 
         grab_x.append(center_x)
         grab_y.append(center_y)
-        grab_radius.append(semi_major*center_grab_multiplier)
+        grab_radius.append(max(min_center_grab_radius, semi_major*center_grab_multiplier))
 
     ghost_source = ColumnDataSource(
         data={
@@ -391,7 +486,8 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         line_color="line_color",
         line_alpha=0.6,
         line_dash="dashed",
-        line_width=4
+        line_width=4,
+        name="ghost_aperture_renderer",
     )
 
     ellipse_renderer = figure.ellipse(
@@ -433,13 +529,16 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         radius="radius",
         source=center_source,
         fill_alpha=1,
-        line_alpha=0,
-        line_color="line_color",
+        fill_color= "white",
+        line_alpha=1,
+        line_color="green",
         line_width=3,
-        selection_fill_alpha=0,
-        selection_line_alpha=0,
-        nonselection_fill_alpha=0,
-        nonselection_line_alpha=0,
+        selection_fill_color="white",
+        selection_line_color="green",
+        nonselection_fill_color="white",
+        nonselection_fill_alpha=1.0,
+        nonselection_line_color="green",
+        nonselection_line_alpha=1.0,
         name="aperture_center_renderer",
     )
 
@@ -455,12 +554,13 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
             "aperture_ids": aperture_ids,
             "aperture_types": aperture_types,
             "minimum_radius": float(minimum_radius),
+            "major_handle_indices" : major_handle_indices,
+            "minor_handle_indices" : minor_handle_indices,
         },
         code=EDITABLE_APERTURES_HANDLE_JS,
     )
 
-    # PointDrawTool modifies handle_source continuously while the pointer
-    # moves, so this callback runs repeatedly throughout each drag.
+    # this callback runs repeatedly throughout each drag, should be continuous ???
     handle_source.js_on_change("data", handle_callback)
 
     center_callback = CustomJS(
@@ -472,6 +572,8 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
             "callback_state": callback_state,
             "aperture_ids": aperture_ids,
             "aperture_types": aperture_types,
+            "major_handle_indices" : major_handle_indices,
+            "minor_handle_indices" : minor_handle_indices,
         },
         code=EDITABLE_APERTURE_CENTER_JS,
     )
@@ -486,6 +588,164 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         "handle_renderer": handle_renderer,
         "handle_tool": handle_tool,
     }
+
+def _pixel_to_arcsec_matrix(wcs):
+    """
+    Linear pixel -> sky transform in arcsec/pixel, flattened for CustomJS.
+
+    ``wcs.pixel_scale_matrix`` is the CD matrix in deg/pixel taking a pixel
+    offset (dx, dy) to intermediate world coordinates (xi, eta), where xi runs
+    east (increasing RA * cos(dec)) and eta runs north. It carries the pixel
+    scale, any rotation and any flip, so the readout stays correct for cutouts
+    that are not north-up/east-left.
+    """
+    cd = np.asarray(wcs.celestial.pixel_scale_matrix, dtype=float) * 3600.0
+    return [float(cd[0, 0]), float(cd[0, 1]), float(cd[1, 0]), float(cd[1, 1])]
+
+
+def _arcsec_per_kpc(redshift):
+    """
+    Angular size of 1 proper kpc at ``redshift``, in arcsec, or None when the
+    redshift is unusable. This is exactly get_local_aperture_size() with
+    apr_kpc=1, and inverting it is what turns an arcsec readout into kpc.
+    """
+    if redshift is None:
+        return None
+    try:
+        redshift = float(redshift)
+    except (TypeError, ValueError):
+        return None
+    if redshift <= 0:
+        return None
+    try:
+        return float(get_local_aperture_size(redshift, apr_kpc=1.0))
+    except Exception as err:
+        logger.warning(f"Could not compute angular scale at z={redshift}: {err}")
+        return None
+
+
+def _pixel_geometry(sky_aperture, wcs):
+    """(semi_major_px, semi_minor_px, theta_rad), normalised so a >= b."""
+    pixel_aperture = sky_aperture.to_pixel(wcs)
+    semi_major = float(pixel_aperture.a)
+    semi_minor = float(pixel_aperture.b)
+    theta = float(pixel_aperture.theta.value)
+    if semi_minor > semi_major:
+        semi_major, semi_minor = semi_minor, semi_major
+        theta += math.pi / 2.0
+    return semi_major, semi_minor, theta
+
+
+def _aperture_readout_text(label, semi_major, semi_minor, theta, cd, arcsec_per_kpc):
+    """Python mirror of APERTURE_READOUT_JS, used for the initial label text."""
+    matrix = np.array([[cd[0], cd[1]], [cd[2], cd[3]]], dtype=float)
+    major = matrix @ np.array([semi_major * np.cos(theta), semi_major * np.sin(theta)])
+    minor = matrix @ np.array([-semi_minor * np.sin(theta), semi_minor * np.cos(theta)])
+
+    a_arcsec = float(np.hypot(*major))
+    b_arcsec = float(np.hypot(*minor))
+    pa = float(np.degrees(np.arctan2(major[0], major[1])) % 180.0)
+
+    text = f"{label}:  a = {a_arcsec:.2f}\u2033"
+    if arcsec_per_kpc:
+        text += f" ({a_arcsec / arcsec_per_kpc:.2f} kpc)"
+    text += f",  b = {b_arcsec:.2f}\u2033"
+    if arcsec_per_kpc:
+        text += f" ({b_arcsec / arcsec_per_kpc:.2f} kpc)"
+    text += f",  PA = {pa:.1f}\u00B0 E of N"
+    return text
+
+
+def add_aperture_readout(
+    fig,
+    wcs,
+    redshift,
+    labels,
+    colors,
+    ellipse_source=None,
+    static_geometry=None,
+    top_margin=10.0,
+    line_height=17.0,
+):
+    """
+    Pin one line of aperture geometry per aperture to the top-left of ``fig``.
+
+    Each line reports the semi-major and semi-minor axes converted from plot
+    (pixel) coordinates into arcsec on the sky via the WCS CD matrix, the same
+    quantities in kpc at ``redshift``, and the major-axis position angle east
+    of north.
+
+    Pass ``ellipse_source`` (the source returned by plot_editable_apertures) to
+    make the readout track drags live; pass ``static_geometry`` — a list of
+    (semi_major_px, semi_minor_px, theta_rad) — for the non-editable plot.
+
+    One Label per aperture rather than one multi-line Label: Label text wrapping
+    is version-dependent, separate Labels are not, and it lets each line take
+    its aperture's colour.
+    """
+    cd = _pixel_to_arcsec_matrix(wcs)
+    arcsec_per_kpc = _arcsec_per_kpc(redshift)
+
+    if static_geometry is None:
+        data = ellipse_source.data
+        static_geometry = [
+            (data["width"][n] / 2.0, data["height"][n] / 2.0, data["angle"][n])
+            for n in range(len(data["x"]))
+        ]
+
+    readout_labels = []
+    for n, label in enumerate(labels):
+        semi_major, semi_minor, theta = static_geometry[n]
+        readout = Label(
+            x=10.0,
+            y=0.0,  # overwritten by APERTURE_READOUT_POSITION_JS once laid out
+            x_units="screen",
+            y_units="screen",
+            text=_aperture_readout_text(
+                label, semi_major, semi_minor, theta, cd, arcsec_per_kpc
+            ),
+            text_font_size="11px",
+            text_color=colors[n],
+            text_baseline="top",       # hang below the anchor, so lines stack downward
+            background_fill_color="white",
+            background_fill_alpha=0.75,
+            level="overlay",           # draw above the image and the glyphs
+            name=f"aperture_readout_{n}",
+        )
+        fig.add_layout(readout)
+        readout_labels.append(readout)
+
+    position_callback = CustomJS(
+        args={
+            "fig": fig,
+            "readout_labels": readout_labels,
+            "top_margin": float(top_margin),
+            "line_height": float(line_height),
+        },
+        code=APERTURE_READOUT_POS_JS,
+    )
+    fig.js_on_change("inner_height", position_callback)
+    # Belt and braces: x_range "end" is already known to fire on first layout in
+    # this plot (the loading-indicator callback relies on it), so the labels are
+    # positioned even if inner_height lands before the callback is attached.
+    fig.x_range.js_on_change("end", position_callback)
+
+    if ellipse_source is not None:
+        ellipse_source.js_on_change(
+            "data",
+            CustomJS(
+                args={
+                    "ellipse_source": ellipse_source,
+                    "readout_labels": readout_labels,
+                    "cd": cd,
+                    "arcsec_per_kpc": arcsec_per_kpc,
+                    "aperture_labels": list(labels),
+                },
+                code=APERTURE_LIVE_READOUT_JS,
+            ),
+        )
+
+    return readout_labels
 
 
 def plot_image_grid(image_dict, apertures=None):
@@ -538,7 +798,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         image_data = np.zeros((500, 500))
         return generate_plot(fig, image_data)
     
-    def add_apertures(fig, global_aperture, local_aperture, wcs, editable):
+    def add_apertures(fig, global_aperture, local_aperture, wcs, editable, transient):
         specs = []
         if global_aperture.exists():
             specs.append({
@@ -546,6 +806,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 "aperture_type": "global",
                 "line_color": "green",
                 "legend_label": "Global Aperture",
+                "readout_label": "Global",
             })
         if local_aperture.exists():
             specs.append({
@@ -553,13 +814,19 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 "aperture_type": "local",
                 "line_color": "blue",
                 "legend_label": "Local Aperture",
+                "readout_label": "Local",
             })
 
         if not specs:
             return
 
+        readout_labels = [s["readout_label"] for s in specs]
+        readout_colors = [s["line_color"] for s in specs]
+        redshift = getattr(transient, "best_redshift", None)
+
+
         if editable:
-            plot_editable_apertures(
+            sources = plot_editable_apertures(
                 fig,
                 [
                     {
@@ -573,6 +840,14 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                 ],
                 wcs,
             )
+            add_aperture_readout(
+                fig,
+                wcs,
+                redshift,
+                labels=readout_labels,
+                colors=readout_colors,
+                ellipse_source=sources["ellipse_source"],
+            )
         else:
             for s in specs:
                 plot_aperture(
@@ -585,6 +860,16 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                         "legend_label": s["legend_label"],
                     },
                 )
+            add_aperture_readout(
+                fig,
+                wcs,
+                redshift,
+                labels=readout_labels,
+                colors=readout_colors,
+                static_geometry=[
+                    _pixel_geometry(s["record"].sky_aperture, wcs) for s in specs
+                ],
+            )
 
     # If there is no cutout data, generate an empty plot
     if cutout is None:
@@ -657,6 +942,7 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
         local_aperture,
         wcs,
         editable=editable,
+        transient=transient,
     )
     return generate_plot(fig, image_data=image_data)
 

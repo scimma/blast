@@ -95,6 +95,12 @@
         cutoutImgClick(transient, filter, apertureEditable);
     }
 
+    var APERTURE_EDIT_RENDERER_NAMES = [
+        'aperture_handle_renderer',
+        'aperture_center_renderer',
+        'ghost_aperture_renderer',
+    ];
+
     function freezeApertureEditing() {
         if (typeof Bokeh === 'undefined' || !Bokeh.documents || !Bokeh.documents.length) {
             return false;
@@ -102,15 +108,22 @@
         var found = false;
         Bokeh.documents.forEach(function (doc) {
             var tool = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_tool');
-            var handles = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_renderer');
+            // var handles = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_renderer') && doc.get_model_by_name('aperture_center_renderer');
             if (tool) {
                 tool.active = false;
                 found = true;
             }
-            if (handles) {
-                handles.visible = false;
-                found = true;
-            }
+            APERTURE_EDIT_RENDERER_NAMES.forEach(function (name) {
+                var handle = doc.get_model_by_name && doc.get_model_by_name(name);
+                if (handle) {
+                    handle.visible = false;
+                    found = true;
+                }
+            });
+            // if (handles) {
+            //     handles.visible = false;
+            //     found = true;
+            // }
         });
         return found;
     }
