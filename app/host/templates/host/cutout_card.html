@@ -27,7 +27,7 @@
         {{ filter_select_form.filters }}
         <div class="input-group-append">
             <button class="btn btn-primary" type="button"
-                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
+                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value, apertureEditable)">Get Cutout</button>
             <button class="btn btn-outline-secondary" type="button" id="edit-aperture-btn"
                 onclick="toggleApertureEdit('{{ transient.name }}')">Enable Aperture Editing</button>
             <button class="btn btn-success" type="button" id="save-aperture-btn"
@@ -42,6 +42,8 @@
     var apertureEditable = false;
     
     var pendingApertureChanges = {};
+
+    var activePlotFilter = "";
 
     function recordApertureChange(evt) {
         pendingApertureChanges[evt.detail.apertureId] = evt.detail;
@@ -140,7 +142,7 @@
             contentType: "application/json",
             data: JSON.stringify({ 
                 transient_name: transient, 
-                filter:document.getElementById('id_filters').value, 
+                filter: activePlotFilter, 
                 apertures: changes 
             }),
             success: function (resp) {
@@ -170,6 +172,10 @@
 
     document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, filter, editable) {
+        pendingApertureChanges = {};
+        setSaveButtonState("Save Aperture Changes", true);
+        setApertureSaveStatus('', false);
+        activePlotFilter = filter || "";
         document.getElementById('loading-indicator').style.display = "block";
         $("#cutout-loader-mask").show();
         $.ajax({
@@ -197,6 +203,12 @@
                 document.getElementById('loading-indicator').style.display = "none";
                 $("#cutout-loader-mask").hide();
             },
+            error: function (xhr) {
+                document.getElementById('loading-indicator').style.display = "none";
+                $("#cutout-loader-mask").hide();
+                console.error("Failed to load cutout plot:", xhr.responseText);
+                setApertureSaveStatus("Could not load cutout plot", true);
+            }
         });
     }
 </script>

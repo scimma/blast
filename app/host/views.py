@@ -2,10 +2,15 @@ import django_filters
 import os
 import csv
 import io
+import json
 import base64
+import json
+from astropy.io import fits
+from astropy.wcs import WCS
 import numpy as np
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -15,6 +20,10 @@ from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
+from host.aperture_utils import APERTURE_EDITABLE_FIELDS
+from host.aperture_utils import _resolve_cutout
+from host.aperture_utils import _apply_aperture_edit
+from host.aperture_utils import cutout_wcs
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
@@ -35,6 +44,10 @@ from host.plotting_utils import plot_cutout_image
 from host.plotting_utils import render_sed_plot
 from host.plotting_utils import plot_sed
 from host.plotting_utils import render_host_spectrum_plot
+from host.plotting_utils import _pixel_to_arcsec_matrix
+from host.plotting_utils import temp_results_paths_from_canonical_path
+from host.plotting_utils import delete_cached_file
+from host.plotting_utils import normalize_pixel_axes
 from host.tables import TransientTable
 from host.tasks import import_transient_list
 from host.tasks import retrigger_transient
@@ -1094,6 +1107,7 @@ def cutout_fits_plot(request):
         return JsonResponse(bokeh_context)
 
 @login_required
+@log_usage_metric()
 def save_aperture_changes(request):
     if request.method != "POST":
         return JsonResponse(
@@ -1110,7 +1124,8 @@ def save_aperture_changes(request):
         )
 
     transient_name = payload.get("transient_name")
-    apertures = payload.get("apertures", [])
+    filter_name = payload.get("filter") or ""
+    edits = payload.get("apertures", [])
 
     if not transient_name:
         return JsonResponse(
@@ -1118,8 +1133,53 @@ def save_aperture_changes(request):
             status=400,
         )
 
+    if not isinstance(edits, list) or not edits:
+        return JsonResponse(
+            {"success": False, "message": "No aperture edits supplied."},
+            status=400,
+        )
+
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Transient not found."},
+            status=404,
+        )
+
+    cutout = _resolve_cutout(transient, filter_name)
+    if cutout is None:
+        return JsonResponse(
+            {"success": False,
+             "message": "Could not identify the cutout these edits were made on."},
+            status=400,
+        )
+
+    wcs = cutout_wcs(cutout) 
+    if wcs is None:
+        return JsonResponse(
+            {"success": False,
+             "message": f'''Could not load the WCS for cutout "{cutout.name}".'''},
+            status=409,
+        )
+
+    try:
+        with transaction.atomic():
+            saved = [_apply_aperture_edit(transient, wcs, edit) for edit in edits]
+    except Aperture.DoesNotExist:
+        return JsonResponse(
+            {"success": False,
+             "message": "Aperture not found for this transient."},
+            status=404,
+        )
+    except (KeyError, TypeError, ValueError) as err:
+        return JsonResponse(
+            {"success": False, "message": f"Invalid aperture edit: {err}"},
+            status=400,
+        )
+
     return JsonResponse({
         "success": True,
         "transient_name": transient_name,
-        "apertures": apertures,
+        "apertures": saved,
     })

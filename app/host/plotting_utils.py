@@ -9,6 +9,7 @@ import prospect.io.read_results as reader
 from astropy.coordinates import SkyCoord
 from astropy.cosmology import WMAP9 as cosmo
 from astropy.io import fits
+import astropy.units as u
 from astropy.visualization import AsinhStretch
 from astropy.visualization import PercentileInterval
 from astropy.wcs import WCS
@@ -62,6 +63,10 @@ try {
         const majorIdx = major_handle_indices[n];
         const minorIdx = minor_handle_indices[n];
 
+        // guard against deleted handle - need to find way to forbid this operation entirely
+        if (handles.x[majorIdx] === undefined) {
+            continue;
+        }
         const cx = ellipses.x[n];
         const cy = ellipses.y[n];
 
@@ -105,6 +110,12 @@ try {
     
         }
 
+        const moved = (
+            ellipses.width[n] !== 2.0 * semiMajor ||
+            ellipses.height[n] !== 2.0 * semiMinor ||
+            ellipses.angle[n] !== theta
+        );
+
         ellipses.width[n] = 2.0 * semiMajor;
         ellipses.height[n] = 2.0 * semiMinor;
         ellipses.angle[n] = theta;
@@ -112,6 +123,11 @@ try {
         // Snap both controls back onto their exact axes.
         handles.x[majorIdx] = cx + semiMajor * Math.cos(theta);
         handles.y[majorIdx] = cy + semiMajor * Math.sin(theta);
+
+        // skip ellipses that haven't actually changed, so untouched apertures are not rewritten
+        if (!moved) {
+            continue;
+        }
 
         // Publish the latest unsaved geometry for this ellipse to the
         // surrounding page. Fired for every ellipse on every callback run;
@@ -216,6 +232,8 @@ APERTURE_LIVE_READOUT_JS = """
 // Registered on ellipse_source, which is single source that both the handle callback and center callback  write to
 
 // `cd` is WCS CD matrix flattened in arsec/pixel
+
+const ellipses = ellipse_source.data;
 
 for (let n = 0; n < ellipses.x.length; n++) {
     const semiMajor = ellipses.width[n] / 2.0;
@@ -334,7 +352,7 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
     """
     Draw one or more editable apertures sharing a single PointDrawTool.
 
-    `apertures` is a list of dicts, each with:
+    apertures is a list of dicts, each with:
         - aperture_id
         - aperture_type ("local" or "global")
         - sky_aperture
@@ -367,7 +385,7 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
         center_y = float(position[1])
         semi_major = float(pixel_aperture.a)
         semi_minor = float(pixel_aperture.b)
-        theta = float(pixel_aperture.theta.value)
+        theta = float(pixel_aperture.theta.to_value(u.rad))
 
         # guard forcing local aperture to render as circular even before edits begin, remove later.
         if ap["aperture_type"] == "local":
@@ -545,6 +563,7 @@ def plot_editable_apertures(figure, apertures, wcs, minimum_radius=1.0, center_g
     # A single shared tool drives every editable aperture on this figure.
     handle_tool = PointDrawTool(renderers=[handle_renderer, center_renderer], add=False, name="aperture_handle_tool")
     figure.add_tools(handle_tool)
+    figure.toolbar.active_tap = handle_tool
 
     handle_callback = CustomJS(
         args={
@@ -638,7 +657,7 @@ def _arcsec_per_kpc(redshift):
 def _pixel_geometry(sky_aperture, wcs):
     """(semi_major_px, semi_minor_px, theta_rad), normalised so a >= b."""
     pixel_aperture = sky_aperture.to_pixel(wcs)
-    return normalize_pixel_axes(pixel_aperture.a, pixel_aperture.b, pixel_aperture.theta.value)
+    return normalize_pixel_axes(pixel_aperture.a, pixel_aperture.b, pixel_aperture.theta.to_value(u.rad))
 
 
 def _aperture_readout_text(label, semi_major, semi_minor, theta, cd, arcsec_per_kpc):
