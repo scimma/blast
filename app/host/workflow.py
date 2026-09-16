@@ -16,7 +16,7 @@ from host.transient_tasks import local_host_sed_fitting
 from host.transient_tasks import mwebv_host
 from host.transient_tasks import mwebv_transient
 from host.transient_tasks import final_progress
-from host.transient_tasks import render_dataset_revision
+from host.transient_tasks import dataset_revision
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.transient_tasks import validate_global_photometry
@@ -76,74 +76,71 @@ def reprocess_transient(request=None, transient_name=''):
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
-def transient_workflow(transient_name=None):
-    assert transient_name
+def transient_workflow(name=None):
+    """Primary definition and launcher of transient workflows."""
+    assert name
     try:
-        Transient.objects.get(name__exact=transient_name)
-        logger.debug(f'Starting workflow for existing transient "{transient_name}"')
+        Transient.objects.get(name__exact=name)
+        logger.debug(f'Starting workflow for existing transient "{name}"')
     except Transient.DoesNotExist:
-        logger.info(f'''Workflow triggered for transient that does not exist: {transient_name}''')
-        logger.info(f'''Downloading transient info from TNS for "{transient_name}"''')
-        blast_transients = get_transients_from_tns_by_name([transient_name])
+        logger.info(f'''Workflow triggered for transient that does not exist: {name}''')
+        logger.info(f'''Downloading transient info from TNS for "{name}"''')
+        blast_transients = get_transients_from_tns_by_name([name])
         for transient in blast_transients:
             transient.save()
-            logger.debug(f'New transient downloaded from TNS: "{transient_name}"')
+            logger.debug(f'New transient downloaded from TNS: "{name}"')
     # Initialize the tasks if necessary
-    for transient in Transient.objects.filter(tasks_initialized__exact="False", name__exact=transient_name):
-        logger.debug(f'Initializing all transient tasks for "{transient_name}"')
+    for transient in Transient.objects.filter(tasks_initialized__exact="False", name__exact=name):
+        logger.debug(f'Initializing all transient tasks for "{name}"')
         initialize_all_tasks_status(transient)
         transient.tasks_initialized = "True"
         transient.save()
     # Execute the workflow
     workflow = chain(
         # workflow_init.si(transient_name),
-        image_download.si(transient_name),
+        image_download.si(name),
         group(
-            generate_thumbnail.si(transient_name),
+            generate_thumbnail.si(name),
             chain(
-                chain(mwebv_transient.si(transient_name), render_dataset_revision.si(transient_name)),
-                chain(host_match.si(transient_name), render_dataset_revision.si(transient_name)),
-                chain(host_information.si(transient_name), render_dataset_revision.si(transient_name)),
+                mwebv_transient.si(name),
+                host_match.si(name),
+                host_information.si(name),
                 group(
-                    chain(mwebv_host.si(transient_name), render_dataset_revision.si(transient_name)),
+                    mwebv_host.si(name),
                     chain(
-                        chain(global_aperture_construction.si(transient_name),
-                              render_dataset_revision.si(transient_name)),
-                        chain(global_aperture_photometry.si(transient_name),
-                              render_dataset_revision.si(transient_name)),
-                        chain(validate_global_photometry.si(transient_name),
-                              render_dataset_revision.si(transient_name)),
-                        chain(host_spectrum_download.si(transient_name),
-                              render_dataset_revision.si(transient_name)),
-                        chain(generate_thumbnail_host_spec.si(transient_name),
-                              render_dataset_revision.si(transient_name)),
+                        global_aperture_construction.si(name),
+                        global_aperture_photometry.si(name),
+                        validate_global_photometry.si(name),
+                        host_spectrum_download.si(name),
+                        generate_thumbnail_host_spec.si(name),
                     ),
                     chain(
-                        global_aperture_construction.si(transient_name),
-                        global_aperture_photometry.si(transient_name),
-                        validate_global_photometry.si(transient_name),
+                        global_aperture_construction.si(name),
+                        global_aperture_photometry.si(name),
+                        validate_global_photometry.si(name),
                     ),
                     chain(
-                        chain(local_aperture_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
-                        chain(validate_local_photometry.si(transient_name), render_dataset_revision.si(transient_name)),
+                        local_aperture_photometry.si(name),
+                        validate_local_photometry.si(name),
                     ),
                 ),
-                crop_transient_images.si(transient_name),
+                crop_transient_images.si(name),
             ),
         ),
         group(
-            generate_thumbnail_final.si(transient_name),
+            generate_thumbnail_final.si(name),
             chain(
-                chain(global_host_sed_fitting.si(transient_name), render_dataset_revision.si(transient_name)),
-                generate_thumbnail_sed_global.si(transient_name),
+                global_host_sed_fitting.si(name),
+                generate_thumbnail_sed_global.si(name),
             ),
             chain(
-                chain(local_host_sed_fitting.si(transient_name), render_dataset_revision.si(transient_name)),
-                generate_thumbnail_sed_local.si(transient_name),
+                local_host_sed_fitting.si(name),
+                generate_thumbnail_sed_local.si(name),
             ),
         ),
-        chain(final_progress.si(transient_name), render_dataset_revision.si(transient_name))
+        dataset_revision.si(name),
+        final_progress.si(name),
     )
     workflow.delay()
 
-    return transient_name
+    return name
