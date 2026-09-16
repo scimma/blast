@@ -161,7 +161,19 @@ class AperturePhotometryFilter(django_filters.FilterSet):
 class SEDFittingResultFilter(django_filters.FilterSet):
     transient = django_filters.Filter(field_name="transient__name")
     aperture_type = django_filters.Filter(field_name="aperture__type")
-
+    log_mass_gte = django_filters.Filter(field_name="log_mass_50__gte")
+    log_mass_lte = django_filters.Filter(field_name="log_mass_50__lte")
+    log_sfr_gte = django_filters.Filter(field_name="log_sfr_50__gte")
+    log_sfr_lte = django_filters.Filter(field_name="log_sfr_50__lte")
+    log_ssfr_gte = django_filters.Filter(field_name="log_ssfr_50__gte")
+    log_ssfr_lte = django_filters.Filter(field_name="log_ssfr_50__lte")
+    log_age_gte = django_filters.Filter(field_name="log_age_50__gte")
+    log_age_lte = django_filters.Filter(field_name="log_age_50__lte")
+    logzsol_gte = django_filters.Filter(field_name="logzsol_50__gte")
+    logzsol_lte = django_filters.Filter(field_name="logzsol_50__lte")
+    gas_logz_gte = django_filters.Filter(field_name="gas_logz_50__gte")
+    gas_logz_lte = django_filters.Filter(field_name="gas_logz_50__lte")
+    
     class Meta:
         model = SEDFittingResult
         fields = ()

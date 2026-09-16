@@ -246,6 +246,18 @@ SED filtering options
 
 * :code:`transient=` - select SED fitting results associated with a given transient
 * :code:`aperture_type=` - select "global" or "local" SED fitting results
+* :code:`log_mass_gte=` - filter on log(stellar mass) greater than or equal to the value provided
+* :code:`log_mass_lte=` - filter on log(stellar mass) less than or equal to the value provided
+* :code:`log_sfr_gte=` - filter on log(star formation rate) greater than or equal to the value provided
+* :code:`log_sfr_lte=` - filter on log(star formation rate) less than or equal to the value provided
+* :code:`log_ssfr_gte=` - filter on log(specific star formation rate) greater than or equal to the value provided
+* :code:`log_ssfr_lte=` - filter on log(specific star formation rate) less than or equal to the value provided
+* :code:`log_age_gte=` - filter on log(mass-weighted stellar age) greater than or equal to the value provided
+* :code:`log_age_lte=` - filter on log(mass-weighted stellar age) less than or equal to the value provided
+* :code:`logzsol_gte=` - filter on log(stellar metallicity) greater than or equal to the value provided
+* :code:`logzsol_lte=` - filter on log(stellar metallicity) less than or equal to the value provided
+* :code:`gas_logz_gte=` - filter on log(gas-phase metallicity) greater than or equal to the value provided
+* :code:`gas_logz_lte=` - filter on log(gas-phase metallicity) less than or equal to the value provided
 
 Example:
 
