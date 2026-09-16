@@ -1,4 +1,4 @@
-FROM python:3.11.13
+FROM python:3.13.14
 
 ## Install Python dependencies
 COPY docs/requirements.txt /tmp/docs-requirements.txt

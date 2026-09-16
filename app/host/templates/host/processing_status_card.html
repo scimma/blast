@@ -32,7 +32,7 @@
                     {{item.last_processing_time_seconds}}
                 {% endif %}
             </td>
-        {% if is_auth %}
+        {% if is_auth and item.pk %}
         <td class="align-middle">
         {% if item.user_warning %}
             <a href="#" type="button" title="Issue reported. Click to clear. (requires authorization)"><span class="report" 

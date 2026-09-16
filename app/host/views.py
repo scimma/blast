@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
-from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse_lazy
@@ -30,10 +29,12 @@ from host.models import Task
 from host.models import Status
 from host.models import Transient
 from host.models import Host
+from host.models import HostSpectrum
 from host.plotting_utils import plot_bar_chart
 from host.plotting_utils import plot_cutout_image
 from host.plotting_utils import render_sed_plot
 from host.plotting_utils import plot_sed
+from host.plotting_utils import render_host_spectrum_plot
 from host.tables import TransientTable
 from host.tasks import import_transient_list
 from host.tasks import retrigger_transient
@@ -324,7 +325,7 @@ def add_transient(request):
             'name',
         ]
         fields_updated = [key for key, value in transient.items()
-                            if key not in ignored_fields and value is not None]
+                          if key not in ignored_fields and value is not None]
         existing_transient.update_fields = ','.join(fields_updated)
 
         # if we made it all the way to the end, we can save
@@ -379,12 +380,12 @@ def add_transient(request):
                 'Global host SED inference',
             ]
             mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                            task__name='Host MWEBV')
+                                                           task__name='Host MWEBV')
             mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
             mwebv_task_register.status = Status.objects.get(message=mwebv_status)
             mwebv_task_register.save()
             host_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                            task__name='Host information')
+                                                          task__name='Host information')
             host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
             host_task_register.status = Status.objects.get(message=host_status)
             host_task_register.save()
@@ -575,20 +576,20 @@ def add_transient(request):
 def results(request, transient_name):
     param_var_ptype = (
         [
-            "{\\rm log}_{10}(M_{\\ast}/M_{\odot})\,",  # noqa
-            "{\\rm log}_{10}({\\rm SFR})",  # noqa
-            "{\\rm log}_{10}({\\rm sSFR})",  # noqa
-            "{\\rm stellar\ age}",  # noqa
-            "{\\rm log}_{10}(Z_{\\ast}/Z_{\odot})",  # noqa
-            "{\\rm log}_{10}(Z_{gas}/Z_{\odot})\,",  # noqa
+            "{\\rm log}_{10}(M_{\\ast}/M_{\\odot})\\,",
+            "{\\rm log}_{10}({\\rm SFR})",
+            "{\\rm log}_{10}({\\rm sSFR})",
+            "{\\rm stellar\\ age}",
+            "{\\rm log}_{10}(Z_{\\ast}/Z_{\\odot})",
+            "{\\rm log}_{10}(Z_{gas}/Z_{\\odot})\\,",
             "\\tau_2",
-            "\delta",  # noqa
+            "\\delta",
             "\\tau_1/\\tau_2",
             "Q_{PAH}",
             "U_{min}",
-            "{\\rm log}_{10}(\gamma_e)\,",  # noqa
-            "{\\rm log}_{10}(f_{AGN})\,",  # noqa
-            "{\\rm log}_{10}(\\tau_{AGN})\,"  # noqa
+            "{\\rm log}_{10}(\\gamma_e)\\,",
+            "{\\rm log}_{10}(f_{AGN})\\,",
+            "{\\rm log}_{10}(\\tau_{AGN})\\,"
         ],
         [
             "log_mass",
@@ -654,6 +655,7 @@ def results(request, transient_name):
             'Host match',
             'Host information',
             'Host MWEBV',
+            'Host spectrum download',
             'Global aperture construction',
             'Global aperture photometry',
             'Validate global photometry',
@@ -779,14 +781,20 @@ def results(request, transient_name):
         filter_.name: ("yes" if filter_.name in filters else "no")
         for filter_ in Filter.objects.all()
     }
+    cutout_ids = {
+        cutout.filter.name: cutout.pk
+        for cutout in all_cutouts
+    }
 
     # Compile aperture details
     global_aperture = select_aperture(transient)
     local_aperture = Aperture.objects.filter(type__exact="local", transient=transient)
 
-    image_data = b''
     # Generate filter selection form and choose cutout to display
     cutout = select_best_cutout(transient.name)
+    image_data = b''
+    image_data_encoded = ''
+    bokeh_cutout_context = {}
     if request.method == "GET":
         filter_select_form = ImageGetForm(filter_choices=filters)
         # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
@@ -803,7 +811,19 @@ def results(request, transient_name):
                 logger.debug(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
                 image_data = b''
             image_data_encoded = base64.b64encode(image_data).decode()
-            bokeh_cutout_context = {}
+        # If the thumbnail is not available, display the Bokeh cutout plot
+        if image_data == b'':
+            try:
+                bokeh_cutout_context = plot_cutout_image(
+                    cutout=cutout,
+                    transient=transient,
+                    global_aperture=global_aperture.prefetch_related(),
+                    local_aperture=local_aperture.prefetch_related(),
+                )
+            except Exception as err:
+                logger.error(f'''Error rendering cutout plot: {err}''')
+                bokeh_cutout_context = {}
+            image_data_encoded = base64.b64encode(image_data).decode()
 
     # Download the SED thumbnails if they exist
     s3 = ObjectStore()
@@ -843,6 +863,28 @@ def results(request, transient_name):
                     logger.error(f'''Error rendering SED plot: {err2}''')
                     interactive_sed_plot[scope] = {}
 
+    # Download the host spectrum thumbnail if it exists
+    interactive_host_spec_plot = {}
+    image_data = b''
+    host_spectrum = HostSpectrum.objects.filter(host=transient.host).first() if transient.host else None
+    if host_spectrum is not None and host_spectrum.spectrum_file:
+        thumbnail_filepath = host_spectrum.spectrum_file.name.replace(".fits", ".jpg")
+        thumbnail_object_key = os.path.join(settings.S3_BASE_PATH, thumbnail_filepath.strip('/'))
+        try:
+            logger.debug(f'''Downloading thumbnail object: "{thumbnail_object_key}"...''')
+            image_data = s3.get_object(path=thumbnail_object_key)
+        except Exception as err:
+            logger.debug(f'''Error downloading thumbnail object: "{thumbnail_object_key}": {err}''')
+            image_data = b''
+    image_data_encoded_host_spec = base64.b64encode(image_data).decode()
+    # If there is no spectrum plot thumbnail, render the interactive plot
+    if image_data == b'':
+        try:
+            interactive_host_spec_plot = render_host_spectrum_plot(transient)
+        except Exception as err:
+            logger.error(f'''Error rendering host spectrum plot: {err}''')
+            interactive_host_spec_plot = {}
+
     # Construct the Django render() function context
     context = {
         **{
@@ -851,6 +893,7 @@ def results(request, transient_name):
             "host_aliases": ', '.join([alias.alias for alias in host_aliases]),
             "filter_select_form": filter_select_form,
             "filter_status": filter_status,
+            "cutout_ids": cutout_ids,
             "local_aperture": local_aperture[0] if local_aperture.exists() else None,
             "global_aperture": global_aperture[0] if global_aperture.exists() else None,
             "local_sed_results": compile_sed_results(transient, 'base', 'local'),
@@ -861,6 +904,7 @@ def results(request, transient_name):
             "image_data_encoded": image_data_encoded,
             "image_data_encoded_sed_local": image_data_encoded_sed['local'],
             "image_data_encoded_sed_global": image_data_encoded_sed['global'],
+            "image_data_encoded_host_spec": image_data_encoded_host_spec,
         },
         **bokeh_cutout_context,
         **user_warning(transient),
@@ -869,44 +913,10 @@ def results(request, transient_name):
         **compile_workflow_status(transient),
         **interactive_sed_plot['local'],
         **interactive_sed_plot['global'],
+        **interactive_host_spec_plot,
     }
     # Return rendered HTML content
     return render(request, "results.html", context)
-
-
-def stream_sed_output_file(file_path):
-    # Stream the data file from the S3 bucket
-    s3 = ObjectStore()
-    object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
-    filename = os.path.basename(file_path)
-    obj_stream = s3.stream_object(object_key)
-    response = StreamingHttpResponse(streaming_content=obj_stream)
-    response["Content-Disposition"] = f"attachment; filename={filename}"
-    return response
-
-
-@log_usage_metric()
-def download_chains(request, slug, aperture_type):
-    sed_result = get_object_or_404(
-        SEDFittingResult, transient__name=slug, aperture__type=aperture_type
-    )
-    return stream_sed_output_file(sed_result.chains_file.name)
-
-
-@log_usage_metric()
-def download_modelfit(request, slug, aperture_type):
-    sed_result = get_object_or_404(
-        SEDFittingResult, transient__name=slug, aperture__type=aperture_type
-    )
-    return stream_sed_output_file(sed_result.model_file.name)
-
-
-@log_usage_metric()
-def download_percentiles(request, slug, aperture_type):
-    sed_result = get_object_or_404(
-        SEDFittingResult, transient__name=slug, aperture__type=aperture_type
-    )
-    return stream_sed_output_file(sed_result.percentiles_file.name)
 
 
 @log_usage_metric()
@@ -981,6 +991,7 @@ def update_home_page_statistics():
     with open(os.path.join(settings.STATIC_ROOT, 'index.html'), 'w') as fp:
         fp.write(html_body)
 
+
 @login_required
 @log_usage_metric()
 def issue_handling(request, item_id, action):
@@ -993,6 +1004,7 @@ def issue_handling(request, item_id, action):
     return HttpResponseRedirect(
         reverse_lazy("results", kwargs={"transient_name": item.transient.name})
     )
+
 
 # Handler for 403 errors
 def error_view(request, exception, template_name="403.html"):
@@ -1029,6 +1041,23 @@ def fetch_sed_plot(request):
     data = {
         f'bokeh_sed_{scope}_div': context[f'bokeh_sed_{scope}_div'],
         f'bokeh_sed_{scope}_script': context[f'bokeh_sed_{scope}_script'],
+    }
+    return JsonResponse(data)
+
+
+# Function for getting the host spectrum data plot
+@log_usage_metric()
+def fetch_host_spectrum_plot(request):
+    transient_name = request.GET.get('transient_name')
+    # Acquire the transient object or return 404 not found
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return JsonResponse(status=404, data={'message': 'Transient not found.'})
+    context = render_host_spectrum_plot(transient)
+    data = {
+        'bokeh_host_spec_div': context['bokeh_host_spec_div'],
+        'bokeh_host_spec_script': context['bokeh_host_spec_script'],
     }
     return JsonResponse(data)
 

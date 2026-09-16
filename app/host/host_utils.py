@@ -45,6 +45,7 @@ from .photometric_calibration import fluxerr_to_mJy_fluxerr
 from host.models import Aperture
 from host.models import Alias
 from host.models import Host
+from host.models import HostSpectrum
 from host.models import AperturePhotometry
 from host.models import Cutout
 from host.models import Filter
@@ -71,6 +72,8 @@ from host.task_prereqs import GenerateThumbnail_prerequisites
 from host.task_prereqs import GenerateThumbnailFinal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
 from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
+from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
 
 from .object_store import ObjectStore
 from .models import TaskLock
@@ -616,7 +619,7 @@ def query_sdss(position):
     finally:
         # Release the SDSS query lock
         logger.debug('''Releasing SDSS query lock...''')
-        TaskLock.objects.release_lock('sdss_query')
+        TaskLock.objects.release_lock('SDSS_query')
 
     return galaxy_data
 
@@ -875,7 +878,7 @@ def delete_transient(transient_name='', transient=None):
     return err_msg
 
 
-def export_transient_info(transient_name=''):
+def export_dataset(transient_name=''):
     '''Export all data associated with a transient sufficient to import into another Blast instance.'''
     def prune_fields(data_object, model_name):
         if model_name == 'transient':
@@ -889,6 +892,7 @@ def export_transient_info(transient_name=''):
         },
         'transient': {},
         'host': None,
+        'host_spectra': [],
         'apertures': [],
         'cutouts': [],
         'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
@@ -916,6 +920,9 @@ def export_transient_info(transient_name=''):
         aliases = HostSerializer(transient_obj.host).data['aliases']
         assert isinstance(aliases, list)
         transient_data['host']['fields']['aliases'] = aliases
+        # Export host_spectrum information
+        for spectrum in HostSpectrum.objects.filter(host=transient_obj.host):
+            transient_data['host_spectra'].append(json.loads(serializers.serialize("json", [spectrum]))[0])
     # Export cutout image data
     cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
     assert isinstance(cutouts, list)
@@ -1102,6 +1109,26 @@ def import_transient_info(transient_data_archive):
                 if 'aliases' in dataset['host']['fields']:
                     for alias in dataset['host']['fields']['aliases']:
                         Alias.objects.create(alias=alias, host=host)
+            # host_spectra added in v2.0.0
+            if 'host_spectra' in dataset:
+                for spectrum in dataset['host_spectra']:
+                    if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['fields']['spectrum_id']):
+                        logger.info('''An existing host spectrum was found with ID '''
+                                    f'''"{spectrum['fields']['spectrum_id']}"''')
+                        continue
+                    HostSpectrum.objects.create(
+                        host=host,
+                        source=spectrum['fields']['source'],
+                        spectrum_file=spectrum['fields']['spectrum_file'],
+                        wavelength_min_angstrom=spectrum['fields']['wavelength_min_angstrom'],
+                        wavelength_max_angstrom=spectrum['fields']['wavelength_max_angstrom'],
+                        redshift=spectrum['fields']['redshift'],
+                        ra_deg=spectrum['fields']['ra_deg'],
+                        dec_deg=spectrum['fields']['dec_deg'],
+                        spectrum_id=spectrum['fields']['spectrum_id'],
+                        message=spectrum['fields']['message'],
+                        software_version=spectrum['fields']['software_version'],
+                    )
         # Verify that the Cutout objects do not exist (by name).
         for cutout in dataset['cutouts']:
             cutout_name = cutout['fields']['name']
@@ -1325,11 +1352,13 @@ def import_transient_info(transient_data_archive):
         logger.debug(f'Installing "{file_type}" files...')
         if file_type == 'cutout':
             canonical_path_root = settings.CUTOUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'cutouts/'
             thumbnail_extension = '.fits'
             canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
         elif file_type == 'sed':
             canonical_path_root = settings.SED_OUTPUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'sed_data/'
             thumbnail_extension = '.h5'
             canonical_paths = []
@@ -1337,6 +1366,12 @@ def import_transient_info(transient_data_archive):
                                      if aperture['sedfittingresults']]:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
                     canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+        elif file_type == 'host_spectra':
+            canonical_path_root = settings.SPECTRA_ROOT
+            path_prefix_replacement = f'{canonical_path_root}/'
+            tar_root_path = 'host_spectra/'
+            thumbnail_extension = '.fits'
+            canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
         # Include possible thumbnail paths
         thumbail_paths = []
         for canonical_path in canonical_paths:
@@ -1348,8 +1383,7 @@ def import_transient_info(transient_data_archive):
                 logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
                 continue
             # Verify that the file is listed in the transient metadata
-            expected_canonical_path = tarinfo.name.replace(tar_root_path,
-                                                           f'{os.path.join(canonical_path_root, transient_name)}/')
+            expected_canonical_path = tarinfo.name.replace(tar_root_path, path_prefix_replacement)
             # logger.debug(f'Archive file canonical path: {expected_canonical_path}')
             if not [path for path in canonical_paths if path == expected_canonical_path]:
                 logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
@@ -1375,6 +1409,9 @@ def import_transient_info(transient_data_archive):
         install_files('cutout')
         # Import SED fit files
         install_files('sed')
+        # Import host spectra fit files
+        if transient_info['host']:
+            install_files('host_spectra')
 
     # Delete database objects associated with failed imports
     for import_failure in import_failures:
@@ -1402,6 +1439,8 @@ def get_all_task_prerequisites(transient_name):
         'Generate thumbnail final': GenerateThumbnailFinal_prerequisites,
         'Generate thumbnail SED local': GenerateThumbnailSEDLocal_prerequisites,
         'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
+        'Host spectrum download': HostSpectrumDownload_prerequisites,
+        'Generate thumbnail host spectrum': GenerateThumbnailHostSpec_prerequisites,
     }
 
 

@@ -1,9 +1,9 @@
 import os
 
-from django.urls import path, re_path
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from django.urls import re_path, include
+from rest_framework.routers import DefaultRouter
 
-from . import views
+import api.views
 
 base_path = os.environ.get("BASE_PATH", "").strip("/")
 if base_path != "":
@@ -11,26 +11,31 @@ if base_path != "":
 
 urlpatterns = [
     re_path(
-        base_path + r"^transient/delete/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
-        views.delete_transient_view,
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/export/$",
+        api.views.DatasetExportView.as_view(),
     ),
     re_path(
-        base_path + r"^transient/export/(?P<transient_name>[a-zA-Z0-9_-]+)/(?P<all>all/|)$",
-        views.export_transient_view,
+        base_path + r"^dataset/(?P<transient_name>[a-zA-Z0-9_-]+)/$",
+        api.views.DatasetView.as_view(),
     ),
-    path(base_path + 'alias/<str:alias>/', views.alias_handler_get_delete, ),
-    path(base_path + 'alias/<str:alias>/<str:object_type>/<str:name>/', views.alias_handler_post),
 ]
 
-# if os.environ.get("ALLOW_API_POST") == "YES":
-#     urlpatterns.append(
-#         path(
-#             f"""{base_path}transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>""",
-#             views.post_transient,
-#         )
-#     )
+router = DefaultRouter()
 
-urlpatterns += [
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
-    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+router.register(r"transient", api.views.TransientViewSet)
+router.register(r"aperture", api.views.ApertureViewSet)
+router.register(r"cutout", api.views.CutoutViewSet, basename="cutout")
+router.register(r"filter", api.views.FilterViewSet)
+router.register(r"aperturephotometry", api.views.AperturePhotometryViewSet)
+router.register(r"sedfittingresult", api.views.SEDFittingResultViewSet, basename="sedfittingresult")
+router.register(r"taskregister", api.views.TaskRegisterViewSet)
+router.register(r"task", api.views.TaskViewSet)
+router.register(r"host", api.views.HostViewSet)
+router.register(r"alias", api.views.AliasViewSet)
+
+# Login/Logout
+api_url_patterns = [
+    re_path("", include(router.urls)),
 ]
+
+urlpatterns += api_url_patterns

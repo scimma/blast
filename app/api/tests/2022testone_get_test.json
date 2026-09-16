@@ -47,6 +47,7 @@
       "aliases": []
     }
   },
+  "host_spectra": [],
   "apertures": [
     {
       "model": "host.aperture",

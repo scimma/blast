@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-set -e
+set -eo pipefail
 
 bash entrypoints/wait-for-it.sh ${DB_HOST}:${DB_PORT} --timeout=0
 bash entrypoints/wait-for-it.sh ${MESSAGE_BROKER_HOST}:${MESSAGE_BROKER_PORT} --timeout=0

@@ -3,7 +3,7 @@
 
 {% block title %} {{transient.get_display_name}} results {% endblock %}
 {% block script %}
-{{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }}
+{{ bokeh_cutout_script | safe }} {{ bokeh_sed_local_script | safe }} {{ bokeh_sed_global_script | safe }} {{ bokeh_host_spec_script | safe }}
 
 
 <script>
@@ -16,9 +16,9 @@ function viewSize() {
 Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderElement => {
     var titleElement = cardHeaderElement.getElementsByTagName('h4')[0]
     var cardBodyElement = Array.from(cardHeaderElement.parentElement.getElementsByClassName('card-body'))[0]
-    if (titleElement.innerHTML.search('Cutout Download Report') >= 0) {
-         cardBodyElement.style.display = 'none'
-    }
+    // if (titleElement.innerHTML.search('Cutout Download Report') >= 0) {
+    //      cardBodyElement.style.display = 'none'
+    // }
     if (viewSize() == 'sm' || viewSize() == 'xs') {
         if (titleElement.innerHTML.search('Cutout Download Report') >= 0 ||
             titleElement.innerHTML.search('Processing Status') >= 0 ||
@@ -83,14 +83,15 @@ Array.from(document.getElementsByClassName('card-header')).forEach(cardHeaderEle
             <div class="col-lg-7 col-md-6">
                 {% include "host/cutout_card.html" %}
                 {% include "host/sed_card.html" %}
+                {% include "host/host_spectrum_card.html" %}
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-6 col-md-12">
-                {% include "host/photometry_card.html" %}
-            </div>
-            <div class="col-lg-6 col-md-12">
+            <div class="col-lg-5 col-md-12">
                 {% include "host/sed_inference_card.html" %}
+            </div>
+            <div class="col-lg-7 col-md-12">
+                {% include "host/photometry_card.html" %}
             </div>
         </div>
     </div>

@@ -1,16 +1,19 @@
 name: Publish Docker image
 
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-      - "dev[0-9]-v[0-9]+.[0-9]+.[0-9]+"
-    paths:
-      - "docker/**"
-      - "env/**"
-      - "app/**"
-      - "run/**"
-      - ".github/**"
+  # Disable the event automatic event triggers until this action is fixed.
+  # Retain ability to manually trigger the action if needed.
+  workflow_dispatch:
+  # push:
+  #   tags:
+  #     - "v[0-9]+.[0-9]+.[0-9]+"
+  #     - "dev[0-9]-v[0-9]+.[0-9]+.[0-9]+"
+  #   paths:
+  #     - "docker/**"
+  #     - "env/**"
+  #     - "app/**"
+  #     - "run/**"
+  #     - ".github/**"
 
 jobs:
   build_test_push:
@@ -44,7 +47,7 @@ jobs:
 
       - name: Login to container registry
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v4
+        uses: docker/login-action@v4.6.0
         with:
           registry: "registry.gitlab.com"
           username: "${{ secrets.GITLAB_REGISTRY_USERNAME }}"

@@ -13,3 +13,7 @@ def app_version(prefix):
 @register.simple_tag(name="support_email")
 def support_email():
     return settings.SUPPORT_EMAIL
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
