@@ -10,6 +10,7 @@ import time
 import warnings
 from collections import namedtuple
 from xml.parsers.expat import ExpatError
+from collections.abc import Mapping
 
 import astropy.units as u
 import numpy as np
@@ -1497,3 +1498,65 @@ def get_processing_status_and_progress(transient):
             processing_status = 'completed'
 
     return progress, processing_status
+
+
+def _canonicalize(value):
+    """Convert a value into a consistently comparable form."""
+    if isinstance(value, Mapping):
+        return (
+            "dict",
+            tuple(
+                sorted(
+                    (
+                        repr(key),
+                        _canonicalize(val),
+                    )
+                    for key, val in value.items()
+                )
+            ),
+        )
+
+    if isinstance(value, list):
+        # Sorting makes list order irrelevant while preserving duplicates.
+        items = [_canonicalize(item) for item in value]
+        return ("list", tuple(sorted(items, key=repr)))
+
+    if isinstance(value, tuple):
+        return ("tuple", tuple(_canonicalize(item) for item in value))
+
+    return ("value", value)
+
+
+def _values_equal(first, second):
+    return _canonicalize(first) == _canonicalize(second)
+
+
+def equal_dicts(first, second, path=""):
+    """Recursively print differences between two dictionaries."""
+
+    all_keys = first.keys() | second.keys()
+
+    for key in all_keys:
+        current_path = f"{path}.{key}" if path else str(key)
+
+        if key not in first:
+            logger.debug(f"Missing from first: {current_path} = {second[key]!r}")
+            continue
+
+        if key not in second:
+            logger.debug(f"Missing from second: {current_path} = {first[key]!r}")
+            continue
+
+        value1 = first[key]
+        value2 = second[key]
+
+        if isinstance(value1, Mapping) and isinstance(value2, Mapping):
+            return equal_dicts(value1, value2, current_path)
+        elif _values_equal(value1, value2):
+            return True
+        else:
+            logger.debug(
+                f"Different at {current_path}: "
+                f"{value1!r} != {value2!r}"
+            )
+            return False

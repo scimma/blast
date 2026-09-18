@@ -51,6 +51,7 @@ from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
+from host.host_utils import equal_dicts
 from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
@@ -1848,26 +1849,19 @@ def dataset_revision(transient_name):
             assert candidate_dr.data['files'][canonical_path] == checksum
         # If any changes to the immutable tabular data fields are detected, make a new revision
         # Check app version in metadata
-        logger.debug(candidate_dr.data['export'])
-        logger.debug(previous_dr.data['export'])
+        # logger.debug(candidate_dr.data['export'])
+        # logger.debug(previous_dr.data['export'])
         candidate_app_version = candidate_dr.data['export']['metadata']['app_version']
         previous_app_version = previous_dr.data['export']['metadata']['app_version']
         assert candidate_app_version == previous_app_version
         # Compare other top-level objects
-        previous_dr_data = dict(sorted(previous_dr.data['export'].items()))
-        candidate_dr_data = dict(sorted(candidate_dr.data['export'].items()))
-        for key in candidate_dr_data.keys():
-            if key in ['metadata', 'workflow_tasks']:
-                continue
-            assert candidate_dr_data[key] == previous_dr.data['export'][key]
-        # from copy import deepcopy
-        # candidate_data_filtered = deepcopy(candidate_dr.data['export'])
-        # previous_data_filtered = deepcopy(previous_dr.data['export'])
-        # candidate_data_filtered.pop('metadata')
-        # previous_data_filtered.pop('metadata')
-        # candidate_data_filtered.pop('workflow_tasks')
-        # previous_data_filtered.pop('workflow_tasks')
-        # assert candidate_data_filtered == previous_data_filtered
+        previous_dr_data = previous_dr.data['export']
+        candidate_dr_data = candidate_dr.data['export']
+        previous_dr_data.pop('metadata')
+        candidate_dr_data.pop('metadata')
+        previous_dr_data.pop('workflow_tasks')
+        candidate_dr_data.pop('workflow_tasks')
+        assert equal_dicts(previous_dr_data, candidate_dr_data)
         logger.info(f'Dataset "{transient.name}" unchanged. No dataset revision created.')
     except (AssertionError, IndexError) as err:
         logger.debug(err)
