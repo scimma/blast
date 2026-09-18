@@ -15,8 +15,8 @@ from host.transient_tasks import local_aperture_photometry
 from host.transient_tasks import local_host_sed_fitting
 from host.transient_tasks import mwebv_host
 from host.transient_tasks import mwebv_transient
-from host.transient_tasks import final_progress
-from host.transient_tasks import dataset_revision
+from host.tasks import final_progress
+from host.tasks import dataset_revision
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.transient_tasks import validate_global_photometry

@@ -3,40 +3,6 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-TASK_NAME = 'Dataset version control'
-
-
-def add_dataset_revision_task(apps, schema_editor):
-    '''Add the new Dataset version control task definition'''
-    Task = apps.get_model("host", "Task")
-    Task.objects.create(name=TASK_NAME)
-
-
-def add_taskregisters(apps, schema_editor):
-    '''Add task registers for the new task to existing transients so that they will run when retriggered.'''
-    Transient = apps.get_model("host", "Transient")
-    TaskRegister = apps.get_model("host", "TaskRegister")
-    Task = apps.get_model("host", "Task")
-    Status = apps.get_model("host", "Status")
-    not_processed_status = Status.objects.get(message__exact="not processed")
-
-    all_transients = Transient.objects.all()
-    all_trs = TaskRegister.objects.select_related('transient').select_related('task').all()
-    num_transients = len(all_transients)
-    task = Task.objects.get(name=TASK_NAME)
-    for idx, transient in enumerate(all_transients):
-        print(f'[{idx + 1}/{num_transients}] Adding task register for transient "{transient.name}": '
-              f'"{TASK_NAME}"...')
-        if not all_trs.filter(transient=transient, task=task):
-            TaskRegister.objects.create(
-                transient=transient,
-                task=task,
-                status=not_processed_status,
-            )
-        else:
-            print(f'''WARNING: Unexpected TaskRegister object already exists for "{TASK_NAME}" '''
-                  f'''on transient "{transient.name}".''')
-
 
 class Migration(migrations.Migration):
 
@@ -58,6 +24,4 @@ class Migration(migrations.Migration):
                 'constraints': [models.UniqueConstraint(fields=('transient', 'revision'), name='unique_revision')],
             },
         ),
-        migrations.RunPython(add_dataset_revision_task),
-        migrations.RunPython(add_taskregisters),
     ]

@@ -1442,6 +1442,7 @@ def get_all_task_prerequisites(transient_name):
         'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
         'Host spectrum download': HostSpectrumDownload_prerequisites,
         'Generate thumbnail host spectrum': GenerateThumbnailHostSpec_prerequisites,
+        'Generate thumbnail host spectrum': GenerateThumbnailHostSpec_prerequisites,
     }
 
 
