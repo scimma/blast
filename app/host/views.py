@@ -2,10 +2,13 @@ import django_filters
 import os
 import csv
 import io
+import json
 import base64
+import json
 import numpy as np
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -15,6 +18,10 @@ from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
+from host.aperture_utils import APERTURE_TYPES
+from host.aperture_utils import _resolve_cutout
+from host.aperture_utils import _apply_aperture_edit
+from host.aperture_utils import cutout_wcs
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
@@ -149,6 +156,88 @@ def transient_list(request):
     context = {"transients": transients, "table": table, "filter": transientfilter}
     return render(request, "transient_list.html", context)
 
+
+def retrigger_updated_transient_workflow(existing_transient, update_host, update_aperture):
+    # reset the relevant task statuses to "not processed" so that they can be re-triggered.
+    # this is a pretty annoying set of logic, the goal is not to reprocess any jobs that
+    # would override the customized data
+    tasknames_to_redo = []
+    tasknames_to_skip = []
+    fields_updated = existing_transient.update_fields.split(',')
+    if 'ra_deg' in fields_updated or 'dec_deg' in fields_updated:
+        tasknames_to_redo += [
+            'Transient MWEBV',
+            'Host match',
+            'Host information',
+            'Host MWEBV',
+            'Global aperture construction',
+            'Global aperture photometry',
+            'Validate global photometry',
+            'Global host SED inference',
+            'Local aperture photometry',
+            'Validate local photometry',
+            'Local host SED inference',
+        ]
+    if 'redshift' in fields_updated or 'host_redshift' in fields_updated:
+        tasknames_to_redo += [
+            'Global host SED inference',
+            'Local aperture photometry',
+            'Validate local photometry',
+            'Local host SED inference',
+        ]
+
+    if update_host:
+        tasknames_to_skip += [
+            'Cutout download',
+            'Transient MWEBV',
+            'Host match',
+            'Host information',
+            'Host MWEBV',
+        ]
+        tasknames_to_redo += [
+            'Global aperture construction',
+            'Global aperture photometry',
+            'Validate global photometry',
+            'Global host SED inference',
+        ]
+        mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,
+                                                        task__name='Host MWEBV')
+        mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
+        mwebv_task_register.status = Status.objects.get(message=mwebv_status)
+        mwebv_task_register.save()
+        host_task_register = TaskRegister.objects.get(transient=existing_transient,
+                                                        task__name='Host information')
+        host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
+        host_task_register.status = Status.objects.get(message=host_status)
+        host_task_register.save()
+
+    if update_aperture:
+        tasknames_to_skip += ['Global aperture construction']
+        tasknames_to_redo += [
+            'Global aperture photometry',
+            'Validate global photometry',
+            'Global host SED inference',
+        ]
+    # now we make sure that tasks_to_redo doesn't include anything in tasks to skip
+    for i, tnr in enumerate(tasknames_to_redo):
+        if tnr in tasknames_to_skip:
+            tasknames_to_redo.pop(i)
+    tasknames_to_redo = np.unique(tasknames_to_redo)
+    tasknames_to_skip = np.unique(tasknames_to_skip)
+
+    tasks_to_redo = TaskRegister.objects.filter(transient=existing_transient,
+                                                task__name__in=tasknames_to_redo)
+    tasks_to_skip = TaskRegister.objects.filter(transient=existing_transient,
+                                                task__name__in=tasknames_to_skip)
+    for tr in tasks_to_redo:
+        tr.status = Status.objects.get(message='not processed')
+        tr.save()
+    for tr in tasks_to_skip:
+        tr.status = Status.objects.get(message='processed')
+        tr.save()
+    # Retrigger updated transients
+    retrigger_transient(transient_name=existing_transient.name)
+    return existing_transient.name
 
 @permission_required("host.upload_transient", raise_exception=True)
 @log_usage_metric()
@@ -335,88 +424,6 @@ def add_transient(request):
         if update_aperture:
             aperture.save()
         return existing_transient, update_host, update_aperture
-
-    def retrigger_updated_transient_workflow(existing_transient, update_host, update_aperture):
-        # reset the relevant task statuses to "not processed" so that they can be re-triggered.
-        # this is a pretty annoying set of logic, the goal is not to reprocess any jobs that
-        # would override the customized data
-        tasknames_to_redo = []
-        tasknames_to_skip = []
-        fields_updated = existing_transient.update_fields.split(',')
-        if 'ra_deg' in fields_updated or 'dec_deg' in fields_updated:
-            tasknames_to_redo += [
-                'Transient MWEBV',
-                'Host match',
-                'Host information',
-                'Host MWEBV',
-                'Global aperture construction',
-                'Global aperture photometry',
-                'Validate global photometry',
-                'Global host SED inference',
-                'Local aperture photometry',
-                'Validate local photometry',
-                'Local host SED inference',
-            ]
-        if 'redshift' in fields_updated or 'host_redshift' in fields_updated:
-            tasknames_to_redo += [
-                'Global host SED inference',
-                'Local aperture photometry',
-                'Validate local photometry',
-                'Local host SED inference',
-            ]
-
-        if update_host:
-            tasknames_to_skip += [
-                'Cutout download',
-                'Transient MWEBV',
-                'Host match',
-                'Host information',
-                'Host MWEBV',
-            ]
-            tasknames_to_redo += [
-                'Global aperture construction',
-                'Global aperture photometry',
-                'Validate global photometry',
-                'Global host SED inference',
-            ]
-            mwebv_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                           task__name='Host MWEBV')
-            mwebv_status = MWEBV_Host(existing_transient.name)._run_process(existing_transient)
-            mwebv_task_register.status = Status.objects.get(message=mwebv_status)
-            mwebv_task_register.save()
-            host_task_register = TaskRegister.objects.get(transient=existing_transient,
-                                                          task__name='Host information')
-            host_status = HostInformation(existing_transient.name)._run_process(existing_transient)
-            host_task_register.status = Status.objects.get(message=host_status)
-            host_task_register.save()
-
-        if update_aperture:
-            tasknames_to_skip += ['Global aperture construction']
-            tasknames_to_redo += [
-                'Global aperture photometry',
-                'Validate global photometry',
-                'Global host SED inference',
-            ]
-        # now we make sure that tasks_to_redo doesn't include anything in tasks to skip
-        for i, tnr in enumerate(tasknames_to_redo):
-            if tnr in tasknames_to_skip:
-                tasknames_to_redo.pop(i)
-        tasknames_to_redo = np.unique(tasknames_to_redo)
-        tasknames_to_skip = np.unique(tasknames_to_skip)
-
-        tasks_to_redo = TaskRegister.objects.filter(transient=existing_transient,
-                                                    task__name__in=tasknames_to_redo)
-        tasks_to_skip = TaskRegister.objects.filter(transient=existing_transient,
-                                                    task__name__in=tasknames_to_skip)
-        for tr in tasks_to_redo:
-            tr.status = Status.objects.get(message='not processed')
-            tr.save()
-        for tr in tasks_to_skip:
-            tr.status = Status.objects.get(message='processed')
-            tr.save()
-        # Retrigger updated transients
-        retrigger_transient(transient_name=existing_transient.name)
-        return existing_transient.name
 
     errors = []
     defined_transient_names = []
@@ -1068,6 +1075,8 @@ def cutout_fits_plot(request):
     if request.method == 'GET':
         transient_name = request.GET.get('transient_name')
         filter = request.GET.get('filter')
+        editable = request.GET.get("editable", "false").lower() == "true"
+
 
         # Acquire the transient object or return 404 not found
         try:
@@ -1087,5 +1096,87 @@ def cutout_fits_plot(request):
             transient=transient,
             global_aperture=global_aperture.prefetch_related(),
             local_aperture=local_aperture.prefetch_related(),
+            editable=editable
         )
         return JsonResponse(bokeh_context)
+
+# @login_required
+@log_usage_metric()
+def save_aperture_changes(request):
+    if request.method != "POST":
+        return JsonResponse(
+            {"success": False, "message": "Only POST requests are allowed."},
+            status=405,
+        )
+
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse(
+            {"success": False, "message": "Invalid JSON payload."},
+            status=400,
+        )
+
+    transient_name = payload.get("transient_name")
+    filter_name = payload.get("filter") or ""
+    edits = payload.get("apertures", [])
+
+    if not transient_name:
+        return JsonResponse(
+            {"success": False, "message": "Missing transient_name."},
+            status=400,
+        )
+
+    if not isinstance(edits, list) or not edits:
+        return JsonResponse(
+            {"success": False, "message": "No aperture edits supplied."},
+            status=400,
+        )
+
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "message": "Transient not found."},
+            status=404,
+        )
+
+    cutout = _resolve_cutout(transient, filter_name)
+    if cutout is None:
+        return JsonResponse(
+            {"success": False,
+             "message": "Could not identify the cutout these edits were made on."},
+            status=400,
+        )
+
+    wcs = cutout_wcs(cutout) 
+    if wcs is None:
+        return JsonResponse(
+            {"success": False,
+             "message": f'''Could not load the WCS for cutout "{cutout.name}".'''},
+            status=409,
+        )
+
+    if len(edits) > len(APERTURE_TYPES):
+        return JsonResponse({"success": False, "message": "Too many aperture edits suppllied"}, status=400,)
+
+    try:
+        with transaction.atomic():
+            saved = [_apply_aperture_edit(transient, wcs, edit) for edit in edits]
+    except Aperture.DoesNotExist:
+        return JsonResponse(
+            {"success": False,
+             "message": "Aperture not found for this transient."},
+            status=404,
+        )
+    except (KeyError, TypeError, ValueError) as err:
+        return JsonResponse(
+            {"success": False, "message": f"Invalid aperture edit: {err}"},
+            status=400,
+        )
+
+    return JsonResponse({
+        "success": True,
+        "transient_name": transient_name,
+        "apertures": saved,
+    })
