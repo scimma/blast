@@ -1,7 +1,12 @@
 from astropy.io import fits
 from astropy.wcs import WCS
 import numpy as np
+from django.db import transaction
+from django.db.models import Q
 from host.host_utils import select_best_cutout
+from host.host_utils import select_aperture
+from host.host_utils import inspect_worker_tasks
+from host.host_utils import get_processing_status_and_progress
 from host.plotting_utils import delete_cached_file
 from host.plotting_utils import normalize_pixel_axes
 from host.plotting_utils import _pixel_to_arcsec_matrix
@@ -21,11 +26,13 @@ APERTURE_EDITABLE_FIELDS = (
 )
 
 APERTURE_EQUALITY_TOLERANCE = 1e-9
+APERTURE_TYPES = ("global", "local") 
 
 def _resolve_cutout(transient, filter_name):
     if not filter_name:
         return select_best_cutout(transient.name)
-    return Cutout.objects.filter(name__exact=f"{transient.name}_{filter_name}").first()
+    return Cutout.objects.filter(name__exact=f"{transient.name}_{filter_name}").filter(~Q(fits="")).first()
+
 
 def _edit_float(edit, key):
     try:
@@ -43,12 +50,30 @@ def _unchanged(stored, incoming):
         float(stored), float(incoming), rtol=0.0, atol=APERTURE_EQUALITY_TOLERANCE,
     )
 
-def _apply_aperture_edit(transient, wcs, edit):
-    aperture_id = edit.get("apertureId")
-    if aperture_id is None:
-        raise ValueError("missing apertureId")
+def resolve_aperture_for_edit(transient, aperture_type, lock=False):
+    """
+    Resolve aperture row that edit belons to from transient and type info
+    """
 
-    aperture = Aperture.objects.get(id=aperture_id, transient=transient)
+    if aperture_type == "global":
+        queryset = select_aperture(transient)
+    elif aperture_type == "local":
+        queryset = Aperture.objects.filter(transient=transient, type__exact="local", name__exact=f"{transient.name}_local",)
+    else:
+        raise ValueError(f"unknown aperture type {aperture_type}")
+
+    if lock:
+        queryset = queryset.select_for_update()
+    return queryset.first()
+
+def _apply_aperture_edit(transient, wcs, edit):
+    aperture_type = edit.get("apertureType")
+    if aperture_type not in APERTURE_TYPES:
+        raise ValueError(f"unknown aperture type {aperture_type}")
+
+    aperture = resolve_aperture_for_edit(transient, aperture_type, lock=True)
+    if aperture is None:
+        raise Aperture.DoesNotExist(f"no {aperture_type} for transient {transient.name}")
 
     geometry = aperture_sky_geometry(
         wcs,
@@ -60,7 +85,7 @@ def _apply_aperture_edit(transient, wcs, edit):
     )
     if (geometry["semi_major_axis_arcsec"] <= 0
             or geometry["semi_minor_axis_arcsec"] <= 0):
-        raise ValueError(f"aperture {aperture_id} would have a non-positive axis")
+        raise ValueError(f"{aperture_type} aperture would have a non-positive axis")
 
     updates = {field: geometry[field] for field in APERTURE_EDITABLE_FIELDS}
 
@@ -81,11 +106,12 @@ def _apply_aperture_edit(transient, wcs, edit):
             f'''Aperture {aperture.id} (type "{aperture.type}", transient '''
             f'''"{transient.name}") edited by hand: {changed}'''
         )
-        # Note: AperturePhotometry and SEDFittingResult rows for this aperture are now stale. 
+
 
     return {
         "apertureId": aperture.id,
         "apertureType": aperture.type,
+        "apertureName": aperture.name,
         "changed": sorted(changed),
         "semiMajorArcsec": aperture.semi_major_axis_arcsec,
         "semiMinorArcsec": aperture.semi_minor_axis_arcsec,

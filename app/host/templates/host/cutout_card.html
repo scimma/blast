@@ -46,7 +46,7 @@
     var activePlotFilter = "";
 
     function recordApertureChange(evt) {
-        pendingApertureChanges[evt.detail.apertureId] = evt.detail;
+        pendingApertureChanges[evt.detail.apertureType] = evt.detail;
         setSaveButtonState("Save Aperture Changes",
             Object.keys(pendingApertureChanges).length === 0,
         );
@@ -81,52 +81,8 @@
         btn.classList.toggle('btn-outline-secondary', !apertureEditable);
         btn.classList.toggle('btn-secondary', apertureEditable);
 
-        if (!apertureEditable) {
-            // Turning editing off: freeze the plot exactly as it is instead of
-            // re-fetching from the server. A re-fetch pulls pristine geometry
-            // from the DB and wipes out any local, unsaved drag edits.
-            if (freezeApertureEditing()) {
-                return;
-            }
-            // If the Bokeh models weren't found for some reason, fall back to
-            // a normal refetch so the button doesn't just do nothing.
-        }
-
         var filter = document.getElementById('id_filters').value;
         cutoutImgClick(transient, filter, apertureEditable);
-    }
-
-    var APERTURE_EDIT_RENDERER_NAMES = [
-        'aperture_handle_renderer',
-        'aperture_center_renderer',
-        'ghost_aperture_renderer',
-    ];
-
-    function freezeApertureEditing() {
-        if (typeof Bokeh === 'undefined' || !Bokeh.documents || !Bokeh.documents.length) {
-            return false;
-        }
-        var found = false;
-        Bokeh.documents.forEach(function (doc) {
-            var tool = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_tool');
-            // var handles = doc.get_model_by_name && doc.get_model_by_name('aperture_handle_renderer') && doc.get_model_by_name('aperture_center_renderer');
-            if (tool) {
-                tool.active = false;
-                found = true;
-            }
-            APERTURE_EDIT_RENDERER_NAMES.forEach(function (name) {
-                var handle = doc.get_model_by_name && doc.get_model_by_name(name);
-                if (handle) {
-                    handle.visible = false;
-                    found = true;
-                }
-            });
-            // if (handles) {
-            //     handles.visible = false;
-            //     found = true;
-            // }
-        });
-        return found;
     }
 
     function saveApertureChanges(transient) {
@@ -151,9 +107,16 @@
                     return ap.changed && ap.changed.length;
                 });
                 setSaveButtonState("Save Aperture Changes", true);
+                var note = "";
+                if (resp.workflow_retriggered) {
+                    note = " Photometry and SED fitting have been queued to re-run";
+                }
+                if (resp.local_edit_not_retriggered) {
+                    note += "local aperture was saved for display only, rebuilt from redshift"
+                }
                 setApertureSaveStatus(
                     written.length
-                        ? "Saved " + written.length + " aperture(s)."
+                        ? "Saved " + written.length + " aperture(s)." + note
                         : "No geometry changes to save.",
                     false
                 );
