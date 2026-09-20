@@ -1552,12 +1552,13 @@ def equal_dicts(first, second, path=""):
         value2 = second[key]
 
         if isinstance(value1, Mapping) and isinstance(value2, Mapping):
-            return equal_dicts(value1, value2, current_path)
+            is_equal = equal_dicts(value1, value2, current_path)
         elif _values_equal(value1, value2):
-            return True
+            is_equal = True
         else:
             logger.debug(
                 f"Different at {current_path}: "
                 f"{value1!r} != {value2!r}"
             )
-            return False
+            is_equal = False
+    return is_equal

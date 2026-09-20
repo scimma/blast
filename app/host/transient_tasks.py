@@ -1,6 +1,6 @@
 import math
 import os
-# from shutil import rmtree
+from shutil import rmtree
 import io
 
 import numpy as np
@@ -13,7 +13,7 @@ from host.base_tasks import task_time_limit
 from time import process_time
 from billiard.exceptions import SoftTimeLimitExceeded
 from django.utils import timezone
-
+from copy import deepcopy
 from host.task_prereqs import ImageDownload_prerequisites
 from host.task_prereqs import MWEBV_Transient_prerequisites
 from host.task_prereqs import HostMatch_prerequisites
@@ -36,7 +36,7 @@ from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
 
 from host.cutouts import download_and_save_cutouts
 from host.prost import run_prost
-# from host.host_utils import export_dataset
+from host.host_utils import export_dataset
 from host.host_utils import select_aperture
 from host.host_utils import check_global_contamination
 from host.host_utils import check_local_radius
@@ -51,7 +51,7 @@ from host.host_utils import select_cutout_aperture
 from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
-# from host.host_utils import equal_dicts
+from host.host_utils import equal_dicts
 from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
@@ -67,7 +67,7 @@ from host.models import SEDFittingResult
 from host.models import StarFormationHistoryResult
 from host.models import Transient
 from host.models import HostSpectrum
-# from host.models import DatasetRevision
+from host.models import DatasetRevision
 from host.prospector import build_model
 from host.prospector import build_obs
 from host.prospector import fit_model
@@ -1771,3 +1771,99 @@ def validate_local_photometry(transient_name):
 )
 def host_spectrum_download(transient_name):
     HostSpectrumDownload(transient_name).run_process()
+
+
+@shared_task(
+    name="Get Final Progress",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def final_progress(transient_name):
+    transient = Transient.objects.get(name=transient_name)
+    transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+    logger.debug(f'''Final progress: {(transient.progress, transient.processing_status)}''')
+    transient.save()
+    # Clean up scratch directories
+    for base_path in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
+        try:
+            rmtree(os.path.join(base_path, transient.name))
+        except FileNotFoundError:
+            pass
+
+
+@shared_task(
+    name="Dataset version control",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def dataset_revision(transient_name):
+    """Create a new dataset revision if needed."""
+
+    def get_checksum(s3_instance, canonical_path):
+        object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+        logger.debug(f'Getting checksum for "{object_key}"')
+        file_obj = s3_instance.object_info(object_key)
+        etag = file_obj.etag
+        return etag
+
+    transient = Transient.objects.get(name=transient_name)
+    # Export tabular data
+    dataset = export_dataset(transient.name)
+
+    # Generate table of file object checksums
+    canonical_paths = []
+    # SED fitting results
+    for aperture in dataset['apertures']:
+        for sedfittingresult in aperture['sedfittingresults']:
+            canonical_paths.extend([
+                sedfittingresult['fields']['posterior'],
+                sedfittingresult['fields']['chains_file'],
+                sedfittingresult['fields']['percentiles_file'],
+                sedfittingresult['fields']['model_file'],
+            ])
+    # Cutout images
+    for cutout_path in [cutout['fields']['fits'] for cutout in dataset['cutouts'] if cutout['fields']['fits']]:
+        canonical_paths.append(cutout_path)
+    # Host spectra files
+    for host_spectrum in dataset['host_spectra']:
+        canonical_paths.append(host_spectrum['fields']['spectrum_file'])
+    s3 = ObjectStore()
+    checksums = {canonical_path: get_checksum(s3, canonical_path) for canonical_path in canonical_paths}
+
+    # Create a candidate DR for comparison
+    candidate_dr = DatasetRevision(transient=transient, data={'export': dataset, 'files': checksums})
+    # Fetch latest DR
+    previous_dr = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    if previous_dr is None:
+        # Save candidate DR to the database as the first revision
+        assert candidate_dr.revision == 0
+        candidate_dr.save()
+        logger.debug(f'New dataset revision created: {candidate_dr}')
+        return
+    # If there is an existing DR, compare and create a new DR if any differences are detected.
+    try:
+        # Must have the same number of files
+        assert len(candidate_dr.data['files']) == len(previous_dr.data['files'])
+        # If any changes to output files are detected, make a new revision
+        for canonical_path, checksum in previous_dr.data['files'].items():
+            assert candidate_dr.data['files'][canonical_path] == checksum
+        # If any changes to the immutable tabular data fields are detected, make a new revision
+        # Check app version in metadata
+        candidate_app_version = candidate_dr.data['export']['metadata']['app_version']
+        previous_app_version = previous_dr.data['export']['metadata']['app_version']
+        assert candidate_app_version == previous_app_version
+        # Compare the rest of the data structure
+        previous_dr_data = deepcopy(previous_dr.data['export'])
+        candidate_dr_data = deepcopy(candidate_dr.data['export'])
+        previous_dr_data.pop('metadata')
+        candidate_dr_data.pop('metadata')
+        previous_dr_data.pop('workflow_tasks')
+        candidate_dr_data.pop('workflow_tasks')
+        assert equal_dicts(previous_dr_data, candidate_dr_data)
+        logger.info(f'Dataset "{transient.name}" unchanged. No dataset revision created.')
+    except (AssertionError, IndexError) as err:
+        logger.debug(err)
+        # Increment the revision index
+        candidate_dr.revision = previous_dr.revision + 1
+        candidate_dr.save()
+        logger.debug(f'New dataset revision created: {candidate_dr}')
