@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from django.core import serializers
 from api.serializers import TransientSerializer
 from api.serializers import HostSerializer
+from api.serializers import DatasetSerializer
 import os
 import math
 import time
@@ -56,6 +57,7 @@ from host.models import Task
 from host.models import Transient
 from host.models import Survey
 from host.models import StarFormationHistoryResult
+from host.models import DatasetRevision
 from host.task_prereqs import ImageDownload_prerequisites
 from host.task_prereqs import MWEBV_Transient_prerequisites
 from host.task_prereqs import HostMatch_prerequisites
@@ -886,82 +888,96 @@ def export_dataset(transient_name=''):
             data_object['fields'].pop('added_by')
         return data_object
 
-    transient_data = {
-        'metadata': {
-            'app_version': f'v{settings.APP_VERSION}',
-            'export_time': datetime.now(timezone.utc).isoformat(),
-        },
-        'transient': {},
-        'host': None,
-        'host_spectra': [],
-        'apertures': [],
-        'cutouts': [],
-        'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
-        'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
-        'workflow_tasks': [],
-    }
+    # # TODO: This data schema must be manually synchronized with the `app/api/serializers.py:TransientDatasetSerializer`
+    # #       class definition used by the OpenAPI spec generator. Ideally
+    # transient_data = {
+    #     'metadata': {
+    #         'app_version': f'v{settings.APP_VERSION}',
+    #         'export_time': datetime.now(timezone.utc).isoformat(),
+    #         'dataset_version': 0,
+    #     },
+    #     'transient': {},
+    #     'host': None,
+    #     'host_spectra': [],
+    #     'apertures': [],
+    #     'cutouts': [],
+    #     'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
+    #     'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
+    #     'workflow_tasks': [],
+    # }
     transient_search = Transient.objects.filter(name__exact=transient_name)
     if not transient_search:
         return {}
     transient_obj = transient_search[0]
-    transient = json.loads(serializers.serialize("json", transient_search))[0]
-    assert isinstance(transient, dict)
-    # Export intrinsic transient data
-    transient_data['transient'] = prune_fields(transient, 'transient')
-    # Include transient aliases
-    # TODO: Unify the serialization across the application and API functions
-    aliases = TransientSerializer(transient_obj).data['aliases']
-    assert isinstance(aliases, list)
-    transient_data['transient']['fields']['aliases'] = aliases
-    # Export host information
-    if transient_obj.host:
-        transient_data['host'] = json.loads(serializers.serialize("json", [transient_obj.host]))[0]
-        # Include host aliases
-        # TODO: Unify the serialization across the application and API functions
-        aliases = HostSerializer(transient_obj.host).data['aliases']
-        assert isinstance(aliases, list)
-        transient_data['host']['fields']['aliases'] = aliases
-        # Export host_spectrum information
-        for spectrum in HostSpectrum.objects.filter(host=transient_obj.host):
-            transient_data['host_spectra'].append(json.loads(serializers.serialize("json", [spectrum]))[0])
-    # Export cutout image data
-    cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
-    assert isinstance(cutouts, list)
-    transient_data['cutouts'] = cutouts
-    # Export aperture-related data
-    apertures = json.loads(serializers.serialize(
-        "json", Aperture.objects.filter(transient__name__exact=transient_name)))
-    assert isinstance(apertures, list)
-    transient_data['apertures'] = apertures
-    for aperture in transient_data['apertures']:
-        aperture['sedfittingresults'] = json.loads(serializers.serialize(
-            "json", SEDFittingResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['sedfittingresults']) == 1 and isinstance(aperture['sedfittingresults'][0], list):
-            aperture['sedfittingresults'] = aperture['sedfittingresults'][0]
-        aperture['aperturephotometry'] = json.loads(serializers.serialize(
-            "json", AperturePhotometry.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['aperturephotometry']) == 1 and isinstance(aperture['aperturephotometry'][0], list):
-            aperture['aperturephotometry'] = aperture['aperturephotometry'][0]
-        aperture['starformationhistoryresult'] = json.loads(serializers.serialize(
-            "json", StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
-            aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
-    for tr in TaskRegister.objects.filter(transient__name=transient_name):
-        try:
-            last_modified = tr.last_modified.isoformat()
-        except AttributeError:
-            last_modified = None
-        transient_data['workflow_tasks'].append({
-            'task_name': tr.task.name,
-            'status': {
-                'type': tr.status.type,
-                'message': tr.status.message,
-            },
-            'user_warning': tr.user_warning,
-            'last_modified': last_modified,
-            'last_processing_time_seconds': tr.last_processing_time_seconds,
-        })
+    # transient_data = TransientDatasetSerializer(transient_obj)
+    logger.debug(DatasetSerializer(transient_obj).data)
+    transient_data = DatasetSerializer(transient_obj).data
     return transient_data
+
+    # transient = json.loads(serializers.serialize("json", transient_search))[0]
+    # assert isinstance(transient, dict)
+    # # Export intrinsic transient data
+    # transient_data['transient'] = prune_fields(transient, 'transient')
+    # # Include dataset version number
+    # dataset_version = DatasetRevision.objects.filter(transient=transient_obj)
+    # if dataset_version:
+    #     dataset_version = dataset_version[0].revision
+    # else:
+    #     dataset_version = 0
+    # assert isinstance(dataset_version, int)
+    # transient_data['metadata']['dataset_version'] = dataset_version
+    # # Include transient aliases
+    # aliases = TransientSerializer(transient_obj).data['aliases']
+    # assert isinstance(aliases, list)
+    # transient_data['transient']['fields']['aliases'] = aliases
+    # # Export host information
+    # if transient_obj.host:
+    #     transient_data['host'] = json.loads(serializers.serialize("json", [transient_obj.host]))[0]
+    #     # Include host aliases
+    #     aliases = HostSerializer(transient_obj.host).data['aliases']
+    #     assert isinstance(aliases, list)
+    #     transient_data['host']['fields']['aliases'] = aliases
+    #     # Export host_spectrum information
+    #     for spectrum in HostSpectrum.objects.filter(host=transient_obj.host):
+    #         transient_data['host_spectra'].append(json.loads(serializers.serialize("json", [spectrum]))[0])
+    # # Export cutout image data
+    # cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
+    # assert isinstance(cutouts, list)
+    # transient_data['cutouts'] = cutouts
+    # # Export aperture-related data
+    # apertures = json.loads(serializers.serialize(
+    #     "json", Aperture.objects.filter(transient__name__exact=transient_name)))
+    # assert isinstance(apertures, list)
+    # transient_data['apertures'] = apertures
+    # for aperture in transient_data['apertures']:
+    #     aperture['sedfittingresults'] = json.loads(serializers.serialize(
+    #         "json", SEDFittingResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+    #     if len(aperture['sedfittingresults']) == 1 and isinstance(aperture['sedfittingresults'][0], list):
+    #         aperture['sedfittingresults'] = aperture['sedfittingresults'][0]
+    #     aperture['aperturephotometry'] = json.loads(serializers.serialize(
+    #         "json", AperturePhotometry.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+    #     if len(aperture['aperturephotometry']) == 1 and isinstance(aperture['aperturephotometry'][0], list):
+    #         aperture['aperturephotometry'] = aperture['aperturephotometry'][0]
+    #     aperture['starformationhistoryresult'] = json.loads(serializers.serialize(
+    #         "json", StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
+    #     if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
+    #         aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
+    # for tr in TaskRegister.objects.filter(transient__name=transient_name):
+    #     try:
+    #         last_modified = tr.last_modified.isoformat()
+    #     except AttributeError:
+    #         last_modified = None
+    #     transient_data['workflow_tasks'].append({
+    #         'task_name': tr.task.name,
+    #         'status': {
+    #             'type': tr.status.type,
+    #             'message': tr.status.message,
+    #         },
+    #         'user_warning': tr.user_warning,
+    #         'last_modified': last_modified,
+    #         'last_processing_time_seconds': tr.last_processing_time_seconds,
+    #     })
+    # return transient_data
 
 
 def import_transient_info(transient_data_archive):

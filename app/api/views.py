@@ -32,7 +32,7 @@ from host.models import Alias
 from host.decorators import log_usage_metric
 from host.host_utils import export_dataset
 from host.host_utils import delete_transient
-from api.serializers import TransientDatasetSerializer
+from api.serializers import DatasetSerializer
 from api.serializers import TransientSerializer
 from api.serializers import ApertureSerializer
 from api.serializers import CutoutSerializer
@@ -436,7 +436,7 @@ class HasPermissionDeleteTransient(BasePermission):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class DatasetExportView(APIView):
-    serializer_class = TransientDatasetSerializer
+    serializer_class = DatasetSerializer
 
     def get(self, request, transient_name=''):
         dataset = export_dataset(transient_name)
@@ -549,7 +549,7 @@ class DatasetView(APIView):
         parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),],
         request=None,
         responses={
-            200: TransientDatasetSerializer,
+            200: DatasetSerializer,
             404: OpenApiResponse(description="Transient not found"),
         }
     )
@@ -558,6 +558,7 @@ class DatasetView(APIView):
         dataset = export_dataset(transient_name)
         if not dataset:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        logger.debug(dataset)
         logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
         return JsonResponse(dataset)

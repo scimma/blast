@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [2.2.0]
+
+### Added
+
+- Added basic version control system for transient datasets. Tabular data exported by `/api/dataset/[transient_name]` now includes
+  a `metadata.dataset_version` field whose integer value corresponds to the immutable dataset version number. By default, the latest revision will be served.
+
 ## [2.1.0]
 
 ### Changed

@@ -1,7 +1,18 @@
 from host import models
+from datetime import datetime, timezone
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from django.urls import reverse
+from django.conf import settings
+
+TRANSIENT_EXCLUDED_FIELDS = [
+    "tns_id",
+    "tns_prefix",
+    "tasks_initialized",
+    "photometric_class",
+    "processing_status",
+    "added_by"
+]
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -59,14 +70,7 @@ class TransientSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transient
         depth = 1
-        exclude = [
-            "tns_id",
-            "tns_prefix",
-            "tasks_initialized",
-            "photometric_class",
-            "processing_status",
-            "added_by"
-        ]
+        exclude = TRANSIENT_EXCLUDED_FIELDS
 
     aliases = serializers.SerializerMethodField()
 
@@ -204,133 +208,174 @@ class TaskRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TaskRegister
         depth = 1
-        fields = "__all__"
+        exclude = []
 
 
-class MetadataSerializer(serializers.Serializer):
-    app_version = serializers.CharField()
-    export_time = serializers.DateTimeField()
+class DatasetSerializer(serializers.Serializer):
+    metadata = serializers.SerializerMethodField()
+    transient = serializers.SerializerMethodField()
+    host = serializers.SerializerMethodField()
+    surveys = serializers.SerializerMethodField()
+    filters = serializers.SerializerMethodField()
+    cutouts = serializers.SerializerMethodField()
+    apertures = serializers.SerializerMethodField()
+    host_spectra = serializers.SerializerMethodField()
+    workflow_tasks = serializers.SerializerMethodField()
 
+    class DatasetMetadataSerializer(serializers.Serializer):
+        app_version = serializers.SerializerMethodField()
+        export_time = serializers.SerializerMethodField()
+        dataset_version = serializers.SerializerMethodField()
 
-class TransientEntitySerializer(serializers.Serializer):
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = TransientSerializer()
+        @extend_schema_field(serializers.CharField())
+        def get_app_version(self, obj):
+            return f'v{settings.APP_VERSION}'
 
+        @extend_schema_field(serializers.DateTimeField())
+        def get_export_time(self, obj):
+            return datetime.now(timezone.utc).isoformat()
 
-class HostEntitySerializer(serializers.Serializer):
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = HostSerializer()
+        @extend_schema_field(serializers.IntegerField())
+        def get_dataset_version(self, obj):
+            dataset_version = models.DatasetRevision.objects.filter(transient=obj)
+            if dataset_version:
+                dataset_version = dataset_version[0].revision
+            else:
+                dataset_version = 0
+            return dataset_version
 
-
-class HostSpectrumEntitySerializer(serializers.Serializer):
-    class HostSpectrumSerializerWithoutId(serializers.ModelSerializer):
+    class DatasetTransientSerializer(TransientSerializer):
         class Meta:
-            model = models.HostSpectrum
+            model = models.Transient
             depth = 0
-            exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = HostSpectrumSerializerWithoutId()
+            exclude = TRANSIENT_EXCLUDED_FIELDS
 
-
-class SEDFittingResultEntitySerializer(serializers.Serializer):
-    class SEDFittingResultSerializerWithoutId(serializers.ModelSerializer):
+    class DatasetHostSerializer(serializers.ModelSerializer):
         class Meta:
-            model = models.SEDFittingResult
+            model = models.Host
             depth = 0
-            exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = SEDFittingResultSerializerWithoutId()
+            exclude = []
 
+        aliases = serializers.SerializerMethodField()
 
-class AperturePhotometryEntitySerializer(serializers.Serializer):
-    class AperturePhotometrySerializerWithoutId(serializers.ModelSerializer):
-        class Meta:
-            model = models.AperturePhotometry
-            depth = 0
-            exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = AperturePhotometrySerializerWithoutId()
+        @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+        def get_aliases(self, obj):
+            aliases = models.Alias.objects.filter(host=obj)
+            return [alias.alias for alias in aliases]
 
-
-class StarFormationHistoryResultEntitySerializer(serializers.Serializer):
-    class StarFormationHistoryResultSerializerWithoutId(serializers.ModelSerializer):
-        class Meta:
-            model = models.StarFormationHistoryResult
-            depth = 0
-            exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = StarFormationHistoryResultSerializerWithoutId()
-
-
-class ApertureEntitySerializer(serializers.Serializer):
-    class ApertureSerializerWithoutId(serializers.ModelSerializer):
-        class Meta:
-            model = models.Aperture
-            depth = 0
-            exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = ApertureSerializerWithoutId()
-    sedfittingresults = serializers.ListField(child=SEDFittingResultEntitySerializer())
-    aperturephotometry = serializers.ListField(child=AperturePhotometryEntitySerializer())
-    starformationhistoryresult = serializers.ListField(child=StarFormationHistoryResultEntitySerializer())
-
-
-class CutoutEntitySerializer(serializers.Serializer):
-    class CutoutSerializerWithoutId(serializers.ModelSerializer):
+    class DatasetCutoutSerializer(serializers.ModelSerializer):
         class Meta:
             model = models.Cutout
             depth = 0
             exclude = ["id"]
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = CutoutSerializerWithoutId()
 
+    class DatasetApertureSerializer(serializers.Serializer):
 
-class FilterEntitySerializer(serializers.Serializer):
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = FilterSerializer()
+        aperture = serializers.SerializerMethodField()
+        sedfittingresults = serializers.SerializerMethodField()
+        aperturephotometry = serializers.SerializerMethodField()
+        starformationhistoryresult = serializers.SerializerMethodField()
 
+        class ApertureSerializerFlat(serializers.ModelSerializer):
+            class Meta:
+                model = models.Aperture
+                depth = 0
+                exclude = []
 
-class SurveyEntitySerializer(serializers.Serializer):
-    class SurveySerializerWithoutId(serializers.ModelSerializer):
+        class DatasetAperturePhotometrySerializer(serializers.ModelSerializer):
+            class Meta:
+                model = models.AperturePhotometry
+                depth = 0
+                exclude = []
+
+        class DatasetStarFormationHistoryResultSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = models.StarFormationHistoryResult
+                depth = 0
+                exclude = []
+
+        class DatasetSEDFittingResultSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = models.SEDFittingResult
+                depth = 0
+                exclude = []
+
+        @extend_schema_field(ApertureSerializerFlat)
+        def get_aperture(self, obj):
+            return self.ApertureSerializerFlat(obj).data
+
+        @extend_schema_field(serializers.ListField(child=DatasetSEDFittingResultSerializer()))
+        def get_sedfittingresults(self, obj):
+            return [self.DatasetSEDFittingResultSerializer(record).data
+                    for record in models.SEDFittingResult.objects.filter(aperture=obj)]
+
+        @extend_schema_field(serializers.ListField(child=DatasetAperturePhotometrySerializer()))
+        def get_aperturephotometry(self, obj):
+            return [self.DatasetAperturePhotometrySerializer(record).data
+                    for record in models.AperturePhotometry.objects.filter(aperture=obj)]
+
+        @extend_schema_field(serializers.ListField(child=DatasetStarFormationHistoryResultSerializer()))
+        def get_starformationhistoryresult(self, obj):
+            return [self.DatasetStarFormationHistoryResultSerializer(record).data
+                    for record in models.StarFormationHistoryResult.objects.filter(aperture=obj)]
+
+    class DatasetHostSpectrumSerializer(serializers.ModelSerializer):
         class Meta:
-            model = models.Survey
-            depth = 1
-            exclude = ["id"]
+            model = models.HostSpectrum
+            depth = 0
+            fields = "__all__"
 
-    model = serializers.CharField()
-    pk = serializers.IntegerField()
-    fields = SurveySerializerWithoutId()
+    class DatasetTaskRegisterSerializer(serializers.ModelSerializer):
 
+        class DatasetTaskStatusSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = models.Status
+                fields = ["message", "type"]
 
-class WorkflowTaskSerializer(serializers.Serializer):
-    class StatusSerializerWithoutId(serializers.ModelSerializer):
+        task = TaskSerializer(read_only=True)
+        status = DatasetTaskStatusSerializer(read_only=True)
+
         class Meta:
-            model = models.Status
-            exclude = ["id"]
+            model = models.TaskRegister
+            depth = 0
+            fields = "__all__"
 
-    task_name = serializers.CharField()
-    status = StatusSerializerWithoutId()
-    user_warning = serializers.BooleanField()
-    last_modified = serializers.DateTimeField()
-    last_processing_time_seconds = serializers.FloatField()
+    @extend_schema_field(DatasetMetadataSerializer)
+    def get_metadata(self, transient_obj):
+        return self.DatasetMetadataSerializer(transient_obj).data
 
+    @extend_schema_field(DatasetTransientSerializer)
+    def get_transient(self, transient_obj):
+        return self.DatasetTransientSerializer(transient_obj).data
 
-class TransientDatasetSerializer(serializers.Serializer):
-    metadata = MetadataSerializer()
-    transient = TransientEntitySerializer()
-    host = HostEntitySerializer()
-    host_spectra = serializers.ListField(child=HostSpectrumEntitySerializer())
-    apertures = serializers.ListField(child=ApertureEntitySerializer())
-    cutouts = serializers.ListField(child=CutoutEntitySerializer())
-    filters = serializers.ListField(child=FilterEntitySerializer())
-    surveys = serializers.ListField(child=SurveyEntitySerializer())
-    workflow_tasks = serializers.ListField(child=WorkflowTaskSerializer())
+    @extend_schema_field(DatasetHostSerializer)
+    def get_host(self, transient_obj):
+        host_data = self.DatasetHostSerializer(transient_obj.host).data if transient_obj.host else None
+        return host_data
+
+    @extend_schema_field(serializers.ListField(child=SurveySerializer()))
+    def get_surveys(self, transient_obj):
+        return [SurveySerializer(record).data for record in models.Survey.objects.all()]
+
+    @extend_schema_field(serializers.ListField(child=FilterSerializer()))
+    def get_filters(self, transient_obj):
+        return [FilterSerializer(record).data for record in models.Filter.objects.all()]
+
+    @extend_schema_field(serializers.ListField(child=DatasetCutoutSerializer()))
+    def get_cutouts(self, transient_obj):
+        return [self.DatasetCutoutSerializer(record).data for record in models.Cutout.objects.all()]
+
+    @extend_schema_field(serializers.ListField(child=DatasetApertureSerializer()))
+    def get_apertures(self, transient_obj):
+        return [self.DatasetApertureSerializer(record).data
+                for record in models.Aperture.objects.filter(transient=transient_obj)]
+
+    @extend_schema_field(serializers.ListField(child=DatasetHostSpectrumSerializer()))
+    def get_host_spectra(self, transient_obj):
+        return [self.DatasetHostSpectrumSerializer(record).data
+                for record in models.HostSpectrum.objects.filter(host=transient_obj.host)]
+
+    @extend_schema_field(serializers.ListField(child=DatasetTaskRegisterSerializer()))
+    def get_workflow_tasks(self, transient_obj):
+        return [self.DatasetTaskRegisterSerializer(record).data
+                for record in models.TaskRegister.objects.filter(transient=transient_obj)]
