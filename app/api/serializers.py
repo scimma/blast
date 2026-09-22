@@ -244,7 +244,7 @@ class DatasetSerializer(serializers.Serializer):
                 dataset_version = 0
             return dataset_version
 
-    class DatasetTransientSerializer(TransientSerializer):
+    class DatasetTransientSerializer(serializers.ModelSerializer):
         class Meta:
             model = models.Transient
             depth = 0
@@ -363,7 +363,8 @@ class DatasetSerializer(serializers.Serializer):
 
     @extend_schema_field(serializers.ListField(child=DatasetCutoutSerializer()))
     def get_cutouts(self, transient_obj):
-        return [self.DatasetCutoutSerializer(record).data for record in models.Cutout.objects.all()]
+        return [self.DatasetCutoutSerializer(record).data
+                for record in models.Cutout.objects.filter(transient=transient_obj)]
 
     @extend_schema_field(serializers.ListField(child=DatasetApertureSerializer()))
     def get_apertures(self, transient_obj):

@@ -457,7 +457,7 @@ class DatasetExportView(APIView):
             tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
             # Download cutout FITS image files into memory
             for cutout in dataset['cutouts']:
-                canonical_path = cutout['fields']['fits']
+                canonical_path = cutout['fits']
                 if not canonical_path:
                     continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
@@ -486,7 +486,7 @@ class DatasetExportView(APIView):
                     sedfittingresults.extend(aperture['sedfittingresults'])
             for sedfittingresult in sedfittingresults:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                    canonical_path = sedfittingresult['fields'][sed_file]
+                    canonical_path = sedfittingresult[sed_file]
                     object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
                     sed_fileobj = BytesIO(s3.get_object(path=object_key))
                     # This assumes that the canonical paths for each sed file are unique
@@ -508,15 +508,15 @@ class DatasetExportView(APIView):
 
             # Download host spectra FITS file into memory
             for spectrum in dataset['host_spectra']:
-                canonical_path = spectrum['fields']['spectrum_file']
+                canonical_path = spectrum['spectrum_file']
                 if not canonical_path:
                     continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
                 spectrum_fileobj = BytesIO(s3.get_object(path=object_key))
                 # This assumes that the canonical paths for each spectrum file are unique
                 tarinfo = tarfile.TarInfo(
-                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
-                                                os.path.join('host_spectra', dataset['host']['fields']['name'])))
+                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['name']),
+                                                os.path.join('host_spectra', dataset['host']['name'])))
                 tarinfo.size = spectrum_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=spectrum_fileobj)
                 # Include thumbnail images
@@ -525,8 +525,8 @@ class DatasetExportView(APIView):
                     continue
                 thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
                 thumbnail_tar_path = canonical_path.replace(os.path.join(
-                    settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
-                    os.path.join('host_spectra', dataset['host']['fields']['name'])).replace('.fits', '.jpg')
+                    settings.SPECTRA_ROOT, dataset['host']['name']),
+                    os.path.join('host_spectra', dataset['host']['name'])).replace('.fits', '.jpg')
                 tarinfo = tarfile.TarInfo(
                     name=thumbnail_tar_path)
                 tarinfo.size = thumbail_fileobj.getbuffer().nbytes
