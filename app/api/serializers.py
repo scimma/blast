@@ -5,15 +5,6 @@ from drf_spectacular.utils import extend_schema_field
 from django.urls import reverse
 from django.conf import settings
 
-TRANSIENT_EXCLUDED_FIELDS = [
-    "tns_id",
-    "tns_prefix",
-    "tasks_initialized",
-    "photometric_class",
-    "processing_status",
-    "added_by"
-]
-
 
 class StatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -70,7 +61,14 @@ class TransientSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transient
         depth = 1
-        exclude = TRANSIENT_EXCLUDED_FIELDS
+        exclude = [
+            "tns_id",
+            "tns_prefix",
+            "tasks_initialized",
+            "photometric_class",
+            "processing_status",
+            "added_by"
+        ]
 
     aliases = serializers.SerializerMethodField()
 
@@ -248,7 +246,17 @@ class DatasetSerializer(serializers.Serializer):
         class Meta:
             model = models.Transient
             depth = 0
-            exclude = TRANSIENT_EXCLUDED_FIELDS
+            exclude = [
+                "tasks_initialized",
+                "added_by"
+            ]
+
+        aliases = serializers.SerializerMethodField()
+
+        @extend_schema_field(serializers.ListField(child=serializers.CharField()))
+        def get_aliases(self, obj):
+            aliases = models.Alias.objects.filter(transient=obj)
+            return [alias.alias for alias in aliases]
 
     class DatasetHostSerializer(serializers.ModelSerializer):
         class Meta:
@@ -267,7 +275,9 @@ class DatasetSerializer(serializers.Serializer):
         class Meta:
             model = models.Cutout
             depth = 0
-            exclude = ["id"]
+            exclude = []
+
+        fits = serializers.FileField(use_url=False)
 
     class DatasetApertureSerializer(serializers.Serializer):
 
@@ -300,6 +310,11 @@ class DatasetSerializer(serializers.Serializer):
                 depth = 0
                 exclude = []
 
+            posterior = serializers.FileField(use_url=False)
+            chains_file = serializers.FileField(use_url=False)
+            percentiles_file = serializers.FileField(use_url=False)
+            model_file = serializers.FileField(use_url=False)
+
         @extend_schema_field(ApertureSerializerFlat)
         def get_aperture(self, obj):
             return self.ApertureSerializerFlat(obj).data
@@ -324,6 +339,8 @@ class DatasetSerializer(serializers.Serializer):
             model = models.HostSpectrum
             depth = 0
             fields = "__all__"
+
+        spectrum_file = serializers.FileField(use_url=False)
 
     class DatasetTaskRegisterSerializer(serializers.ModelSerializer):
 
