@@ -100,7 +100,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
 # MEDIA_URL = "/cutouts/"
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
+# MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 
 ######################################################################
 # Logging config
