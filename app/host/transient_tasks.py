@@ -52,6 +52,7 @@ from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
 from host.host_utils import equal_dicts
+from host.host_utils import get_latest_dataset_version
 from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
@@ -1833,7 +1834,7 @@ def dataset_revision(transient_name):
     # Create a candidate DR for comparison
     candidate_dr = DatasetRevision(transient=transient, data={'export': dataset, 'files': checksums})
     # Fetch latest DR
-    previous_dr = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    previous_dr = get_latest_dataset_version(transient)
     if previous_dr is None:
         # Save candidate DR to the database as the first revision
         assert candidate_dr.revision == 0

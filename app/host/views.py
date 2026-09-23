@@ -18,6 +18,7 @@ from host.forms import TransientUploadForm
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
+from host.host_utils import get_latest_dataset_version
 from host.models import Alias
 from host.models import Aperture
 from host.models import AperturePhotometry
@@ -884,7 +885,8 @@ def results(request, transient_name):
         except Exception as err:
             logger.error(f'''Error rendering host spectrum plot: {err}''')
             interactive_host_spec_plot = {}
-
+    # Determine latest dataset revision (consistent with displayed data)
+    dataset_version = get_latest_dataset_version(transient)
     # Construct the Django render() function context
     context = {
         **{
@@ -905,6 +907,7 @@ def results(request, transient_name):
             "image_data_encoded_sed_local": image_data_encoded_sed['local'],
             "image_data_encoded_sed_global": image_data_encoded_sed['global'],
             "image_data_encoded_host_spec": image_data_encoded_host_spec,
+            "dataset_version": dataset_version,
         },
         **bokeh_cutout_context,
         **user_warning(transient),

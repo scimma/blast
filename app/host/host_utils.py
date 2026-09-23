@@ -1692,3 +1692,11 @@ def equal_dicts(first, second, path=""):
             )
             is_equal = False
     return is_equal
+
+
+def get_latest_dataset_version(transient):
+    """Return the revision index of the latest dataset version"""
+    dataset_version = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    dataset_version = dataset_version if dataset_version else 0
+    assert isinstance(dataset_version, int)
+    return dataset_version
