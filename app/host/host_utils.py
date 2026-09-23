@@ -1,10 +1,8 @@
 import json
 from tarfile import open as tar_open
-from datetime import datetime, timezone
-from django.core import serializers
-from api.serializers import TransientSerializer
-from api.serializers import HostSerializer
+from datetime import datetime
 from api.serializers import DatasetSerializer
+from packaging.version import Version
 import os
 import math
 import time
@@ -12,6 +10,7 @@ import warnings
 from collections import namedtuple
 from xml.parsers.expat import ExpatError
 from collections.abc import Mapping
+from copy import deepcopy
 
 import astropy.units as u
 import numpy as np
@@ -27,6 +26,7 @@ cosmo = FlatLambdaCDM(H0=70, Om0=0.315)
 
 from django.conf import settings
 from django.db.models import Q
+from django.db import transaction
 from dustmaps.sfd import SFDQuery
 
 from photutils.aperture import aperture_photometry
@@ -892,6 +892,7 @@ def export_dataset(transient_name=''):
     return transient_data
 
 
+@transaction.atomic
 def import_transient_info(transient_data_archive):
     '''Import all data associated with a transient from a Blast export file.'''
     logger.debug(f'Importing transient archive file "{transient_data_archive}"...')
@@ -908,19 +909,17 @@ def import_transient_info(transient_data_archive):
         })
 
     def process_transient_dataset(dataset):
-        from api.serializers import DatasetSerializer
-        # Validate incoming data schema
-        serializer = DatasetSerializer(dataset)
-        serializer.is_valid(raise_exception=True)
-        # Parse dataset components
-        transient_data = serializer.validated_data.pop('transient')
-        host_data = serializer.validated_data.pop('host')
-        surveys = serializer.validated_data.pop('surveys')
-        filters = serializer.validated_data.pop('filters')
-        cutouts = serializer.validated_data.pop('cutouts')
-        apertures = serializer.validated_data.pop('apertures')
-        host_spectra = serializer.validated_data.pop('host_spectra')
-        workflow_tasks = serializer.validated_data.pop('workflow_tasks')
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".'''
+        # TODO: Consider writing a separate "DatasetInputSerializer" class to perform validation prior to processing.
+        transient_data = dataset.pop('transient')
+        host_data = dataset.pop('host')
+        surveys = dataset.pop('surveys')
+        filters = dataset.pop('filters')
+        cutouts = dataset.pop('cutouts')
+        apertures = dataset.pop('apertures')
+        host_spectra = dataset.pop('host_spectra')
+        workflow_tasks = dataset.pop('workflow_tasks')
         # Verify that the transient is not already present (by name)
         transient_name = transient_data['name']
         if Transient.objects.filter(name__exact=transient_name):
@@ -1026,7 +1025,7 @@ def import_transient_info(transient_data_archive):
                 return
         # Verify that each Aperture object does not exist.
         for aperture in apertures:
-            aperture_name = aperture['fields']['name']
+            aperture_name = aperture['aperture']['name']
             if Aperture.objects.filter(name__exact=aperture_name).exists():
                 record_import_error(transient_name, f'[{transient_name}] Aperture "{aperture_name}" exists.')
                 return
@@ -1036,34 +1035,41 @@ def import_transient_info(transient_data_archive):
 
         # Create Transient object
         transient_data.pop('host')
+        alias_list = transient_data.pop('aliases')
         transient = Transient.objects.create(host=host, **transient_data)
         # Create Alias objects
-        for alias in transient_data['aliases']:
+        for alias in alias_list:
             Alias.objects.create(alias=alias, transient=transient)
         # Create Cutout objects
         for cutout in cutouts:
             filter_name = [filter['name'] for filter in filters if filter['id'] == cutout['filter']][0]
             cutout['filter'] = Filter.objects.get(name__exact=filter_name)
             cutout.pop('transient')
-            Cutout.objects.create(transient=transient, filter=Filter.objects.get(name__exact=filter_name), **cutout)
+            Cutout.objects.create(transient=transient, **cutout)
         # For each Aperture object,
             # Create Aperture object
             # Create StarFormationHistoryResult objects
             # Create AperturePhotometry objects
             # Create SEDFittingResult objects
         for aperture in apertures:
-            cutout_name_search = [cutout['name'] for cutout in cutouts if cutout['id'] == aperture['cutout']]
-            if cutout_name_search:
-                cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
-            else:
+            aperture_info = aperture['aperture']
+            try:
                 cutout_obj = None
-            aperture['cutout'] = cutout_obj
-            aperture.pop('transient')
-            aperture_obj = Aperture.objects.create(cutout=cutout_obj, transient=transient, **aperture)
+                cutout_name_search = [cutout['name'] for cutout in cutouts if cutout['id'] == aperture_info['cutout']]
+                if cutout_name_search:
+                    cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
+            except Exception as err:
+                logger.error(f'Error finding cutout object {aperture_info['cutout']} '
+                             f'associated with aperture "{aperture_info['name']}"')
+                raise err
+            aperture_info.pop('cutout')
+            aperture_info.pop('transient')
+            aperture_obj = Aperture.objects.create(cutout=cutout_obj, transient=transient, **aperture_info)
             for aperturephotometry in aperture['aperturephotometry']:
                 filter_name = [filter['name'] for filter in filters if filter['id'] == aperturephotometry['filter']][0]
                 aperturephotometry['filter'] = Filter.objects.get(name__exact=filter_name)
                 aperturephotometry.pop('transient')
+                aperturephotometry.pop('aperture')
                 AperturePhotometry.objects.create(aperture=aperture_obj, transient=transient, **aperturephotometry)
             # Compile a dictionary of StarFormationHistoryResult objects indexed by their primary key values for
             # subsequent association with SEDFittingResult objects.
@@ -1076,13 +1082,14 @@ def import_transient_info(transient_data_archive):
             for sedfittingresults in aperture['sedfittingresults']:
                 sedfittingresults.pop('transient')
                 sedfittingresults.pop('aperture')
+                logsfh = sedfittingresults.pop('logsfh')
                 sedfittingresult = SEDFittingResult.objects.create(
                     aperture=aperture_obj,
                     transient=transient,
                     **sedfittingresults)
                 # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
                 sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
-                                             for sfh_pk in sedfittingresults['logsfh']])
+                                             for sfh_pk in logsfh])
         initialize_all_tasks_status(transient)
         all_trs = TaskRegister.objects.filter(transient__name=transient_name)
         for tr in workflow_tasks:
@@ -1109,7 +1116,10 @@ def import_transient_info(transient_data_archive):
         imported_transient_names.append(transient.name)
 
     def process_transient_dataset_v2_1_0(dataset):
-        '''This uses the top-level variables "imported_transient_names" and "import_failures".'''
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".
+        This function is largely redundant with "process_transient_dataset()", but is retained
+        for importing dataset archives generated by Blast versions up to v2.1.0.'''
         # Verify that the transient is not already present (by name)
         transient_name = dataset['transient']['fields']['name']
         if Transient.objects.filter(name__exact=transient_name):
@@ -1464,14 +1474,17 @@ def import_transient_info(transient_data_archive):
         # Record successful database import
         imported_transient_names.append(transient.name)
 
-    def install_files(file_type):
+    def install_files(transient_info, file_type):
         logger.debug(f'Installing "{file_type}" files...')
         if file_type == 'cutout':
             canonical_path_root = settings.CUTOUT_ROOT
             path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'cutouts/'
             thumbnail_extension = '.fits'
-            canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+            else:
+                canonical_paths = [cutout['fits'] for cutout in transient_info['cutouts']]
         elif file_type == 'sed':
             canonical_path_root = settings.SED_OUTPUT_ROOT
             path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
@@ -1481,26 +1494,36 @@ def import_transient_info(transient_data_archive):
             for sedfittingresult in [aperture['sedfittingresults'] for aperture in transient_info['apertures']
                                      if aperture['sedfittingresults']]:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                    canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+                    if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                        canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+                    else:
+                        canonical_paths.append(sedfittingresult[0][sed_file])
         elif file_type == 'host_spectra':
             canonical_path_root = settings.SPECTRA_ROOT
             path_prefix_replacement = f'{canonical_path_root}/'
             tar_root_path = 'host_spectra/'
             thumbnail_extension = '.fits'
-            canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
+            else:
+                canonical_paths = [spectrum['spectrum_file'] for spectrum in transient_info['host_spectra']]
         # Include possible thumbnail paths
         thumbail_paths = []
-        for canonical_path in canonical_paths:
+        logger.debug(canonical_paths)
+        # Generate paths for thumbnails that might exist, ignoring null or empty string values in "canonical_paths"
+        for canonical_path in [c_path for c_path in canonical_paths if c_path]:
             thumbail_paths.append(canonical_path.replace(thumbnail_extension, '.jpg'))
         canonical_paths.extend(thumbail_paths)
         # logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
+        # Iterate over all files in the subfolder of the file type being scanned
         for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
             if not tarinfo.isreg():
                 logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
                 continue
             # Verify that the file is listed in the transient metadata
             expected_canonical_path = tarinfo.name.replace(tar_root_path, path_prefix_replacement)
-            # logger.debug(f'Archive file canonical path: {expected_canonical_path}')
+            logger.debug(f'Archive file expected canonical path: {expected_canonical_path}')
+            # Skip files in the archive file that are not associated with the imported data objects
             if not [path for path in canonical_paths if path == expected_canonical_path]:
                 logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
                 continue
@@ -1518,31 +1541,34 @@ def import_transient_info(transient_data_archive):
             logger.error('Error importing transient dataset: No "transient.json" file found.')
             return [], []
         transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
-        transient_name = transient_info['transient']['fields']['name']
+        # Handle variations in data schema from older Blast versions
+        if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+            transient_name = transient_info['transient']['fields']['name']
+        else:
+            transient_name = transient_info['transient']['name']
         logger.debug(f'''Importing transient "{transient_name}"...''')
         # Construct the import list
         if isinstance(transient_info, dict):
-            datasets_to_import = [transient_info]
+            datasets_to_import = [deepcopy(transient_info)]
         elif isinstance(transient_info, list):
-            datasets_to_import = transient_info
+            datasets_to_import = [deepcopy(tr_info) for tr_info in transient_info]
         assert isinstance(datasets_to_import, list)
         # Construct the database objects for each transient.
         for dataset in datasets_to_import:
             # Use a nested function to support aborting upon error within nested for loops.
             # This uses the top-level variables "imported_transient_names" and "import_failures".
-
-            from packaging.version import Version
+            # Handle variations in data schema from older Blast versions
             if Version(dataset['metadata']['app_version']) <= Version('2.1.0'):
                 process_transient_dataset_v2_1_0(dataset)
             else:
                 process_transient_dataset(dataset)
         # Import cutout image files
-        install_files('cutout')
+        install_files(transient_info, 'cutout')
         # Import SED fit files
-        install_files('sed')
+        install_files(transient_info, 'sed')
         # Import host spectra fit files
         if transient_info['host']:
-            install_files('host_spectra')
+            install_files(transient_info, 'host_spectra')
 
     # Delete database objects associated with failed imports
     for import_failure in import_failures:
@@ -1694,9 +1720,7 @@ def equal_dicts(first, second, path=""):
     return is_equal
 
 
-def get_latest_dataset_version(transient):
+def get_latest_dataset_revision(transient):
     """Return the revision index of the latest dataset version"""
-    dataset_version = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
-    dataset_version = dataset_version if dataset_version else 0
-    assert isinstance(dataset_version, int)
-    return dataset_version
+    latest_dataset_revision = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    return latest_dataset_revision
