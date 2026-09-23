@@ -52,7 +52,7 @@ from host.host_utils import select_best_cutout
 from host.host_utils import create_or_update_aperture
 from host.host_utils import get_processing_status_and_progress
 from host.host_utils import equal_dicts
-from host.host_utils import get_latest_dataset_version
+from host.host_utils import get_latest_dataset_revision
 from host.host_spectrum import fetch_host_spectrum
 from host.plotting_utils import plot_position
 from host.plotting_utils import plot_aperture
@@ -1817,24 +1817,24 @@ def dataset_revision(transient_name):
     for aperture in dataset['apertures']:
         for sedfittingresult in aperture['sedfittingresults']:
             canonical_paths.extend([
-                sedfittingresult['fields']['posterior'],
-                sedfittingresult['fields']['chains_file'],
-                sedfittingresult['fields']['percentiles_file'],
-                sedfittingresult['fields']['model_file'],
+                sedfittingresult['posterior'],
+                sedfittingresult['chains_file'],
+                sedfittingresult['percentiles_file'],
+                sedfittingresult['model_file'],
             ])
     # Cutout images
-    for cutout_path in [cutout['fields']['fits'] for cutout in dataset['cutouts'] if cutout['fields']['fits']]:
+    for cutout_path in [cutout['fits'] for cutout in dataset['cutouts'] if cutout['fits']]:
         canonical_paths.append(cutout_path)
     # Host spectra files
     for host_spectrum in dataset['host_spectra']:
-        canonical_paths.append(host_spectrum['fields']['spectrum_file'])
+        canonical_paths.append(host_spectrum['spectrum_file'])
     s3 = ObjectStore()
     checksums = {canonical_path: get_checksum(s3, canonical_path) for canonical_path in canonical_paths}
 
     # Create a candidate DR for comparison
     candidate_dr = DatasetRevision(transient=transient, data={'export': dataset, 'files': checksums})
     # Fetch latest DR
-    previous_dr = get_latest_dataset_version(transient)
+    previous_dr = get_latest_dataset_revision(transient)
     if previous_dr is None:
         # Save candidate DR to the database as the first revision
         assert candidate_dr.revision == 0
