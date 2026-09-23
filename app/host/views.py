@@ -18,7 +18,7 @@ from host.forms import TransientUploadForm
 from host.host_utils import import_transient_info
 from host.host_utils import select_aperture
 from host.host_utils import select_best_cutout
-from host.host_utils import get_latest_dataset_version
+from host.host_utils import get_latest_dataset_revision
 from host.models import Alias
 from host.models import Aperture
 from host.models import AperturePhotometry
@@ -886,7 +886,8 @@ def results(request, transient_name):
             logger.error(f'''Error rendering host spectrum plot: {err}''')
             interactive_host_spec_plot = {}
     # Determine latest dataset revision (consistent with displayed data)
-    dataset_version = get_latest_dataset_version(transient)
+    dataset_revision = get_latest_dataset_revision(transient)
+    dataset_version = dataset_revision.revision if dataset_revision else 0
     # Construct the Django render() function context
     context = {
         **{
