@@ -30,7 +30,7 @@
                 onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value, apertureEditable)">Get Cutout</button>
             <button class="btn btn-outline-secondary" type="button" id="edit-aperture-btn"
                 onclick="toggleApertureEdit('{{ transient.name }}')">Enable Aperture Editing</button>
-            <button class="btn btn-success" type="button" id="save-aperture-btn"
+            <button class="btn btn-success" type="button" id="save-aperture-btn" style="display: none;"
                 onclick="saveApertureChanges('{{ transient.name }}')" disabled>Save Aperture Changes</button>
         </div>
     </div>
@@ -47,39 +47,33 @@
 
     function recordApertureChange(evt) {
         pendingApertureChanges[evt.detail.apertureType] = evt.detail;
-        setSaveButtonState("Save Aperture Changes",
-            Object.keys(pendingApertureChanges).length === 0,
-        );
+        setSaveButtonState(Object.keys(pendingApertureChanges).length === 0);
         setApertureSaveStatus('', false);
     }
 
     window.addEventListener('blast:aperture-change', recordApertureChange);
-    window.addEventListener('blast:aperture-translate', recordApertureChange);
 
-    function setSaveButtonState(label, disabled) {
+    function setSaveButtonState(disabled, label) {
         var saveBtn = document.getElementById('save-aperture-btn');
-        if (!saveBtn) {
-            return;
-        }
-        saveBtn.textContent = label;
+        saveBtn.textContent = label || "Save Aperture Changes";
         saveBtn.disabled = disabled;
     }
 
     function setApertureSaveStatus(message, isError) {
         var element = document.getElementById('aperture-save-status');
-        if(!element) {
-            return;
-        }
         element.textContent = message || '';
         element.className = message ? (isError ? 'text-danger small mt-1' : 'text-success small mt-1') : '';
     }
 
     function toggleApertureEdit(transient) {
         apertureEditable = !apertureEditable;
-        var btn = document.getElementById('edit-aperture-btn');
-        btn.textContent = apertureEditable ? "Disable Aperture Editing" : "Enable Aperture Editing";
-        btn.classList.toggle('btn-outline-secondary', !apertureEditable);
-        btn.classList.toggle('btn-secondary', apertureEditable);
+        var editbtn = document.getElementById('edit-aperture-btn');
+        editbtn.textContent = apertureEditable ? "Cancel Aperture Editing" : "Enable Aperture Editing";
+        editbtn.classList.toggle('btn-outline-secondary', !apertureEditable);
+        editbtn.classList.toggle('btn-secondary', apertureEditable);
+
+        var savebtn = document.getElementById('save-aperture-btn');
+        savebtn.style.display = apertureEditable ? "" : "none";
 
         var filter = document.getElementById('id_filters').value;
         cutoutImgClick(transient, filter, apertureEditable);
@@ -88,7 +82,6 @@
     function saveApertureChanges(transient) {
         var changes = Object.values(pendingApertureChanges);
         if (!changes.length) return;
-        setSaveButtonState("Saving...", true);
         setApertureSaveStatus('', false);
 
         $.ajax({
@@ -106,13 +99,16 @@
                 var written = (resp.apertures || []).filter(function (ap) {
                     return ap.changed && ap.changed.length;
                 });
-                setSaveButtonState("Save Aperture Changes", true);
+                setSaveButtonState(true);
                 var note = "";
                 if (resp.workflow_retriggered) {
                     note = " Photometry and SED fitting have been queued to re-run";
                 }
                 if (resp.local_edit_not_retriggered) {
                     note += "local aperture was saved for display only, rebuilt from redshift"
+                }
+                if (written.length) {
+                    cutoutImgClick(transient, activePlotFilter, apertureEditable);
                 }
                 setApertureSaveStatus(
                     written.length
@@ -126,17 +122,16 @@
                 try {
                     message = JSON.parse(xhr.responseText).message || message;
                 } catch (err) { /* non-JSON body (500 page, proxy error): keep default */ }
-                 console.error("Failed to save aperture changes:", xhr.responseText);
-                setSaveButtonState("Save Aperture Changes", false);
+                console.error("Failed to save aperture changes:", xhr.responseText);
+                setSaveButtonState(false);
                 setApertureSaveStatus(message, true);
             },
         });
     }
 
-    document.getElementById('loading-indicator').style.display = "none";
     function cutoutImgClick(transient, filter, editable) {
         pendingApertureChanges = {};
-        setSaveButtonState("Save Aperture Changes", true);
+        setSaveButtonState(true);
         setApertureSaveStatus('', false);
         activePlotFilter = filter || "";
         document.getElementById('loading-indicator').style.display = "block";

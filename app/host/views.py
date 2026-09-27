@@ -18,8 +18,6 @@ from django.core.exceptions import ValidationError
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
-from host.aperture_utils import APERTURE_TYPES
-from host.aperture_utils import _resolve_cutout
 from host.aperture_utils import _apply_aperture_edit
 from host.aperture_utils import cutout_wcs
 from host.host_utils import import_transient_info
@@ -1100,7 +1098,7 @@ def cutout_fits_plot(request):
         )
         return JsonResponse(bokeh_context)
 
-# @login_required
+@login_required
 @log_usage_metric()
 def save_aperture_changes(request):
     if request.method != "POST":
@@ -1109,14 +1107,7 @@ def save_aperture_changes(request):
             status=405,
         )
 
-    try:
-        payload = json.loads(request.body)
-    except (json.JSONDecodeError, TypeError):
-        return JsonResponse(
-            {"success": False, "message": "Invalid JSON payload."},
-            status=400,
-        )
-
+    payload = json.loads(request.body)
     transient_name = payload.get("transient_name")
     filter_name = payload.get("filter") or ""
     edits = payload.get("apertures", [])
@@ -1124,10 +1115,10 @@ def save_aperture_changes(request):
     if not transient_name:
         return JsonResponse(
             {"success": False, "message": "Missing transient_name."},
-            status=400,
+            status=400
         )
 
-    if not isinstance(edits, list) or not edits:
+    if not edits:
         return JsonResponse(
             {"success": False, "message": "No aperture edits supplied."},
             status=400,
@@ -1141,11 +1132,14 @@ def save_aperture_changes(request):
             status=404,
         )
 
-    cutout = _resolve_cutout(transient, filter_name)
+    if not filter_name:
+        cutout = select_best_cutout(transient.name)
+    else:
+        cutout = Cutout.objects.filter(name__exact=f"{transient.name}_{filter_name}").filter(~Q(fits="")).first()
+
     if cutout is None:
         return JsonResponse(
-            {"success": False,
-             "message": "Could not identify the cutout these edits were made on."},
+            {"success": False, "message": "Could not identify the cutout these edits were made on."},
             status=400,
         )
 
@@ -1157,7 +1151,7 @@ def save_aperture_changes(request):
             status=409,
         )
 
-    if len(edits) > len(APERTURE_TYPES):
+    if len(edits) > 2: # more than the number of aperture types
         return JsonResponse({"success": False, "message": "Too many aperture edits suppllied"}, status=400,)
 
     try:

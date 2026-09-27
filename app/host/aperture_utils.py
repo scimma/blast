@@ -1,18 +1,13 @@
 from astropy.io import fits
 from astropy.wcs import WCS
 import numpy as np
-from django.db import transaction
 from django.db.models import Q
-from host.host_utils import select_best_cutout
 from host.host_utils import select_aperture
-from host.host_utils import inspect_worker_tasks
-from host.host_utils import get_processing_status_and_progress
 from host.plotting_utils import delete_cached_file
 from host.plotting_utils import normalize_pixel_axes
 from host.plotting_utils import _pixel_to_arcsec_matrix
 from host.plotting_utils import temp_results_paths_from_canonical_path
 from host.models import Aperture
-from host.models import Cutout
 from host.log import get_logger
 from host.object_store import ObjectStore
 logger = get_logger(__name__)
@@ -25,32 +20,7 @@ APERTURE_EDITABLE_FIELDS = (
     "orientation_deg",
 )
 
-APERTURE_EQUALITY_TOLERANCE = 1e-9
-APERTURE_TYPES = ("global", "local") 
-
-def _resolve_cutout(transient, filter_name):
-    if not filter_name:
-        return select_best_cutout(transient.name)
-    return Cutout.objects.filter(name__exact=f"{transient.name}_{filter_name}").filter(~Q(fits="")).first()
-
-
-def _edit_float(edit, key):
-    try:
-        value = float(edit[key])
-    except (KeyError, TypeError, ValueError):
-        raise ValueError(f'''"{key}" is missing or not a number''')
-    if not np.isfinite(value):
-        raise ValueError(f'''"{key}" must be finite''')
-    return value
-
-def _unchanged(stored, incoming):
-    if stored is None:
-        return False
-    return np.isclose(
-        float(stored), float(incoming), rtol=0.0, atol=APERTURE_EQUALITY_TOLERANCE,
-    )
-
-def resolve_aperture_for_edit(transient, aperture_type, lock=False):
+def resolve_aperture_for_edit(transient, aperture_type, lock):
     """
     Resolve aperture row that edit belons to from transient and type info
     """
@@ -68,7 +38,7 @@ def resolve_aperture_for_edit(transient, aperture_type, lock=False):
 
 def _apply_aperture_edit(transient, wcs, edit):
     aperture_type = edit.get("apertureType")
-    if aperture_type not in APERTURE_TYPES:
+    if aperture_type not in ("global", "local"):
         raise ValueError(f"unknown aperture type {aperture_type}")
 
     aperture = resolve_aperture_for_edit(transient, aperture_type, lock=True)
@@ -77,11 +47,11 @@ def _apply_aperture_edit(transient, wcs, edit):
 
     geometry = aperture_sky_geometry(
         wcs,
-        x=_edit_float(edit, "x"),
-        y=_edit_float(edit, "y"),
-        semi_major_px=_edit_float(edit, "semiMajor"),
-        semi_minor_px=_edit_float(edit, "semiMinor"),
-        theta_rad=_edit_float(edit, "thetaRadians"),
+        x=float(edit["x"]),
+        y=float(edit["y"]),
+        semi_major_px=float(edit["semiMajor"]),
+        semi_minor_px=float(edit["semiMinor"]),
+        theta_rad=float(edit["thetaRadians"]),
     )
     if (geometry["semi_major_axis_arcsec"] <= 0
             or geometry["semi_minor_axis_arcsec"] <= 0):
@@ -93,9 +63,8 @@ def _apply_aperture_edit(transient, wcs, edit):
         updates["semi_minor_axis_arcsec"] = updates["semi_major_axis_arcsec"]
 
     changed = {
-        field: value
-        for field, value in updates.items()
-        if not _unchanged(getattr(aperture, field), value)
+        field: value for field, value in updates.items()
+        if not np.isclose(float(getattr(aperture, field)), float(value), rtol=0.0, atol=1e-9) # aperture equality tolerance = 1e-9, arbitrarily set
     }
 
     if changed:
@@ -106,7 +75,6 @@ def _apply_aperture_edit(transient, wcs, edit):
             f'''Aperture {aperture.id} (type "{aperture.type}", transient '''
             f'''"{transient.name}") edited by hand: {changed}'''
         )
-
 
     return {
         "apertureId": aperture.id,

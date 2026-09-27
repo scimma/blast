@@ -148,6 +148,7 @@ try {
         );
     }
 
+    ellipse_source.properties.data.change.emit();
     ellipse_source.change.emit();
     handle_source.change.emit();
 } finally {
@@ -216,6 +217,7 @@ try {
 
     }
 
+    ellipse_source.properties.data.change.emit();
     ellipse_source.change.emit();
     handle_source.change.emit();
 
@@ -868,16 +870,6 @@ def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_a
                         "legend_label": s["legend_label"],
                     },
                 )
-            add_aperture_readout(
-                fig,
-                wcs,
-                redshift,
-                labels=readout_labels,
-                colors=readout_colors,
-                static_geometry=[
-                    _pixel_geometry(s["record"].sky_aperture, wcs) for s in specs
-                ],
-            )
 
     # If there is no cutout data, generate an empty plot
     if cutout is None:
