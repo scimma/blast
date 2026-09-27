@@ -1797,50 +1797,25 @@ def final_progress(transient_name):
     time_limit=task_time_limit,
     soft_time_limit=task_soft_time_limit,
 )
+def dataset_version_control(transient_name):
+    dataset_revision(transient_name)
+
+
 def dataset_revision(transient_name):
-    """Create a new dataset revision if needed."""
-
-    def get_checksum(s3_instance, canonical_path):
-        object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
-        logger.debug(f'Getting checksum for "{object_key}"')
-        file_obj = s3_instance.object_info(object_key)
-        etag = file_obj.etag
-        return etag
-
+    """Create a new dataset revision if needed. Return the latest DatasetRevision object."""
     transient = Transient.objects.get(name=transient_name)
     # Export tabular data
     dataset = export_dataset(transient.name)
-
-    # Generate table of file object checksums
-    canonical_paths = []
-    # SED fitting results
-    for aperture in dataset['apertures']:
-        for sedfittingresult in aperture['sedfittingresults']:
-            canonical_paths.extend([
-                sedfittingresult['posterior'],
-                sedfittingresult['chains_file'],
-                sedfittingresult['percentiles_file'],
-                sedfittingresult['model_file'],
-            ])
-    # Cutout images
-    for cutout_path in [cutout['fits'] for cutout in dataset['cutouts'] if cutout['fits']]:
-        canonical_paths.append(cutout_path)
-    # Host spectra files
-    for host_spectrum in dataset['host_spectra']:
-        canonical_paths.append(host_spectrum['spectrum_file'])
-    s3 = ObjectStore()
-    checksums = {canonical_path: get_checksum(s3, canonical_path) for canonical_path in canonical_paths}
-
     # Create a candidate DR for comparison
-    candidate_dr = DatasetRevision(transient=transient, data={'export': dataset, 'files': checksums})
+    candidate_dr = DatasetRevision(transient=transient, data=dataset)
     # Fetch latest DR
-    previous_dr = get_latest_dataset_revision(transient)
+    previous_dr = get_latest_dataset_revision(transient.name)
     if previous_dr is None:
         # Save candidate DR to the database as the first revision
         assert candidate_dr.revision == 0
         candidate_dr.save()
         logger.debug(f'New dataset revision created: {candidate_dr}')
-        return
+        return candidate_dr
     # If there is an existing DR, compare and create a new DR if any differences are detected.
     try:
         # Must have the same number of files
@@ -1850,21 +1825,23 @@ def dataset_revision(transient_name):
             assert candidate_dr.data['files'][canonical_path] == checksum
         # If any changes to the immutable tabular data fields are detected, make a new revision
         # Check app version in metadata
-        candidate_app_version = candidate_dr.data['export']['metadata']['app_version']
-        previous_app_version = previous_dr.data['export']['metadata']['app_version']
+        candidate_app_version = candidate_dr.data['metadata']['app_version']
+        previous_app_version = previous_dr.data['metadata']['app_version']
         assert candidate_app_version == previous_app_version
         # Compare the rest of the data structure
-        previous_dr_data = deepcopy(previous_dr.data['export'])
-        candidate_dr_data = deepcopy(candidate_dr.data['export'])
+        previous_dr_data = deepcopy(previous_dr.data)
+        candidate_dr_data = deepcopy(candidate_dr.data)
         previous_dr_data.pop('metadata')
         candidate_dr_data.pop('metadata')
         previous_dr_data.pop('workflow_tasks')
         candidate_dr_data.pop('workflow_tasks')
         assert equal_dicts(previous_dr_data, candidate_dr_data)
         logger.info(f'Dataset "{transient.name}" unchanged. No dataset revision created.')
+        return previous_dr
     except (AssertionError, IndexError) as err:
         logger.debug(err)
         # Increment the revision index
         candidate_dr.revision = previous_dr.revision + 1
         candidate_dr.save()
         logger.debug(f'New dataset revision created: {candidate_dr}')
+        return candidate_dr

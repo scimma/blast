@@ -16,7 +16,7 @@ from host.transient_tasks import local_host_sed_fitting
 from host.transient_tasks import mwebv_host
 from host.transient_tasks import mwebv_transient
 from host.transient_tasks import final_progress
-from host.transient_tasks import dataset_revision
+from host.transient_tasks import dataset_version_control
 from host.base_tasks import task_soft_time_limit
 from host.base_tasks import task_time_limit
 from host.transient_tasks import validate_global_photometry
@@ -138,7 +138,7 @@ def transient_workflow(name=None):
                 generate_thumbnail_sed_local.si(name),
             ),
         ),
-        dataset_revision.si(name),
+        dataset_version_control.si(name),
         final_progress.si(name),
     )
     workflow.delay()

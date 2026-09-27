@@ -1,9 +1,11 @@
+import os
 from host import models
 from datetime import datetime, timezone
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from django.urls import reverse
 from django.conf import settings
+from host.object_store import ObjectStore
 
 
 class StatusSerializer(serializers.ModelSerializer):
@@ -219,6 +221,16 @@ class DatasetSerializer(serializers.Serializer):
     apertures = serializers.SerializerMethodField()
     host_spectra = serializers.SerializerMethodField()
     workflow_tasks = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+
+    s3 = ObjectStore()
+
+    def get_checksum(self, canonical_path):
+        """Calculate checksum of file objects in data store"""
+        object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+        file_obj = self.s3.object_info(object_key)
+        etag = file_obj.etag
+        return etag
 
     class DatasetMetadataSerializer(serializers.Serializer):
         app_version = serializers.SerializerMethodField()
@@ -397,3 +409,20 @@ class DatasetSerializer(serializers.Serializer):
     def get_workflow_tasks(self, transient_obj):
         return [self.DatasetTaskRegisterSerializer(record).data
                 for record in models.TaskRegister.objects.filter(transient=transient_obj)]
+
+    @extend_schema_field(serializers.DictField)
+    def get_files(self, transient_obj):
+        canonical_paths = []
+        canonical_paths.extend([record.fits for record in
+                                models.Cutout.objects.filter(transient=transient_obj) if record.fits])
+        canonical_paths.extend([record.spectrum_file for record in
+                                models.HostSpectrum.objects.filter(host=transient_obj.host) if record.spectrum_file])
+        canonical_paths.extend([record.posterior for record in
+                                models.SEDFittingResult.objects.filter(transient=transient_obj) if record.posterior])
+        canonical_paths.extend([record.chains_file for record in
+                                models.SEDFittingResult.objects.filter(transient=transient_obj) if record.chains_file])
+        canonical_paths.extend([record.percentiles_file for record in
+                                models.SEDFittingResult.objects.filter(transient=transient_obj) if record.percentiles_file])  # noqa
+        canonical_paths.extend([record.model_file for record in
+                                models.SEDFittingResult.objects.filter(transient=transient_obj) if record.model_file])
+        return {str(path): self.get_checksum(str(path)) for path in canonical_paths}

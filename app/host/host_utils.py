@@ -1720,7 +1720,12 @@ def equal_dicts(first, second, path=""):
     return is_equal
 
 
-def get_latest_dataset_revision(transient):
+def get_latest_dataset_revision(transient_name):
     """Return the revision index of the latest dataset version"""
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        logger.warning(f'Transient not found: "{transient_name}"')
+        return None
     latest_dataset_revision = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
     return latest_dataset_revision

@@ -886,7 +886,7 @@ def results(request, transient_name):
             logger.error(f'''Error rendering host spectrum plot: {err}''')
             interactive_host_spec_plot = {}
     # Determine latest dataset revision (consistent with displayed data)
-    dataset_revision = get_latest_dataset_revision(transient)
+    dataset_revision = get_latest_dataset_revision(transient.name)
     dataset_version = dataset_revision.revision if dataset_revision else 0
     # Construct the Django render() function context
     context = {

@@ -30,8 +30,9 @@ from host.models import Transient
 from host.models import Host
 from host.models import Alias
 from host.decorators import log_usage_metric
-from host.host_utils import export_dataset
 from host.host_utils import delete_transient
+from host.host_utils import get_latest_dataset_revision
+from host.transient_tasks import dataset_revision
 from api.serializers import DatasetSerializer
 from api.serializers import TransientSerializer
 from api.serializers import ApertureSerializer
@@ -439,11 +440,18 @@ class DatasetExportView(APIView):
     serializer_class = DatasetSerializer
 
     def get(self, request, transient_name=''):
-        dataset = export_dataset(transient_name)
+        try:
+            Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        dr = get_latest_dataset_revision(transient_name)
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
         if not dataset:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         logger.info(f'Exporting all data for "{transient_name}", including files.')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         s3 = ObjectStore()
         tar_bytes_io = BytesIO()
         # Generate in-memory compressed archive file object of all data to stream
@@ -554,13 +562,18 @@ class DatasetView(APIView):
         }
     )
     def get(self, request, transient_name=''):
-        # get_transient_view(request=request, transient_name=transient_name, all=True)
-        dataset = export_dataset(transient_name)
+        try:
+            Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        dr = get_latest_dataset_revision(transient_name)
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
         if not dataset:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-        logger.debug(dataset)
-        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         return JsonResponse(dataset)
 
     @extend_schema(
