@@ -29,6 +29,7 @@ from host.models import Task
 from host.models import Transient
 from host.models import Host
 from host.models import Alias
+from host.models import DatasetRevision
 from host.decorators import log_usage_metric
 from host.host_utils import delete_transient
 from host.host_utils import get_latest_dataset_revision
@@ -554,7 +555,9 @@ class DatasetView(APIView):
         return []
 
     @extend_schema(
-        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),],
+        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),
+                    OpenApiParameter(name="revision", type=int, location=OpenApiParameter.QUERY,
+                                     required=False, description="Dataset revision")],
         request=None,
         responses={
             200: DatasetSerializer,
@@ -562,16 +565,26 @@ class DatasetView(APIView):
         }
     )
     def get(self, request, transient_name=''):
+        revision = request.query_params.get('revision', '')
         try:
-            Transient.objects.get(name__exact=transient_name)
+            transient = Transient.objects.get(name__exact=transient_name)
         except Transient.DoesNotExist:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-        dr = get_latest_dataset_revision(transient_name)
+        dataset = None
+        drs = DatasetRevision.objects.filter(transient=transient)
+        if revision:
+            revision = int(revision)
+            try:
+                dr = drs.get(revision__exact=revision)
+            except DatasetRevision.DoesNotExist:
+                return JsonResponse(data={"message": f'Dataset revision {revision} for "{transient_name}" not found'},
+                                    status=status.HTTP_404_NOT_FOUND)
+            dataset = dr.data
+        if not dataset:
+            dr = drs.order_by("-revision", "pk").first()
         if not dr:
             dr = dataset_revision(transient_name)
         dataset = dr.data
-        if not dataset:
-            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
         logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
         logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         return JsonResponse(dataset)
