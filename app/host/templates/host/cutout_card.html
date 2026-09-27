@@ -27,13 +27,113 @@
         {{ filter_select_form.filters }}
         <div class="input-group-append">
             <button class="btn btn-primary" type="button"
-                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
+                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value, apertureEditable)">Get Cutout</button>
+            <button class="btn btn-outline-secondary" type="button" id="edit-aperture-btn"
+                onclick="toggleApertureEdit('{{ transient.name }}')">Enable Aperture Editing</button>
+            <button class="btn btn-success" type="button" id="save-aperture-btn" style="display: none;"
+                onclick="saveApertureChanges('{{ transient.name }}')" disabled>Save Aperture Changes</button>
         </div>
     </div>
+    <div id="aperture-save-status" role="status" aria-live="assertive"></div>
 </form>
 <script>
+    // tracks whether aperture-editing mode is currently on, so the toggle button knows what to switch to and re-request on the next click
     document.getElementById('loading-indicator').style.display = "none";
-    function cutoutImgClick(transient, filter) {
+    var apertureEditable = false;
+    
+    var pendingApertureChanges = {};
+
+    var activePlotFilter = "";
+
+    function recordApertureChange(evt) {
+        pendingApertureChanges[evt.detail.apertureType] = evt.detail;
+        setSaveButtonState(Object.keys(pendingApertureChanges).length === 0);
+        setApertureSaveStatus('', false);
+    }
+
+    window.addEventListener('blast:aperture-change', recordApertureChange);
+
+    function setSaveButtonState(disabled, label) {
+        var saveBtn = document.getElementById('save-aperture-btn');
+        saveBtn.textContent = label || "Save Aperture Changes";
+        saveBtn.disabled = disabled;
+    }
+
+    function setApertureSaveStatus(message, isError) {
+        var element = document.getElementById('aperture-save-status');
+        element.textContent = message || '';
+        element.className = message ? (isError ? 'text-danger small mt-1' : 'text-success small mt-1') : '';
+    }
+
+    function toggleApertureEdit(transient) {
+        apertureEditable = !apertureEditable;
+        var editbtn = document.getElementById('edit-aperture-btn');
+        editbtn.textContent = apertureEditable ? "Cancel Aperture Editing" : "Enable Aperture Editing";
+        editbtn.classList.toggle('btn-outline-secondary', !apertureEditable);
+        editbtn.classList.toggle('btn-secondary', apertureEditable);
+
+        var savebtn = document.getElementById('save-aperture-btn');
+        savebtn.style.display = apertureEditable ? "" : "none";
+
+        var filter = document.getElementById('id_filters').value;
+        cutoutImgClick(transient, filter, apertureEditable);
+    }
+
+    function saveApertureChanges(transient) {
+        var changes = Object.values(pendingApertureChanges);
+        if (!changes.length) return;
+        setApertureSaveStatus('', false);
+
+        $.ajax({
+            url: "{% url 'save_aperture_changes' %}",
+            type: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            contentType: "application/json",
+            data: JSON.stringify({ 
+                transient_name: transient, 
+                filter: activePlotFilter, 
+                apertures: changes 
+            }),
+            success: function (resp) {
+                pendingApertureChanges = {};
+                var written = (resp.apertures || []).filter(function (ap) {
+                    return ap.changed && ap.changed.length;
+                });
+                setSaveButtonState(true);
+                var note = "";
+                if (resp.workflow_retriggered) {
+                    note = " Photometry and SED fitting have been queued to re-run";
+                }
+                if (resp.local_edit_not_retriggered) {
+                    note += "local aperture was saved for display only, rebuilt from redshift"
+                }
+                if (written.length) {
+                    cutoutImgClick(transient, activePlotFilter, apertureEditable);
+                }
+                setApertureSaveStatus(
+                    written.length
+                        ? "Saved " + written.length + " aperture(s)." + note
+                        : "No geometry changes to save.",
+                    false
+                );
+            },
+            error: function (xhr) {
+                var message = "Failed to save aperture changes.";
+                try {
+                    message = JSON.parse(xhr.responseText).message || message;
+                } catch (err) { /* non-JSON body (500 page, proxy error): keep default */ }
+                console.error("Failed to save aperture changes:", xhr.responseText);
+                setSaveButtonState(false);
+                setApertureSaveStatus(message, true);
+            },
+        });
+    }
+
+    function cutoutImgClick(transient, filter, editable) {
+        pendingApertureChanges = {};
+        setSaveButtonState(true);
+        setApertureSaveStatus('', false);
+        activePlotFilter = filter || "";
         document.getElementById('loading-indicator').style.display = "block";
         $("#cutout-loader-mask").show();
         $.ajax({
@@ -41,7 +141,8 @@
             type: "GET",
             data: {
                 transient_name: transient,
-                filter: filter
+                filter: filter,
+                editable: editable
             },
             success: function (resp) {
                 document.getElementById("cutout-img-bokeh").innerHTML = resp.bokeh_cutout_div;
@@ -60,6 +161,12 @@
                 document.getElementById('loading-indicator').style.display = "none";
                 $("#cutout-loader-mask").hide();
             },
+            error: function (xhr) {
+                document.getElementById('loading-indicator').style.display = "none";
+                $("#cutout-loader-mask").hide();
+                console.error("Failed to load cutout plot:", xhr.responseText);
+                setApertureSaveStatus("Could not load cutout plot", true);
+            }
         });
     }
 </script>
