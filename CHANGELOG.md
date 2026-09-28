@@ -13,19 +13,35 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
-## [2.2.0]
+## [3.0.0]
 
 ### Added
 
-- Added basic version control system for transient datasets. Tabular data exported by `/api/dataset/[transient_name]` now includes
-  a `metadata.dataset_version` field whose integer value corresponds to the immutable dataset version number. By default, the latest revision will be served.
+- Implemented a basic version control system for transient datasets. Tabular data exported by
+  `GET /api/dataset/[transient_name]` now includes a `metadata.dataset_version` field whose integer value
+  corresponds to the immutable dataset version number. By default, the latest revision will be served.
+  A `revision` query parameter can be used, for example `GET /api/dataset/[transient_name]?revision=2`,
+  to request a specific dataset revision. Files are not version controlled; while a manifest of their
+  checksums is included in each dataset revision, previous versions of changed files are not stored for
+  subsequent retrieval.
+- Enabled pagination for API responses with a default page size of 100 objects.
+
+### Fixed
+
+- Fixed a regression introduced in v2.0.0 causing the SED fit file download links on result pages to be effectively
+  randomized because the transient ID was used in the URL construction instead of the relevant `SEDFittingResult`
+  object ID.
 
 ## [2.1.0]
 
 ### Changed
 
-- Improved the usage metrics logging system to handle class-based views, including the individual Blast data object endpoints and the transient dataset download endpoints.
-- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible, the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation of semantic versioning.)
+- Improved the usage metrics logging system to handle class-based views, including the individual Blast data 
+  object endpoints and the transient dataset download endpoints.
+- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints
+  and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible,
+  the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation
+  of semantic versioning.)
 
 ## [2.0.1]
 
