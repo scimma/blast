@@ -739,6 +739,9 @@ def results(request, transient_name):
 
         sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
         results = ()
+        obj_id = None
+        if sed_obj.exists():
+            obj_id = sed_obj[0].id
         if category == 'base':
             # Compile spectral energy distribution results
             for param, var, ptype in zip(*param_var_ptype):
@@ -765,7 +768,7 @@ def results(request, transient_name):
                             sh.logsfr_tmax
                         ),
                     )
-        return results
+        return results, obj_id
 
     # Acquire the transient object or return 404 not found
     try:
@@ -889,6 +892,10 @@ def results(request, transient_name):
     dataset_revision = get_latest_dataset_revision(transient.name)
     dataset_version = dataset_revision.revision if dataset_revision else 0
     # Construct the Django render() function context
+    results_local_sed_results, obj_id_local_sed_results = compile_sed_results(transient, 'base', 'local')
+    results_global_sed_results, obj_id_global_sed_results = compile_sed_results(transient, 'base', 'global')
+    results_local_sfh_results, obj_id_local_sfh_results = compile_sed_results(transient, 'sfh', 'local')
+    results_global_sfh_results, obj_id_global_sfh_results = compile_sed_results(transient, 'sfh', 'global')
     context = {
         **{
             "transient": transient,
@@ -899,10 +906,12 @@ def results(request, transient_name):
             "cutout_ids": cutout_ids,
             "local_aperture": local_aperture[0] if local_aperture.exists() else None,
             "global_aperture": global_aperture[0] if global_aperture.exists() else None,
-            "local_sed_results": compile_sed_results(transient, 'base', 'local'),
-            "global_sed_results": compile_sed_results(transient, 'base', 'global'),
-            "local_sfh_results": compile_sed_results(transient, 'sfh', 'local'),
-            "global_sfh_results": compile_sed_results(transient, 'sfh', 'global'),
+            "local_sed_results": results_local_sed_results,
+            "global_sed_results": results_global_sed_results,
+            "local_sfh_results": results_local_sfh_results,
+            "global_sfh_results": results_global_sfh_results,
+            "obj_id_local_sed_results": obj_id_local_sed_results,
+            "obj_id_global_sed_results": obj_id_global_sed_results,
             "is_auth": request.user.is_authenticated,
             "image_data_encoded": image_data_encoded,
             "image_data_encoded_sed_local": image_data_encoded_sed['local'],
