@@ -227,10 +227,11 @@ services:
         condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "/garage", "json-api", "GetClusterHealth"]
-      interval: 5s
-      timeout: 4s
-      retries: 15
-      start_period: 5s
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+      start_interval: 5s
     ports:
       - "127.0.0.1:${S3_SERVER_PORT:-9000}:${S3_SERVER_PORT:-9000}"
       - "127.0.0.1:${S3_RPC_PORT:-9001}:${S3_RPC_PORT:-9001}"
