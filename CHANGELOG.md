@@ -24,7 +24,13 @@ Types of changes:
   to request a specific dataset revision. Files are not version controlled; while a manifest of their
   checksums is included in each dataset revision, previous versions of changed files are not stored for
   subsequent retrieval.
-- Enabled pagination for API responses with a default page size of 100 objects.
+
+### Changed
+
+- Enabled pagination for API responses with a default page size of 100 objects. This changes the API response
+  schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
+  `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
+  `GET /api/task`, `GET /api/host`, `GET /api/alias`.
 
 ### Fixed
 
