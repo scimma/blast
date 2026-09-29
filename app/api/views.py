@@ -300,7 +300,8 @@ class AliasViewSet(viewsets.ModelViewSet):
             return [HasPermissionDeleteAlias()]
         elif self.request.method == "POST":
             return [HasPermissionCreateAlias()]
-        return []
+        else:
+            return [IsAuthenticated()]
     queryset = Alias.objects.select_related("transient", "host")
     serializer_class = AliasSerializer
     filter_backends = (DjangoFilterBackend,)
