@@ -41,6 +41,9 @@ services:
       internal:
         aliases:
           - ${WEB_APP_HOST}
+    depends_on:
+      object-store:
+        condition: service_healthy
     volumes:
       - init-data:/mnt/data
       - django-static:/app/static
@@ -108,6 +111,9 @@ services:
     command: bash entrypoints/docker-entrypoint.celery.sh
     networks:
       - internal
+    depends_on:
+      object-store:
+        condition: service_healthy
     deploy:
       mode: replicated
       replicas: 2
@@ -133,6 +139,12 @@ services:
     command: bash entrypoints/docker-entrypoint.celery_beat.sh
     networks:
       - internal
+    healthcheck:
+      test: ["CMD", "bash", "-c", "[ -f /tmp/celery-beat-ready ]"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 600s
     volumes:
       - init-data:/mnt/data
       - django-static:/app/static
