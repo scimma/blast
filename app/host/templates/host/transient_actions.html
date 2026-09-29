@@ -2,27 +2,32 @@
   .navbar .nav-link i {
     font-size: larger;
   }
+  .bi-passport {
+    color: red;
+    font-size: larger;
+    padding-right: 1rem;
+  }
 </style>
 <li class="nav-item dropdown">
   <a class="nav-link dropdown-toggle" href="#" role="button" id="export-dropdown" data-toggle="dropdown" aria-expanded="false">
-    <i class="bi bi-save"></i> Download data{% if not is_auth %} (requires authentication){% endif %}
+    <i class="bi bi-save"></i> Download data
   </a>
   <div class="dropdown-menu" aria-labelledby="export-dropdown">
-    <a class="dropdown-item" title="Download with all files" href="/api/dataset/{{transient.name}}/export/"><i class="bi bi-file-earmark-zip"></i> Download with all files (.tar.gz)</a>
+    <a class="dropdown-item" title="Download with all files" href="/api/dataset/{{transient.name}}/export/">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-file-earmark-zip"></i> Download with all files (.tar.gz)</a>
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Download without files" target="_blank" href="/api/dataset/{{transient.name}}/"><i class="bi bi-filetype-json"></i> Download without files (.json)</a>
+    <a class="dropdown-item" title="Download without files" target="_blank" href="/api/dataset/{{transient.name}}/">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-filetype-json"></i> Download without files (.json)</a>
     
     {% if local_sed_results %}
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Local SED best-fit model" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'model' %}"><i class="bi bi-graph-up"></i> Local SED best-fit model (.npz)</a>
-    <a class="dropdown-item" title="Local parameter confidence intervals" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'percentiles' %}"><i class="bi bi-percent"></i> Local parameter confidence intervals (.npz)</a>
-    <a class="dropdown-item" title="Local parameter estimation chains" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'chains' %}"><i class="bi bi-link"></i> Local parameter estimation chains (.npz)</a>
+    <a class="dropdown-item" title="Local SED best-fit model" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'model' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-graph-up"></i> Local SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Local parameter confidence intervals" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'percentiles' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-percent"></i> Local parameter confidence intervals (.npz)</a>
+    <a class="dropdown-item" title="Local parameter estimation chains" href="{% url 'sedfittingresult-download' obj_id_local_sed_results 'chains' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-link"></i> Local parameter estimation chains (.npz)</a>
     {% endif %}
     {% if global_sed_results %}
     <div class="dropdown-divider"></div>
-    <a class="dropdown-item" title="Global SED best-fit model" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'model' %}"><i class="bi bi-graph-up"></i> Global SED best-fit model (.npz)</a>
-    <a class="dropdown-item" title="Global parameter confidence intervals" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'percentiles' %}"><i class="bi bi-percent"></i> Global parameter confidence intervals (.npz)</a>
-    <a class="dropdown-item" title="Global parameter estimation chains" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'chains' %}"><i class="bi bi-link"></i> Global parameter estimation chains (.npz)</a>
+    <a class="dropdown-item" title="Global SED best-fit model" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'model' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-graph-up"></i> Global SED best-fit model (.npz)</a>
+    <a class="dropdown-item" title="Global parameter confidence intervals" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'percentiles' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-percent"></i> Global parameter confidence intervals (.npz)</a>
+    <a class="dropdown-item" title="Global parameter estimation chains" href="{% url 'sedfittingresult-download' obj_id_global_sed_results 'chains' %}">{% if not is_auth %}<span title="Authorization required"><i class="bi bi-passport"></i></span>{% endif %}<i class="bi bi-link"></i> Global parameter estimation chains (.npz)</a>
     {% endif %}
   </div>
 </li>

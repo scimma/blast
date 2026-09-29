@@ -1,4 +1,5 @@
 from django.contrib.auth.context_processors import auth
+from rest_framework.authtoken.models import Token
 import base64
 import binascii
 from host.log import get_logger
@@ -34,10 +35,19 @@ def user_profile(request):
             username_b64decoded = ''
         else:
             break
+
+    token = ''
+    try:
+        api_token, created = Token.objects.get_or_create(user=user)
+        token = api_token.key
+    except TypeError:
+        token = ''
+
     context = {
         'username_b64decoded': username_b64decoded,
         'has_perm_retrigger_transient': check_perms(user, "host.retrigger_transient"),
         'has_perm_reprocess_transient': check_perms(user, "host.reprocess_transient"),
         'has_perm_add_alias': check_perms(user, "host.add_alias"),
+        'api_token': token,
     }
     return context

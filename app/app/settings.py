@@ -234,6 +234,7 @@ CELERYD_REDIRECT_STDOUTS_LEVEL = "INFO"
 # Django Rest Framework config
 #
 INSTALLED_APPS.append('rest_framework')
+INSTALLED_APPS.append('rest_framework.authtoken')
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         f'rest_framework.permissions.{os.environ.get("API_AUTHENTICATION")}',
@@ -242,6 +243,11 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 100,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
 }
 
 ######################################################################

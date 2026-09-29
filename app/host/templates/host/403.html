@@ -12,13 +12,19 @@
 </style>
 <div class="container">
     <div class="p-5 text-left bg-light">
-        <h1 class="mb-3">Request Authorization</h1>
+        {% if is_auth %}
+        <div class="text-center" style="font-size: 1.6rem;">
+            <p class="mb-3 py-3"><span class="p-3" style="font-weight: bold; color: #b15000;">
+                You have authenticated successfully, so you can use the API functions as detailed in the <br><a target="_blank" title="API explorer" href="{% url 'swagger-ui' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;API explorer</a>&nbsp;!</span>
+            </p>
+        </div>
+        <hr />
         <div style="font-size: larger;">
-            <p class="mb-3">
-                You have authenticated successfully, but you are not yet <i>authorized</i> to upload new transients.
+            <p>
+                If you are a researcher who wants to add new transients to the Blast database, you will need to request special <i class="bi bi-passport"></i> <i>authorization</i> to do so. <b><i>This is not something most users need</i></b>.
             </p>
             <p>
-                Please
+                If you do need this special permission, please
                 <a href="mailto:{% support_email %}?subject=Blast%20authorization%20request
                     &body=Request authorization to upload new transients to Blast by submitting the information below.
                     %0A%0A
@@ -48,6 +54,11 @@
                 email, as our team is small.
             </p>
         </div>
+        {% else %}
+        <div style="font-size: larger;">
+            <p>Please <a href="{% url 'login' %}">log in</a> to access this page.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
