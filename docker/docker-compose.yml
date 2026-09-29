@@ -10,6 +10,8 @@ volumes:
   init-data:
     name: "blast-init-data-$USER"
   object-data: {}
+  garage-meta: {}
+  garage-config: {}
   influxdb-data: {}
   influxdb-config: {}
   grafana-storage: {}
@@ -181,23 +183,54 @@ services:
     profiles:
       - "batch"
 
+  garage-config:
+    platform: linux/amd64
+    image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        echo "Rendering Garage config template..."
+        cat /tmp/garage.tpl.toml | \
+        sed 's/{{S3_SERVER_PORT}}/${S3_SERVER_PORT:-9000}/g' | \
+        sed 's/{{S3_RPC_PORT}}/${S3_RPC_PORT:-9001}/g' | \
+        sed 's/{{S3_ADMIN_PORT}}/${S3_ADMIN_PORT:-9003}/g' > /etc/garage.toml
+        cat /etc/garage.toml
+    volumes:
+      - garage-config:/etc
+      - ./garage.tpl.toml:/tmp/garage.tpl.toml:ro
+
   object-store:
     platform: linux/amd64
-    image: quay.io/minio/minio:RELEASE.2025-02-07T23-21-09Z
+    image: dxflrs/garage:v2.4.1
+    command:
+      -  /garage
+      -  server
+      -  --single-node 
+      -  --default-bucket
+    restart: unless-stopped
+    depends_on:
+      garage-config:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/garage", "json-api", "GetClusterHealth"]
+      interval: 5s
+      timeout: 4s
+      retries: 15
+      start_period: 5s
     ports:
-      - 127.0.0.1:${S3_CONSOLE_PORT:-9001}:${S3_CONSOLE_PORT:-9001}
-      - 127.0.0.1:${S3_SERVER_PORT:-9000}:${S3_SERVER_PORT:-9000}
+      - "127.0.0.1:${S3_SERVER_PORT:-9000}:${S3_SERVER_PORT:-9000}"
+      - "127.0.0.1:${S3_RPC_PORT:-9001}:${S3_RPC_PORT:-9001}"
+      - "127.0.0.1:${S3_ADMIN_PORT:-9003}:${S3_ADMIN_PORT:-9003}"
     networks:
       - internal
-    command:
-    - server
-    - /data
-    - --address
-    - ":${S3_SERVER_PORT:-9000}"
-    - --console-address
-    - ":${S3_CONSOLE_PORT:-9001}"
+    environment:
+      RUST_LOG: garage=info
     volumes:
-      - object-data:/data
+      - garage-config:/etc
+      - garage-meta:/var/lib/garage/meta
+      - object-data:/var/lib/garage/data
       - init-data:/init_data
     profiles:
       - "full_prod"
