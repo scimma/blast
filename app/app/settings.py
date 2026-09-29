@@ -275,7 +275,7 @@ OIDC_OP_JWKS_ENDPOINT = os.environ.get('OIDC_OP_JWKS_ENDPOINT', '')
 OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
 # OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 LOGIN_URL = '/oidc/authenticate'
-LOGIN_REDIRECT_URL = "/add"
+LOGIN_REDIRECT_URL = "/accounts/login"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
 # ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
 # which allows the front end to use location.href to /auth/logout to logout.
