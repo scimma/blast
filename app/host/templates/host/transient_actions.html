@@ -5,7 +5,7 @@
 </style>
 <li class="nav-item dropdown">
   <a class="nav-link dropdown-toggle" href="#" role="button" id="export-dropdown" data-toggle="dropdown" aria-expanded="false">
-    <i class="bi bi-save"></i> Download data
+    <i class="bi bi-save"></i> Download data{% if not is_auth %} (requires authentication){% endif %}
   </a>
   <div class="dropdown-menu" aria-labelledby="export-dropdown">
     <a class="dropdown-item" title="Download with all files" href="/api/dataset/{{transient.name}}/export/"><i class="bi bi-file-earmark-zip"></i> Download with all files (.tar.gz)</a>

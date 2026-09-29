@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from host.object_store import ObjectStore
 from host.models import Aperture
@@ -177,6 +178,7 @@ class SEDFittingResultFilter(django_filters.FilterSet):
     # description=dedent('''''')
 )
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Transient.objects.all()
     serializer_class = TransientSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -185,6 +187,7 @@ class TransientViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Aperture.objects.all()
     serializer_class = ApertureSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -193,6 +196,7 @@ class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Cutout.objects.all()
     serializer_class = CutoutSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -213,6 +217,7 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Filter.objects.all()
     serializer_class = FilterSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -221,6 +226,7 @@ class FilterViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = AperturePhotometry.objects.all()
     serializer_class = AperturePhotometrySerializer
     filter_backends = (DjangoFilterBackend,)
@@ -229,6 +235,7 @@ class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = SEDFittingResult.objects.all()
     serializer_class = SEDFittingResultSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -262,6 +269,7 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = TaskRegister.objects.all()
     serializer_class = TaskRegisterSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -270,12 +278,14 @@ class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class TaskViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class HostViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Host.objects.all()
     serializer_class = HostSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -438,6 +448,7 @@ class HasPermissionDeleteTransient(BasePermission):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class DatasetExportView(APIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = DatasetSerializer
 
     def get(self, request, transient_name=''):
@@ -552,7 +563,8 @@ class DatasetView(APIView):
         method = self.request.method
         if method == "DELETE":
             return [HasPermissionDeleteTransient()]
-        return []
+        else:
+            return [IsAuthenticated()]
 
     @extend_schema(
         parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),
