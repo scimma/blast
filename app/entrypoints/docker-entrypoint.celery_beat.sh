@@ -15,10 +15,6 @@ fi
 
 ## Initialize astro data
 ##
-until mc alias set object-storage ${S3_ENDPOINT_URL} "" "" && mc ping -c 1 object-storage; do
-  echo "Waiting for object storage..."
-  sleep 5
-done
 echo "Running astro data initialization script..."
 # Create data folders on persistent volume and symlink to expected paths
 bash entrypoints/initialize_data_dirs.sh
