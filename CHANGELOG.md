@@ -31,6 +31,9 @@ Types of changes:
   schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
   `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
   `GET /api/task`, `GET /api/host`, `GET /api/alias`.
+- The MinIO object storage server used in the Docker Compose deployment was replaced with Garage due to the
+  change in MinIO business model and subsequent discontinuation of anonymous image downloads.
+- More service dependencies based on health checks were defined and revised for the Docker Compose deployment.
 
 ### Fixed
 
