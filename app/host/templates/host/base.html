@@ -168,6 +168,9 @@
     font-size: 0.8rem;
     margin-top: 1rem;
   }
+  code {
+    color:#d15e00;
+  }
 </style>
   {% load bootstrap4 %}
   {% load static %}
@@ -216,9 +219,12 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}"> Admin </a>
           </li>
+          {% endif %}
+          {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'login' %}">
-              <i class="bi bi-person-vcard"></i> API Token
+            <a class="nav-link" href="{% url 'api_token' %}">
+              <i class="bi bi-passport"></i>
+                API token
             </a>
           </li>
           {% endif %}

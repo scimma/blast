@@ -62,20 +62,12 @@ span.psw {
   font-weight: bold;
 }
 .profile-item th {
-  text-align: right;
+  text-align: left;
 }
 .profile-item td {
   font-family: monospace;
   padding-left: 1rem;
   padding-right: 1rem;
-}
-
-button.copy-token:hover {
-  color:white;
-  background-color: #d15e00;
-}
-button.copy-token > i {
-  font-size: 2rem;
 }
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
@@ -106,7 +98,7 @@ button.copy-token > i {
   </form>
   {% else %}
   <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
-    <div class="p-2">
+    <div class="p-2" id="user-profile-section">
       <h2>User Profile</h2>
     </div>
     <div class="p-2">
@@ -135,8 +127,8 @@ button.copy-token > i {
                 username: {{ user.username }}%0A">✉️ using this template to email us</a>.</span>
       </p>
     </div>
-    <div class="p-2 my-3">
-      <table>
+    <div class="p-2 my-3" style="max-width: 600px;">
+      <table class="table-striped">
         <tr class="profile-item">
           <th>Given Name:</th>
           <td>{% if user.first_name %}{{ user.first_name }}{% else %}<code>None</code>{% endif %}</td>
@@ -151,38 +143,13 @@ button.copy-token > i {
         </tr>
       </table>
     </div>
-    <div class="p-2">
-      <h2><i class="bi bi-person-vcard"></i> API token</h2>
-    </div>
-    <div class="p-2" style="max-width: 600px;">
-      <p style="text-align: center;">Use the token below to authenticate when using the API programmatically.</p>
-      <p style="text-align: center; font-size: larger;"><code id="api-token-value">{{ api_token }}</code>
-        <button id="copy-token-btn" type="button" class="btn copy-token" onclick="copyToken()" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
-      </p>
-      <p style="text-align: center;">Note: The Authorization header for API requests must include the &ldquo;Token&rdquo; prefix:
-        <br>
-        <code>Authorization: Token {{ api_token }}</code>
-      </p>
-      <p>For example,
-        <pre><code>curl -X 'GET' 'https://blast.scimma.org/api/transient/' \
-  -H 'Authorization: Token {{ api_token }}'
-        </code></pre>
-      </p>
-      <p style="text-align: center;">
-        When using the <a target="_blank" title="API explorer" href="{% url 'swagger-ui' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;API explorer</a>, ensure you enter 
-        <br>
-        <code>Token {{ api_token }}</code>
-        <br>
-         in the &ldquo;tokenAuth (apiKey)&rdquo; input field of the <b>Authorize</b> modal dialog.
-      </p>
-    </div>
     <div class="p-2" style="max-width: 600px;">
       <p style="text-align: center;">
         Your account username, displayed below, is a unique identifier automatically assigned by our
         authentication system. It is displayed here for reference if needed by the Blast support team.
       </p>
       <p style="text-align: center; font-family: monospace;">
-        {% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}
+        <code style="font-size: large;">{% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}</code>
       </p>
     </div>
   </div>
@@ -199,15 +166,6 @@ button.copy-token > i {
               login_form.style.display = "none";
               oidc_button.style.display = "block";
           }
-      }
-
-      function copyToken() {
-        // Get the token value from the code tag
-        var copyText = document.getElementById("api-token-value");
-        // Copy the token value to the clipboard
-        navigator.clipboard.writeText(copyText.innerHTML);
-        var copyBtn = document.getElementById("copy-token-btn");
-        copyBtn.innerHTML = `<i class="bi bi-clipboard-check"></i>`;
       }
   </script>
 </body>

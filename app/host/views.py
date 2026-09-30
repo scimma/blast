@@ -151,7 +151,11 @@ def transient_list(request):
     return render(request, "transient_list.html", context)
 
 
-@permission_required("host.upload_transient", raise_exception=True)
+@login_required
+def api_token(request):
+    return render(request, "api_token.html", {})
+
+
 @log_usage_metric()
 def add_transient(request):
     def identify_existing_transients(transients=[]):

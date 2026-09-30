@@ -18,6 +18,7 @@ if base_path != "":
 urlpatterns = [
     path(f"""{base_path}transients/""", views.transient_list, name="transient_list"),
     path(f"""{base_path}add/""", views.add_transient, name="add_transient"),
+    path(f"""{base_path}token/""", views.api_token, name="api_token"),
     path(f"""{base_path}transients/<slug:transient_name>/""", views.results, name="results"),
     path(f"""{base_path}acknowledgements/""", views.acknowledgements, name="acknowledgements"),
     path(f"""{base_path}team/""", views.team, name="team"),

@@ -1,0 +1,57 @@
+{% extends 'host/base.html' %}
+{% load host_tags %}
+
+{% block title %} API Token {% endblock %}
+
+{% block body %}
+<style>
+  button.copy-token:hover {
+    color:white;
+    background-color: #d15e00;
+  }
+  button.copy-token > i {
+    font-size: 1rem;
+  }
+</style>
+<body>
+  <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5" style="font-size: large;">
+    <div class="p-2">
+      <h2><i class="bi bi-person-vcard"></i> API token</h2>
+    </div>
+    <div class="p-2" style="max-width: 800px;">
+      <p style="text-align: center;">Use the token below to authenticate when using the API programmatically.</p>
+      <p style="text-align: center; font-size: larger;"><code id="api-token-value">{{ api_token }}</code>
+        <button id="copy-token-btn" type="button" class="btn copy-token" onclick="copyToken()" title="Copy to clipboard"><i class="bi bi-clipboard"></i></button>
+      </p>
+      <p style="text-align: center;">Note: The Authorization header for API requests must include the &ldquo;Token&rdquo; prefix:
+        <br>
+        <code>Authorization: Token {{ api_token }}</code>
+      </p>
+      <p>For example,</p><p style="background-color: rgb(232, 232, 232);" class="p-3"><span style="font-size: 1rem;">
+          
+            <code>curl -X 'GET' 'https://blast.scimma.org/api/transient/' \<br>&nbsp;&nbsp;-H 'Authorization: Token {{ api_token }}'
+            </code>
+      </span>
+      </p>
+      <p style="text-align: center;">
+        When using the <a target="_blank" title="API explorer" href="{% url 'swagger-ui' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;API explorer</a>, ensure that you enter 
+        <br>
+        <code>Token {{ api_token }}</code>
+        <br>
+         in the &ldquo;tokenAuth (apiKey)&rdquo; input field of the <b>Authorize</b> modal dialog.
+      </p>
+    </div>
+  </div>
+
+  <script>
+      function copyToken() {
+        // Get the token value from the code tag
+        var copyText = document.getElementById("api-token-value");
+        // Copy the token value to the clipboard
+        navigator.clipboard.writeText(copyText.innerHTML);
+        var copyBtn = document.getElementById("copy-token-btn");
+        copyBtn.innerHTML = `<i class="bi bi-clipboard-check"></i>`;
+      }
+  </script>
+</body>
+{% endblock %}
