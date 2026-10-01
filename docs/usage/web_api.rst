@@ -5,7 +5,7 @@ Web API
 
 Blast provides an HTTP application programming interface (API) for fetching data programmatically.  The API allows queries on :ref:`individual data objects associated with a transient<api_individual>`, as well as :ref:`fetching all data for a given transient<api_all>`.
 
-An interactive Blast API explorer is accessible at :code:`/swagger-ui/`. The OpenAPI spec for the Blast API can be downloaded from :code:`/api/schema/openapi/` (also linked at the top of the interactive page).
+An interactive Blast API explorer is accessible at :code:`/api-explorer/`. The OpenAPI spec for the Blast API can be downloaded from :code:`/api/schema/openapi/` (also linked at the top of the interactive page).
 
 .. _api_all:
 

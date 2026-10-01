@@ -48,6 +48,8 @@ urlpatterns = [
 
 urlpatterns += [
     path('api/schema/openapi/', SpectacularAPIView.as_view(), name='schema'),  # Download of API Schema in YAML
+    path('api-explorer/', SpectacularSwaggerView.as_view(url_name='schema'), name='api-explorer'),
+    # The swagger-ui/ path is deprecated and will be removed at some point.
     path('swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]
 

@@ -35,6 +35,10 @@ Types of changes:
   change in MinIO business model and subsequent discontinuation of anonymous image downloads.
 - More service dependencies based on health checks were defined and revised for the Docker Compose deployment.
 
+### Deprecated
+
+- The path to the Swagger UI powered API explorer, `/swagger-ui/`, will be removed in a future release, replaced by `/api-explorer/` for the sake of consistency in terminology.
+
 ### Fixed
 
 - Fixed a regression introduced in v2.0.0 causing the SED fit file download links on result pages to be effectively
