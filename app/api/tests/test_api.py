@@ -25,20 +25,26 @@ class APITestDataset(TestCase):
         with open('''/data/transient_datasets/2026dix.tar.gz''', 'rb') as dataset_fileobj:
             import_transient_info(dataset_fileobj)
 
+    def test_dataset_get_no_auth(self):
+        response = self.client.get("/api/dataset/2026dix/")
+        self.assertTrue(response.status_code == status.HTTP_401_UNAUTHORIZED)
+
     def test_dataset_get(self):
-        client = APIClient()
+        # Create a temporary user and authenticate them
+        user = User.objects.create_user(username="dataset-test", password='password')
+        self.client.force_login(user)
         # Load expected data
         with open(os.path.join(Path(__file__).resolve().parent, 'dataset_get_test_expected_data.json')) as fp:
             expected_data = json.load(fp)
         # Ignore metadata that includes timestamp of export
         expected_data.pop('metadata')
         # Fetch data from API
-        request = client.get("/api/dataset/2026dix/")
-        data = json.loads(request.content)
+        response = self.client.get("/api/dataset/2026dix/")
+        data = json.loads(response.content)
         # Remove the metadata content that contains the generation timestamp
         data.pop('metadata')
         self.assertTrue(equal_dicts(data, expected_data))
-        self.assertTrue(request.status_code == status.HTTP_200_OK)
+        self.assertTrue(response.status_code == status.HTTP_200_OK)
 
     def test_dataset_delete(self):
         # Create a temporary user and authenticate them
@@ -82,8 +88,10 @@ class APITestDataset(TestCase):
                                                        '2026dix/PanSTARRS/PanSTARRS_g.jpg')))
 
     def test_dataset_get_missing(self):
-        client = APIClient()
-        request = client.get("/api/dataset/NotInDatabase/")
+        # Create a temporary user and authenticate them
+        user = User.objects.create_user(username="dataset-test", password='password')
+        self.client.force_login(user)
+        request = self.client.get("/api/dataset/NotInDatabase/")
         self.assertTrue(request.status_code == status.HTTP_404_NOT_FOUND)
         data = json.loads(request.content)
         self.assertTrue(data["message"] == "NotInDatabase not in database")
@@ -97,8 +105,8 @@ class APITestAlias(TestCase):
 
     def test_alias(self):
         # Create a temporary user and authenticate them
-        user = User.objects.create_user(username="testola", password='password')
-        self.client.force_login(user)
+        user_authorized = User.objects.create_user(username="alias-authorized-test", password='password')
+        self.client.force_login(user_authorized)
         object_type = 'transient'
         name = '2026dix'
         alias = '2026dix-alias-test!'
@@ -113,19 +121,22 @@ class APITestAlias(TestCase):
             codename="add_alias",
             content_type=ContentType.objects.get_for_model(Alias),
         )
-        user.user_permissions.add(add_permission)
-        assert user.has_perm('host.add_alias')
+        user_authorized.user_permissions.add(add_permission)
+        assert user_authorized.has_perm('host.add_alias')
         response = self.client.post('/api/alias/', data={
             'alias': alias,
             object_type: name,
         })
         self.assertTrue(response.status_code == status.HTTP_201_CREATED)
-        # Fetch information about the alias anonymously
         self.client.logout()
+        # Fetch information about the alias from authenticated but unauthorized user
+        user_unauthorized = User.objects.create_user(username="alias-anonymous-test", password='password')
+        self.client.force_login(user_unauthorized)
         response = self.client.get(f'/api/alias/{alias}/')
         self.assertTrue(response.status_code == status.HTTP_200_OK)
+        self.client.logout()
         # Fail when attempting to create another alias with the same name
-        self.client.force_login(user)
+        self.client.force_login(user_authorized)
         object_type = 'host'
         response = self.client.post('/api/alias/', data={
             'alias': alias,
@@ -140,7 +151,7 @@ class APITestAlias(TestCase):
             codename="delete_alias",
             content_type=ContentType.objects.get_for_model(Alias),
         )
-        user.user_permissions.add(delete_permission)
+        user_authorized.user_permissions.add(delete_permission)
         # Delete the alias
         response = self.client.delete(f'/api/alias/{alias}/')
         self.assertTrue(response.status_code == status.HTTP_204_NO_CONTENT)
