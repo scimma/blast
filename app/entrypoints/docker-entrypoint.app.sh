@@ -44,7 +44,7 @@ fi
 
 # Start server
 if [[ $DEV_MODE == 1 ]]; then
-  python manage.py --exclude-tag=download runserver 0.0.0.0:${WEB_APP_PORT}
+  python manage.py runserver 0.0.0.0:${WEB_APP_PORT}
 else
   bash entrypoints/wait-for-it.sh ${WEB_SERVER_HOST}:${WEB_SERVER_PORT} --timeout=0
   gunicorn app.wsgi --timeout 0 --bind 0.0.0.0:${WEB_APP_PORT} --workers=${GUNICORN_WORKERS:=1}
