@@ -36,9 +36,12 @@ Types of changes:
   `GET /api/task`, `GET /api/host`, `GET /api/alias`.
 - Cutout download filenames are now prefixed with the associated transient name (for example, `2026dkf_PanSTARRS_z.fits`
   instead of `PanSTARRS_z.fits`).
+- PanSTARRS downloaded image file headers are modified to empty the `DATE` field, which is populated by the catalog
+  server with the timestamp of the download time. This ensures that the file checksum is a valid comparison method.
 - The MinIO object storage server used in the Docker Compose deployment was replaced with Garage due to the
   change in MinIO business model and subsequent discontinuation of anonymous image downloads.
 - More service dependencies based on health checks were defined and revised for the Docker Compose deployment.
+- The unit test script was altered to ensure different tests run with independent, isolated databases.
 
 ### Deprecated
 
