@@ -29,10 +29,13 @@ Types of changes:
 
 ### Changed
 
+- **All API endpoints now require authentication**, even for read-only requests.
 - Enabled pagination for API responses with a default page size of 100 objects. This changes the API response
   schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
   `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
   `GET /api/task`, `GET /api/host`, `GET /api/alias`.
+- Cutout download filenames are now prefixed with the associated transient name (for example, `2026dkf_PanSTARRS_z.fits`
+  instead of `PanSTARRS_z.fits`).
 - The MinIO object storage server used in the Docker Compose deployment was replaced with Garage due to the
   change in MinIO business model and subsequent discontinuation of anonymous image downloads.
 - More service dependencies based on health checks were defined and revised for the Docker Compose deployment.

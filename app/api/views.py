@@ -51,11 +51,11 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 
-def stream_download_file(file_path):
+def stream_download_file(file_path, file_name=None):
     # Stream the data file from the S3 bucket
     s3 = ObjectStore()
     object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
-    filename = os.path.basename(file_path)
+    filename = file_name if file_name else os.path.basename(file_path)
     obj_stream = s3.stream_object(object_key)
     response = StreamingHttpResponse(streaming_content=obj_stream)
     response["Content-Disposition"] = f"attachment; filename={filename}"
@@ -212,7 +212,7 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     @action(methods=['get'], detail=True, url_path="download")
     def download(self, request, pk=None):
         cutout = self.get_object()
-        return stream_download_file(cutout.fits.name)
+        return stream_download_file(cutout.fits.name, f'{cutout.name}.fits')
 
 
 @method_decorator(log_usage_metric(), name="dispatch")
