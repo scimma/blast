@@ -168,6 +168,9 @@
     font-size: 0.8rem;
     margin-top: 1rem;
   }
+  code {
+    color:#d15e00;
+  }
 </style>
   {% load bootstrap4 %}
   {% load static %}
@@ -195,7 +198,7 @@
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" target="_blank" title="Docs" href="https://blast.readthedocs.io/en/latest/"><i class="bi bi-book-half"></i>&nbsp;&nbsp; Docs</a>
               <a class="dropdown-item" target="_blank" title="Source code" href="https://github.com/scimma/blast"><i class="bi-github" role="img" aria-label="GitHub"></i>&nbsp;&nbsp; Source Code</a>
-              <a class="dropdown-item" target="_blank" title="API explorer" href="{% url 'swagger-ui' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;&nbsp; API explorer</a>
+              <a class="dropdown-item" target="_blank" title="API explorer" href="{% url 'api-explorer' %}"><i class="bi-binoculars-fill" role="img" aria-label="Swagger"></i>&nbsp;&nbsp; API explorer</a>
             </div>
           </li>
           <li class="nav-item">
@@ -215,6 +218,14 @@
           {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}"> Admin </a>
+          </li>
+          {% endif %}
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'api_token' %}">
+              <i class="bi bi-passport"></i>
+                API token
+            </a>
           </li>
           {% endif %}
           <li class="nav-item">
@@ -282,7 +293,9 @@
                 <a href="https://ncsa.illinois.edu/">UIUC:NCSA</a>:<a href="https://caps.ncsa.illinois.edu/">CAPS</a> /
                 <a href="https://www.scimma.org/">SCIMMA</a>
               </span>
-              <span class="text-muted"><span style="font-size: 1.2rem; color: #c9c9c9">//</span> <a href="https://github.com/scimma/blast/releases/tag/{% app_version "v" %}">{% app_version "v" %}</a></span>
+              <span class="text-muted"><span style="font-size: 1.2rem; color: #c9c9c9">//</span>
+                <a href="https://github.com/scimma/blast/blob/{% app_version 'v' %}/CHANGELOG.md">{% app_version "v" %}</a>
+              </span>
             </span>
           </span>
         </div>

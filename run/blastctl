@@ -34,7 +34,7 @@ case "$PROFILE" in
   "ci")
     COMPOSE_FILE="docker-compose.ci.yaml"
     ENV_FILE=".env.ci"
-    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP} --exit-code-from app"
+    COMPOSE_ARGS_UP="${COMPOSE_ARGS_UP}"
     COMPOSE_PROJECT_NAME="blast-ci-${USER}"
     ;;
   "docs")

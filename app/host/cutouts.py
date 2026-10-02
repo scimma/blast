@@ -220,14 +220,14 @@ def download_and_save_cutouts(
 
 
 def panstarrs_image_filename(position, image_size=None, filter=None):
-    """Query panstarrs service to get a list of image names
+    """Query PanSTARRS service to get a list of image names
 
     Parameters
     ----------
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :size : int: cutout image size in pixels.
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: PanSTARRS filter (g r i z y)
     Returns
     -------
     :filename: str: file name of the cutout
@@ -281,14 +281,14 @@ def hips_cutout(position, survey, image_size=None):
 
 def panstarrs_cutout(position, image_size=None, filter=None):
     """
-    Download Panstarrs cutout from their own service
+    Download PanSTARRS cutout from their own service
 
     Parameters
     ----------
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: PanSTARRS filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -303,11 +303,20 @@ def panstarrs_cutout(position, image_size=None, filter=None):
         )
         try:
             r = requests.get(fits_url, stream=True)
-        except Exception as e:
+        except Exception as err:
+            logger.error(f'Error downloading PanSTARRS image: "{err}". Retrying...')
             time.sleep(5)
             r = requests.get(fits_url, stream=True)
         fits_image = fits.open(BytesIO(r.content))
-
+        # Remove the mutable download date field from the FITS header
+        # for the sake of dataset version control.
+        extension = 0
+        header = fits_image[extension].header
+        keyword = 'DATE'
+        if keyword in header:
+            header[keyword] = ''
+        else:
+            raise KeyError(f"PanSTARRS FITS file header keyword {keyword!r} was not found in extension {extension!r}.")
     else:
         fits_image = None
 
@@ -323,7 +332,7 @@ def galex_cutout(position, image_size=None, filter=None):
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -383,7 +392,7 @@ def WISE_cutout(position, image_size=None, filter=None):
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -443,7 +452,7 @@ def DES_cutout(position, image_size=None, filter=None):
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -474,7 +483,7 @@ def DES_cutout_single_version(
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -548,7 +557,7 @@ def TWOMASS_cutout(position, image_size=None, filter=None):
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None
@@ -588,7 +597,7 @@ def SDSS_cutout(position, image_size=None, filter=None):
     :position : :class:`~astropy.coordinates.SkyCoord`
         Target centre position of the cutout image to be downloaded.
     :image_size: int: size of cutout image in pixels
-    :filter: str: Panstarrs filter (g r i z y)
+    :filter: str: filter (g r i z y)
     Returns
     -------
     :cutout : :class:`~astropy.io.fits.HDUList` or None

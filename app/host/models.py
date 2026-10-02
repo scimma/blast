@@ -772,3 +772,29 @@ class HostSpectrum(models.Model):
 
     def __str__(self):
         return f'''source: {self.source}, host: "{self.host.name}"'''
+
+
+class DatasetRevision(models.Model):
+    """Store immutable revisions of metadata and tabular data associated with transient datasets."""
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["transient", "revision"],
+                name="unique_revision",
+            ),
+        ]
+
+    transient = models.ForeignKey(Transient, on_delete=models.CASCADE, blank=False,
+                                  help_text='Transient associated with dataset')
+    revision = models.PositiveIntegerField(blank=True, null=False, default=0, help_text='Revision index of the dataset')
+    data = models.JSONField(blank=False, null=False, default=dict, help_text='Tabular data associated with the dataset')
+    software_version = models.CharField(max_length=50, blank=True, null=True,
+                                        help_text='Version of Blast that generated this object')
+
+    def save(self, *args, **kwargs):
+        self.software_version = settings.APP_VERSION
+        super(DatasetRevision, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return f'''transient: "{self.transient.name}", revision: {self.revision}'''

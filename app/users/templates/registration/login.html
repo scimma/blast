@@ -62,14 +62,13 @@ span.psw {
   font-weight: bold;
 }
 .profile-item th {
-  text-align: right;
+  text-align: left;
 }
 .profile-item td {
   font-family: monospace;
   padding-left: 1rem;
   padding-right: 1rem;
 }
-
 /* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
   span.psw {
@@ -99,7 +98,7 @@ span.psw {
   </form>
   {% else %}
   <div class="form-frame d-flex flex-column align-items-center justify-content-center py-5">
-    <div class="p-2">
+    <div class="p-2" id="user-profile-section">
       <h2>User Profile</h2>
     </div>
     <div class="p-2">
@@ -128,8 +127,8 @@ span.psw {
                 username: {{ user.username }}%0A">✉️ using this template to email us</a>.</span>
       </p>
     </div>
-    <div class="p-2 my-3">
-      <table>
+    <div class="p-2 my-3" style="max-width: 600px;">
+      <table class="table-striped">
         <tr class="profile-item">
           <th>Given Name:</th>
           <td>{% if user.first_name %}{{ user.first_name }}{% else %}<code>None</code>{% endif %}</td>
@@ -150,7 +149,7 @@ span.psw {
         authentication system. It is displayed here for reference if needed by the Blast support team.
       </p>
       <p style="text-align: center; font-family: monospace;">
-        {% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}
+        <code style="font-size: large;">{% if username_b64decoded %}{{ username_b64decoded }}{% else %}{{ user.username }}{% endif %}</code>
       </p>
     </div>
   </div>

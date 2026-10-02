@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from host.object_store import ObjectStore
 from host.models import Aperture
@@ -29,10 +30,12 @@ from host.models import Task
 from host.models import Transient
 from host.models import Host
 from host.models import Alias
+from host.models import DatasetRevision
 from host.decorators import log_usage_metric
-from host.host_utils import export_dataset
 from host.host_utils import delete_transient
-from api.serializers import TransientDatasetSerializer
+from host.host_utils import get_latest_dataset_revision
+from host.transient_tasks import dataset_revision
+from api.serializers import DatasetSerializer
 from api.serializers import TransientSerializer
 from api.serializers import ApertureSerializer
 from api.serializers import CutoutSerializer
@@ -48,11 +51,11 @@ from host.log import get_logger
 logger = get_logger(__name__)
 
 
-def stream_download_file(file_path):
+def stream_download_file(file_path, file_name=None):
     # Stream the data file from the S3 bucket
     s3 = ObjectStore()
     object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
-    filename = os.path.basename(file_path)
+    filename = file_name if file_name else os.path.basename(file_path)
     obj_stream = s3.stream_object(object_key)
     response = StreamingHttpResponse(streaming_content=obj_stream)
     response["Content-Disposition"] = f"attachment; filename={filename}"
@@ -175,6 +178,7 @@ class SEDFittingResultFilter(django_filters.FilterSet):
     # description=dedent('''''')
 )
 class TransientViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Transient.objects.all()
     serializer_class = TransientSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -183,6 +187,7 @@ class TransientViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Aperture.objects.all()
     serializer_class = ApertureSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -191,6 +196,7 @@ class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Cutout.objects.all()
     serializer_class = CutoutSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -206,11 +212,12 @@ class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
     @action(methods=['get'], detail=True, url_path="download")
     def download(self, request, pk=None):
         cutout = self.get_object()
-        return stream_download_file(cutout.fits.name)
+        return stream_download_file(cutout.fits.name, f'{cutout.name}.fits')
 
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class FilterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Filter.objects.all()
     serializer_class = FilterSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -219,6 +226,7 @@ class FilterViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = AperturePhotometry.objects.all()
     serializer_class = AperturePhotometrySerializer
     filter_backends = (DjangoFilterBackend,)
@@ -227,6 +235,7 @@ class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = SEDFittingResult.objects.all()
     serializer_class = SEDFittingResultSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -260,6 +269,7 @@ class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = TaskRegister.objects.all()
     serializer_class = TaskRegisterSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -268,12 +278,14 @@ class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class TaskViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class HostViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
     queryset = Host.objects.all()
     serializer_class = HostSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -288,7 +300,8 @@ class AliasViewSet(viewsets.ModelViewSet):
             return [HasPermissionDeleteAlias()]
         elif self.request.method == "POST":
             return [HasPermissionCreateAlias()]
-        return []
+        else:
+            return [IsAuthenticated()]
     queryset = Alias.objects.select_related("transient", "host")
     serializer_class = AliasSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -436,14 +449,22 @@ class HasPermissionDeleteTransient(BasePermission):
 
 @method_decorator(log_usage_metric(), name="dispatch")
 class DatasetExportView(APIView):
-    serializer_class = TransientDatasetSerializer
+    permission_classes = [IsAuthenticated]
+    serializer_class = DatasetSerializer
 
     def get(self, request, transient_name=''):
-        dataset = export_dataset(transient_name)
+        try:
+            Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        dr = get_latest_dataset_revision(transient_name)
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
         if not dataset:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         logger.info(f'Exporting all data for "{transient_name}", including files.')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         s3 = ObjectStore()
         tar_bytes_io = BytesIO()
         # Generate in-memory compressed archive file object of all data to stream
@@ -457,7 +478,7 @@ class DatasetExportView(APIView):
             tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
             # Download cutout FITS image files into memory
             for cutout in dataset['cutouts']:
-                canonical_path = cutout['fields']['fits']
+                canonical_path = cutout['fits']
                 if not canonical_path:
                     continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
@@ -486,7 +507,7 @@ class DatasetExportView(APIView):
                     sedfittingresults.extend(aperture['sedfittingresults'])
             for sedfittingresult in sedfittingresults:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                    canonical_path = sedfittingresult['fields'][sed_file]
+                    canonical_path = sedfittingresult[sed_file]
                     object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
                     sed_fileobj = BytesIO(s3.get_object(path=object_key))
                     # This assumes that the canonical paths for each sed file are unique
@@ -508,15 +529,15 @@ class DatasetExportView(APIView):
 
             # Download host spectra FITS file into memory
             for spectrum in dataset['host_spectra']:
-                canonical_path = spectrum['fields']['spectrum_file']
+                canonical_path = spectrum['spectrum_file']
                 if not canonical_path:
                     continue
                 object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
                 spectrum_fileobj = BytesIO(s3.get_object(path=object_key))
                 # This assumes that the canonical paths for each spectrum file are unique
                 tarinfo = tarfile.TarInfo(
-                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
-                                                os.path.join('host_spectra', dataset['host']['fields']['name'])))
+                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['name']),
+                                                os.path.join('host_spectra', dataset['host']['name'])))
                 tarinfo.size = spectrum_fileobj.getbuffer().nbytes
                 tar_fp.addfile(tarinfo, fileobj=spectrum_fileobj)
                 # Include thumbnail images
@@ -525,8 +546,8 @@ class DatasetExportView(APIView):
                     continue
                 thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
                 thumbnail_tar_path = canonical_path.replace(os.path.join(
-                    settings.SPECTRA_ROOT, dataset['host']['fields']['name']),
-                    os.path.join('host_spectra', dataset['host']['fields']['name'])).replace('.fits', '.jpg')
+                    settings.SPECTRA_ROOT, dataset['host']['name']),
+                    os.path.join('host_spectra', dataset['host']['name'])).replace('.fits', '.jpg')
                 tarinfo = tarfile.TarInfo(
                     name=thumbnail_tar_path)
                 tarinfo.size = thumbail_fileobj.getbuffer().nbytes
@@ -543,23 +564,42 @@ class DatasetView(APIView):
         method = self.request.method
         if method == "DELETE":
             return [HasPermissionDeleteTransient()]
-        return []
+        else:
+            return [IsAuthenticated()]
 
     @extend_schema(
-        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),],
+        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),
+                    OpenApiParameter(name="revision", type=int, location=OpenApiParameter.QUERY,
+                                     required=False, description="Dataset revision")],
         request=None,
         responses={
-            200: TransientDatasetSerializer,
+            200: DatasetSerializer,
             404: OpenApiResponse(description="Transient not found"),
         }
     )
     def get(self, request, transient_name=''):
-        # get_transient_view(request=request, transient_name=transient_name, all=True)
-        dataset = export_dataset(transient_name)
-        if not dataset:
+        revision = request.query_params.get('revision', '')
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
             return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
-        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
+        dataset = None
+        drs = DatasetRevision.objects.filter(transient=transient)
+        if revision:
+            revision = int(revision)
+            try:
+                dr = drs.get(revision__exact=revision)
+            except DatasetRevision.DoesNotExist:
+                return JsonResponse(data={"message": f'Dataset revision {revision} for "{transient_name}" not found'},
+                                    status=status.HTTP_404_NOT_FOUND)
+            dataset = dr.data
+        if not dataset:
+            dr = drs.order_by("-revision", "pk").first()
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
         logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
         return JsonResponse(dataset)
 
     @extend_schema(

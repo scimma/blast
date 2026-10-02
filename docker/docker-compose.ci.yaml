@@ -31,12 +31,9 @@ services:
     extends:
       file: docker-compose.yml
       service: celery-beat
-    healthcheck:
-      test: ["CMD", "bash", "-c", "[ -f /tmp/celery-beat-ready ]"]
-      interval: 10s
-      timeout: 5s
-      retries: 1
-      start_period: 600s
+    depends_on:
+      object-store:
+        condition: service_healthy
     env_file:
       - ../env/.env.default
       - ../env/.env.ci

@@ -13,12 +13,58 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.0.0]
+
+### Added
+
+- Implemented a basic version control system for transient datasets. Tabular data exported by
+  `GET /api/dataset/[transient_name]` now includes a `metadata.dataset_version` field whose integer value
+  corresponds to the immutable dataset revision (DR) index. By default, the latest revision will be served.
+  API responses will be faster and cheaper because a DR is generated once by compiling relevant data objects
+  to create a DatasetRevision object that is subsequently served directly.
+  A `revision` API query parameter can be used, for example `GET /api/dataset/[transient_name]?revision=2`,
+  to request a specific dataset revision. Files are not version controlled; while a manifest of their
+  checksums is included in each dataset revision, previous versions of changed files are not stored for
+  subsequent retrieval.
+
+### Changed
+
+- **All API endpoints now require authentication**, even for read-only requests. A new API token system provides
+  the authentication mechanism, described on a new dedicated webpage `/token/` that also displays the user's API token.
+- Enabled pagination for API responses with a default page size of 100 objects. This changes the API response
+  schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
+  `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
+  `GET /api/task`, `GET /api/host`, `GET /api/alias`.
+- Cutout download filenames are now prefixed with the associated transient name (for example, `2026dkf_PanSTARRS_z.fits`
+  instead of `PanSTARRS_z.fits`).
+- PanSTARRS downloaded image file headers are modified to empty the `DATE` field, which is populated by the catalog
+  server with the timestamp of the download time. This ensures that the file checksum is a valid comparison method.
+- The MinIO object storage server used in the Docker Compose deployment was replaced with Garage due to the
+  change in MinIO business model and subsequent discontinuation of anonymous image downloads.
+- More service dependencies based on health checks were defined and revised for the Docker Compose deployment.
+- The unit test script was altered to ensure different tests run with independent, isolated databases.
+
+### Deprecated
+
+- The path to the Swagger UI powered API explorer, `/swagger-ui/`, will be removed in a future release, replaced by
+  `/api-explorer/` for the sake of consistency in terminology.
+
+### Fixed
+
+- Fixed a regression introduced in v2.0.0 causing the SED fit file download links on result pages to be effectively
+  randomized because the transient ID was used in the URL construction instead of the relevant `SEDFittingResult`
+  object ID.
+
 ## [2.1.0]
 
 ### Changed
 
-- Improved the usage metrics logging system to handle class-based views, including the individual Blast data object endpoints and the transient dataset download endpoints.
-- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible, the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation of semantic versioning.)
+- Improved the usage metrics logging system to handle class-based views, including the individual Blast data 
+  object endpoints and the transient dataset download endpoints.
+- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints
+  and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible,
+  the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation
+  of semantic versioning.)
 
 ## [2.0.1]
 
