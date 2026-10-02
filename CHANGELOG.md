@@ -19,8 +19,10 @@ Types of changes:
 
 - Implemented a basic version control system for transient datasets. Tabular data exported by
   `GET /api/dataset/[transient_name]` now includes a `metadata.dataset_version` field whose integer value
-  corresponds to the immutable dataset version number. By default, the latest revision will be served.
-  A `revision` query parameter can be used, for example `GET /api/dataset/[transient_name]?revision=2`,
+  corresponds to the immutable dataset revision (DR) index. By default, the latest revision will be served.
+  API responses will be faster and cheaper because a DR is generated once by compiling relevant data objects
+  to create a DatasetRevision object that is subsequently served directly.
+  A `revision` API query parameter can be used, for example `GET /api/dataset/[transient_name]?revision=2`,
   to request a specific dataset revision. Files are not version controlled; while a manifest of their
   checksums is included in each dataset revision, previous versions of changed files are not stored for
   subsequent retrieval.
