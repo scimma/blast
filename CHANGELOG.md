@@ -29,7 +29,8 @@ Types of changes:
 
 ### Changed
 
-- **All API endpoints now require authentication**, even for read-only requests.
+- **All API endpoints now require authentication**, even for read-only requests. A new API token system provides
+  the authentication mechanism, described on a new dedicated webpage `/token/` that also displays the user's API token.
 - Enabled pagination for API responses with a default page size of 100 objects. This changes the API response
   schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
   `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
@@ -45,7 +46,8 @@ Types of changes:
 
 ### Deprecated
 
-- The path to the Swagger UI powered API explorer, `/swagger-ui/`, will be removed in a future release, replaced by `/api-explorer/` for the sake of consistency in terminology.
+- The path to the Swagger UI powered API explorer, `/swagger-ui/`, will be removed in a future release, replaced by
+  `/api-explorer/` for the sake of consistency in terminology.
 
 ### Fixed
 
