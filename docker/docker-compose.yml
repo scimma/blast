@@ -1,5 +1,17 @@
 name: blast-base
 
+x-env-garage: &env-garage
+  RUST_LOG: garage=info
+  GARAGE_DEFAULT_ACCESS_KEY: "${GARAGE_DEFAULT_ACCESS_KEY}"
+  GARAGE_DEFAULT_SECRET_KEY: "${GARAGE_DEFAULT_SECRET_KEY}"
+  GARAGE_RPC_SECRET: "${GARAGE_RPC_SECRET}"
+  GARAGE_ADMIN_TOKEN: "${GARAGE_ADMIN_TOKEN}"
+  GARAGE_METRICS_TOKEN: "${GARAGE_METRICS_TOKEN}"
+  GARAGE_DEFAULT_BUCKET: "${S3_BUCKET}"
+x-env-s3: &env-s3
+  AWS_S3_ACCESS_KEY_ID: "${GARAGE_DEFAULT_ACCESS_KEY}"
+  AWS_S3_SECRET_ACCESS_KEY: "${GARAGE_DEFAULT_SECRET_KEY}"
+
 networks:
   internal:
     external: false
@@ -48,6 +60,10 @@ services:
       - init-data:/mnt/data
       - django-static:/app/static
       - ./dustmapsrc:/tmp/.dustmapsrc:ro
+    environment:
+      <<: [
+        *env-s3,
+      ]
     profiles:
       - "full_prod"
       - "slim_prod"
@@ -124,6 +140,10 @@ services:
         limits:
           cpus: "${CELERY_WORKER_LIMIT_CPUS:-4.0}"
           memory: ${CELERY_WORKER_LIMIT_MEMORY:-4G}
+    environment:
+      <<: [
+        *env-s3,
+      ]
     volumes:
       - init-data:/mnt/data
       - django-static:/app/static
@@ -145,6 +165,10 @@ services:
       timeout: 5s
       retries: 1
       start_period: 600s
+    environment:
+      <<: [
+        *env-s3,
+      ]
     volumes:
       - init-data:/mnt/data
       - django-static:/app/static
@@ -239,7 +263,9 @@ services:
     networks:
       - internal
     environment:
-      RUST_LOG: garage=info
+      <<: [
+        *env-garage,
+      ]
     volumes:
       - garage-config:/etc
       - garage-meta:/var/lib/garage/meta

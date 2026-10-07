@@ -72,6 +72,13 @@ if [[ "${COMPOSE_FILE}x" != "x" ]]; then
   COMPOSE_FILES="${COMPOSE_FILES} --file docker/${COMPOSE_FILE}"
 fi
 
+# Prepare S3 secrets for Garage
+export GARAGE_DEFAULT_ACCESS_KEY="${GARAGE_DEFAULT_ACCESS_KEY:-$(openssl rand -hex 16)}"
+export GARAGE_DEFAULT_SECRET_KEY="${GARAGE_DEFAULT_SECRET_KEY:-$(openssl rand -hex 32)}"
+export GARAGE_RPC_SECRET="${GARAGE_RPC_SECRET:-$(openssl rand -hex 32)}"
+export GARAGE_ADMIN_TOKEN="${GARAGE_ADMIN_TOKEN:-$(openssl rand -hex 32)}"
+export GARAGE_METRICS_TOKEN="${GARAGE_METRICS_TOKEN:-$(openssl rand -hex 32)}"
+
 case "$ACTION" in
   "up")
     set -x
