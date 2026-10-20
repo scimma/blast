@@ -38,6 +38,8 @@ class HostSerializer(serializers.HyperlinkedModelSerializer):
             "ra_deg",
             "dec_deg",
             "redshift",
+            "photometric_redshift",
+            "photometric_redshift_err",
             "milkyway_dust_reddening",
             "object_id",
             "catalog_name",
