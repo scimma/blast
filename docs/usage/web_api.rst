@@ -5,7 +5,7 @@ Web API
 
 Blast provides an HTTP application programming interface (API) for fetching data programmatically.  The API allows queries on :ref:`individual data objects associated with a transient<api_individual>`, as well as :ref:`fetching all data for a given transient<api_all>`.
 
-An interactive Blast API explorer is accessible at :code:`/swagger-ui/`. The OpenAPI spec for the Blast API can be downloaded from :code:`/api/schema/openapi/` (also linked at the top of the interactive page).
+An interactive Blast API explorer is accessible at :code:`/api-explorer/`. The OpenAPI spec for the Blast API can be downloaded from :code:`/api/schema/openapi/` (also linked at the top of the interactive page).
 
 .. _api_all:
 
@@ -18,6 +18,8 @@ A **full transient dataset** can be exported using :code:`/api/dataset/<transien
 
 **All tabular data** associated with a transient (i.e. data stored as text instead of as binary files) can be fetched as a JSON document using :code:`/api/dataset/<transient_name>/`.
 The schema of the document returned by this endpoint serializes transient-associated objects more closely to the internal models (see :ref:`models`). It was designed to capture a transient dataset in a self-contained way amenable to import into any Blast instance. The result is a more hierarchical structure, but one with static keys and less redundancy that also supports simpler parsing algorithms. The schema includes additional related objects including apertures, cutouts, surveys, and filters. Although the surveys and filters exist independently of a particular transient, they are included because transient cutout objects are associated with filters that are themselves associated with surveys.
+
+**Dataset revisions (DRs)**: Datasets are version-controlled: if differences in output are detected after all or part of a transient workflow is reprocessed, an immutable copy of the tabular data is stored as a "dataset revision". DRs are indexed by a monotonically increasing integer value, with the initial dataset version having index :code:`0`. DRs include a manifest of file checksums so that it is clear which files have changed; however, due to resource limitations, copies of the previous file versions are not retained. The primary purpose of DRs is to enable valid comparisons in support of reproducible science. Researchers should include the DR index that uniquely identifies the transient datasets used in their analyses when publishing their data, such that subsequent efforts to extend or reproduce their work will be able to identify the correct versions for comparison. The tabular data fetching function above has the option to request a specific DR instead of receiving the latest version, for example: :code:`/api/dataset/<transient_name>/?revision=2`. See the `API Explorer <https://blast.scimma.org/api-explorer/>`__ for more details.
 
 .. _api_individual:
 

@@ -1,15 +1,16 @@
 import json
 from tarfile import open as tar_open
-from datetime import datetime, timezone
-from django.core import serializers
-from api.serializers import TransientSerializer
-from api.serializers import HostSerializer
+from datetime import datetime
+from api.serializers import DatasetSerializer
+from packaging.version import Version
 import os
 import math
 import time
 import warnings
 from collections import namedtuple
 from xml.parsers.expat import ExpatError
+from collections.abc import Mapping
+from copy import deepcopy
 
 import astropy.units as u
 import numpy as np
@@ -25,6 +26,7 @@ cosmo = FlatLambdaCDM(H0=70, Om0=0.315)
 
 from django.conf import settings
 from django.db.models import Q
+from django.db import transaction
 from dustmaps.sfd import SFDQuery
 
 from photutils.aperture import aperture_photometry
@@ -55,6 +57,7 @@ from host.models import Task
 from host.models import Transient
 from host.models import Survey
 from host.models import StarFormationHistoryResult
+from host.models import DatasetRevision
 from host.task_prereqs import ImageDownload_prerequisites
 from host.task_prereqs import MWEBV_Transient_prerequisites
 from host.task_prereqs import HostMatch_prerequisites
@@ -880,89 +883,16 @@ def delete_transient(transient_name='', transient=None):
 
 def export_dataset(transient_name=''):
     '''Export all data associated with a transient sufficient to import into another Blast instance.'''
-    def prune_fields(data_object, model_name):
-        if model_name == 'transient':
-            data_object['fields'].pop('added_by')
-        return data_object
-
-    transient_data = {
-        'metadata': {
-            'app_version': f'v{settings.APP_VERSION}',
-            'export_time': datetime.now(timezone.utc).isoformat(),
-        },
-        'transient': {},
-        'host': None,
-        'host_spectra': [],
-        'apertures': [],
-        'cutouts': [],
-        'filters': json.loads(serializers.serialize("json", Filter.objects.all())),
-        'surveys': json.loads(serializers.serialize("json", Survey.objects.all())),
-        'workflow_tasks': [],
-    }
     transient_search = Transient.objects.filter(name__exact=transient_name)
     if not transient_search:
         return {}
     transient_obj = transient_search[0]
-    transient = json.loads(serializers.serialize("json", transient_search))[0]
-    assert isinstance(transient, dict)
-    # Export intrinsic transient data
-    transient_data['transient'] = prune_fields(transient, 'transient')
-    # Include transient aliases
-    # TODO: Unify the serialization across the application and API functions
-    aliases = TransientSerializer(transient_obj).data['aliases']
-    assert isinstance(aliases, list)
-    transient_data['transient']['fields']['aliases'] = aliases
-    # Export host information
-    if transient_obj.host:
-        transient_data['host'] = json.loads(serializers.serialize("json", [transient_obj.host]))[0]
-        # Include host aliases
-        # TODO: Unify the serialization across the application and API functions
-        aliases = HostSerializer(transient_obj.host).data['aliases']
-        assert isinstance(aliases, list)
-        transient_data['host']['fields']['aliases'] = aliases
-        # Export host_spectrum information
-        for spectrum in HostSpectrum.objects.filter(host=transient_obj.host):
-            transient_data['host_spectra'].append(json.loads(serializers.serialize("json", [spectrum]))[0])
-    # Export cutout image data
-    cutouts = json.loads(serializers.serialize("json", Cutout.objects.filter(transient__name__exact=transient_name)))
-    assert isinstance(cutouts, list)
-    transient_data['cutouts'] = cutouts
-    # Export aperture-related data
-    apertures = json.loads(serializers.serialize(
-        "json", Aperture.objects.filter(transient__name__exact=transient_name)))
-    assert isinstance(apertures, list)
-    transient_data['apertures'] = apertures
-    for aperture in transient_data['apertures']:
-        aperture['sedfittingresults'] = json.loads(serializers.serialize(
-            "json", SEDFittingResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['sedfittingresults']) == 1 and isinstance(aperture['sedfittingresults'][0], list):
-            aperture['sedfittingresults'] = aperture['sedfittingresults'][0]
-        aperture['aperturephotometry'] = json.loads(serializers.serialize(
-            "json", AperturePhotometry.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['aperturephotometry']) == 1 and isinstance(aperture['aperturephotometry'][0], list):
-            aperture['aperturephotometry'] = aperture['aperturephotometry'][0]
-        aperture['starformationhistoryresult'] = json.loads(serializers.serialize(
-            "json", StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture['fields']['name']))),
-        if len(aperture['starformationhistoryresult']) == 1 and isinstance(aperture['starformationhistoryresult'][0], list):  # noqa
-            aperture['starformationhistoryresult'] = aperture['starformationhistoryresult'][0]
-    for tr in TaskRegister.objects.filter(transient__name=transient_name):
-        try:
-            last_modified = tr.last_modified.isoformat()
-        except AttributeError:
-            last_modified = None
-        transient_data['workflow_tasks'].append({
-            'task_name': tr.task.name,
-            'status': {
-                'type': tr.status.type,
-                'message': tr.status.message,
-            },
-            'user_warning': tr.user_warning,
-            'last_modified': last_modified,
-            'last_processing_time_seconds': tr.last_processing_time_seconds,
-        })
+    transient_data = DatasetSerializer(transient_obj).data
+    logger.debug(f'Exporting transient dataset:\n{json.dumps(transient_data, indent=2)}')
     return transient_data
 
 
+@transaction.atomic
 def import_transient_info(transient_data_archive):
     '''Import all data associated with a transient from a Blast export file.'''
     logger.debug(f'Importing transient archive file "{transient_data_archive}"...')
@@ -979,7 +909,217 @@ def import_transient_info(transient_data_archive):
         })
 
     def process_transient_dataset(dataset):
-        '''This uses the top-level variables "imported_transient_names" and "import_failures".'''
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".'''
+        # TODO: Consider writing a separate "DatasetInputSerializer" class to perform validation prior to processing.
+        transient_data = dataset.pop('transient')
+        host_data = dataset.pop('host')
+        surveys = dataset.pop('surveys')
+        filters = dataset.pop('filters')
+        cutouts = dataset.pop('cutouts')
+        apertures = dataset.pop('apertures')
+        host_spectra = dataset.pop('host_spectra')
+        workflow_tasks = dataset.pop('workflow_tasks')
+        # Verify that the transient is not already present (by name)
+        transient_name = transient_data['name']
+        if Transient.objects.filter(name__exact=transient_name):
+            record_import_error(transient_name, f'Transient "{transient_name}" already exists')
+            return
+        # Verify that Survey objects exist and are identical.
+        for survey in surveys:
+            survey_name = survey['name']
+            try:
+                Survey.objects.get(name__exact=survey_name)
+            except Survey.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Survey "{survey_name}" does not exist.')
+                return
+        for filter in filters:
+            filter_name = filter['name']
+            try:
+                filter_obj = Filter.objects.get(name__exact=filter_name)
+            except Filter.DoesNotExist:
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Filter "{filter_name}" does not exist.')
+                return
+            try:
+                # The survey names associated with the existing and importing filter should match
+                assert filter_obj.survey.name == [survey['name'] for survey in surveys
+                                                  if survey['id'] == filter['survey']][0]
+                assert filter_obj.kcorrect_name == filter['kcorrect_name']
+                assert filter_obj.sedpy_id == filter['sedpy_id']
+                assert filter_obj.hips_id == filter['hips_id']
+                assert filter_obj.vosa_id == filter['vosa_id']
+            except AssertionError as err:
+                record_import_error(transient_name, f'[{transient_name}] Filter named '
+                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+                return
+            # Allow some Filter fields to evolve
+            try:
+                assert filter_obj.image_download_method == filter['image_download_method']
+                assert filter_obj.pixel_size_arcsec == filter['pixel_size_arcsec']
+                assert filter_obj.image_fwhm_arcsec == filter['image_fwhm_arcsec']
+                assert filter_obj.wavelength_eff_angstrom == filter['wavelength_eff_angstrom']
+                assert filter_obj.wavelength_min_angstrom == filter['wavelength_min_angstrom']
+                assert filter_obj.wavelength_max_angstrom == filter['wavelength_max_angstrom']
+                assert filter_obj.vega_zero_point_jansky == filter['vega_zero_point_jansky']
+                assert filter_obj.magnitude_zero_point == filter['magnitude_zero_point']
+                assert filter_obj.ab_offset == filter['ab_offset']
+                assert filter_obj.magnitude_zero_point_keyword == filter['magnitude_zero_point_keyword']
+                assert filter_obj.image_pixel_units == filter['image_pixel_units']
+            except AssertionError as err:
+                logger.warning(f'[{transient_name}] Filter named '
+                               f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+        # Verify that if the Host exists (by name), that it is identical.
+        # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
+        #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
+        #       missing?
+        host = None
+        if host_data:
+            host_name = host_data['name']
+            ra_deg = host_data['ra_deg']
+            dec_deg = host_data['dec_deg']
+            cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
+                           & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
+                           & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
+                           & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
+            proximate_hosts = Host.objects.filter(cone_search)
+            if proximate_hosts:
+                logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
+                            f'''importing host "{host_name}".''')
+            # If there is an existing proximate host for an unnamed host, claim this is the same host
+            if not host_name and proximate_hosts:
+                host = proximate_hosts[0]
+            elif host_name:
+                # Find existing hosts with the same name
+                host_search = Host.objects.filter(name__exact=host_name)
+                if host_search:
+                    # If the host name matches, require that the position overlaps
+                    proximity_search = host_search.filter(cone_search)
+                    # Consider the import a failure if there is an inconsistent host definition
+                    if not proximity_search:
+                        record_import_error(transient_name,
+                                            f'[{transient_name}] Host with matching name "{host_name}" '
+                                            f'exists, but it is in a different location.')
+                        return
+                    # If the name and location match, claim this is the same host
+                    host = proximity_search[0]
+            # If no host match was found, create a new Host object
+            if not host:
+                host = Host.objects.create(**host_data)
+                # Create Alias objects
+                if 'aliases' in host_data:
+                    for alias in host_data['aliases']:
+                        Alias.objects.create(alias=alias, host=host)
+            # Create host spectra
+            for spectrum in host_spectra:
+                if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['spectrum_id']):
+                    logger.info('''An existing host spectrum was found with ID '''
+                                f'''"{spectrum['spectrum_id']}"''')
+                    continue
+                HostSpectrum.objects.create(host=host, **spectrum)
+        # Verify that the Cutout objects do not exist (by name).
+        for cutout in cutouts:
+            cutout_name = cutout['name']
+            if Cutout.objects.filter(name__exact=cutout_name).exists():
+                record_import_error(transient_name, f'[{transient_name}] Cutout "{cutout_name}" exists.')
+                return
+        # Verify that each Aperture object does not exist.
+        for aperture in apertures:
+            aperture_name = aperture['aperture']['name']
+            if Aperture.objects.filter(name__exact=aperture_name).exists():
+                record_import_error(transient_name, f'[{transient_name}] Aperture "{aperture_name}" exists.')
+                return
+            # Ignore any orphaned StarFormationHistoryResult objects that may exist because they will not interfere.
+            # Ignore any orphaned AperturePhotometry objects that may exist because they will not interfere.
+            # Ignore any orphaned SEDFittingResult objects that may exist because they will not interfere.
+
+        # Create Transient object
+        transient_data.pop('host')
+        alias_list = transient_data.pop('aliases')
+        transient = Transient.objects.create(host=host, **transient_data)
+        # Create Alias objects
+        for alias in alias_list:
+            Alias.objects.create(alias=alias, transient=transient)
+        # Create Cutout objects
+        for cutout in cutouts:
+            filter_name = [filter['name'] for filter in filters if filter['id'] == cutout['filter']][0]
+            cutout['filter'] = Filter.objects.get(name__exact=filter_name)
+            cutout.pop('transient')
+            Cutout.objects.create(transient=transient, **cutout)
+        # For each Aperture object,
+            # Create Aperture object
+            # Create StarFormationHistoryResult objects
+            # Create AperturePhotometry objects
+            # Create SEDFittingResult objects
+        for aperture in apertures:
+            aperture_info = aperture['aperture']
+            try:
+                cutout_obj = None
+                cutout_name_search = [cutout['name'] for cutout in cutouts if cutout['id'] == aperture_info['cutout']]
+                if cutout_name_search:
+                    cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
+            except Exception as err:
+                logger.error(f'Error finding cutout object {aperture_info['cutout']} '
+                             f'associated with aperture "{aperture_info['name']}"')
+                raise err
+            aperture_info.pop('cutout')
+            aperture_info.pop('transient')
+            aperture_obj = Aperture.objects.create(cutout=cutout_obj, transient=transient, **aperture_info)
+            for aperturephotometry in aperture['aperturephotometry']:
+                filter_name = [filter['name'] for filter in filters if filter['id'] == aperturephotometry['filter']][0]
+                aperturephotometry['filter'] = Filter.objects.get(name__exact=filter_name)
+                aperturephotometry.pop('transient')
+                aperturephotometry.pop('aperture')
+                AperturePhotometry.objects.create(aperture=aperture_obj, transient=transient, **aperturephotometry)
+            # Compile a dictionary of StarFormationHistoryResult objects indexed by their primary key values for
+            # subsequent association with SEDFittingResult objects.
+            sfh_objs = {}
+            for starformationhistoryresult in aperture['starformationhistoryresult']:
+                starformationhistoryresult.pop('transient')
+                starformationhistoryresult.pop('aperture')
+                sfh_objs[starformationhistoryresult['id']] = StarFormationHistoryResult.objects.create(
+                    aperture=aperture_obj, transient=transient, **starformationhistoryresult)
+            for sedfittingresults in aperture['sedfittingresults']:
+                sedfittingresults.pop('transient')
+                sedfittingresults.pop('aperture')
+                logsfh = sedfittingresults.pop('logsfh')
+                sedfittingresult = SEDFittingResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    **sedfittingresults)
+                # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
+                sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                                             for sfh_pk in logsfh])
+        initialize_all_tasks_status(transient)
+        all_trs = TaskRegister.objects.filter(transient__name=transient_name)
+        for tr in workflow_tasks:
+            task_name = tr['task']['name']
+            try:
+                tr_obj = all_trs.get(task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Workflow task "{task_name}" does not exist.')
+                return
+            tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
+            # If the last_modified time is not in the proper ISO format, use null value
+            try:
+                datetime.fromisoformat(tr['last_modified'])
+                tr_obj.last_modified = tr['last_modified']
+            except (ValueError, TypeError):
+                tr_obj.last_modified = None
+            tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
+            tr_obj.save()
+        # Calculate workflow progress and mark tasks as initialized so retriggering works.
+        transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+        transient.tasks_initialized = "True"
+        transient.save()
+        # Record successful database import
+        imported_transient_names.append(transient.name)
+
+    def process_transient_dataset_v2_1_0(dataset):
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".
+        This function is largely redundant with "process_transient_dataset()", but is retained
+        for importing dataset archives generated by Blast versions up to v2.1.0.'''
         # Verify that the transient is not already present (by name)
         transient_name = dataset['transient']['fields']['name']
         if Transient.objects.filter(name__exact=transient_name):
@@ -1334,28 +1474,17 @@ def import_transient_info(transient_data_archive):
         # Record successful database import
         imported_transient_names.append(transient.name)
 
-    def construct_database_objects(transient_data):
-        # Construct the import list
-        if isinstance(transient_data, dict):
-            datasets_to_import = [transient_data]
-        elif isinstance(transient_data, list):
-            datasets_to_import = transient_data
-        assert isinstance(datasets_to_import, list)
-
-        # Construct the database objects for each transient.
-        for dataset in datasets_to_import:
-            # Use a nested function to support aborting upon error within nested for loops.
-            # This uses the top-level variables "imported_transient_names" and "import_failures".
-            process_transient_dataset(dataset)
-
-    def install_files(file_type):
+    def install_files(transient_info, file_type):
         logger.debug(f'Installing "{file_type}" files...')
         if file_type == 'cutout':
             canonical_path_root = settings.CUTOUT_ROOT
             path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
             tar_root_path = 'cutouts/'
             thumbnail_extension = '.fits'
-            canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+            else:
+                canonical_paths = [cutout['fits'] for cutout in transient_info['cutouts']]
         elif file_type == 'sed':
             canonical_path_root = settings.SED_OUTPUT_ROOT
             path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
@@ -1365,26 +1494,36 @@ def import_transient_info(transient_data_archive):
             for sedfittingresult in [aperture['sedfittingresults'] for aperture in transient_info['apertures']
                                      if aperture['sedfittingresults']]:
                 for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
-                    canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+                    if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                        canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+                    else:
+                        canonical_paths.append(sedfittingresult[0][sed_file])
         elif file_type == 'host_spectra':
             canonical_path_root = settings.SPECTRA_ROOT
             path_prefix_replacement = f'{canonical_path_root}/'
             tar_root_path = 'host_spectra/'
             thumbnail_extension = '.fits'
-            canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
+            else:
+                canonical_paths = [spectrum['spectrum_file'] for spectrum in transient_info['host_spectra']]
         # Include possible thumbnail paths
         thumbail_paths = []
-        for canonical_path in canonical_paths:
+        logger.debug(canonical_paths)
+        # Generate paths for thumbnails that might exist, ignoring null or empty string values in "canonical_paths"
+        for canonical_path in [c_path for c_path in canonical_paths if c_path]:
             thumbail_paths.append(canonical_path.replace(thumbnail_extension, '.jpg'))
         canonical_paths.extend(thumbail_paths)
         # logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
+        # Iterate over all files in the subfolder of the file type being scanned
         for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
             if not tarinfo.isreg():
                 logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
                 continue
             # Verify that the file is listed in the transient metadata
             expected_canonical_path = tarinfo.name.replace(tar_root_path, path_prefix_replacement)
-            # logger.debug(f'Archive file canonical path: {expected_canonical_path}')
+            logger.debug(f'Archive file expected canonical path: {expected_canonical_path}')
+            # Skip files in the archive file that are not associated with the imported data objects
             if not [path for path in canonical_paths if path == expected_canonical_path]:
                 logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
                 continue
@@ -1402,16 +1541,34 @@ def import_transient_info(transient_data_archive):
             logger.error('Error importing transient dataset: No "transient.json" file found.')
             return [], []
         transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
-        transient_name = transient_info['transient']['fields']['name']
+        # Handle variations in data schema from older Blast versions
+        if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+            transient_name = transient_info['transient']['fields']['name']
+        else:
+            transient_name = transient_info['transient']['name']
         logger.debug(f'''Importing transient "{transient_name}"...''')
-        construct_database_objects(transient_info)
+        # Construct the import list
+        if isinstance(transient_info, dict):
+            datasets_to_import = [deepcopy(transient_info)]
+        elif isinstance(transient_info, list):
+            datasets_to_import = [deepcopy(tr_info) for tr_info in transient_info]
+        assert isinstance(datasets_to_import, list)
+        # Construct the database objects for each transient.
+        for dataset in datasets_to_import:
+            # Use a nested function to support aborting upon error within nested for loops.
+            # This uses the top-level variables "imported_transient_names" and "import_failures".
+            # Handle variations in data schema from older Blast versions
+            if Version(dataset['metadata']['app_version']) <= Version('2.1.0'):
+                process_transient_dataset_v2_1_0(dataset)
+            else:
+                process_transient_dataset(dataset)
         # Import cutout image files
-        install_files('cutout')
+        install_files(transient_info, 'cutout')
         # Import SED fit files
-        install_files('sed')
+        install_files(transient_info, 'sed')
         # Import host spectra fit files
         if transient_info['host']:
-            install_files('host_spectra')
+            install_files(transient_info, 'host_spectra')
 
     # Delete database objects associated with failed imports
     for import_failure in import_failures:
@@ -1497,3 +1654,77 @@ def get_processing_status_and_progress(transient):
             processing_status = 'completed'
 
     return progress, processing_status
+
+
+def _canonicalize(value):
+    """Convert a value into a consistently comparable form."""
+    if isinstance(value, Mapping):
+        return (
+            "dict",
+            tuple(
+                sorted(
+                    (
+                        repr(key),
+                        _canonicalize(val),
+                    )
+                    for key, val in value.items()
+                )
+            ),
+        )
+
+    if isinstance(value, list):
+        # Sorting makes list order irrelevant while preserving duplicates.
+        items = [_canonicalize(item) for item in value]
+        return ("list", tuple(sorted(items, key=repr)))
+
+    if isinstance(value, tuple):
+        return ("tuple", tuple(_canonicalize(item) for item in value))
+
+    return ("value", value)
+
+
+def _values_equal(first, second):
+    return _canonicalize(first) == _canonicalize(second)
+
+
+def equal_dicts(first, second, path=""):
+    """Recursively print differences between two dictionaries."""
+
+    all_keys = first.keys() | second.keys()
+
+    for key in all_keys:
+        current_path = f"{path}.{key}" if path else str(key)
+
+        if key not in first:
+            logger.debug(f"Missing from first: {current_path} = {second[key]!r}")
+            continue
+
+        if key not in second:
+            logger.debug(f"Missing from second: {current_path} = {first[key]!r}")
+            continue
+
+        value1 = first[key]
+        value2 = second[key]
+
+        if isinstance(value1, Mapping) and isinstance(value2, Mapping):
+            is_equal = equal_dicts(value1, value2, current_path)
+        elif _values_equal(value1, value2):
+            is_equal = True
+        else:
+            logger.debug(
+                f"Different at {current_path}: "
+                f"{value1!r} != {value2!r}"
+            )
+            is_equal = False
+    return is_equal
+
+
+def get_latest_dataset_revision(transient_name):
+    """Return the revision index of the latest dataset version"""
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        logger.warning(f'Transient not found: "{transient_name}"')
+        return None
+    latest_dataset_revision = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    return latest_dataset_revision

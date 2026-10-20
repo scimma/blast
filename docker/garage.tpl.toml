@@ -1,0 +1,26 @@
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+
+# Use "sqlite" instead if you need ARM or 32-bit compatibility.
+db_engine = "lmdb"
+
+# For a single-node deployment.
+replication_factor = 1
+
+rpc_bind_addr = "[::]:{{S3_RPC_PORT}}"
+rpc_public_addr = "127.0.0.1:{{S3_RPC_PORT}}"
+#rpc_secret = ""
+
+[s3_api]
+api_bind_addr = "[::]:{{S3_SERVER_PORT}}"
+s3_region = "osn"
+
+# Optional. Path-style access works without this.
+# Add it only if you need virtual-hosted-style access such as
+# https://bucket.s3.example.com/object.
+# root_domain = ".s3.example.com"
+
+[admin]
+api_bind_addr = "[::]:{{S3_ADMIN_PORT}}"
+#admin_token = ""
+#metrics_token = ""

@@ -11,3 +11,4 @@ Disallow: /fetch_host_spectrum_plot/
 Disallow: /api/
 Disallow: /admin/
 Disallow: /swagger-ui/
+Disallow: /api-explorer/

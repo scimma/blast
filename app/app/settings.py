@@ -4,7 +4,7 @@ from pathlib import Path
 ######################################################################
 # Blast application config
 #
-APP_VERSION = '2.1.0'
+APP_VERSION = '3.0.0'
 # Data paths
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
@@ -99,8 +99,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), "app/static/")
-MEDIA_URL = "/cutouts/"
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
+# MEDIA_URL = "/cutouts/"
+# MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR), "data")
 
 ######################################################################
 # Logging config
@@ -234,12 +234,20 @@ CELERYD_REDIRECT_STDOUTS_LEVEL = "INFO"
 # Django Rest Framework config
 #
 INSTALLED_APPS.append('rest_framework')
+INSTALLED_APPS.append('rest_framework.authtoken')
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         f'rest_framework.permissions.{os.environ.get("API_AUTHENTICATION")}',
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
 }
 
 ######################################################################
@@ -273,7 +281,7 @@ OIDC_OP_JWKS_ENDPOINT = os.environ.get('OIDC_OP_JWKS_ENDPOINT', '')
 OIDC_OP_LOGOUT_URL_METHOD = "app.auth_backend.execute_logout"
 # OIDC_USERNAME_ALGO = 'app_base.auth_backends.generate_username'
 LOGIN_URL = '/oidc/authenticate'
-LOGIN_REDIRECT_URL = "/add"
+LOGIN_REDIRECT_URL = "/accounts/login"
 LOGOUT_REDIRECT_URL = os.environ.get('OIDC_OP_LOGOUT_ENDPOINT', '/')
 # ALLOW_LOGOUT_GET_METHOD tells mozilla-django-oidc that the front end can logout with a GET
 # which allows the front end to use location.href to /auth/logout to logout.

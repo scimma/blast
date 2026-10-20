@@ -4,11 +4,13 @@ custom Django management command. See the `dev.py` module docstring for usage in
 """
 
 from host.models import Status
+from host.models import DatasetRevision
 from host.models import TaskRegister
 from host.models import Transient
 from host.object_store import ObjectStore
 from host.transient_tasks import generate_thumbnail_sed_global
 from host.transient_tasks import generate_thumbnail_sed_local
+from host.transient_tasks import dataset_version_control
 from sparcl.client import SparclClient
 from sparcl.exceptions import TooManyRequests
 from time import sleep
@@ -478,3 +480,16 @@ def test_sparcl_rate_limit(transient_name='2026dix'):
         except Exception as err:
             print(err)
             break
+
+
+def generate_initial_dataset_revisions():
+    all_transients = Transient.objects.all()
+    num_trans = len(all_transients)
+    all_drs = DatasetRevision.objects.all()
+    for idx, transient in enumerate(all_transients):
+        print(f'''[{idx + 1}/{num_trans}] Analyzing transient "{transient.name}"...''')
+        if not all_drs.filter(transient=transient):
+            print(f'''    "{transient.name}" does not have a dataset revision. Triggering initial DR...''')
+            dataset_version_control.delay(transient.name)
+        else:
+            print(f'''    "{transient.name}" has at least one dataset revision.''')

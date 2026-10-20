@@ -144,5 +144,16 @@
   </tbody>
 </table>
 {% endif %}
-  {% endblock %}
+<h5 style="text-align: center;" class="pt-3">Dataset
+  <a target="_blank" aria-label="Help: learn more about datasets" title="Learn more about datasets" style="margin-left: 0.35rem;"
+    href="https://blast.readthedocs.io/en/stable/usage/web_api.html#downloading-all-blast-data-for-a-given-transient">
+    <span aria-hidden="true"><i class="bi bi-question-circle"></i></span>
+  </a>
+</h5>
+<table class="table table-responsive table-hover table-sm transient-info-table">
+  <tbody>
+    <tr><td class="align-middle transient-info-table-td">Version:</td><td class="align-middle" style="text-align: left;"><code>{{dataset_version}}</code></td></tr>
+  </tbody>
+</table>
+{% endblock %}
 

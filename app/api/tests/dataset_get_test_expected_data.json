@@ -1,0 +1,2152 @@
+{
+  "metadata": {
+    "app_version": "v3.0.0",
+    "export_time": "2026-09-28T18:14:23.079128+00:00",
+    "dataset_version": 0
+  },
+  "transient": {
+    "id": 1,
+    "aliases": [],
+    "ra_deg": 177.65625,
+    "dec_deg": 55.353639,
+    "name": "2026dix",
+    "display_name": null,
+    "tns_id": 201360,
+    "tns_prefix": "AT",
+    "public_timestamp": "2026-02-16T09:26:15.072000Z",
+    "redshift": null,
+    "spectroscopic_class": null,
+    "photometric_class": null,
+    "milkyway_dust_reddening": 0.011003538500517607,
+    "processing_status": "completed",
+    "progress": 100,
+    "software_version": "3.0.0",
+    "update_comment": null,
+    "update_fields": null,
+    "host": 1
+  },
+  "host": {
+    "id": 1,
+    "aliases": [],
+    "ra_deg": 177.662201,
+    "dec_deg": 55.353867,
+    "name": "NGC3913",
+    "redshift": 0.0041580065070319,
+    "redshift_err": 0.0012474019521095,
+    "photometric_redshift": null,
+    "photometric_redshift_err": null,
+    "milkyway_dust_reddening": 0.011014966275542975,
+    "object_id": null,
+    "catalog_name": null,
+    "catalog_release": null,
+    "software_version": "3.0.0"
+  },
+  "surveys": [
+    {
+      "id": 1,
+      "name": "2MASS"
+    },
+    {
+      "id": 2,
+      "name": "WISE"
+    },
+    {
+      "id": 3,
+      "name": "GALEX"
+    },
+    {
+      "id": 4,
+      "name": "PanSTARRS"
+    },
+    {
+      "id": 5,
+      "name": "SDSS"
+    },
+    {
+      "id": 6,
+      "name": "DES"
+    }
+  ],
+  "filters": [
+    {
+      "id": 1,
+      "name": "2MASS_H",
+      "kcorrect_name": "twomass_H",
+      "sedpy_id": "twomass_H",
+      "hips_id": "CDS/P/2MASS/H",
+      "vosa_id": "2MASS/2MASS.H",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.0,
+      "image_fwhm_arcsec": 2.8,
+      "wavelength_eff_angstrom": 16620.0,
+      "wavelength_min_angstrom": 14787.38,
+      "wavelength_max_angstrom": 18231.02,
+      "vega_zero_point_jansky": 1024.0,
+      "magnitude_zero_point": null,
+      "ab_offset": 1.3676,
+      "magnitude_zero_point_keyword": "MAGZP",
+      "image_pixel_units": "counts",
+      "survey": 1
+    },
+    {
+      "id": 2,
+      "name": "2MASS_J",
+      "kcorrect_name": "twomass_J",
+      "sedpy_id": "twomass_j",
+      "hips_id": "CDS/P/2MASS/J",
+      "vosa_id": "2MASS/2MASS.J",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.0,
+      "image_fwhm_arcsec": 2.9,
+      "wavelength_eff_angstrom": 12350.0,
+      "wavelength_min_angstrom": 10806.47,
+      "wavelength_max_angstrom": 14067.97,
+      "vega_zero_point_jansky": 1594.0,
+      "magnitude_zero_point": null,
+      "ab_offset": 0.8949,
+      "magnitude_zero_point_keyword": "MAGZP",
+      "image_pixel_units": "counts",
+      "survey": 1
+    },
+    {
+      "id": 3,
+      "name": "2MASS_K",
+      "kcorrect_name": "twomass_Ks",
+      "sedpy_id": "twomass_k",
+      "hips_id": "CDS/P/2MASS/K",
+      "vosa_id": "2MASS/2MASS.Ks",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.0,
+      "image_fwhm_arcsec": 2.9,
+      "wavelength_eff_angstrom": 21590.0,
+      "wavelength_min_angstrom": 19543.69,
+      "wavelength_max_angstrom": 23552.4,
+      "vega_zero_point_jansky": 666.8,
+      "magnitude_zero_point": null,
+      "ab_offset": 1.8378,
+      "magnitude_zero_point_keyword": "MAGZP",
+      "image_pixel_units": "counts",
+      "survey": 1
+    },
+    {
+      "id": 4,
+      "name": "WISE_W1",
+      "kcorrect_name": "wise_w1",
+      "sedpy_id": "wise_w1",
+      "hips_id": "CDS/P/allWISE/W1",
+      "vosa_id": "WISE/WISE.W1",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.375,
+      "image_fwhm_arcsec": 5.84,
+      "wavelength_eff_angstrom": 33526.0,
+      "wavelength_min_angstrom": 27540.97,
+      "wavelength_max_angstrom": 38723.88,
+      "vega_zero_point_jansky": 309.54,
+      "magnitude_zero_point": 20.5,
+      "ab_offset": 2.699,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 2
+    },
+    {
+      "id": 5,
+      "name": "WISE_W2",
+      "kcorrect_name": "wise_w2",
+      "sedpy_id": "wise_w2",
+      "hips_id": "CDS/P/allWISE/W2",
+      "vosa_id": "WISE/WISE.W2",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.375,
+      "image_fwhm_arcsec": 6.48,
+      "wavelength_eff_angstrom": 46028.0,
+      "wavelength_min_angstrom": 39633.26,
+      "wavelength_max_angstrom": 53413.6,
+      "vega_zero_point_jansky": 171.79,
+      "magnitude_zero_point": 19.5,
+      "ab_offset": 3.339,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 2
+    },
+    {
+      "id": 6,
+      "name": "WISE_W3",
+      "kcorrect_name": "wise_w3",
+      "sedpy_id": "wise_w3",
+      "hips_id": "CDS/P/allWISE/W3",
+      "vosa_id": "WISE/WISE.W3",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.375,
+      "image_fwhm_arcsec": 6.72,
+      "wavelength_eff_angstrom": 115608.0,
+      "wavelength_min_angstrom": 74430.44,
+      "wavelength_max_angstrom": 172613.43,
+      "vega_zero_point_jansky": 31.67,
+      "magnitude_zero_point": 18.0,
+      "ab_offset": 5.174,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 2
+    },
+    {
+      "id": 7,
+      "name": "WISE_W4",
+      "kcorrect_name": "wise_w4",
+      "sedpy_id": "wise_w4",
+      "hips_id": "CDS/P/allWISE/W4",
+      "vosa_id": "WISE/WISE.W4",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.375,
+      "image_fwhm_arcsec": 11.82,
+      "wavelength_eff_angstrom": 220883.0,
+      "wavelength_min_angstrom": 195200.83,
+      "wavelength_max_angstrom": 279107.24,
+      "vega_zero_point_jansky": 8.36,
+      "magnitude_zero_point": 13.0,
+      "ab_offset": 6.62,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 2
+    },
+    {
+      "id": 8,
+      "name": "GALEX_NUV",
+      "kcorrect_name": "galex_NUV",
+      "sedpy_id": "galex_nuv",
+      "hips_id": "CDS/P/GALEXGR6/AIS/NUV",
+      "vosa_id": "GALEX/GALEX.NUV",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.5,
+      "image_fwhm_arcsec": 5.3,
+      "wavelength_eff_angstrom": 2304.74,
+      "wavelength_min_angstrom": 1692.52,
+      "wavelength_max_angstrom": 3006.67,
+      "vega_zero_point_jansky": 788.55,
+      "magnitude_zero_point": 20.08,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 3
+    },
+    {
+      "id": 9,
+      "name": "GALEX_FUV",
+      "kcorrect_name": "galex_FUV",
+      "sedpy_id": "galex_fuv",
+      "hips_id": "CDS/P/GALEXGR6/AIS/FUV",
+      "vosa_id": "GALEX/GALEX.FUV",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 1.5,
+      "image_fwhm_arcsec": 4.2,
+      "wavelength_eff_angstrom": 1549.02,
+      "wavelength_min_angstrom": 1340.32,
+      "wavelength_max_angstrom": 1806.43,
+      "vega_zero_point_jansky": 520.73,
+      "magnitude_zero_point": 18.82,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 3
+    },
+    {
+      "id": 10,
+      "name": "PanSTARRS_g",
+      "kcorrect_name": "none",
+      "sedpy_id": "panstarrs_g",
+      "hips_id": "CDS/P/PanSTARRS/DR1/g",
+      "vosa_id": "PAN-STARRS/PS1.g",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.25,
+      "image_fwhm_arcsec": 1.31,
+      "wavelength_eff_angstrom": 4810.88,
+      "wavelength_min_angstrom": 3943.4,
+      "wavelength_max_angstrom": 5593.27,
+      "vega_zero_point_jansky": 3893.0,
+      "magnitude_zero_point": 25.0,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts",
+      "survey": 4
+    },
+    {
+      "id": 11,
+      "name": "PanSTARRS_r",
+      "kcorrect_name": "none",
+      "sedpy_id": "panstarrs_r",
+      "hips_id": "CDS/P/PanSTARRS/DR1/r",
+      "vosa_id": "PAN-STARRS/PS1.r",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.25,
+      "image_fwhm_arcsec": 1.19,
+      "wavelength_eff_angstrom": 6156.36,
+      "wavelength_min_angstrom": 5386.23,
+      "wavelength_max_angstrom": 7035.65,
+      "vega_zero_point_jansky": 3135.5,
+      "magnitude_zero_point": 25.0,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts",
+      "survey": 4
+    },
+    {
+      "id": 12,
+      "name": "PanSTARRS_i",
+      "kcorrect_name": "none",
+      "sedpy_id": "panstarrs_i",
+      "hips_id": "CDS/P/PanSTARRS/DR1/i",
+      "vosa_id": "PAN-STARRS/PS1.i",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.25,
+      "image_fwhm_arcsec": 1.11,
+      "wavelength_eff_angstrom": 7503.68,
+      "wavelength_min_angstrom": 6778.45,
+      "wavelength_max_angstrom": 8304.37,
+      "vega_zero_point_jansky": 2577.03,
+      "magnitude_zero_point": 25.0,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts",
+      "survey": 4
+    },
+    {
+      "id": 13,
+      "name": "PanSTARRS_z",
+      "kcorrect_name": "none",
+      "sedpy_id": "panstarrs_z",
+      "hips_id": "CDS/P/PanSTARRS/DR1/z",
+      "vosa_id": "PAN-STARRS/PS1.z",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.25,
+      "image_fwhm_arcsec": 1.07,
+      "wavelength_eff_angstrom": 8668.56,
+      "wavelength_min_angstrom": 8028.0,
+      "wavelength_max_angstrom": 9346.0,
+      "vega_zero_point_jansky": 2273.05,
+      "magnitude_zero_point": 25.0,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts",
+      "survey": 4
+    },
+    {
+      "id": 14,
+      "name": "PanSTARRS_y",
+      "kcorrect_name": "none",
+      "sedpy_id": "panstarrs_y",
+      "hips_id": "CDS/P/PanSTARRS/DR1/y",
+      "vosa_id": "PAN-STARRS/PS1.y",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.25,
+      "image_fwhm_arcsec": 1.02,
+      "wavelength_eff_angstrom": 9613.45,
+      "wavelength_min_angstrom": 9100.5,
+      "wavelength_max_angstrom": 10838.5,
+      "vega_zero_point_jansky": 2203.66,
+      "magnitude_zero_point": 25.0,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts",
+      "survey": 4
+    },
+    {
+      "id": 15,
+      "name": "SDSS_i",
+      "kcorrect_name": "sdss_i0",
+      "sedpy_id": "sdss_i",
+      "hips_id": "CDS/P/SDSS9/i",
+      "vosa_id": "SLOAN/SDSS.i",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.4,
+      "image_fwhm_arcsec": 1.26,
+      "wavelength_eff_angstrom": 7470.6,
+      "wavelength_min_angstrom": 6430.0,
+      "wavelength_max_angstrom": 8630.0,
+      "vega_zero_point_jansky": 3971.19,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 5
+    },
+    {
+      "id": 16,
+      "name": "SDSS_r",
+      "kcorrect_name": "sdss_r0",
+      "sedpy_id": "sdss_r",
+      "hips_id": "CDS/P/SDSS9/r",
+      "vosa_id": "SLOAN/SDSS.r",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.4,
+      "image_fwhm_arcsec": 1.32,
+      "wavelength_eff_angstrom": 6141.12,
+      "wavelength_min_angstrom": 5415.34,
+      "wavelength_max_angstrom": 6989.14,
+      "vega_zero_point_jansky": 3142.02,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 5
+    },
+    {
+      "id": 17,
+      "name": "SDSS_u",
+      "kcorrect_name": "sdss_u0",
+      "sedpy_id": "sdss_u",
+      "hips_id": "CDS/P/SDSS9/u",
+      "vosa_id": "SLOAN/SDSS.u",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.4,
+      "image_fwhm_arcsec": 1.53,
+      "wavelength_eff_angstrom": 3608.04,
+      "wavelength_min_angstrom": 3048.28,
+      "wavelength_max_angstrom": 4028.23,
+      "vega_zero_point_jansky": 1628.72,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 5
+    },
+    {
+      "id": 18,
+      "name": "SDSS_z",
+      "kcorrect_name": "sdss_z0",
+      "sedpy_id": "sdss_z",
+      "hips_id": "CDS/P/SDSS9/z",
+      "vosa_id": "SLOAN/SDSS.z",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.4,
+      "image_fwhm_arcsec": 1.29,
+      "wavelength_eff_angstrom": 8922.78,
+      "wavelength_min_angstrom": 7960.44,
+      "wavelength_max_angstrom": 10833.25,
+      "vega_zero_point_jansky": 2227.03,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 5
+    },
+    {
+      "id": 19,
+      "name": "SDSS_g",
+      "kcorrect_name": "sdss_g0",
+      "sedpy_id": "sdss_g",
+      "hips_id": "CDS/P/SDSS9/g",
+      "vosa_id": "SLOAN/SDSS.g",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.4,
+      "image_fwhm_arcsec": 1.44,
+      "wavelength_eff_angstrom": 4671.78,
+      "wavelength_min_angstrom": 3797.64,
+      "wavelength_max_angstrom": 5553.04,
+      "vega_zero_point_jansky": 4023.57,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 5
+    },
+    {
+      "id": 20,
+      "name": "DES_g",
+      "kcorrect_name": "decam_g",
+      "sedpy_id": "des_g",
+      "hips_id": "CDS/P/DES-DR1/g",
+      "vosa_id": "CTIO/DECam.g",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.2637,
+      "image_fwhm_arcsec": 1.16,
+      "wavelength_eff_angstrom": 4770.83,
+      "wavelength_min_angstrom": 3925.42,
+      "wavelength_max_angstrom": 5529.96,
+      "vega_zero_point_jansky": 3905.01,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 6
+    },
+    {
+      "id": 21,
+      "name": "DES_r",
+      "kcorrect_name": "decam_r",
+      "sedpy_id": "des_r",
+      "hips_id": "CDS/P/DES-DR1/r",
+      "vosa_id": "CTIO/DECam.r",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.2637,
+      "image_fwhm_arcsec": 1.07,
+      "wavelength_eff_angstrom": 6371.33,
+      "wavelength_min_angstrom": 5519.97,
+      "wavelength_max_angstrom": 7233.72,
+      "vega_zero_point_jansky": 3027.32,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 6
+    },
+    {
+      "id": 22,
+      "name": "DES_i",
+      "kcorrect_name": "decam_i",
+      "sedpy_id": "des_i",
+      "hips_id": "CDS/P/DES-DR1/i",
+      "vosa_id": "CTIO/DECam.i",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.2637,
+      "image_fwhm_arcsec": 0.97,
+      "wavelength_eff_angstrom": 7774.19,
+      "wavelength_min_angstrom": 6948.18,
+      "wavelength_max_angstrom": 8645.68,
+      "vega_zero_point_jansky": 2467.82,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 6
+    },
+    {
+      "id": 23,
+      "name": "DES_z",
+      "kcorrect_name": "decam_z",
+      "sedpy_id": "des_z",
+      "hips_id": "CDS/P/DES-DR1/z",
+      "vosa_id": "CTIO/DECam.z",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.2637,
+      "image_fwhm_arcsec": 0.93,
+      "wavelength_eff_angstrom": 9157.9,
+      "wavelength_min_angstrom": 8341.2,
+      "wavelength_max_angstrom": 10074.26,
+      "vega_zero_point_jansky": 2247.33,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 6
+    },
+    {
+      "id": 24,
+      "name": "DES_Y",
+      "kcorrect_name": "decam_Y",
+      "sedpy_id": "des_y",
+      "hips_id": "CDS/P/DES-DR1/Y",
+      "vosa_id": "CTIO/DECam.y",
+      "image_download_method": "custom",
+      "pixel_size_arcsec": 0.2637,
+      "image_fwhm_arcsec": 0.91,
+      "wavelength_eff_angstrom": 9886.35,
+      "wavelength_min_angstrom": 9364.77,
+      "wavelength_max_angstrom": 10685.78,
+      "vega_zero_point_jansky": 2146.18,
+      "magnitude_zero_point": 22.5,
+      "ab_offset": 0.0,
+      "magnitude_zero_point_keyword": null,
+      "image_pixel_units": "counts/sec",
+      "survey": 6
+    }
+  ],
+  "cutouts": [
+    {
+      "id": 1,
+      "fits": null,
+      "name": "2026dix_DES_i",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 22,
+      "transient": 1
+    },
+    {
+      "id": 2,
+      "fits": null,
+      "name": "2026dix_DES_r",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 21,
+      "transient": 1
+    },
+    {
+      "id": 3,
+      "fits": null,
+      "name": "2026dix_DES_Y",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 24,
+      "transient": 1
+    },
+    {
+      "id": 4,
+      "fits": null,
+      "name": "2026dix_DES_z",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 23,
+      "transient": 1
+    },
+    {
+      "id": 5,
+      "fits": null,
+      "name": "2026dix_DES_g",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 20,
+      "transient": 1
+    },
+    {
+      "id": 6,
+      "fits": null,
+      "name": "2026dix_GALEX_FUV",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 9,
+      "transient": 1
+    },
+    {
+      "id": 7,
+      "fits": null,
+      "name": "2026dix_GALEX_NUV",
+      "message": "No image found",
+      "software_version": "3.0.0",
+      "cropped": false,
+      "filter": 8,
+      "transient": 1
+    },
+    {
+      "id": 8,
+      "fits": "/data/cutout_cdn/2026dix/2MASS/2MASS_H.fits",
+      "name": "2026dix_2MASS_H",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 1,
+      "transient": 1
+    },
+    {
+      "id": 9,
+      "fits": "/data/cutout_cdn/2026dix/2MASS/2MASS_J.fits",
+      "name": "2026dix_2MASS_J",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 2,
+      "transient": 1
+    },
+    {
+      "id": 10,
+      "fits": "/data/cutout_cdn/2026dix/WISE/WISE_W3.fits",
+      "name": "2026dix_WISE_W3",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 6,
+      "transient": 1
+    },
+    {
+      "id": 11,
+      "fits": "/data/cutout_cdn/2026dix/WISE/WISE_W1.fits",
+      "name": "2026dix_WISE_W1",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 4,
+      "transient": 1
+    },
+    {
+      "id": 12,
+      "fits": "/data/cutout_cdn/2026dix/2MASS/2MASS_K.fits",
+      "name": "2026dix_2MASS_K",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 3,
+      "transient": 1
+    },
+    {
+      "id": 13,
+      "fits": "/data/cutout_cdn/2026dix/WISE/WISE_W2.fits",
+      "name": "2026dix_WISE_W2",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 5,
+      "transient": 1
+    },
+    {
+      "id": 14,
+      "fits": "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_i.fits",
+      "name": "2026dix_PanSTARRS_i",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 12,
+      "transient": 1
+    },
+    {
+      "id": 15,
+      "fits": "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_z.fits",
+      "name": "2026dix_PanSTARRS_z",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 13,
+      "transient": 1
+    },
+    {
+      "id": 16,
+      "fits": "/data/cutout_cdn/2026dix/SDSS/SDSS_u.fits",
+      "name": "2026dix_SDSS_u",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 17,
+      "transient": 1
+    },
+    {
+      "id": 17,
+      "fits": "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_y.fits",
+      "name": "2026dix_PanSTARRS_y",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 14,
+      "transient": 1
+    },
+    {
+      "id": 18,
+      "fits": "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_g.fits",
+      "name": "2026dix_PanSTARRS_g",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 10,
+      "transient": 1
+    },
+    {
+      "id": 19,
+      "fits": "/data/cutout_cdn/2026dix/WISE/WISE_W4.fits",
+      "name": "2026dix_WISE_W4",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 7,
+      "transient": 1
+    },
+    {
+      "id": 20,
+      "fits": "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_r.fits",
+      "name": "2026dix_PanSTARRS_r",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 11,
+      "transient": 1
+    },
+    {
+      "id": 21,
+      "fits": "/data/cutout_cdn/2026dix/SDSS/SDSS_r.fits",
+      "name": "2026dix_SDSS_r",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 16,
+      "transient": 1
+    },
+    {
+      "id": 22,
+      "fits": "/data/cutout_cdn/2026dix/SDSS/SDSS_i.fits",
+      "name": "2026dix_SDSS_i",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 15,
+      "transient": 1
+    },
+    {
+      "id": 23,
+      "fits": "/data/cutout_cdn/2026dix/SDSS/SDSS_g.fits",
+      "name": "2026dix_SDSS_g",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 19,
+      "transient": 1
+    },
+    {
+      "id": 24,
+      "fits": "/data/cutout_cdn/2026dix/SDSS/SDSS_z.fits",
+      "name": "2026dix_SDSS_z",
+      "message": null,
+      "software_version": "3.0.0",
+      "cropped": true,
+      "filter": 18,
+      "transient": 1
+    }
+  ],
+  "apertures": [
+    {
+      "aperture": {
+        "id": 1,
+        "ra_deg": 177.65625,
+        "dec_deg": 55.353639,
+        "name": "2026dix_local",
+        "orientation_deg": 0.0,
+        "semi_major_axis_arcsec": 23.28501538752877,
+        "semi_minor_axis_arcsec": 23.28501538752877,
+        "type": "local",
+        "software_version": "3.0.0",
+        "cutout": null,
+        "transient": 1
+      },
+      "sedfittingresults": [
+        {
+          "id": 1,
+          "posterior": "/data/sed_output/2026dix/2026dix_local.h5",
+          "chains_file": "/data/sed_output/2026dix/2026dix_local_chain.npz",
+          "percentiles_file": "/data/sed_output/2026dix/2026dix_local_perc.npz",
+          "model_file": "/data/sed_output/2026dix/2026dix_local_modeldata.npz",
+          "log_mass_16": 8.892310219650168,
+          "log_mass_50": 8.980697632616705,
+          "log_mass_84": 9.072896527737445,
+          "mass_surviving_ratio": 0.5746459126642199,
+          "log_sfr_16": -2.238518138417228,
+          "log_sfr_50": -1.6343022708073116,
+          "log_sfr_84": -1.1342581315587412,
+          "log_ssfr_16": -11.270764425362474,
+          "log_ssfr_50": -10.665382191616828,
+          "log_ssfr_84": -10.065274874743906,
+          "log_age_16": 6.611828779662431,
+          "log_age_50": 7.739468555073041,
+          "log_age_84": 9.222514027366936,
+          "age_16": 6.611828779662431,
+          "age_50": 7.739468555073041,
+          "age_84": 9.222514027366936,
+          "log_tau_16": null,
+          "log_tau_50": null,
+          "log_tau_84": null,
+          "logzsol_16": -1.3051660341024398,
+          "logzsol_50": -0.9794348478317261,
+          "logzsol_84": -0.756606830894947,
+          "dust2_16": 0.11934750614315272,
+          "dust2_50": 0.24036862701177597,
+          "dust2_84": 0.3732251119017601,
+          "dust_index_16": -0.879955891430378,
+          "dust_index_50": -0.6248266696929932,
+          "dust_index_84": -0.16989887210726734,
+          "dust1_fraction_16": 0.6640643725395202,
+          "dust1_fraction_50": 0.9951934516429901,
+          "dust1_fraction_84": 1.3166621968746186,
+          "log_fagn_16": -4.317531170845032,
+          "log_fagn_50": -3.1916812658309937,
+          "log_fagn_84": -2.061770964860916,
+          "log_agn_tau_16": 0.9565313692092896,
+          "log_agn_tau_50": 1.4115934371948242,
+          "log_agn_tau_84": 1.865641238808632,
+          "gas_logz_16": -1.2890155009031297,
+          "gas_logz_50": 0.005053607514128089,
+          "gas_logz_84": 0.3029538426399231,
+          "duste_qpah_16": 0.4172755514085293,
+          "duste_qpah_50": 1.4473335146903992,
+          "duste_qpah_84": 3.5595974380970006,
+          "duste_umin_16": 2.5963178362846375,
+          "duste_umin_50": 7.63959527015686,
+          "duste_umin_84": 14.60528590965271,
+          "log_duste_gamma_16": -3.193308847665787,
+          "log_duste_gamma_50": -2.418642997741699,
+          "log_duste_gamma_84": -1.4760072735548018,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1,
+          "logsfh": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ],
+      "aperturephotometry": [
+        {
+          "id": 1,
+          "flux": 23258.668018846907,
+          "flux_error": 657.2915924986958,
+          "magnitude": 11.615937900354746,
+          "magnitude_error": 0.030681958287446815,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 1,
+          "transient": 1
+        },
+        {
+          "id": 2,
+          "flux": 20078.48003946104,
+          "flux_error": 415.8119596493224,
+          "magnitude": 12.248272916997282,
+          "magnitude_error": 0.0224841244807387,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 2,
+          "transient": 1
+        },
+        {
+          "id": 3,
+          "flux": 14354.132220976648,
+          "flux_error": 422.1981227401705,
+          "magnitude": 8.333557644113915,
+          "magnitude_error": 0.03193369649954465,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 6,
+          "transient": 1
+        },
+        {
+          "id": 4,
+          "flux": 8294.92641681655,
+          "flux_error": 88.40342887479765,
+          "magnitude": 11.403968655477073,
+          "magnitude_error": 0.01157088054871536,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 4,
+          "transient": 1
+        },
+        {
+          "id": 5,
+          "flux": 16390.277179274373,
+          "flux_error": 747.854754791376,
+          "magnitude": 11.525734254815134,
+          "magnitude_error": 0.049538265789898214,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 3,
+          "transient": 1
+        },
+        {
+          "id": 6,
+          "flux": 4738.319126201393,
+          "flux_error": 90.02626201572903,
+          "magnitude": 11.37193923214362,
+          "magnitude_error": 0.02062788724592179,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 5,
+          "transient": 1
+        },
+        {
+          "id": 7,
+          "flux": 13701.483259472925,
+          "flux_error": 9.113537446739203,
+          "magnitude": 13.55808103894556,
+          "magnitude_error": 0.0007221530266866437,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 12,
+          "transient": 1
+        },
+        {
+          "id": 8,
+          "flux": 16135.302085764299,
+          "flux_error": 24.318769754226864,
+          "magnitude": 13.380557248263703,
+          "magnitude_error": 0.0016363429814839723,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 13,
+          "transient": 1
+        },
+        {
+          "id": 9,
+          "flux": 2137.6691608713522,
+          "flux_error": 21.913686130441626,
+          "magnitude": 15.575148770182379,
+          "magnitude_error": 0.011129733949159165,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 17,
+          "transient": 1
+        },
+        {
+          "id": 10,
+          "flux": 18196.164169932286,
+          "flux_error": 50.95247039134431,
+          "magnitude": 13.250050383801998,
+          "magnitude_error": 0.0030401515719061783,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 14,
+          "transient": 1
+        },
+        {
+          "id": 11,
+          "flux": 6985.264079846916,
+          "flux_error": 6.400011541972438,
+          "magnitude": 14.28954292654008,
+          "magnitude_error": 0.0009947358398612978,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 10,
+          "transient": 1
+        },
+        {
+          "id": 12,
+          "flux": 11998.746730910776,
+          "flux_error": 1635.228110452041,
+          "magnitude": 7.082160284104734,
+          "magnitude_error": 0.14796271638471528,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 7,
+          "transient": 1
+        },
+        {
+          "id": 13,
+          "flux": 11544.311276708504,
+          "flux_error": 9.788672218118723,
+          "magnitude": 13.744079928986359,
+          "magnitude_error": 0.0009205886061521386,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 11,
+          "transient": 1
+        },
+        {
+          "id": 14,
+          "flux": 10814.545651033795,
+          "flux_error": 32.04333717869985,
+          "magnitude": 13.81497930438419,
+          "magnitude_error": 0.0032169128780355927,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 16,
+          "transient": 1
+        },
+        {
+          "id": 15,
+          "flux": 14017.736000122399,
+          "flux_error": 39.50576697415804,
+          "magnitude": 13.533305308657207,
+          "magnitude_error": 0.003059795904521877,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 15,
+          "transient": 1
+        },
+        {
+          "id": 16,
+          "flux": 6636.187471906068,
+          "flux_error": 23.921319504420513,
+          "magnitude": 14.345203384201966,
+          "magnitude_error": 0.003913598989765997,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 19,
+          "transient": 1
+        },
+        {
+          "id": 17,
+          "flux": 16244.27499087949,
+          "flux_error": 73.4052978839535,
+          "magnitude": 13.373249167936121,
+          "magnitude_error": 0.004906105810037967,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 1,
+          "filter": 18,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": [
+        {
+          "id": 1,
+          "logsfr_16": -2.1433462131061543,
+          "logsfr_50": -1.6441760069001194,
+          "logsfr_84": -1.3894708251384709,
+          "logsfr_tmin": 1e-09,
+          "logsfr_tmax": 0.0299999133271615,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 2,
+          "logsfr_16": -2.4682886821340038,
+          "logsfr_50": -1.6390201440001928,
+          "logsfr_84": -1.0449352030451977,
+          "logsfr_tmin": 0.0299999133271615,
+          "logsfr_tmax": 0.1,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 3,
+          "logsfr_16": -2.3418881611485554,
+          "logsfr_50": -1.5453540654605307,
+          "logsfr_84": -1.0112130334084934,
+          "logsfr_tmin": 0.1,
+          "logsfr_tmax": 0.3320188749394955,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 4,
+          "logsfr_16": -2.2212612698782994,
+          "logsfr_50": -1.4678071060638653,
+          "logsfr_84": -1.0735859113053134,
+          "logsfr_tmin": 0.3320188749394955,
+          "logsfr_tmax": 1.1023653331608834,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 5,
+          "logsfr_16": -1.89434475284962,
+          "logsfr_50": -1.1476750941919078,
+          "logsfr_84": -0.8643237913370856,
+          "logsfr_tmin": 1.1023653331608834,
+          "logsfr_tmax": 3.6600609768837855,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 6,
+          "logsfr_16": -1.1739285969230566,
+          "logsfr_50": -0.9102221373509617,
+          "logsfr_84": -0.7489006145643783,
+          "logsfr_tmin": 3.6600609768837855,
+          "logsfr_tmax": 12.152093277549053,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        },
+        {
+          "id": 7,
+          "logsfr_16": -1.2992930327575987,
+          "logsfr_50": -0.8130091160304603,
+          "logsfr_84": -0.26355358986485206,
+          "logsfr_tmin": 12.152093277549053,
+          "logsfr_tmax": 13.502325863943382,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 1
+        }
+      ]
+    },
+    {
+      "aperture": {
+        "id": 2,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_2MASS_H_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.09056642033084,
+        "semi_minor_axis_arcsec": 39.27290203019512,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 8,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 18,
+          "flux": 29480.464232228664,
+          "flux_error": 1132.4087609354756,
+          "magnitude": 11.358564204686145,
+          "magnitude_error": 0.041704098757155215,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 2,
+          "filter": 1,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 3,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_2MASS_J_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.097501733604446,
+        "semi_minor_axis_arcsec": 39.28015827199916,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 9,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 19,
+          "flux": 27198.760178717013,
+          "flux_error": 715.1269439544338,
+          "magnitude": 11.91872723070621,
+          "magnitude_error": 0.02854590863516165,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 3,
+          "filter": 2,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 4,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_WISE_W3_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.542183966946425,
+        "semi_minor_axis_arcsec": 39.74517875004847,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 10,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 20,
+          "flux": 27222.133941031287,
+          "flux_error": 751.8643150007899,
+          "magnitude": 7.638694583716225,
+          "magnitude_error": 0.029986594311989963,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 4,
+          "filter": 6,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 5,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_WISE_W1_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.4089392371215,
+        "semi_minor_axis_arcsec": 39.605888878717316,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 11,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 21,
+          "flux": 14087.831138973805,
+          "flux_error": 156.18772880306773,
+          "magnitude": 10.828889656488126,
+          "magnitude_error": 0.012036843392619113,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 5,
+          "filter": 4,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 6,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_2MASS_K_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.097501733604446,
+        "semi_minor_axis_arcsec": 39.280158271999156,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 12,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 22,
+          "flux": 20961.821477131718,
+          "flux_error": 1289.3143257814818,
+          "magnitude": 11.258627455091869,
+          "magnitude_error": 0.066778956448421,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 6,
+          "filter": 3,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 7,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_WISE_W2_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.504036535542184,
+        "semi_minor_axis_arcsec": 39.705304858082926,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 13,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 23,
+          "flux": 7738.957266603847,
+          "flux_error": 152.83657409817638,
+          "magnitude": 10.839293878611567,
+          "magnitude_error": 0.021441476258623752,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 7,
+          "filter": 5,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 8,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_PanSTARRS_i_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.010081062387826,
+        "semi_minor_axis_arcsec": 39.1886837476497,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 14,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 24,
+          "flux": 19123.174167382535,
+          "flux_error": 15.210657134452184,
+          "magnitude": 13.196100048852049,
+          "magnitude_error": 0.0008635705718270465,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 8,
+          "filter": 12,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 9,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_PanSTARRS_z_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.00901789538029,
+        "semi_minor_axis_arcsec": 39.187571165782956,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 15,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 25,
+          "flux": 22411.88115682054,
+          "flux_error": 39.82271049730356,
+          "magnitude": 13.023804222814611,
+          "magnitude_error": 0.0019291337699140327,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 9,
+          "filter": 13,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 10,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_SDSS_u_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.023597462236545,
+        "semi_minor_axis_arcsec": 39.20282813616007,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 16,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 26,
+          "flux": 3092.9773764479933,
+          "flux_error": 35.05401360527443,
+          "magnitude": 15.174058141569589,
+          "magnitude_error": 0.012304694777610307,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 10,
+          "filter": 17,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 11,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_PanSTARRS_y_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.0077437655819,
+        "semi_minor_axis_arcsec": 39.18623781218738,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 17,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 27,
+          "flux": 24792.28804080989,
+          "flux_error": 85.56151688007742,
+          "magnitude": 12.914208477589927,
+          "magnitude_error": 0.003746896564116617,
+          "is_validated": "false",
+          "software_version": "3.0.0",
+          "aperture": 11,
+          "filter": 14,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 12,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_PanSTARRS_g_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.015981625990875,
+        "semi_minor_axis_arcsec": 39.19485851324513,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 18,
+        "transient": 1
+      },
+      "sedfittingresults": [
+        {
+          "id": 2,
+          "posterior": "/data/sed_output/2026dix/2026dix_global.h5",
+          "chains_file": "/data/sed_output/2026dix/2026dix_global_chain.npz",
+          "percentiles_file": "/data/sed_output/2026dix/2026dix_global_perc.npz",
+          "model_file": "/data/sed_output/2026dix/2026dix_global_modeldata.npz",
+          "log_mass_16": 8.999281495634254,
+          "log_mass_50": 9.11818190076526,
+          "log_mass_84": 9.21640938732751,
+          "mass_surviving_ratio": 0.5803884083553305,
+          "log_sfr_16": -2.004021319689778,
+          "log_sfr_50": -1.449976968935683,
+          "log_sfr_84": -1.0282804800927088,
+          "log_ssfr_16": -11.132671461154695,
+          "log_ssfr_50": -10.555447136350205,
+          "log_ssfr_84": -10.107995962047818,
+          "log_age_16": 6.049458439318354,
+          "log_age_50": 7.476621347514019,
+          "log_age_84": 8.641854465977458,
+          "age_16": 6.049458439318354,
+          "age_50": 7.476621347514019,
+          "age_84": 8.641854465977458,
+          "log_tau_16": null,
+          "log_tau_50": null,
+          "log_tau_84": null,
+          "logzsol_16": -1.0528184344768525,
+          "logzsol_50": -0.7794291079044342,
+          "logzsol_84": -0.5649277832508087,
+          "dust2_16": 0.14623124301433563,
+          "dust2_50": 0.25257354974746704,
+          "dust2_84": 0.372321976095438,
+          "dust_index_16": -0.6705831183195115,
+          "dust_index_50": -0.16860975325107574,
+          "dust_index_84": 0.2147824757099151,
+          "dust1_fraction_16": 0.5428942956328392,
+          "dust1_fraction_50": 0.8953804671764374,
+          "dust1_fraction_84": 1.2424803122282029,
+          "log_fagn_16": -4.329793491840363,
+          "log_fagn_50": -3.377455472946167,
+          "log_fagn_84": -2.3750162880420684,
+          "log_agn_tau_16": 1.0368534035682677,
+          "log_agn_tau_50": 1.5322590470314026,
+          "log_agn_tau_84": 1.9307948772907257,
+          "gas_logz_16": -1.731831678032875,
+          "gas_logz_50": -0.0790989100933075,
+          "gas_logz_84": 0.27185545957088464,
+          "duste_qpah_16": 1.074357466697693,
+          "duste_qpah_50": 2.8039932250976562,
+          "duste_qpah_84": 5.242970495700836,
+          "duste_umin_16": 2.7866019444465637,
+          "duste_umin_50": 7.3516552448272705,
+          "duste_umin_84": 14.235125067710872,
+          "log_duste_gamma_16": -3.346614145278931,
+          "log_duste_gamma_50": -2.3773316144943237,
+          "log_duste_gamma_84": -1.3917440310716633,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12,
+          "logsfh": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14
+          ]
+        }
+      ],
+      "aperturephotometry": [
+        {
+          "id": 28,
+          "flux": 10110.397176462746,
+          "flux_error": 10.698118956507864,
+          "magnitude": 13.888079458164437,
+          "magnitude_error": 0.001148812212651791,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 12,
+          "filter": 10,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": [
+        {
+          "id": 8,
+          "logsfr_16": -1.7312981176676219,
+          "logsfr_50": -1.312388749006125,
+          "logsfr_84": -1.0402821211306377,
+          "logsfr_tmin": 1e-09,
+          "logsfr_tmax": 0.0299999133271615,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 9,
+          "logsfr_16": -2.457503314015049,
+          "logsfr_50": -1.5493866932809912,
+          "logsfr_84": -1.0080651362641626,
+          "logsfr_tmin": 0.0299999133271615,
+          "logsfr_tmax": 0.1,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 10,
+          "logsfr_16": -2.3483206806070536,
+          "logsfr_50": -1.4779257174531222,
+          "logsfr_84": -0.9455373547247692,
+          "logsfr_tmin": 0.1,
+          "logsfr_tmax": 0.3320188749394955,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 11,
+          "logsfr_16": -1.9550178197600876,
+          "logsfr_50": -1.2750175363877287,
+          "logsfr_84": -0.8749474112278821,
+          "logsfr_tmin": 0.3320188749394955,
+          "logsfr_tmax": 1.1023653331608834,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 12,
+          "logsfr_16": -1.4540958941010453,
+          "logsfr_50": -0.9177509186706339,
+          "logsfr_84": -0.6566088860845345,
+          "logsfr_tmin": 1.1023653331608834,
+          "logsfr_tmax": 3.6600609768837855,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 13,
+          "logsfr_16": -1.0703822359366668,
+          "logsfr_50": -0.7811745185539963,
+          "logsfr_84": -0.6050851803168977,
+          "logsfr_tmin": 3.6600609768837855,
+          "logsfr_tmax": 12.152093277549053,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        },
+        {
+          "id": 14,
+          "logsfr_16": -1.3519549449005528,
+          "logsfr_50": -0.7750407835866501,
+          "logsfr_84": -0.267316752756454,
+          "logsfr_tmin": 12.152093277549053,
+          "logsfr_tmax": 13.502325863943382,
+          "software_version": "3.0.0",
+          "transient": 1,
+          "aperture": 12
+        }
+      ]
+    },
+    {
+      "aperture": {
+        "id": 13,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_WISE_W4_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 42.66505653041633,
+        "semi_minor_axis_arcsec": 40.91739524790531,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 19,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 29,
+          "flux": 30235.644552233374,
+          "flux_error": 2800.5966011048895,
+          "magnitude": 6.078701922077497,
+          "magnitude_error": 0.10056368153709434,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 13,
+          "filter": 7,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 14,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_PanSTARRS_r_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.01232435187771,
+        "semi_minor_axis_arcsec": 39.1910312938216,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 20,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 30,
+          "flux": 16561.855837482504,
+          "flux_error": 16.26220043476117,
+          "magnitude": 13.35222749997397,
+          "magnitude_error": 0.0010660563155043136,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 14,
+          "filter": 11,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 15,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_SDSS_r_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.01630223147403,
+        "semi_minor_axis_arcsec": 39.195194014997604,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 21,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 31,
+          "flux": 15309.34757364497,
+          "flux_error": 42.122287292151626,
+          "magnitude": 13.437608292229411,
+          "magnitude_error": 0.0029872055025922145,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 15,
+          "filter": 16,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 16,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_SDSS_i_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.014415133506674,
+        "semi_minor_axis_arcsec": 39.19321923334831,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 22,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 32,
+          "flux": 19686.11037899412,
+          "flux_error": 54.179809243360864,
+          "magnitude": 13.164600210392432,
+          "magnitude_error": 0.0029880467884749575,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 16,
+          "filter": 15,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 17,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_SDSS_g_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.02033945183317,
+        "semi_minor_axis_arcsec": 39.19941879509572,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 23,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 33,
+          "flux": 9703.29404674979,
+          "flux_error": 31.20477549635506,
+          "magnitude": 13.932702019109286,
+          "magnitude_error": 0.0034914972784670776,
+          "is_validated": "true",
+          "software_version": "3.0.0",
+          "aperture": 17,
+          "filter": 19,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    },
+    {
+      "aperture": {
+        "id": 18,
+        "ra_deg": 177.6619311732392,
+        "dec_deg": 55.354109454007244,
+        "name": "2026dix_SDSS_z_global",
+        "orientation_deg": -63.824542796408736,
+        "semi_major_axis_arcsec": 41.01534772184214,
+        "semi_minor_axis_arcsec": 39.19419515531992,
+        "type": "global",
+        "software_version": "3.0.0",
+        "cutout": 24,
+        "transient": 1
+      },
+      "sedfittingresults": [],
+      "aperturephotometry": [
+        {
+          "id": 34,
+          "flux": 22091.750749757746,
+          "flux_error": 118.57703389103276,
+          "magnitude": 13.039424663373692,
+          "magnitude_error": 0.005827473211778203,
+          "is_validated": "false",
+          "software_version": "3.0.0",
+          "aperture": 18,
+          "filter": 18,
+          "transient": 1
+        }
+      ],
+      "starformationhistoryresult": []
+    }
+  ],
+  "host_spectra": [
+    {
+      "id": 1,
+      "spectrum_file": "/data/spectra/NGC3913/desi_spectrum.fits",
+      "source": "DESI",
+      "wavelength_min_angstrom": 3600.0,
+      "wavelength_max_angstrom": 9824.000000000524,
+      "redshift": 0.0031760166172169996,
+      "ra_deg": 177.66222524600673,
+      "dec_deg": 55.35387229651723,
+      "spectrum_id": "39633325320571085",
+      "message": null,
+      "software_version": "3.0.0",
+      "host": 1
+    }
+  ],
+  "workflow_tasks": [
+    {
+      "id": 2,
+      "task": {
+        "name": "Cutout download"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:44.569924Z",
+      "last_processing_time_seconds": 17.02,
+      "transient": 1
+    },
+    {
+      "id": 11,
+      "task": {
+        "name": "Transient MWEBV"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:45.479372Z",
+      "last_processing_time_seconds": 0.16,
+      "transient": 1
+    },
+    {
+      "id": 1,
+      "task": {
+        "name": "Host match"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:51.196687Z",
+      "last_processing_time_seconds": 4.88,
+      "transient": 1
+    },
+    {
+      "id": 8,
+      "task": {
+        "name": "Host information"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:52.449622Z",
+      "last_processing_time_seconds": 0.04,
+      "transient": 1
+    },
+    {
+      "id": 14,
+      "task": {
+        "name": "Generate thumbnail"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:52.953034Z",
+      "last_processing_time_seconds": 1.12,
+      "transient": 1
+    },
+    {
+      "id": 12,
+      "task": {
+        "name": "Host MWEBV"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:53.339834Z",
+      "last_processing_time_seconds": 0.13,
+      "transient": 1
+    },
+    {
+      "id": 3,
+      "task": {
+        "name": "Global aperture construction"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:17:54.684843Z",
+      "last_processing_time_seconds": 0.73,
+      "transient": 1
+    },
+    {
+      "id": 4,
+      "task": {
+        "name": "Local aperture photometry"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:00.829201Z",
+      "last_processing_time_seconds": 4.82,
+      "transient": 1
+    },
+    {
+      "id": 6,
+      "task": {
+        "name": "Validate local photometry"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:01.667959Z",
+      "last_processing_time_seconds": 0.02,
+      "transient": 1
+    },
+    {
+      "id": 5,
+      "task": {
+        "name": "Global aperture photometry"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:11.145284Z",
+      "last_processing_time_seconds": 5.11,
+      "transient": 1
+    },
+    {
+      "id": 7,
+      "task": {
+        "name": "Validate global photometry"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:41.728638Z",
+      "last_processing_time_seconds": 15.01,
+      "transient": 1
+    },
+    {
+      "id": 13,
+      "task": {
+        "name": "Crop transient images"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:52.090132Z",
+      "last_processing_time_seconds": 0.77,
+      "transient": 1
+    },
+    {
+      "id": 15,
+      "task": {
+        "name": "Generate thumbnail final"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:18:57.431669Z",
+      "last_processing_time_seconds": 0.5,
+      "transient": 1
+    },
+    {
+      "id": 10,
+      "task": {
+        "name": "Local host SED inference"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:25:45.049249Z",
+      "last_processing_time_seconds": 412.13,
+      "transient": 1
+    },
+    {
+      "id": 16,
+      "task": {
+        "name": "Generate thumbnail SED local"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:25:50.597038Z",
+      "last_processing_time_seconds": 0.51,
+      "transient": 1
+    },
+    {
+      "id": 9,
+      "task": {
+        "name": "Global host SED inference"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:26:16.756877Z",
+      "last_processing_time_seconds": 443.65,
+      "transient": 1
+    },
+    {
+      "id": 17,
+      "task": {
+        "name": "Generate thumbnail SED global"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-02-16T15:26:22.468847Z",
+      "last_processing_time_seconds": 0.53,
+      "transient": 1
+    },
+    {
+      "id": 18,
+      "task": {
+        "name": "Host spectrum download"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-08-12T22:43:15.631289Z",
+      "last_processing_time_seconds": 0.1,
+      "transient": 1
+    },
+    {
+      "id": 19,
+      "task": {
+        "name": "Generate thumbnail host spectrum"
+      },
+      "status": {
+        "message": "processed",
+        "type": "success"
+      },
+      "user_warning": false,
+      "last_modified": "2026-08-12T22:43:19.402559Z",
+      "last_processing_time_seconds": 0.27,
+      "transient": 1
+    }
+  ],
+  "files": {
+    "/data/cutout_cdn/2026dix/2MASS/2MASS_H.fits": "a1ecdbc8694c79475696adda83a092e1",
+    "/data/cutout_cdn/2026dix/2MASS/2MASS_J.fits": "b44927aaa632531a69ec934b6ad69485",
+    "/data/cutout_cdn/2026dix/WISE/WISE_W3.fits": "2ce63a6630242dedbf5af365b671469b",
+    "/data/cutout_cdn/2026dix/WISE/WISE_W1.fits": "3724b2109176eb7d04f5dbecde5b653a",
+    "/data/cutout_cdn/2026dix/2MASS/2MASS_K.fits": "eeb2dc0c096e3746e652076cfad8351b",
+    "/data/cutout_cdn/2026dix/WISE/WISE_W2.fits": "15507ea02969ea08ec002091ce1ebac6",
+    "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_i.fits": "73d62bc56de5f10aafa189e25b5fb9fb",
+    "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_z.fits": "d75d55199795cbb35659721440fe8d6a",
+    "/data/cutout_cdn/2026dix/SDSS/SDSS_u.fits": "897278f512e2daf96944e4370c6becb3",
+    "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_y.fits": "0d2fcdc6a7af895cb657c3956349cffc",
+    "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_g.fits": "d8dc0fc13cc03acf37f0a30760b0b7b8",
+    "/data/cutout_cdn/2026dix/WISE/WISE_W4.fits": "82ffece992698df63d6426e12f872721",
+    "/data/cutout_cdn/2026dix/PanSTARRS/PanSTARRS_r.fits": "8d998abacc46040239233802c2b43042",
+    "/data/cutout_cdn/2026dix/SDSS/SDSS_r.fits": "8791c266d0a7a3d4dc022294785a0723",
+    "/data/cutout_cdn/2026dix/SDSS/SDSS_i.fits": "f7a59f85c6682d4ba310e561568282a4",
+    "/data/cutout_cdn/2026dix/SDSS/SDSS_g.fits": "4e7ead59f037d4e3bc1452cba34d3343",
+    "/data/cutout_cdn/2026dix/SDSS/SDSS_z.fits": "39abeeb341b147323e91bc1dabaacadd",
+    "/data/spectra/NGC3913/desi_spectrum.fits": "95b2c205b51461d192bffcfd8c8d520c",
+    "/data/sed_output/2026dix/2026dix_local.h5": "7dcfac9253ce0b210a24ccd996d1c7ad",
+    "/data/sed_output/2026dix/2026dix_global.h5": "99d838b4c10b006117101cb2dbf41280",
+    "/data/sed_output/2026dix/2026dix_local_chain.npz": "aa21626696841804813e5046a4c35646",
+    "/data/sed_output/2026dix/2026dix_global_chain.npz": "142e20172062d113f26b17298f7b5432",
+    "/data/sed_output/2026dix/2026dix_local_perc.npz": "c5953b72fa58c63c8458afe4a799926b",
+    "/data/sed_output/2026dix/2026dix_global_perc.npz": "5140a72539edb2c1d40c1edf571cf56c",
+    "/data/sed_output/2026dix/2026dix_local_modeldata.npz": "afa652b04813fdaf4218f1d25431f828",
+    "/data/sed_output/2026dix/2026dix_global_modeldata.npz": "649fde9da0a41ae97be9f5ed9d0046e3"
+  }
+}
