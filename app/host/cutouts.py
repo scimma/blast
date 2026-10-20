@@ -354,7 +354,8 @@ def galex_cutout(position, image_size=None, filter=None):
     # avoid masked regions
     center = SkyCoord(obs["s_ra"], obs["s_dec"], unit=u.deg)
     sep = position.separation(center).deg
-    obs = obs[(sep < 0.55) & ~np.char.endswith(obs["dataURL"], ".jpeg")]
+    obs = obs[(sep < 0.55) & ~np.char.endswith(obs["dataURL"], ".jpeg") &\
+              ~np.char.endswith(obs["dataURL"], "rtastar.fits.gz")]
     if len(obs) > 1:
         obs = obs[obs["t_exptime"] == max(obs["t_exptime"])]
 
