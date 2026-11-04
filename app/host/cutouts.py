@@ -194,7 +194,7 @@ def download_and_save_cutouts(
         return status_succeeded
 
     try:
-        results = []
+        results = {}
         if filter_set is None:
             filter_set = Filter.objects.all()
         with ThreadPoolExecutor(max_workers=len(filter_set)) as executor:
@@ -202,15 +202,18 @@ def download_and_save_cutouts(
             for future in as_completed(future_to_filter):
                 filter = future_to_filter[future]
                 try:
-                    result = future.result()
+                    results[filter.name] = future.result()
                 except Exception as exc:
                     print('%r generated an exception: %s' % (filter, exc))
-                    result = status_failed
-                logger.debug(f'''"{filter}" result: "{result}"''')
-                results.append(result)
+                    results[filter.name] = status_failed
+                logger.debug(f'''"{filter}" result: "{results[filter.name]}"''')
 
-        # If any of the cutout downloads failed, mark the entire task as failed
-        if not results or [result for result in results if result != status_succeeded]:
+        # If any cutout download failures occur for filters not in the exception list,
+        # mark the entire task as failed.
+        untolerated_failures = {filter: result for filter, result in results.items()
+                                if result != status_succeeded and filter not in settings.FILTERS_CAN_FAIL}
+        logger.debug(untolerated_failures)
+        if not results or untolerated_failures:
             return status_failed
         else:
             return status_succeeded
@@ -405,7 +408,12 @@ def WISE_cutout(position, image_size=None, filter=None):
         "W4": "2.2e-5",
     }
 
-    url = f"https://irsa.ipac.caltech.edu/SIA?COLLECTION=wise_allwise&POS=circle+{position.ra.deg}+{position.dec.deg}+0.002777&RESPONSEFORMAT=CSV&BAND={band_to_wavelength[filter]}&FORMAT=image/fits"
+    url = (f'https://irsa.ipac.caltech.edu/SIA'
+           f'?COLLECTION=wise_allwise'
+           f'&POS=circle+{position.ra.deg}+{position.dec.deg}+0.002777'
+           f'&RESPONSEFORMAT=CSV'
+           f'&BAND={band_to_wavelength[filter]}'
+           f'&FORMAT=image/fits')
     r = requests.get(url)
     url = None
     for t in r.text.split(","):
