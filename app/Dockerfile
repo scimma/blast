@@ -27,8 +27,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-
     && rm -rf /var/lib/apt/list/*
 
 # Mozilla geckodriver is required for thumbnail generation
-RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.36.0/geckodriver-v0.36.0-linux64.tar.gz && \
-    tar -xvzf geckodriver-v0.36.0-linux64.tar.gz && \
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.37.1/geckodriver-v0.37.1-linux64.tar.gz && \
+    tar -xvzf geckodriver-v0.37.1-linux64.tar.gz && \
     chmod +x geckodriver && \
     mv geckodriver /usr/local/bin/
 
