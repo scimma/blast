@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.1]
+
+### Changed
+
+- Updated geckodriver to v0.37.1 to match Firefox
+- Silenced Bokeh warning messages for known empty plots
+
 ## [3.1.0]
 
 ### Added
