@@ -1691,6 +1691,9 @@ def equal_dicts(first, second, path=""):
     """Recursively print differences between two dictionaries."""
 
     all_keys = first.keys() | second.keys()
+    # If there are no keys then the two are equal
+    if not all_keys:
+        return True
 
     for key in all_keys:
         current_path = f"{path}.{key}" if path else str(key)

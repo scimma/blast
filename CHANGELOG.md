@@ -20,6 +20,10 @@ Types of changes:
 - Updated geckodriver to v0.37.1 to match Firefox
 - Silenced Bokeh warning messages for known empty plots
 
+### Fixed
+
+- Fixed variable initialization bug in `equal_dicts()`
+
 ## [3.1.0]
 
 ### Added
