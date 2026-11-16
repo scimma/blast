@@ -23,6 +23,7 @@ Types of changes:
 ### Fixed
 
 - Fixed variable initialization bug in `equal_dicts()`
+- Handle empty file paths in DatasetSerializer 
 
 ## [3.1.0]
 
