@@ -13,6 +13,16 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.0]
+
+### Added
+
+- Added `FILTERS_CAN_FAIL` environment variable to allow image downloads to fail for specified filters
+  without blocking the workflow. The value is a comma-separated list; for example
+  `WISE_W1,WISE_W2,WISE_W3,WISE_W4`. This addresses an operational scenario where remote data
+  catalogs are intermittently or frequently inaccessible, which blocks the transient workflows that
+  researchers may want to complete in spite of missing some input data.
+
 ## [3.0.0]
 
 ### Added
