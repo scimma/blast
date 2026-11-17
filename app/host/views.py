@@ -3,7 +3,6 @@ import os
 import csv
 import io
 import base64
-import json
 import numpy as np
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
@@ -14,7 +13,6 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
 from django.core.cache import cache
-import urllib.error
 import urllib.request
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
@@ -953,12 +951,11 @@ def team(request):
     return render(request, "team_members.html", context)
 
 
-# @log_usage_metric()
+@log_usage_metric()
 def status_monitor_proxy(request):
     """Server-side pass-through for the status monitor API (it doesn't allow browser CORS reads)."""
     
     try:
-
         data = cache.get("status_monitor_json")
     except Exception:
         logger.warning("cache unavailable for status monitor, fetching directly")
@@ -966,14 +963,14 @@ def status_monitor_proxy(request):
     if data is None:
         try:
             with urllib.request.urlopen("https://monitor.ncsa.illinois.edu/api/status-page/blast", timeout=5) as resp:
-                data = json.load(resp)
-        except (OSError, ValueError):
+                data = resp.read()
+        except OSError:
             return JsonResponse({"error": "status monitor unreachable"}, status=502)
         try:
             cache.set("status_monitor_json", data, 300)
         except Exception:
             pass
-    return JsonResponse(data)
+    return HttpResponse(data, content_type="application/json")
 
 
 @log_usage_metric()
