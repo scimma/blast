@@ -27,6 +27,10 @@ Types of changes:
 - Handle host aliases during dataset import
 - Restored missing S3 credentials for Celery Flower container in Docker Compose deployment
 
+### Removed
+
+- Disabled Silk profiler
+
 ## [3.1.0]
 
 ### Added

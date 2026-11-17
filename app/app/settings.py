@@ -303,8 +303,7 @@ LOGGING['loggers']['mozilla_django_oidc'] = {
 ######################################################################
 # Django Silk profiler
 #
-SILKY_PYTHON_PROFILER = os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true"
-SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
-if SILKY_PYTHON_PROFILER:
-    INSTALLED_APPS.append('silk')
-    MIDDLEWARE.append('silk.middleware.SilkyMiddleware')
+# SILKY_PYTHON_PROFILER = os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true"
+# SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
+# INSTALLED_APPS.append('silk')
+# MIDDLEWARE.append('silk.middleware.SilkyMiddleware')

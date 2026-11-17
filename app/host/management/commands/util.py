@@ -519,7 +519,7 @@ def trigger_host_spectra_downloads():
                          if TaskRegister.objects.filter(task__name='Host information', status__message='processed',
                                                         transient=tr.transient).exists()]
         log_json(f'''{len(host_info_trs)} transients with unprocessed host spectrum download tasks.''', 'info',
-                 [tr.transient.name for tr in trs])
+                 [tr.transient.name for tr in host_info_trs])
         return host_info_trs
 
     def ad_hoc_host_spectrum_download_workflow(transient_name):
