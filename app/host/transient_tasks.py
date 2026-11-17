@@ -1242,9 +1242,10 @@ class GenerateThumbnail(TransientTaskRunner):
                 fig.title.text_font = "sans serif"
                 fig.title.text_font_style = "bold"
                 fig.axis.axis_label_text_font_size = "16px"
-                fig.legend.label_text_font_size = "16px"
-                fig.legend.label_text_font = "sans serif"
-                fig.legend.label_text_font_style = "normal"
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
                 # Export plot to thumbnail
                 canonical_path = render['canonical_path']
                 sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)  # noqa
@@ -1307,9 +1308,10 @@ class GenerateThumbnail(TransientTaskRunner):
                     "marker": "cross",
                 }
                 plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
-                fig.legend.label_text_font_size = "16px"
-                fig.legend.label_text_font = "sans serif"
-                fig.legend.label_text_font_style = "normal"
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
 
                 if transient.host is not None:
                     host_kwargs = {
@@ -1378,9 +1380,10 @@ class GenerateThumbnail(TransientTaskRunner):
                 fig.title.text_font = "sans serif"
                 fig.title.text_font_style = "bold"
                 fig.axis.axis_label_text_font_size = "16px"
-                fig.legend.label_text_font_size = "16px"
-                fig.legend.label_text_font = "sans serif"
-                fig.legend.label_text_font_style = "normal"
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
                 # Export plot to thumbnail
                 canonical_path = render['canonical_path']
                 spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
