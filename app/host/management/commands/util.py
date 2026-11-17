@@ -3,6 +3,10 @@ This module contains functions designed to be invoked as arguments to the `dev`
 custom Django management command. See the `dev.py` module docstring for usage instructions.
 """
 
+import json
+from time import sleep
+from django.db import close_old_connections
+from celery import chain
 from host.models import Status
 from host.models import DatasetRevision
 from host.models import TaskRegister
@@ -11,9 +15,15 @@ from host.object_store import ObjectStore
 from host.transient_tasks import generate_thumbnail_sed_global
 from host.transient_tasks import generate_thumbnail_sed_local
 from host.transient_tasks import dataset_version_control
+from host.transient_tasks import host_spectrum_download
+from host.transient_tasks import generate_thumbnail_host_spec
+from host.transient_tasks import final_progress
 from sparcl.client import SparclClient
 from sparcl.exceptions import TooManyRequests
-from time import sleep
+
+
+def log_json(msg, level='info', data=None):
+    print(json.dumps({'level': level, 'message': msg, 'data': data}, indent=2))
 
 
 def render_homepage():
@@ -493,3 +503,58 @@ def generate_initial_dataset_revisions():
             dataset_version_control.delay(transient.name)
         else:
             print(f'''    "{transient.name}" has at least one dataset revision.''')
+
+
+def trigger_host_spectra_downloads():
+    """This finds all transients whose "Host information" task is processed and "Host spectrum download" task is
+    unprocessed, meaning that the "Host spectrum download" task prerequisites should be satisfied. These download tasks
+    are then launched in async Celery Canvas sub-workflows that include download, thumbnail generation, dataset
+    revision, and final progress recalculation."""
+
+    def query_unprocessed_host_spectrum_downloads():
+        """Returns all "Host spectrum download" TaskRegister objects  that are unprocessed and whose
+        associated transient's "Host information" task is processed."""
+        trs = TaskRegister.objects.filter(task__name="Host spectrum download", status__message='not processed')
+        host_info_trs = [tr for tr in trs
+                         if TaskRegister.objects.filter(task__name='Host information', status__message='processed',
+                                                        transient=tr.transient).exists()]
+        log_json(f'''{len(host_info_trs)} transients with unprocessed host spectrum download tasks.''', 'info',
+                 [tr.transient.name for tr in trs])
+        return host_info_trs
+
+    def ad_hoc_host_spectrum_download_workflow(transient_name):
+        workflow = chain(
+            host_spectrum_download.si(transient_name),
+            generate_thumbnail_host_spec.si(transient_name),
+            dataset_version_control.si(transient_name),
+            final_progress.si(transient_name),
+        )
+        workflow.delay()
+
+    # There are many unexplained failures related to the Django database connections, so this loop will retry in
+    # the event of any failure until the list of transients to process goes to zero.
+    try_again = False
+    attempt_idx = 0
+    while try_again or attempt_idx == 0:
+        try_again = False
+        attempt_idx += 1
+        log_json(f'[Attempt {attempt_idx}] Collecting "Host spectrum download" task registers', level='info')
+        try:
+            host_info_trs = query_unprocessed_host_spectrum_downloads()
+        except Exception as err:
+            log_json('''Error querying TaskRegister objects''', 'error', str(err))
+            try_again = True
+            sleep(10)
+            continue
+        num_trs = len(host_info_trs)
+        for tr_idx, tr in enumerate(host_info_trs):
+            # There are eventually failures due to database connections "already being closed". Using
+            # close_old_connections() is an attempt to avoid failures due to connection timeouts.
+            close_old_connections()
+            try:
+                log_json(f'[{tr_idx + 1}/{num_trs}] Launching host spectrum download task for "{tr.transient.name}"')
+                ad_hoc_host_spectrum_download_workflow(tr.transient.name)
+            except Exception as err:
+                log_json(f'Error launching host spectrum download task for "{tr.transient.name}"', 'error', str(err))
+                try_again = True
+                break
