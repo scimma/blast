@@ -136,6 +136,9 @@ services:
     extends:
       file: docker-compose.yml
       service: flower
+    depends_on:
+      celery-beat:
+        condition: service_healthy
     build:
       context: ../app/
     env_file:
