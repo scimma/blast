@@ -24,6 +24,7 @@ Types of changes:
 
 - Fixed variable initialization bug in `equal_dicts()`
 - Handle empty file paths in DatasetSerializer
+- Handle host aliases during dataset import
 - Restored missing S3 credentials for Celery Flower container in Docker Compose deployment
 
 ## [3.1.0]
