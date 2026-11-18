@@ -171,6 +171,9 @@
   code {
     color:#d15e00;
   }
+  #status-link {
+    display: none;
+  }
 </style>
   {% load bootstrap4 %}
   {% load static %}
@@ -328,8 +331,8 @@
     integrity="
     sha512-as9/oV0X0fT3O2lsRUY+vLRdPV2AZ+hoJqSNfZ/XxnGDJ4rjtAIlFnuMj0Bz/dfqEA/MKO2ahlOj0pUyLqnR6A==" crossorigin="anonymous"></script>
   {% include "latexify/scripts.html" %}
-  <!-- Status monitor indication color changing -->
   <script>
+    /* Query service monitor status and indicate active incidents */
     (function () {
       const link = document.getElementById("status-link");
       const icon = document.getElementById("status-icon");
@@ -342,8 +345,10 @@
           if (active_incidents.length === 0) {
             icon.classList.add('text-success');
             link.title = 'All systems operational';
+            document.getElementById("status-link").style.display = "none"
             return;
           }
+          document.getElementById("status-link").style.display = "block"
           const worst = active_incidents.map(i => i.style).reduce((a,b) => error_types.indexOf(b) > error_types.indexOf(a) ? b : a);
           icon.classList.add(error_types.includes(worst) ? 'text-' + worst : 'text-warning');
           link.title = active_incidents.map(i => i.title).join('\n');

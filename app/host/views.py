@@ -954,7 +954,7 @@ def team(request):
 @log_usage_metric()
 def status_monitor_proxy(request):
     """Server-side pass-through for the status monitor API (it doesn't allow browser CORS reads)."""
-    
+
     try:
         data = cache.get("status_monitor_json")
     except Exception:
