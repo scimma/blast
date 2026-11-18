@@ -92,8 +92,7 @@ WSGI_APPLICATION = "app.wsgi.application"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-tn6@rg(#694!6p^c!^0ekz5d)jyxk(dxtx-z9m2%$h&w$p0#+)")
-# DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "false").lower() == "true"
 # Internationalization & timezone
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
