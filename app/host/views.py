@@ -962,7 +962,7 @@ def status_monitor_proxy(request):
         data = None
     if data is None:
         try:
-            with urllib.request.urlopen("https://monitor.ncsa.illinois.edu/api/status-page/blast", timeout=5) as resp:
+            with urllib.request.urlopen(settings.SERVICE_MONITOR_API_URL, timeout=5) as resp:
                 data = resp.read()
         except OSError:
             return JsonResponse({"error": "status monitor unreachable"}, status=502)
