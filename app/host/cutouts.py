@@ -297,7 +297,6 @@ def panstarrs_cutout(position, image_size=None, filter=None):
                 extension = ext
         logger.debug(f'''FITS extension: {extension}''')
         if extension > 0:
-            from astropy.io import fits
             primary = fits.PrimaryHDU(
                 data=fits_image[extension].data,
                 header=fits_image[extension].header.copy(),
