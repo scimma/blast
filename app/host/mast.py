@@ -36,23 +36,18 @@ class MastCutoutAPI():
         for key in config.keys():
             if key in conf:
                 config[key] = conf[key]
-                # No value can be empty
-                assert config[key]
         self.config = DotMap(config)
-        # # API token may be provided by env var
-        # if not self.config.api_token:
-        #     self.config.api_token = os.getenv('MAST_API_TOKEN', '')
-        assert self.config.api_token
         # Configure HTTP session
         self.session = requests.Session()
         self.session.headers.update({"Authorization": f"Bearer {self.config.api_token}"})
 
     def fetch_data(self):
-        logger.debug(f'''Submitting async MAST cutout job (PanSTARRS {self.config.filters})...''')
+        filter_str = ','.join([f'PanSTARRS_{filter}' for filter in self.config.filters])
+        logger.debug(f'''Submitting async MAST cutout job ({filter_str})...''')
         self.job_id = self.submit_async_job()
-        logger.debug('''Polling async MAST cutout job (PanSTARRS {self.config.filters})...''')
+        logger.debug(f'''Polling async MAST cutout job ({filter_str})...''')
         final_phase = self.wait_for_job(self.job_id)
-        logger.debug(f'''MAST cutout job (PanSTARRS {self.config.filters}) finished with phase: {final_phase}''')
+        logger.debug(f'''MAST cutout job ({filter_str}) finished with phase: {final_phase}''')
         if final_phase != "COMPLETED":
             error_response = self.session.get(os.path.join(self.config.async_api_url, self.job_id, 'error'),
                                               timeout=self.config.api_timeout)
@@ -144,19 +139,10 @@ class MastCutoutAPI():
         """Poll job phase until completion or timeout."""
         terminal_phases = {"COMPLETED", "ERROR", "ABORTED"}
         start = time.monotonic()
-
         while True:
             phase = self.get_job_phase(job_id)
-            # summary = self.get_results_summary(job_id)
-            # completed = summary.get("completed_jobs", 0)
-            # total = summary.get("total_jobs", 0)
-            # executing = summary.get("executing_jobs", 0)
-            # queued = summary.get("queued_jobs", 0)
-
             if phase in terminal_phases:
                 return phase
-
             if time.monotonic() - start > self.config.api_polling_timeout:
                 raise TimeoutError(f"Job {job_id} did not finish within {self.config.api_polling_timeout} seconds")
-
             time.sleep(self.config.api_polling_interval_sec)
