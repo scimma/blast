@@ -48,11 +48,11 @@ class MastCutoutAPI():
         self.session.headers.update({"Authorization": f"Bearer {self.config.api_token}"})
 
     def fetch_data(self):
-        logger.debug('''Submitting async MAST cutout job...''')
+        logger.debug(f'''Submitting async MAST cutout job (PanSTARRS {self.config.filters})...''')
         self.job_id = self.submit_async_job()
-        logger.debug('''Polling async MAST cutout job...''')
+        logger.debug('''Polling async MAST cutout job (PanSTARRS {self.config.filters})...''')
         final_phase = self.wait_for_job(self.job_id)
-        logger.debug(f'''MAST cutout job finished with phase: {final_phase}''')
+        logger.debug(f'''MAST cutout job (PanSTARRS {self.config.filters}) finished with phase: {final_phase}''')
         if final_phase != "COMPLETED":
             error_response = self.session.get(os.path.join(self.config.async_api_url, self.job_id, 'error'),
                                               timeout=self.config.api_timeout)
@@ -62,7 +62,6 @@ class MastCutoutAPI():
         cutouts = results_payload.get("results", [])
         fits_data = []
         for idx, cutout in enumerate(cutouts):
-            logger.debug(f'''PanSTARRS cutout metadata: {json.dumps(cutout)}''')
             try:
                 fits_data.append({
                     'metadata': cutout,
@@ -112,7 +111,6 @@ class MastCutoutAPI():
             params["stack_file"] = stack_files
         if warp_files:
             params["warp_file"] = warp_files
-        logger.debug(f'''ps1 params: {params}''')
         return params
 
     def get_job_phase(self, job_id: str) -> str:

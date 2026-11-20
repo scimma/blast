@@ -28,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .models import Cutout
 from .models import Filter
-
+from host.mast import MastCutoutAPI
 from host.log import get_logger
 logger = get_logger(__name__)
 
@@ -269,7 +269,6 @@ def panstarrs_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    from host.mast import MastCutoutAPI
     api = MastCutoutAPI({
         'api_token': settings.MAST_API_TOKEN,
         'positions': [(position.ra.degree, position.dec.degree)],
@@ -280,7 +279,7 @@ def panstarrs_cutout(position, image_size=None, filter=None):
     try:
         # Assume we are constrained to a single cutout per MAST job for now.
         fits_datum = fits_data[0]
-        logger.debug(f'''PanSTARRS cutout metadata: {json.dumps(fits_datum['metadata'])}''')
+        logger.debug(f'''PanSTARRS_{filter} cutout metadata: {json.dumps(fits_datum['metadata'])}''')
         fits_image = fits_datum['fits']
         extension = 0
         for ext in range(len(fits_image)):
@@ -295,7 +294,6 @@ def panstarrs_cutout(position, image_size=None, filter=None):
             data = fits_image[ext].data
             if data is not None:
                 extension = ext
-        logger.debug(f'''FITS extension: {extension}''')
         if extension > 0:
             primary = fits.PrimaryHDU(
                 data=fits_image[extension].data,
