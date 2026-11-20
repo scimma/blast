@@ -12,6 +12,8 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
+import urllib.request
 from django_tables2 import RequestConfig
 from host.forms import ImageGetForm
 from host.forms import TransientUploadForm
@@ -947,6 +949,28 @@ def acknowledgements(request):
 def team(request):
     context = {}
     return render(request, "team_members.html", context)
+
+
+@log_usage_metric()
+def status_monitor_proxy(request):
+    """Server-side pass-through for the status monitor API (it doesn't allow browser CORS reads)."""
+
+    try:
+        data = cache.get("status_monitor_json")
+    except Exception:
+        logger.warning("cache unavailable for status monitor, fetching directly")
+        data = None
+    if data is None:
+        try:
+            with urllib.request.urlopen(settings.SERVICE_MONITOR_API_URL, timeout=5) as resp:
+                data = resp.read()
+        except OSError:
+            return JsonResponse({"error": "status monitor unreachable"}, status=502)
+        try:
+            cache.set("status_monitor_json", data, 300)
+        except Exception:
+            pass
+    return HttpResponse(data, content_type="application/json")
 
 
 @log_usage_metric()

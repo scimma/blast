@@ -10,9 +10,15 @@ def app_version(prefix):
     return f'''{prefix}{settings.APP_VERSION}'''
 
 
+@register.simple_tag(name="service_monitor_url")
+def service_monitor_url():
+    return f'''{settings.SERVICE_MONITOR_URL}'''
+
+
 @register.simple_tag(name="support_email")
 def support_email():
     return settings.SUPPORT_EMAIL
+
 
 @register.filter
 def get_item(dictionary, key):

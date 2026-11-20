@@ -171,6 +171,9 @@
   code {
     color:#d15e00;
   }
+  #status-link {
+    display: none;
+  }
 </style>
   {% load bootstrap4 %}
   {% load static %}
@@ -214,7 +217,12 @@
       </div>
       <div class="container-fluid d-flex flex-row-reverse">
         <ul class="navbar-nav ml-auto d-flex align-items-center">
-          
+          <li class="nav-item">
+            <a class="nav-link" id="status-link" href="{% service_monitor_url %}" target="_blank" title="Service Status">
+              <i class="bi bi-circle-fill" id="status-icon"></i> Status
+            </a>
+          </li>
+
           {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}"> Admin </a>
@@ -323,6 +331,35 @@
     integrity="
     sha512-as9/oV0X0fT3O2lsRUY+vLRdPV2AZ+hoJqSNfZ/XxnGDJ4rjtAIlFnuMj0Bz/dfqEA/MKO2ahlOj0pUyLqnR6A==" crossorigin="anonymous"></script>
   {% include "latexify/scripts.html" %}
+  <script>
+    /* Query service monitor status and indicate active incidents */
+    (function () {
+      const link = document.getElementById("status-link");
+      const icon = document.getElementById("status-icon");
+
+      const error_types = ['info', 'warning', 'danger']; // Uptime Kuma incident types
+      fetch("{% url 'status_monitor_proxy' %}")
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(data => {
+          const active_incidents = (data.incidents || []).filter(i => i.active);
+          if (active_incidents.length === 0) {
+            icon.classList.add('text-success');
+            link.title = 'All systems operational';
+            document.getElementById("status-link").style.display = "none"
+            return;
+          }
+          document.getElementById("status-link").style.display = "block"
+          const worst = active_incidents.map(i => i.style).reduce((a,b) => error_types.indexOf(b) > error_types.indexOf(a) ? b : a);
+          icon.classList.add(error_types.includes(worst) ? 'text-' + worst : 'text-warning');
+          link.title = active_incidents.map(i => i.title).join('\n');
+        })
+        .catch(err => {
+          console.error('Status check failed:', err);
+          icon.classList.add('text-muted');
+          link.title = 'Status monitor unreachable';
+        });
+    })();
+  </script>
   {% block script %}{% endblock %}
 </body>
 </html>

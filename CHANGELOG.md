@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.2]
+
+### Added
+
+- Added a status monitor indicator to the nav bar to alert users of any service incidents posted
+  on the external monitoring service configured in the settings.
+
 ## [3.1.1]
 
 ### Changed
