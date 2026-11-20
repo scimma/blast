@@ -49,6 +49,9 @@ USAGE_METRICS_IGNORE_REQUESTS = [
         'method': 'GET',
     },
 ]
+# API token used to access the MAST Cutouts API, one of the Barbara A. Mikulski Archive for Space Telescopes’ (MAST)
+# web service APIs. See https://cutouts.mast.stsci.edu/docs/ for docs.
+MAST_API_TOKEN = os.getenv('MAST_API_TOKEN', '')
 
 ######################################################################
 # Django apps and middlewares

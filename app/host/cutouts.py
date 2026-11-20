@@ -1,4 +1,5 @@
 import os
+import json
 import re
 import time
 from io import BytesIO
@@ -7,7 +8,6 @@ import astropy.table as at
 import astropy.units as u
 import astropy.utils.data
 import numpy as np
-import pandas as pd
 import requests
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -222,34 +222,6 @@ def download_and_save_cutouts(
         return status_failed
 
 
-def panstarrs_image_filename(position, image_size=None, filter=None):
-    """Query PanSTARRS service to get a list of image names
-
-    Parameters
-    ----------
-    :position : :class:`~astropy.coordinates.SkyCoord`
-        Target centre position of the cutout image to be downloaded.
-    :size : int: cutout image size in pixels.
-    :filter: str: PanSTARRS filter (g r i z y)
-    Returns
-    -------
-    :filename: str: file name of the cutout
-    """
-
-    service = "https://ps1images.stsci.edu/cgi-bin/ps1filenames.py"
-    url = (
-        f"{service}?ra={position.ra.degree}&dec={position.dec.degree}"
-        f"&size={image_size}&format=fits&filters={filter}"
-    )
-
-    ### was having SSL errors with pandas, so let's run it through requests
-    ### optionally, can edit to do this in an unsafe way
-    r = requests.get(url, stream=True)
-    r.raw.decode_content = True
-    filename_table = pd.read_csv(r.raw, sep=r"\s+")["filename"]
-    return filename_table[0] if len(filename_table) > 0 else None
-
-
 def hips_cutout(position, survey, image_size=None):
     """
     Download fits image from hips2fits service.
@@ -284,7 +256,7 @@ def hips_cutout(position, survey, image_size=None):
 
 def panstarrs_cutout(position, image_size=None, filter=None):
     """
-    Download PanSTARRS cutout from their own service
+    Download PanSTARRS cutout from the MAST cutout service service
 
     Parameters
     ----------
@@ -297,32 +269,43 @@ def panstarrs_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    filename = panstarrs_image_filename(position, image_size=image_size, filter=filter)
-    if filename is not None:
-        service = "https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
-        fits_url = (
-            f"{service}ra={position.ra.degree}&dec={position.dec.degree}"
-            f"&size={image_size}&format=fits&red={filename}"
-        )
-        try:
-            r = requests.get(fits_url, stream=True)
-        except Exception as err:
-            logger.error(f'Error downloading PanSTARRS image: "{err}". Retrying...')
-            time.sleep(5)
-            r = requests.get(fits_url, stream=True)
-        fits_image = fits.open(BytesIO(r.content))
-        # Remove the mutable download date field from the FITS header
-        # for the sake of dataset version control.
+    from host.mast import MastCutoutAPI
+    api = MastCutoutAPI({
+        'api_token': settings.MAST_API_TOKEN,
+        'positions': [(position.ra.degree, position.dec.degree)],
+        'size_px': image_size,
+        'filters': filter.split(','),
+    })
+    fits_data = api.fetch_data()
+    try:
+        # Assume we are constrained to a single cutout per MAST job for now.
+        fits_datum = fits_data[0]
+        logger.debug(f'''PanSTARRS cutout metadata: {json.dumps(fits_datum['metadata'])}''')
+        fits_image = fits_datum['fits']
         extension = 0
-        header = fits_image[extension].header
-        keyword = 'DATE'
-        if keyword in header:
-            header[keyword] = ''
-        else:
-            raise KeyError(f"PanSTARRS FITS file header keyword {keyword!r} was not found in extension {extension!r}.")
-    else:
+        for ext in range(len(fits_image)):
+            # Remove the mutable date fields from the FITS header for the sake of dataset version control.
+            # For example:
+            #     CHECKSUM= 'Qai2SVh2Qah2QUh2'   / HDU checksum updated 2026-11-19T19:29:48
+            #     DATASUM = '1230604659'         / data unit checksum updated 2026-11-19T19:29:48
+            for keyword, split_str in [('CHECKSUM', '/ HDU checksum updated'),
+                                       ('DATASUM', '/ data unit checksum updated')]:
+                if keyword in fits_image[ext].header:
+                    fits_image[ext].header[keyword] = fits_image[ext].header[keyword].split(split_str)[0]
+            data = fits_image[ext].data
+            if data is not None:
+                extension = ext
+        logger.debug(f'''FITS extension: {extension}''')
+        if extension > 0:
+            from astropy.io import fits
+            primary = fits.PrimaryHDU(
+                data=fits_image[extension].data,
+                header=fits_image[extension].header.copy(),
+            )
+            fits_image = fits.HDUList([primary])
+    except Exception as err:
+        logger.error(f'''Error fetching cutout data from MAST cutout service: {err}''')
         fits_image = None
-
     return fits_image
 
 
