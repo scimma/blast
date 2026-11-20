@@ -13,6 +13,13 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.3]
+
+### Changed
+
+- Switched to the new [MAST Image Cutout Service](https://cutouts.mast.stsci.edu/docs/api/cutouts/async.html)
+  async API to download PanSTARRS data.
+
 ## [3.1.2]
 
 ### Added
