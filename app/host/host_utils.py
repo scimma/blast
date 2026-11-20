@@ -914,6 +914,7 @@ def import_transient_info(transient_data_archive):
         # TODO: Consider writing a separate "DatasetInputSerializer" class to perform validation prior to processing.
         transient_data = dataset.pop('transient')
         host_data = dataset.pop('host')
+        host_aliases = host_data.pop('aliases')
         surveys = dataset.pop('surveys')
         filters = dataset.pop('filters')
         cutouts = dataset.pop('cutouts')
@@ -1007,15 +1008,16 @@ def import_transient_info(transient_data_archive):
             if not host:
                 host = Host.objects.create(**host_data)
                 # Create Alias objects
-                if 'aliases' in host_data:
-                    for alias in host_data['aliases']:
-                        Alias.objects.create(alias=alias, host=host)
+                for alias in host_aliases:
+                    Alias.objects.create(alias=alias, host=host)
             # Create host spectra
             for spectrum in host_spectra:
                 if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['spectrum_id']):
                     logger.info('''An existing host spectrum was found with ID '''
                                 f'''"{spectrum['spectrum_id']}"''')
                     continue
+                spectrum.pop('id')
+                spectrum.pop('host')
                 HostSpectrum.objects.create(host=host, **spectrum)
         # Verify that the Cutout objects do not exist (by name).
         for cutout in cutouts:
@@ -1691,6 +1693,9 @@ def equal_dicts(first, second, path=""):
     """Recursively print differences between two dictionaries."""
 
     all_keys = first.keys() | second.keys()
+    # If there are no keys then the two are equal
+    if not all_keys:
+        return True
 
     for key in all_keys:
         current_path = f"{path}.{key}" if path else str(key)

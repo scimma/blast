@@ -30,7 +30,8 @@ from host.models import HostSpectrum
 from bokeh.models import CustomJS
 from host.object_store import ObjectStore
 from django.conf import settings
-from bokeh.io import curdoc
+from bokeh.core.validation import silence
+from bokeh.core.validation.warnings import MISSING_RENDERERS
 
 # import extinction
 # from bokeh.models import Circle
@@ -667,7 +668,11 @@ def plot_host_spectrum(host_spectrum=None, spectrum_file=None):
     else:
         fig.title = "Data Not Available"
 
+    # Silence emptoy plot warnings that pollute the logs.
+    # ref: https://docs.bokeh.org/en/2.4.1/docs/reference/core/validation.html#bokeh-core-validation
+    silence(MISSING_RENDERERS, True)
     script, div = components(fig)
+    silence(MISSING_RENDERERS, False)
     return {"bokeh_host_spec_script": script, "bokeh_host_spec_div": div, "fig": fig}
 
 

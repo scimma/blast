@@ -4,7 +4,7 @@ from pathlib import Path
 ######################################################################
 # Blast application config
 #
-APP_VERSION = '3.1.0'
+APP_VERSION = '3.1.1'
 # Data paths
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
@@ -303,7 +303,7 @@ LOGGING['loggers']['mozilla_django_oidc'] = {
 ######################################################################
 # Django Silk profiler
 #
-SILKY_PYTHON_PROFILER = os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true"
-SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
-INSTALLED_APPS.append('silk')
-MIDDLEWARE.append('silk.middleware.SilkyMiddleware')
+# SILKY_PYTHON_PROFILER = os.environ.get("SILKY_PYTHON_PROFILER", "false").lower() == "true"
+# SILKY_INTERCEPT_PERCENT = int(os.environ.get("SILKY_INTERCEPT_PERCENT", "0"))
+# INSTALLED_APPS.append('silk')
+# MIDDLEWARE.append('silk.middleware.SilkyMiddleware')

@@ -195,6 +195,10 @@ services:
     platform: linux/amd64
     image: ${BLAST_IMAGE:-hub.ncsa.illinois.edu/blast/blast:latest}
     command: bash entrypoints/docker-entrypoint.flower.sh
+    environment:
+      <<: [
+        *env-s3,
+      ]
     networks:
       - internal
     ports:

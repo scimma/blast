@@ -42,7 +42,7 @@ from host.tables import TransientTable
 from host.tasks import import_transient_list
 from host.tasks import retrigger_transient
 from host.object_store import ObjectStore
-from silk.profiling.profiler import silk_profile
+# from silk.profiling.profiler import silk_profile
 from django.template.loader import render_to_string
 from django.conf import settings
 from celery import shared_task
@@ -140,7 +140,7 @@ class TransientFilter(django_filters.FilterSet):
         return qs
 
 
-@silk_profile(name="List transients")
+# @silk_profile(name="List transients")
 @log_usage_metric()
 def transient_list(request):
     transients = Transient.objects.order_by("-public_timestamp")
@@ -579,8 +579,8 @@ def add_transient(request):
     return render(request, "add_transient.html", context)
 
 
+# @silk_profile(name="Transient result for some transient")
 @log_usage_metric()
-@silk_profile(name="Transient result for some transient")
 def results(request, transient_name):
     param_var_ptype = (
         [

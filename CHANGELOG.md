@@ -13,6 +13,24 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.1]
+
+### Changed
+
+- Updated geckodriver to v0.37.1 to match Firefox
+- Silenced Bokeh warning messages for known empty plots
+
+### Fixed
+
+- Fixed variable initialization bug in `equal_dicts()`
+- Handle empty file paths in DatasetSerializer
+- Handle host aliases during dataset import
+- Restored missing S3 credentials for Celery Flower container in Docker Compose deployment
+
+### Removed
+
+- Disabled Silk profiler
+
 ## [3.1.0]
 
 ### Added

@@ -229,7 +229,9 @@ class DatasetSerializer(serializers.Serializer):
         """Calculate checksum of file objects in data store"""
         object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
         file_obj = self.s3.object_info(object_key)
-        etag = file_obj.etag
+        etag = None
+        if file_obj:
+            etag = file_obj.etag
         return etag
 
     class DatasetMetadataSerializer(serializers.Serializer):
@@ -425,4 +427,4 @@ class DatasetSerializer(serializers.Serializer):
                                 models.SEDFittingResult.objects.filter(transient=transient_obj) if record.percentiles_file])  # noqa
         canonical_paths.extend([record.model_file for record in
                                 models.SEDFittingResult.objects.filter(transient=transient_obj) if record.model_file])
-        return {str(path): self.get_checksum(str(path)) for path in canonical_paths}
+        return {str(path): self.get_checksum(str(path)) for path in canonical_paths if path}
