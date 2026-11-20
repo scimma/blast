@@ -1,7 +1,10 @@
+from unittest import mock
+
 from django.test import TestCase
 from sedpy.observate import Filter as SedpyFilter
 
 from ..models import Filter
+from ..transient_tasks import GlobalHostSEDFitting
 
 
 class FilterTest(TestCase):
@@ -26,6 +29,32 @@ class PropsectorBuildObsTest(TestCase):
 
     def test_build_obs(self):
         pass
+
+
+class HostSEDFittingNoValidDataTest(TestCase):
+
+    def test_no_valid_data_returns_not_enough_filters(self):
+        """
+        If the S/N cut drops every filter, prospect's fix_obs raises
+        AssertionError("No valid data to fit..."); the task should report
+        "not enough filters" instead of failing.
+        """
+        transient = mock.MagicMock(best_redshift=0.1)
+        transient.name = "TEST_NO_VALID_DATA"
+        no_valid = AssertionError("No valid data to fit: check the sign of the masks.")
+        with mock.patch("host.transient_tasks.Aperture") as aperture_cls,                 mock.patch("host.transient_tasks.build_obs", side_effect=no_valid):
+            aperture_cls.objects.filter.return_value = [mock.MagicMock()]
+            status = GlobalHostSEDFitting()._run_process(transient, mode="test")
+        self.assertEqual(status, "not enough filters")
+
+    def test_other_assertion_errors_still_raise(self):
+        transient = mock.MagicMock(best_redshift=0.1)
+        transient.name = "TEST_OTHER_ASSERT"
+        with mock.patch("host.transient_tasks.Aperture") as aperture_cls,                 mock.patch("host.transient_tasks.build_obs",
+                           side_effect=AssertionError("something else")):
+            aperture_cls.objects.filter.return_value = [mock.MagicMock()]
+            with self.assertRaises(AssertionError):
+                GlobalHostSEDFitting()._run_process(transient, mode="test")
 
 
 # class SEDFittingFullTest(TestCase):

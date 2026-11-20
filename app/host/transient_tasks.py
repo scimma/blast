@@ -1025,7 +1025,14 @@ class HostSEDFitting(TransientTaskRunner):
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")
 
-        observations = build_obs(transient, aperture_type, use_mag_offset=False)
+        try:
+            observations = build_obs(transient, aperture_type, use_mag_offset=False)
+        except AssertionError as err:
+            # prospect asserts ndof > 0; every filter was dropped (e.g. by the S/N cut)
+            if "No valid data to fit" not in str(err):
+                raise
+            logger.warning(f"No usable photometry to fit for {transient.name} ({aperture_type}): {err}")
+            return "not enough filters"
         model_components = build_model(observations)
 
         if mode == "test" and not sbipp:
