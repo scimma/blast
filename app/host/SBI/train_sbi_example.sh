@@ -24,9 +24,11 @@
 
 set -euo pipefail
 
+set +u                            # conda's activate.d hooks use unset variables
 eval "$(conda shell.bash hook)"   # makes `conda activate` work in a batch shell
 conda activate blast
-cd $BLAST_HOME_DIR
+set -u
+cd $BLAST_HOME_DIR/app
 
 # Default output file; used when --outfile is not given on the command line.
 export OUTFILE=${OUTFILE:-host/SBI/sbi_phot_${SLURM_ARRAY_TASK_ID:-1}.h5}
