@@ -8,7 +8,10 @@ can result in large uncertainties, particularly in regimes where small increment
 in redshift yield large changes in magnitude.
 
 Training is performed by running the :code:`train_sbi.py` script in the :code:`app/host/SBI`
-subdirectory.  First, run the simulations in 10 batches of 150000 each:
+subdirectory.  Each redshift range will need to be either trained individually, or you will need
+to edit the example below to avoid file naming collisions.
+
+First, run the simulations in 10 batches of 150000 each:
 
    .. code ::
 
@@ -21,5 +24,7 @@ Once these have finished, train the model using those files:
       sbatch train_sbi_example.sh --do-train --train-files 'host/SBI/sbi_phot_*.h5' --model-file host/SBI/SBI_model_0015_0200.pt
 
 The SBI example will need to be adapted to your cluster environment.  It assumes you have a conda environment
-called "blast" and an environment variable $BLAST_HOME_DIR for your top-level blast code directory.
+called "blast" and an environment variable $BLAST_HOME_DIR for your top-level blast code directory.  The details
+of the slurm environment/partitions/nodes will also need to be adjusted.
 
+Once the new model has been trained, it will need to be added to the S3 bucket for use in Blast.
