@@ -102,7 +102,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env.dev
+.env*
+!.env.default
+!.env.ci
 .venv
 #env/
 venv/
@@ -144,18 +146,18 @@ data/*
 !data/cutout_cdn/
 !data/transmission/
 data/cutout_cdn/*
-!data/cutout_cdn/2010h/
-data/cutout_cdn/2010h/*
+!data/cutout_cdn/2010H/
+data/cutout_cdn/2010H/*
 !data/cutout_cdn/2010ag/
 data/cutout_cdn/2010ag/*
 !data/cutout_cdn/2010ai/
 data/cutout_cdn/2010ai/*
-!data/cutout_cdn/2010h/*
+!data/cutout_cdn/2010H/*
 !data/cutout_cdn/2010ag/*
 !data/cutout_cdn/2010ai/*
-!data/sed_output/2010h/*
+!data/sed_output/2010H/*
 
-static/
+# static/
 
 .DS_Store
 
@@ -167,3 +169,6 @@ batch/*
 !batch/docker-entrypoint.batch.sh
 
 validation/validation_data/jones+18_panstarrs_g_cutouts/
+app/sbi-logs/
+
+.vscode/

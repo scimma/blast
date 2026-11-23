@@ -1,0 +1,87 @@
+name: blast-prod
+
+networks:
+  internal:
+    external: false
+
+services:
+
+  nginx:
+    extends:
+      file: docker-compose.yml
+      service: nginx
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  influxdb:
+    extends:
+      file: docker-compose.yml
+      service: influxdb
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  celery-worker:
+    extends:
+      file: docker-compose.yml
+      service: celery-worker
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  celery-beat:
+    extends:
+      file: docker-compose.yml
+      service: celery-beat
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod
+
+  flower:
+    extends:
+      file: docker-compose.yml
+      service: flower
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.prod

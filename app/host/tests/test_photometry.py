@@ -1,29 +1,22 @@
 from django.test import TestCase
 
 from ..models import AperturePhotometry
-from ..models import TaskRegister
 from ..models import Transient
 from ..transient_tasks import GlobalAperturePhotometry
 from ..transient_tasks import LocalAperturePhotometry
 from ..transient_tasks import ValidateGlobalPhotometry
 from ..transient_tasks import ValidateLocalPhotometry
+from ..host_utils import import_transient_info
 
 
 class TestValidatePhotometry(TestCase):
-    fixtures = [
-        "../fixtures/initial/setup_survey_data.yaml",
-        "../fixtures/initial/setup_filter_data.yaml",
-        "../fixtures/initial/setup_catalog_data.yaml",
-        "../fixtures/initial/setup_status.yaml",
-        "../fixtures/initial/setup_tasks.yaml",
-        "../fixtures/initial/setup_acknowledgements.yaml",
-        "../fixtures/test/test_2010h_onefilter.yaml",
-    ]
+    def setUp(self):
+        with open('''/data/transient_datasets/2026dix.tar.gz''', 'rb') as dataset_fileobj:
+            import_transient_info(dataset_fileobj)
 
     def test_validate_local_photometry(self):
-
-        transient = Transient.objects.get(name="2010H")
-        vlp_cls = ValidateLocalPhotometry()
+        transient = Transient.objects.get(name="2026dix")
+        vlp_cls = ValidateLocalPhotometry(transient_name=transient.name)
 
         status_message = vlp_cls._run_process(transient)
 
@@ -41,11 +34,11 @@ class TestValidatePhotometry(TestCase):
         assert status_message == "processed"
 
     def test_validate_global_photometry(self):
-
-        transient = Transient.objects.get(name="2010H")
-        vgp_cls = ValidateGlobalPhotometry()
+        transient = Transient.objects.get(name="2026dix")
+        vgp_cls = ValidateGlobalPhotometry(transient_name=transient.name)
 
         status_message = vgp_cls._run_process(transient)
+        assert status_message == "processed"
 
         not_validated_global_aperture_photometry = AperturePhotometry.objects.filter(
             transient=transient, aperture__type="global", is_validated=False
@@ -54,20 +47,20 @@ class TestValidatePhotometry(TestCase):
         assert len(not_validated_global_aperture_photometry) == 0
 
     def test_global_aperture_photometry(self):
-        transient = Transient.objects.get(name="2010H")
-        apphot_cls = GlobalAperturePhotometry()
+        transient = Transient.objects.get(name="2026dix")
+        apphot_cls = GlobalAperturePhotometry(transient_name=transient.name)
 
         status_message = apphot_cls._run_process(transient)
 
         assert status_message == "processed"
 
     def test_local_aperture_redshifts(self):
-        transient = Transient.objects.get(name="2010H")
+        transient = Transient.objects.get(name="2026dix")
         transient.redshift = None
         transient.host.redshift = None
         transient.host.photometric_redshift = None
         transient.save()
-        apphot_cls = LocalAperturePhotometry()
+        apphot_cls = LocalAperturePhotometry(transient_name=transient.name)
 
         status_message = apphot_cls._run_process(transient)
 

@@ -1,12 +1,15 @@
+.. _software_acknowledgements:
+
 Software
 ========
 
 Blast is largely glue between already established software projects. It could not
-exist without them. If you use blast, you must acknowledge and cite all
-of the following projects which blast uses.
+exist without them. If you use Blast, you must acknowledge and cite all
+of the following projects which Blast uses.  We include a file with all citations
+in `BibTex format <../_static/acknowledgements.bib>`_.
 
-If you see your software being used in blast and we have not cited you properly,
-please raise an `issue on github <https://github.com/astrophpeter/blast/issues>`_.
+If you see your software being used in Blast and we have not cited you properly,
+please raise an `issue on GitHub <https://github.com/scimma/blast/issues>`_.
 
 .. list-table::
    :widths: 22 25 25
@@ -21,6 +24,9 @@ please raise an `issue on github <https://github.com/astrophpeter/blast/issues>`
    * - NumPy
      - `<https://github.com/numpy/numpy>`_
      - `<https://ui.adsabs.harvard.edu/abs/2020Natur.585..357H/abstract>`_
+   * - Bokeh
+     - `<https://bokeh.org/>`_
+     - 
    * - GHOST
      - `<https://github.com/uiucsn/astro_ghost>`_
      - `<https://ui.adsabs.harvard.edu/abs/2021ApJ...908..170G/abstract>`_
@@ -51,3 +57,12 @@ please raise an `issue on github <https://github.com/astrophpeter/blast/issues>`
    * - Python FSPS
      - `<https://github.com/dfm/python-fsps/tree/v0.4.1rc1>`_
      - `<https://doi.org/10.5281/zenodo.4737461>`_
+   * - SBI
+     - `<https://sbi-dev.github.io/sbi/latest/>`_
+     - `<https://doi.org/10.21105/joss.02505>`_
+   * - SBI++
+     - `<https://github.com/wangbingjie/sbi_pp>`_
+     - `<https://doi.org/10.3847/2041-8213/ace361>`_
+   * - Prost
+     - `<https://github.com/alexandergagliano/Prost>`_
+     - `<https://astro-prost.readthedocs.io/>`_

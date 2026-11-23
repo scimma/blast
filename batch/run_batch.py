@@ -4,11 +4,12 @@ import sys
 import time
 from urllib.request import Request
 from urllib.request import urlopen
+from urllib.error import HTTPError
 
 
 def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
     """
-    Post transients from csv file to blast for processing.
+    Post transients from csv file to Blast for processing.
 
     Parameters
         path_to_input_csv (str): path to input transient csv file.
@@ -25,8 +26,11 @@ def post_transient_from_csv(path_to_input_csv: str, base_url: str) -> None:
             try:
                 response = urlopen(Request(post_url, method="POST"))
                 data = json.loads(response.read())
-                post_message = data.get("message", "no message returned by blast")
+                post_message = data.get("message", "no message returned by Blast")
                 print(f"{post_message}")
+            except HTTPError as e:
+                print(e.code)
+                print(e.read())
             except Exception as e:
                 print(f"{name}: {e}")
 
@@ -76,28 +80,32 @@ def transient_processing_progress(path_to_output_csv: str) -> float:
     with open(path_to_output_csv, newline="") as csv_file:
         reader = csv.DictReader(csv_file)
         for transient in reader:
-            status = transient["transient_processing_status"]
-
-            if status == "processing":
+            progress = int(transient["transient_progress"])
+            # TODO: This progress monitor is not ideal, because if a transient fails to begin (0) or the workflow
+            #       fails to complete (<100), the script will idle indefinitely.
+            if progress >= 0:
                 processing = +1
-            else:
+            elif progress == 100:
                 completed = +1
 
     return completed / (processing + completed)
 
 
 if __name__ == "__main__":
-    localhost = "http://0.0.0.0:8000"
+    import os
+    from datetime import datetime, timezone
+    localhost = f'''http://{os.getenv('WEB_APP_HOST')}:{os.getenv('WEB_APP_PORT')}'''
     post_endpoint = "/api/transient/post/"
     get_endpoint = "/api/transient/get/"
 
     input_csv = str(sys.argv[1])
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     post_transient_from_csv(input_csv, f"{localhost}{post_endpoint}")
-    download_data_snapshot(input_csv, "/results.csv", f"{localhost}{get_endpoint}")
-    batch_progress = transient_processing_progress("/results.csv")
+    download_data_snapshot(input_csv, f"/results/blast_results.{timestamp}.csv", f"{localhost}{get_endpoint}")
+    batch_progress = transient_processing_progress(f"/results/blast_results.{timestamp}.csv")
 
     while batch_progress < 1.0:
         print(batch_progress)
         time.sleep(10)
-        download_data_snapshot(input_csv, "/results.csv", f"{localhost}{get_endpoint}")
-        batch_progress = transient_processing_progress("/results.csv")
+        download_data_snapshot(input_csv, f"/results/blast_results.{timestamp}.csv", f"{localhost}{get_endpoint}")
+        batch_progress = transient_processing_progress(f"/results/blast_results.{timestamp}.csv")

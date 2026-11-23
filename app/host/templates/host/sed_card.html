@@ -2,33 +2,125 @@
 
 <!-- title -->
 {% block title %}
-
-<h5>Spectral Energy Distribution</h5>
-
-<ul class="nav nav-tabs card-header-tabs" id="myTab-sed" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="global-sed-tab" data-bs-toggle="tab" data-bs-target="#global-sed" type="button" role="tab" aria-controls="global-sed" aria-selected="false">Global</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="local-sed-tab" data-bs-toggle="tab" data-bs-target="#local-sed" type="button" role="tab" aria-controls="local-sed" aria-selected="true">Local</button>
-    </li>
-</ul>
-
+<h4>Spectral Energy Distribution</h4>
 {% endblock %}
 
 <!-- body -->
 {% block body %}
+
+<ul class="nav nav-tabs card-header-tabs" id="myTab-sed" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="global-sed-tab" data-toggle="tab" data-target="#global-sed" type="button" role="tab" aria-controls="global-sed" aria-selected="false">Global</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="local-sed-tab" data-toggle="tab" data-target="#local-sed" type="button" role="tab" aria-controls="local-sed" aria-selected="true">Local</button>
+    </li>
+</ul>
 <div class="tab-content" id="myTabContent-sed">
-    <div class="tab-pane fade" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
-        <div>&nbsp;</div>
-        <div class="container">
-            {{ bokeh_sed_local_div | safe }}
+    <div class="tab-pane" id="local-sed" role="tabpanel" aria-labelledby="local-sed-tab">
+        <div>
+            {% if bokeh_sed_local_div %}
+            <div id="sed-local-div" class="d-flex justify-content-center align-items-center">
+                {{ bokeh_sed_local_div | safe }}
+            </div>
+            {% else %}
+            <div id="sed-local-div" class="d-flex justify-content-center align-items-center">
+                <div id="sed-local-loader-mask" class="loader-mask"></div>
+                <div id="loading-indicator-sed-local" class="loader"></div>
+                {% if image_data_encoded_sed_local %}
+                <button title="Click the image to load the interactive plot." id="sed-local-button" onclick="sedLocalImgClick('{{ transient.name }}', 'local')">
+                    <img id="sed-local" src="data:image/png;base64,{{ image_data_encoded_sed_local }}" style="width: 100%;"/>
+                </button>
+                {% endif %}
+                <br>
+            </div>
+
+            <script>
+                $("#loading-indicator-sed-local").hide()
+                function sedLocalImgClick(transient, scope) {
+                    $("#loading-indicator-sed-local").show();
+                    $("#sed-local-loader-mask").show();
+                    $.ajax({
+                        url: "{% url 'fetch_sed_plot' %}",
+                        type: "GET",
+                        data: {
+                            transient_name: transient,
+                            scope: scope
+                        },
+                        success: function (resp) {
+                            $("#sed-local-div").replaceWith(resp.bokeh_sed_local_div);
+                            var sed_local_script = document.createElement("script");
+                            sed_local_script.type = 'text/javascript';
+                            var raw_script = resp.bokeh_sed_local_script;
+                            var raw_script_trimmed = raw_script.trim();
+                            var closeMarker = "<" + "/script>";
+                            var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                            var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                            var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
+                            sed_local_script.text = script_trimmed;
+                            document.body.appendChild(sed_local_script);
+                            $("#loading-indicator-sed-local").hide()
+                            $("#sed-local-loader-mask").hide();
+                        },
+                    });
+                }
+            </script>
+            {% endif %}
         </div>
     </div>
-    <div class="tab-pane fade show active" id="global-sed" role="tabpanel" aria-labelledby="global-sed-tab">
-        <div>&nbsp;</div>
-        <div class="container">
-            {{ bokeh_sed_global_div | safe }}
+
+    <div class="tab-pane active" id="global-sed" role="tabpanel" aria-labelledby="global-sed-tab">
+        <div>
+            {% if contam_warning %}
+            <b style="color:red">Warning:</b> possible contaminating objects in the global aperture<br>
+            {% endif %}
+            
+            {% if bokeh_sed_global_div %}
+            <div id="sed-global-div" class="d-flex justify-content-center align-items-center">
+                {{ bokeh_sed_global_div | safe }}
+            </div>
+            {% else %}
+            <div id="sed-global-div" class="d-flex justify-content-center align-items-center">
+                <div id="sed-global-loader-mask" class="loader-mask"></div>
+                <div id="loading-indicator-sed-global" class="loader"></div>
+                {% if image_data_encoded_sed_global %}
+                <button title="Click the image to load the interactive plot." id="sed-global-button" onclick="sedGlobalImgClick('{{ transient.name }}', 'global')">
+                    <img id="sed-global" src="data:image/png;base64,{{ image_data_encoded_sed_global }}" style="width: 100%;"/>
+                </button>
+                {% endif %}
+                <br>
+            </div>
+            <script>
+                $("#loading-indicator-sed-global").hide()
+                function sedGlobalImgClick(transient, scope) {
+                    $("#loading-indicator-sed-global").show();
+                    $("#sed-global-loader-mask").show();
+                    $.ajax({
+                        url: "{% url 'fetch_sed_plot' %}",
+                        type: "GET",
+                        data: {
+                            transient_name: transient,
+                            scope: scope
+                        },
+                        success: function (resp) {
+                            $("#sed-global-div").replaceWith(resp.bokeh_sed_global_div);
+                            var sed_global_script = document.createElement("script");
+                            sed_global_script.type = 'text/javascript';
+                            var raw_script = resp.bokeh_sed_global_script;
+                            var raw_script_trimmed = raw_script.trim();
+                            var closeMarker = "<" + "/script>";
+                            var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                            var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                            var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
+                            sed_global_script.text = script_trimmed;
+                            document.body.appendChild(sed_global_script);
+                            $("#loading-indicator-sed-global").hide()
+                            $("#sed-global-loader-mask").hide();
+                        },
+                    });
+                }
+            </script>
+            {% endif %}
         </div>
     </div>
 </div>

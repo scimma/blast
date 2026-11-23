@@ -4,7 +4,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("host", "0011_filter_magnitude_zero_point_keyword"),
     ]

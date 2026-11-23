@@ -1,7 +1,14 @@
-{% extends "host/card_template.html"%}
+{% extends "host/card_template.html" %}
 <!-- title -->
-{% block title %} <h5>Database Snapshot </h5>{%endblock%}
+{% block title %}<h4>Transient Processing Statistics</h4>{%endblock%}
 
 <!-- body -->
-{% block body %}<b>Total transients ingested:{{total}}</b>
-{{ bokeh_cutout_div | safe }}{% endblock %}
+{% block body %}
+<center>
+  <b>Transients processed: {{processed}}</b>
+  <br>
+  <b>Transients in progress: {{in_progress}}</b>
+</center>
+
+{{ bokeh_cutout_div | safe }}
+{% endblock %}

@@ -1,0 +1,726 @@
+# Changelog
+
+All notable changes to the Blast application will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project (mostly) adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Types of changes:
+- `Added`: for new features.
+- `Changed`: for changes in existing functionality.
+- `Deprecated`: for soon-to-be removed features.
+- `Removed`: for now removed features.
+- `Fixed`: for any bug fixes.
+- `Security`: in case of vulnerabilities.
+
+## [3.1.2]
+
+### Added
+
+- Added a status monitor indicator to the nav bar to alert users of any service incidents posted
+  on the external monitoring service configured in the settings.
+
+## [3.1.1]
+
+### Changed
+
+- Updated geckodriver to v0.37.1 to match Firefox
+- Silenced Bokeh warning messages for known empty plots
+
+### Fixed
+
+- Fixed variable initialization bug in `equal_dicts()`
+- Handle empty file paths in DatasetSerializer
+- Handle host aliases during dataset import
+- Restored missing S3 credentials for Celery Flower container in Docker Compose deployment
+
+### Removed
+
+- Disabled Silk profiler
+
+## [3.1.0]
+
+### Added
+
+- Added `FILTERS_CAN_FAIL` environment variable to allow image downloads to fail for specified filters
+  without blocking the workflow. The value is a comma-separated list; for example
+  `WISE_W1,WISE_W2,WISE_W3,WISE_W4`. This addresses an operational scenario where remote data
+  catalogs are intermittently or frequently inaccessible, which blocks the transient workflows that
+  researchers may want to complete in spite of missing some input data.
+
+## [3.0.0]
+
+### Added
+
+- Implemented a basic version control system for transient datasets. Tabular data exported by
+  `GET /api/dataset/[transient_name]` now includes a `metadata.dataset_version` field whose integer value
+  corresponds to the immutable dataset revision (DR) index. By default, the latest revision will be served.
+  API responses will be faster and cheaper because a DR is generated once by compiling relevant data objects
+  to create a DatasetRevision object that is subsequently served directly.
+  A `revision` API query parameter can be used, for example `GET /api/dataset/[transient_name]?revision=2`,
+  to request a specific dataset revision. Files are not version controlled; while a manifest of their
+  checksums is included in each dataset revision, previous versions of changed files are not stored for
+  subsequent retrieval.
+
+### Changed
+
+- **All API endpoints now require authentication**, even for read-only requests. A new API token system provides
+  the authentication mechanism, described on a new dedicated webpage `/token/` that also displays the user's API token.
+- Enabled pagination for API responses with a default page size of 100 objects. This changes the API response
+  schema for all the core data model query and filter endpoints, including `GET /api/transient`, `GET /api/aperture`,
+  `GET /api/cutout`, `GET /api/filter`, `GET /api/aperturephotometry`, `GET /api/sedfittingresult`, `GET /api/taskregister`,
+  `GET /api/task`, `GET /api/host`, `GET /api/alias`.
+- Cutout download filenames are now prefixed with the associated transient name (for example, `2026dkf_PanSTARRS_z.fits`
+  instead of `PanSTARRS_z.fits`).
+- PanSTARRS downloaded image file headers are modified to empty the `DATE` field, which is populated by the catalog
+  server with the timestamp of the download time. This ensures that the file checksum is a valid comparison method.
+- The MinIO object storage server used in the Docker Compose deployment was replaced with Garage due to the
+  change in MinIO business model and subsequent discontinuation of anonymous image downloads.
+- More service dependencies based on health checks were defined and revised for the Docker Compose deployment.
+- The unit test script was altered to ensure different tests run with independent, isolated databases.
+
+### Deprecated
+
+- The path to the Swagger UI powered API explorer, `/swagger-ui/`, will be removed in a future release, replaced by
+  `/api-explorer/` for the sake of consistency in terminology.
+
+### Fixed
+
+- Fixed a regression introduced in v2.0.0 causing the SED fit file download links on result pages to be effectively
+  randomized because the transient ID was used in the URL construction instead of the relevant `SEDFittingResult`
+  object ID.
+
+## [2.1.0]
+
+### Changed
+
+- Improved the usage metrics logging system to handle class-based views, including the individual Blast data 
+  object endpoints and the transient dataset download endpoints.
+- Replaced Alias API view functions with ModelViewSet subclass for consistency with other data object API endpoints
+  and to benefit from the Django REST Framework. (While this API change is technically *not* backwards-compatible,
+  the nature of the `/api/alias/` functionality and its lack of known use to date justifies this "minor" violation
+  of semantic versioning.)
+
+## [2.0.1]
+
+### Fixed
+
+- Fixed bug in Flower port spec in Docker Compose config
+- Fixed misspelling of Manuguri on team member page
+
+## [2.0.0]
+
+### Added
+
+- **New SBI models with redshift coverage up to z = 1**
+- Improved S/N distributions for training and SED parameter estimation
+- New low-redshift SBI model makes hack where redshift is increased by 0.015 no longer necessary
+- **Added host galaxy spectrum download functionality to the transient workflow.** Archival spectra are fetched
+  from SPARCL (DESI-DR1, SDSS-DR17, BOSS-DR17), stored as FITS files via a new `HostSpectrum` model.
+  The downstream goal is to feed these spectra into pPXF for stellar population fitting
+  (something like `HostSpectrumFitting`).
+  - New model: `HostSpectrum`.
+    - Stores one spectrum per host galaxy as a FITS file in ObjectStore
+    - Linked to `Host` via ForeignKey
+    - Tracks source (DESI/SDSS/BOSS), retrieval status, and other metadata
+  - New pipeline: `fetch_host_spectrum()` (`app/host/host_spectrum.py`)
+    - Queries SPARCL with a unified interface across DESI-DR1, SDSS-DR17, BOSS-DR17 in priority order
+  - New task: `host_spectrum_download`
+    - Wired into the main workflow after `host_information` and alongside `mwebv_host`,
+      `global_aperture_construction`, `local_aperture_photometry`
+
+### Changed
+
+- **Blast API endpoints and schema**
+  - **Added a webpage to interactively explore the Blast API, powered by Swagger: `/swagger-ui/`**, complementing
+    another new API endpoint `GET /api/schema/openapi/` that renders the OpenAPI spec for the entire Blast API.
+  - **Added a new API endpoint `GET /api/cutout/[id]/download/` to download image cutouts**. The download URLs
+    are now included in the `GET /api/cutout/{id}/` API response. Transient results pages now include direct
+    download links next to each available filter under "Cutout Download Report".
+  - **Replaced API endpoint `GET /api/transient/get/[transient_name]` with `GET /api/dataset/[transient_name]`
+    that returns the output of the `export_dataset()` function. *This changed the schema of
+    the returned transient data object*.** (See the new OpenAPI spec generator described above.)
+  - **Replaced the API endpoint `GET /api/transient/export/[transient_name]/[all]` with
+    `GET /api/dataset/[transient_name]/export/`; now "export" means "the entire transient dataset including files".**
+  - Replaced API endpoint `GET /api/transient/delete/[transient_name]/` with
+    `DELETE /api/dataset/[transient_name]/?files=false`. By default, only database objects associated with
+    a transient dataset are deleted; setting query parameter `files` to `true` will also delete the associated
+    files.
+  - Replaced the three SED fit data download endpoints `/download_chains`, `/download_modelfit`, and
+    `/download_percentiles` with `GET /api/sedfittingresult/{id}/download/{download_type}/`, where
+    `download_type` can be `chains`, `model`, or `percentiles`. These download URLs are now included in the
+    `GET /api/sedfittingresult/{id}/` response.
+  - The schema for `GET /api/transient/[transient_name]/` was modified to include the associated `Host` object.
+  - Issue report and resolve condensed to a single API endpoint `GET /issue_handling/[action]/[item_id]/`;
+    functionality preserved.
+- Improved treatment of out-of-distribution photometric noise
+- Fewer "neighbors" used to characterize missing bands, resulting in improved performance
+- Updated team member page
+- Dependencies:
+  - Upgraded base Python version from 3.11.13 to 3.13.14 in `app/Dockerfile` and `docs/Dockerfile`
+  - Updated most of the dependencies specified in `app/requirements.txt`. In the process, `arviz==0.23.4`
+    was added, pinned to the latest version <1.0.0 due to a backwards incompatibility that affected `sbi`.
+  - The `sbi` and `pandas` were pinned to earlier versions to avoid other incompatibilities that will be
+    addressed in a later release.
+  - Added `scikit-build-core<0.8` as a pip build constraint to fix `fsps` build with the new Python version
+  - Added `sparclclient==1.3.0` to `app/requirements.txt` for querying DESI/SDSS/BOSS spectra via SPARCL
+  - Added `ppxf==9.4.8` to `app/requirements.txt` for spectral fitting
+  - Added the `drf-spectacular` package for OpenAPI spec generation
+  - Now installing `gfortran` before all pip installs in the Dockerfile `deps` build stage, required for
+    compiling Fortran-based dependencies
+  - Upgraded `bokeh` from 3.9.1 to 3.9.2 in `app/requirements.txt`, and updated the BokehJS CDN version pin
+    in `base.html` from 3.7.3 to 3.9.2 to keep versions in sync.
+- Development environment:
+  - Renamed the Docker volume "blast-data" to "blast-init-data".
+  - Appended the `$USER` env var value to the Docker Compose project name in order to isolate Blast instances
+    from one another, for example when developing code on a shared host.
+  - Moved data initialization routine to the celery-beat container to better support multiple webserver
+    replicas and more efficient restarts of those replicas.
+  - Added healthchecks and dependencies to Compose specs for celery-beat, the webserver and the
+    NGINX proxy services, such that the webserver waits to start until data initialization completes in
+    celery-beat. Also this fixes the bug in the Compose deployment where restarting the webserver would
+    sometimes break the proxy connection, requiring a manual proxy restart.
+
+### Removed
+
+- Removed POST request handling from results view function rendered obsolete in v1.8.0.
+- Removed the obsolete, optional transient creation API endpoint
+  `/api/transient/post/name=<str:transient_name>&ra=<str:transient_ra>&dec=<str:transient_dec>` controlled
+  by the `ALLOW_API_POST` environment variable.
+
+### Fixed
+
+- Fixed longstanding bug where S/N estimates did not include dispersion
+- Correctly identifies out-of-distribution photometric noise
+- Fixed bugs and corrected names of unit tests related to the handler functions in `add_transient()`.
+- Updated the Prost fork to fix an error that will appear when `pandas` is updated to v3.
+- Fixed bug related to uninitialized variables in result page rendering
+- Properly released TaskLock for SDSS downloads by correcting a typo
+
+## [1.13.1]
+
+### Fixed
+
+- Fixed bug and corrected name of unit test `test_add_transients_by_definition()`.
+- Fixed broken unit test `test_transient_export_no_files()` by updating the expected data to
+  match the updated Host and Transient models.
+- Fixed broken unit test `test_alias()`.
+- Rename unit test to `test_update_transient()`.
+
+## [1.13.0]
+
+### Added
+
+- Added a new form to update properties of existing transients
+- Form prompts retriggering of updated transients from the relevant stages
+- Added a new migration to record comments on any user-updated properties
+
+### Changed
+
+- Now using astropy version 7.2.0, prospector 1.4.1, photutils dev version (commit 2573ef4, until
+  latest release)
+- Included legacy survey data release [DES DR10](https://www.legacysurvey.org/dr10/description/)
+- Updated how legacy survey downloads works, resulting in fewer download timeouts.
+- Improved efficiency of cutout unit test by using ThreadPoolExecutor to test downloads in parallel.
+- Reintroduce the formerly excluded `host` value in `TransientSerializer` that defines the data
+  object returned by the `/api/transient/` API endpoint.
+
+### Fixed
+
+- Incorporated photutils fix for misaligned apertures in DES legacy survey images that caused offset
+  apertures in the plotting and photometry.
+- Added the missing microjansky unit label to the flux axis label of the SED plots.
+
+## [1.12.0]
+
+### Added
+
+- Added a new Alias model and corresponding API endpoint to store user-defined aliases for Transient 
+  and Host objects. A rudimentary web interface for adding aliases was also created.
+- Added documentation on how to use the downloadable Blast data files.
+
+### Changed
+
+- Host objects must now have unique `name` values. Since v1.11.0, the host matching task generates a
+  deterministic coordinate-based name in cases where no name value is provided by the catalogs. 
+
+### Fixed
+
+- The transient archive import function no longer ignores the catalog info Host fields added in v1.11.0.
+
+## [1.11.0]
+
+### Added
+
+- Added three new fields to the Host mode (`object_id`, `catalog_name`, `catalog_release`) to capture the
+  source catalog information provided by the host matcher.
+- Added support for input arguments to custom functions invoked by the `blast_admin` Django custom
+  management command. See `blast_admin.py` module docstring for details.
+- Added `CELERY_LOG_LEVEL` environment variable to override default logging levels for Celery workers and
+  Celery Beat.
+
+### Changed
+
+- The `HostMatch._run_process()` function was altered to treat any unhandled exception as a failure with a 
+  corresponding "failed" status message. Previously, an unhandled exception would result in a misleading 
+  "no host match" status.
+- Additional logic was added to the host matching task to avoid creating duplicate `Host` objects: The host
+  information returned by Prost is compared against existing Host objects by cone search and by catalog information. 
+- Updated the host information card displayed on result pages to include the new catalog information.
+- Replaced `on_delete=models.CASCADE` with `on_delete=models.SET_NULL` for the `User` and `Host`
+  objects associated with a `Transient` object. Transients should not be deleted in the event one or both 
+  of these associated objects are deleted.
+- Removed redundant call to `initialize_all_tasks_status()` in `reprocess_transient()`
+
+### Removed
+
+- Removed the obsolete "Initialize transient task" periodic task. Workflows for new transients ingested
+  from TNS are now triggered upon discovery. Thus, all pathways for adding new transients now automatically
+  initialize and trigger workflows immediately, eliminating the need for this periodic task.
+- Removed unused TransientImportForm
+- Removed unused CatalogManager
+
+### Fixed
+
+- Fixed a bug in the dataset archive importer to support importing transients lacking host information.
+
+## [1.10.0]
+
+### Deprecated
+
+- The `log_age` columns (`log_age_16`, `log_age_50`, `log_age_84`) in the `SEDFittingResult` model are
+  deprecated. They have been replaced by corresponding `age` columns and will be removed in a future release.
+
+### Changed
+
+- Updated documentation to reflect how the `log_age` columns in the `SEDFittingResult` model will be
+  deprecated and replaced by the `age` columns.
+- Updated units in documentation for above columns from log years to gigayears.
+- Prospector results will feed the age info to the `age` columns as well.
+- Updated archive file import algorithm to populate the `age` values from `log_age` values if the `age`
+  keys are missing.
+
+### Fixed
+
+- Added `age` columns to the `SEDFittingResult` model to accurately reflect how the age is in gigayears
+  and not in `log_10` years as implied by the `log_age` columns.
+
+## [1.9.5]
+
+### Changed
+
+- Refactored the `dustmaps` config to use the `DUSTMAPS_DATA_ROOT` environment variable, simplifying its use
+  by eliminating the need to override the value within Python modules that use `dustmaps`.
+- Added a `utils.py` module loaded by the management command defined in `app/host/management/commands/blast_admin.py`
+  with example functions that have been useful to Blast developers and operators.
+
+### Added
+
+- Added support for usage monitoring with InfluxDB and Grafana. When `USAGE_METRICS_LOGROLLER_ENABLED` and
+  `USAGE_METRICS_LOGROLLER_INFLUXDB_ENABLED` are true, the buffer of usage logs will be periodically exported
+  to InfluxDB as well as to the object store, providing a Grafana-compatible data source for real-time monitoring.
+
+## [1.9.4]
+
+### Added
+
+- Added a `robots.txt` file to reduce system load caused by web crawlers when serving Blast publicly on the internet.
+
+## [1.9.3]
+
+### Added
+
+- Added SCIMMA logo and link to scimma.org to header.
+- Added NSF logo to footer linking to the existing Acknowledgements page.
+- Added a Django admin command `blast_admin` to execute functions defined in a `local_util.py` module
+  in the same directory. This is useful in local dev environments, allowing the developer to add/modify
+  functions dynamically and executing code in the Django environment using
+  `python manage.py blast_admin [custom_func]`.
+- Updated GitHub Action versions used in `.github/workflows/docker_image_workflow.yml`
+
+
+## [1.9.2]
+
+### Changed
+
+- Revised layout and styling of webpages, primarily the transient results page. Information cards
+  are collapsable and tables are formatted more legibly. Buttons controlling workflow
+  retriggering/reprocessing, as well as buttons for downloading transient data products, were moved
+  to the navbar. Improved image loading indicator animation.
+- Updated and revised documentation
+
+### Fixed
+
+- Fixed a bug in the issue reporting & resolving API endpoints.
+
+## [1.9.1]
+
+### Fixed
+
+- Fixed a bug in the workflow progress calculation introduced by the  refactoring of transient task
+  prerequisites.
+
+## [1.9.0]
+
+### Added
+
+- Implemented support for importing and exporting self-contained transient datasets in the form of 
+  compressed archive files (.tar.gz), including API endpoint `/api/transient/export/[2026abc]/[all]`,
+  where `2026abc` represents the target transient name and `all` is an optional parameter that will
+  include the cutout and SED fit files in the generated archive file.
+- Added a third option to the Add Transients page for importing a transient by uploading an archive file.
+- Added an API endpoint to delete a transient: `/api/transient/delete/[2026abc]/[all]`, where `2026abc`
+  represents the target transient name and `all` is an optional parameter that will delete the cutout
+  and SED fit files in addition to the transient database objects (e.g. `Cutout`, `Aperture`,
+  `AperturePhotometry`, `SEDFittingResult` objects).
+- Dataset archive files for transients 2026dgt, 2026dix, and 2026dkf were added to the 
+  `app/entrypoints/blast-data.json` initial file manifest and uploaded to the public object store.
+
+### Removed
+
+- Removed the 2010H, 2010ag, and 2010ai transient datasets from the data initialization routine. The 
+  associated database objects were removed from `app/host/migrations/0024_load_fixtures.py` and the 
+  files were removed from the `app/entrypoints/blast-data.json` initial file manifest.
+
+### Changed
+
+- Modified the unit tests to remove references to the 2010H, 2010ag, and 2010ai transients and instead
+  import transient 2026dix from its dataset archive file.
+- Modifed the data initialization routine to import transients 2026dgt, 2026dix, and 2026dkf from their
+  dataset archive files.
+- Updated the documentation with better screenshots and information about the dataset portation system.
+- Increased `client_max_body_size` in NGINX proxy to support transient archive file uploads.
+
+## [1.8.7]
+
+### Fixed
+
+- Reduced the prerequisites for the `GenerateThumbnailSEDLocal` and `GenerateThumbnailSEDGlobal` tasks
+  that were inadvertently preventing SED fit thumbnails from being generated.
+- Fixed a database foreign key constraint violation triggered by the `GlobalApertureConstruction` task
+  that sometimes deleted `Aperture` objects with associated `SEDFittingResult`, `AperturePhotometry`, and/or
+  `StarFormationHistoryResult` objects.
+
+## [1.8.6]
+
+### Removed
+
+- Removed unused Catalog and CatalogPhotometry models
+- Removed Acknowledgement model and copied content statically into HTML template.
+- Removed obsolete analytics webpage.
+- Removed obsolete Celery Flower webpage. Flower is deployed as a separate Docker Compose service with
+  routing handled by the NGINX web proxy that is also deployed independently via Compose.
+- Deleted TaskRegisterSnapshot model and associated periodic task.
+
+### Added
+
+- Added migration script that adds the `Transient.name` validation function
+
+## [1.8.5]
+
+### Fixed
+
+- Fixed a bug caused by searching for transients whose name included space characters.
+
+### Changed
+
+- Defined rules for transient names, allowing only alphanumeric values, underscores, hyphens,
+  and plus signs. Existing invalid transient names are renamed via a migration script, and the
+  original invalid names are set as the new `display_name` field value. This display name is
+  shown in the transient table and as the header of the result pages. The actual `name` value,
+  which is the unique identifier for the transient in the database, is still shown in the transient
+  information panel.
+- Reorganized `settings.py` to consolidate configuration into modular blocks to aid development.
+
+### Removed
+
+- Removed `revproxy` Django app and the obsolete `FlowerProxyView` class.
+
+## [1.8.4]
+
+### Added
+
+- Added a `cropped` field to the `Cutout` model to record whether the image has been cropped
+
+### Fixed
+
+- Fixed a bug in photometry caused by previously cropped images being used instead of downloading 
+  original data again from source catalogs when reprocessing a transient. Improved the cutout download
+  function logic.
+  
+## [1.8.3]
+
+### Changed
+
+- Temporarily running a fork of Prost that supports a custom PanSTARRS catalog API timeout value
+
+### Fixed
+
+- Better error handling in the Global Aperture Construction task
+
+## [1.8.2]
+  
+### Changed
+
+- Added a custom sorting function for the transient table "discovery date" column that 
+  always sorts transients lacking discovery dates last whether ascending or descending.
+- Revised the data initialization routine to compare test transient dataset files (e.g. 2010H)
+  without downloading them by S3 etag checksum, and, if a file needs to be installed, only
+  download to local scratch space temporarily in order to upload to the Blast dataset S3 bucket.
+
+### Removed
+
+- The local `/data/cutout_cdn` and `/data/sed_output` directories are no longer provisioned.
+
+### Fixed
+
+- Fixed bug in the image cropping task introduced by the transition to using local scratch space
+  instead of a shared persistent volume for generated transient data files.
+- Since the switch to PostgreSQL, there have been failures when rerunning aperture tasks due to
+  foreign key constraint violations. The `_overwrite_or_create_object(Aperture, query, data)`
+  calls have been replaced by a more deliberate algorithm for updating associated objects if they
+  exist.
+
+## [1.8.1]
+
+### Fixed
+
+- Fixed regression that broke SED fitting result display
+- Fixed variable initialization bug in `host.prospector.build_obs()`
+- Fixed bug where result page renders can fail due to `None` type for `global_aperture` 
+  because of an unhandled possibility in the `select_aperture()` function.
+- Fixed bug in `tns_data_ingestion()` that caused the task to fail if there are no active tasks.
+
+## [1.8.0]
+
+### Added
+
+- Added new workflow tasks to generate thumbnail images (JPEG format) of the interactive Bokeh
+  plots for the data image cutout display and both SED fit plots.
+- Added a new workflow task that crops the data image cutouts. Replaces the previous "trimming" mechanism.
+
+### Changed
+
+- Changed the result pages to display lightweight "thumbnail" images instead of downloading the 
+  files and rendering the Bokeh plots. Clicking on a thumbnail triggers the Bokeh render via an AJAX
+  request and replaces the thumbnail with the interactive plot. This will reduce the page load
+  time and reduce system load on the API server replicas.
+- User-selected cutout filters are now loaded via AJAX instead of reloading the entire page.
+- The results page rendering function was refactored to organize logically independent code into
+  reusable functions.
+- The task status table on the result pages now orders tasks by order of their execution.
+- The workflow structure was altered to incorporate the new tasks, and due to a shortcoming of the
+  Celery Canvas system (see https://github.com/celery/celery/issues/893 and 
+  https://github.com/celery/celery/issues/4562), the new structure will not in general run as fast as its
+  optimal DAG.
+- Improved temporary file handling and cleanup:
+  - Temporary server-side downloads from the object store use ephemeral `tmp` directories in the 
+    responding API server replica container instead of in the shared data volume.
+  - The periodic garbage collection task now removes unneeded files regardless of free space.
+
+### Removed
+
+- Removed the unnecessary "Transient information" workflow task.
+- Hid the workflow diagram from the result pages until a more automated method is devised 
+  to generate it when the workflow structure changes.
+- Removed "Transient information" task from `app/host/fixtures/test/test_2010H_onefilter.yaml` so unit tests pass.
+
+## [1.7.3]
+
+### Changedeven if there is sufficient 
+
+- Increased transient name length limit from 20 to 64 characters
+- Updated to version `actions/checkout@v6` for GitHub CI/CD
+
+## [1.7.2]
+
+### Changed
+
+- Improved detection of duplicate transients when users add transients by CSV-formatted definition. In addition to searching for
+  existing transients with the same names, the coordinates of submitted transients are also checked for proximity to existing
+  transients; those within 1 arcsecond of an existing transient are rejected.
+- Transients added by definition are no longer allowed to have names with prefixes "AT" or "SN".
+
+## [1.7.1]
+
+### Security
+
+- Upgraded Django to v5.1.14 to address CVE-2025-64458 and CVE-2025-64459. Set static versions for docs dependencies.
+
+## [1.7.0]
+
+### Added
+
+- Added a `DISABLE_CELERY_BEAT` environment variable that when set to `true` will prevent Celery Beat from running. This
+  is occasionally useful during local development and testing.
+- Added scratch file pruning to a new "Workflow init" task in the transient workflow. If the JOB_SCRATCH_MAX_SIZE value
+  minus the calculated disk space consumed is less than the JOB_SCRATCH_FREE_SPACE value, the pruning function is invoked.
+
+### Removed
+
+- Replaced RabbitMQ with Redis, supporting high-availability mode with Redis Sentinel. Redis now performs the functions of Django caching, Celery results backend, and Celery message broker.
+- Replaced MariaDB with PostgreSQL database.
+
+### Changed
+
+- Configuration of Celery Flower instance is now consistent with the workers using `-A app`
+
+### Fixed
+
+- Error handling was added in a few places where errors were noticed in the application logs.
+
+## [1.6.6]
+
+## Changed
+
+- Updated associated institutions in footer.
+- Added a Blast team member page with photos and bios.
+
+## [1.6.5]
+
+### Security
+
+- Upgraded Django to v5.1.13
+
+## [1.6.4]
+
+### Changed
+
+- Use TaskLock for global rate limiting of SDSS queries.
+- Bypass need for file locking in aperture tasks by redundant downloads named uniquely to each task. There were occasional failures of the file lock mechanism that are not worth debugging.
+
+## [1.6.3]
+
+### Changed
+
+- Refactored and revised logic in HostInformation task.
+- Use TaskLock for global rate limiting of NED queries.
+- Fix minor bug in TransientTaskRunner task
+
+## [1.6.2]
+
+### Changed
+
+- Update Prost host galaxy matcher to v1.2.13.
+
+## [1.6.1]
+
+### Changed
+
+- Added plaintext email for support requests or contacts.
+- Disabled celery-beat when running in batch mode.
+
+## [1.6.0]
+
+### Changed
+
+- Revamped the "Add Transient" web form:
+  - Improved CSV handling to handle whitespace surrounding values.
+  - Changed the wording from "upload" to "add", "define", and "import" to reflect the two distinct ways users can add transients to the database.
+  - Redesigned the form structure to make the two addition methods mutually exclusive and not simultaneously visible.
+  - Improved algorithm for reporting when added transients are ignored because they already exist in the database.
+
+## [1.5.7]
+
+### Security
+
+- Upgraded Django to v5.1.12
+
+## [1.5.6]
+
+### Added
+
+- Added a privacy policy about the usage data collection.
+- Ensure usage metric object character fields do not exceed the length limits.
+
+### Fixed
+
+- Fixed two API endpoints that should require authentication: "report" and "resolve" on transient result pages.
+
+## [1.5.5]
+
+### Added
+
+- Added a decorator function to capture HTTP requests to specific endpoints as `UsageMetricsLog` objects.
+- Added a periodic task `UsageLogRoller` to roll the usage logs by exporting logs to archive files uploaded to the object store and pruning the Django database table.
+
+## [1.5.4]
+
+### Added
+
+- Added a new "garbage collector" periodic task that purges the `cutout_cdn` and `sed_output` scratch space of orphaned data.
+
+## [1.5.3] - 2025-07-07
+
+### Fixed
+
+- Fixed a bug introduced in v1.5.2 when loading some transient result pages.
+
+## [1.5.2] - 2025-07-03
+
+### Fixed
+
+- Fixed a bug when loading result pages, where the page would fail with a "Server Error (500)" message if there were missing data files expected by the page renderer. These errors are now handled more gracefully by rendering empty plots and a message sayingt o reprocess the transient.
+
+### Changed
+
+- Restructured the navigation bar to separate the user account interface and ancillary information from application tools. Links to documentation, source code repo, and acknowledgements were moved to a dropdown menu.
+- Improved the responsiveness of the web pages and support for browser scaling.
+- Retrigger and reprocess buttons are now displayed on the result pages based on user permissions.
+
+## [1.5.1] - 2025-07-02
+
+### Fixed
+
+- The static landing page was not populating the support email address in the email template defined by the `mailto` link in the footer. Instead of supplying the value via context processor, it was supplied via template tag such that the information is available to the periodic rendering function `update_home_page_statistics()`.
+
+## [1.5.0] - 2025-07-01
+
+### Added
+
+- Added support for OIDC-based authentication and role-based access control (RBAC). Anyone can authenticate but only authorized users are allowed to use protected API functions such as transient upload, reprocessing, or retriggering. Django admins can authorize users by granting them the custom permission "Can launch a new transient workflow". The recommended approach is to grant the permission to a group created for the purpose (e.g. "users-default"), and then add users to that group.
+- There is a new registration process for new Blast users. Upon login users are redirected to the uploads page, where they encounter a message informing them that they need to request authorization to access this feature by clicking a link that will prepopulate an email using a template. The template instructs the new user to provide their name, and email address (these are not supplied by all identity providers) as well as an explanation for the request.
+
+### Fixed
+
+- Transient result pages indicate when SED data is loading or if that data is unavailable.
+
+## [1.4.1] - 2025-06-13
+
+### Fixed
+
+- Fixed a minor bug in the Blast documentation `developer_guide/dev_system_pages.md` preventing images from being rendered.
+
+## [1.4.0] - 2025-06-13
+
+### Added
+
+- Improved workflow execution speed by using ThreadPoolExecutor to download cutouts in parallel.
+- Added a graphical SVG-based view of the workflow and task status to the transient result pages.
+
+### Changed
+
+- The Python package "GHOST" that was used for associating transients with a host galaxy was replaced with its successor "Prost", a library by the same author with improved accuracy.
+- When workflows are manually retriggered via the `retrigger_transient/[transient]` API endpoint, failed tasks are retried. The automated retriggering periodic task does not retry failed tasks.
+- Consolidated object storage interface into a unified class used for data initialization and generated data storage.
+- Improved the workflow initialization algorithm to prune redundant TaskRegister objects and handle the addition of new tasks to the transient workflow.
+- Improved the accuracy of the workflow progress calculation with a new algorithm. This change necessitated a revision of the task prerequisites to more accurately reflect the actual workflow definition used by the Celery Canvas to execute tasks.
+- Consolidated, minimized, and updated the versions of the set of Python package dependencies in `requirements.txt`.
+- Update the MariaDB version for the Django database used in the Docker Compose deployment from v10 to v11.1.
+
+### Fixed
+
+- Secured two API endpoints that should require authentication to run:  `reprocess_transient/[transient]`, `retrigger_transient/[transient]`.
+- Fixed a bug in the aperture construction unit test to support downloading cutouts for a subset of filters.
+- Implemented a file locking mechanism to prevent concurrent processes from deleting data files prematurely in the `GlobalApertureConstruction`, `GlobalAperturePhotometry`, and `LocalAperturePhotometry` workflow tasks.
+- Updated the NGINX proxy configuration in the Docker Compose deployment to fix problems with localhost routing in the development environment.
+
+## [1.3.0] - 2025-05-09
+
+### Added
+
+- Implemented an automated retriggering mechanism executed periodically by Celery Beat to resume aborted workflows.
+
+### Fixed
+
+- There was an error related to the angle value in `/app/host/plotting_utils.py`, where the reference to `theta_rad` in `plot_aperture()` was preventing transient result pages from rendering due to an invalid value type. It was fixed by referencing `theta_rad.value` instead.

@@ -1,34 +1,70 @@
 {% extends "host/card_template.html" %}
 
 <!-- title -->
-{% block title %} <h5>Processing Status</h5> {% endblock %}
+{% block title %}
+<h4>Processing Status: <span class="badge {{ processing_status_badge_class }}">{{ transient.processing_status }}</span></h4>
+{% endblock %}
 
 <!-- body -->
 {% block body %}
-
-<table class="table table-striped">
+<table class="table table-striped processing-status-table table-sm">
     <thead>
         <tr>
-            <th scope="col">Task Name</th>
-            <th scope="col">Status</th>
-            <th scope="col">Time taken (s)</th>
+            <th scope="col" style="width: 40%;">Task Name</th>
+            <th scope="col" style="width: 25%;">Status</th>
+            <th scope="col" style="width: 15%;">Time (s)</th>
+            {% if is_auth %}<th scope="col" style="width: 20%;">Warning Flag</th>{% endif %}
         </tr>
     </thead>
     <tbody>
-        {% for item in transient.taskregister_set.all %}
+        {% for item in transient_taskregister_set %}
         <tr>
-            <td>{{item.task.name}}</td>
-            <td> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
-            <td>
+      {% if item.user_warning %}
+            <td class="align-middle" title="An issue has been reported."><b style="color:red">{{item.task.name}}</b></td>
+      {% else %}
+            <td class="align-middle">{{ item.task.name }}</td>
+      {% endif %}
+            <td class="align-middle"> <span class="badge {{item.status.badge}}">{{item.status.message}}</span></td>
+            <td class="align-middle">
                 {% if item.last_processing_time_seconds == 'None' %}
                     --
                 {% else %}
                     {{item.last_processing_time_seconds}}
                 {% endif %}
             </td>
+        {% if is_auth and item.pk %}
+        <td class="align-middle">
+        {% if item.user_warning %}
+            <a href="#" type="button" title="Issue reported. Click to clear. (requires authorization)"><span class="report" 
+                {% if is_auth %}
+                onclick="window.open('{% url 'issue_handling' action='resolve' item_id=item.pk %}','_self')"
+                {% else %}
+                onclick="return false;"
+                {% endif %}
+            ><i class="bi bi-exclamation-triangle issue-reported"></i></span></a>
+        {% else %}
+            <a href="#" type="button" title="No issues reported. Click to report an issue. (requires authorization)"><span class="report" 
+                {% if is_auth %}
+                onclick="window.open('{% url 'issue_handling' action='report' item_id=item.pk %}','_self')"
+                {% else %}
+                onclick="return false;"
+                {% endif %}
+            ><i class="bi bi-check-circle issue-resolved"></i></span></a>
+        {% endif %}
+        </td>
+        {% endif %}
         </tr>
        {% endfor %}
     </tbody>
 </table>
-
+<style>
+.issue-resolved {
+    color: green;
+    font-size: 1.5rem;
+}
+.issue-reported {
+    color: red;
+    font-size: 1.5rem;
+}
+</style>
 {% endblock %}

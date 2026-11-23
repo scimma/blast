@@ -11,7 +11,6 @@ from scipy.stats import binned_statistic
 
 
 def main():
-
     for f in Filter.objects.all():
         phot = AperturePhotometry.objects.filter(filter=f, magnitude__isnull=False)
         mag = np.array(phot.values_list("magnitude", flat=True))

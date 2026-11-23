@@ -1,0 +1,48 @@
+name: blast-ci-$USER
+
+networks:
+  internal:
+    external: false
+
+services:
+
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    depends_on:
+      celery-beat:
+        condition: service_healthy
+    environment:
+      - "TEST_MODE=1"
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+
+  celery-beat:
+    extends:
+      file: docker-compose.yml
+      service: celery-beat
+    depends_on:
+      object-store:
+        condition: service_healthy
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+
+  object-store:
+    extends:
+      file: docker-compose.yml
+      service: object-store
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.ci
+

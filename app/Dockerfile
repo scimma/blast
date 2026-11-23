@@ -1,19 +1,48 @@
-FROM python:3.8
-ENV PYTHONUNBUFFERED 1
+FROM python:3.13.14 AS deps
 
-RUN apt-get update
-RUN apt-get install ffmpeg libsm6 libxext6 gfortran libhealpix-cxx-dev -y
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gfortran \
+    && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip
 COPY ./requirements.txt /requirements.txt
-RUN pip install -r /requirements.txt
+RUN echo "scikit-build-core<0.8" > /build-constraints.txt && \
+    PIP_BUILD_CONSTRAINT=/build-constraints.txt pip install -r /requirements.txt --no-cache-dir
+
+FROM python:3.13.14
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    gfortran \
+    libhealpix-cxx-dev \
+    libhdf5-serial-dev \
+    netcdf-bin \
+    libnetcdf-dev \
+    jq \
+    xxd \
+    firefox-esr \
+    && rm -rf /var/lib/apt/list/*
+
+# Mozilla geckodriver is required for thumbnail generation
+RUN wget https://github.com/mozilla/geckodriver/releases/download/v0.37.1/geckodriver-v0.37.1-linux64.tar.gz && \
+    tar -xvzf geckodriver-v0.37.1-linux64.tar.gz && \
+    chmod +x geckodriver && \
+    mv geckodriver /usr/local/bin/
 
 COPY ./debug/debug_ipython.py /root/.ipython/profile_default/startup/
+COPY --from=deps /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
+COPY --from=deps /usr/local/bin/ /usr/local/bin/
+
+# Install Prost from source
+# TODO: Remove this when astro-prost package is updated
+RUN git clone https://github.com/manning-ncsa/Prost.git /tmp/prost && cd /tmp/prost && \
+    git checkout fb238fa && \
+    pip uninstall --yes astro-prost && pip install --no-cache-dir . && \
+    cd / && rm -rf /tmp/prost
 
 RUN mkdir /app
-RUN mkdir /cutout_cdn
-RUN mkdir /ghost_output
-RUN mkdir /fsps
-
-RUN
 COPY . /app
 WORKDIR /app

@@ -7,7 +7,7 @@ Getting started
 We need your help
 +++++++++++++++++
 
-This section walks you through how to become a blast developer. We want your
+This section walks you through how to become a Blast developer. We want your
 help. No, really. There may be a little voice inside your head that
 is telling you that you're not ready to be an open source contributor; that your
 skills aren't nearly good enough to contribute. What could you possibly offer a
@@ -30,7 +30,7 @@ see the errors and assumptions that seasoned contributors have glossed over.
 
 .. note::
     This text was originally written by Adrienne Lowe for a PyCon talk,
-    and was adapted by blast based on its use in the README file for the MetPy
+    and was adapted by Blast based on its use in the README file for the MetPy
     project and `Astropy <https://www.astropy.org>`_ project.
 
 Code of Conduct

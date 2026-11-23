@@ -4,7 +4,6 @@ from django.db import models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("host", "0006_host_milkyway_dust_reddening"),
     ]

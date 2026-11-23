@@ -3,50 +3,208 @@
 {% block title %} Acknowledgements {% endblock %}
 
 {% block body %}
-
+<div class="container">
 <div class="p-5 text-left bg-light" >
   <h1 class="mb-3">Acknowledgements</h1>
-  </h3>  <h6 class="mb-3">Blast is largely glue between already established software projects. It could not
-    exist without them. If you use blast, you <b>must</b> acknowledge and cite all
-    of the following projects which blast uses. Blast is based upon work supported by the National Aeronautics and Space Administration
-  under Grant No. 80NSSC21K0834 issued through the Astrophysics Data Analysis Program.</h6>
-
-
+  <p class="mb-3">Blast is largely glue between already established software projects. It could not
+    exist without them. If you use Blast, you <b>must</b> acknowledge and cite all
+    of the following projects which Blast uses; a BibTeX file is available via
+    <a href="https://blast.readthedocs.io/en/latest/acknowledgements/software.html">
+    the software page of our documentation</a>. Blast is
+    based upon work originally supported by the National Aeronautics and Space Administration
+    under Grant No. 80NSSC21K0834 issued through the Astrophysics Data Analysis Program.
+  </p>
+  <p>
+    Currently Blast application development and operation of the public service are funded by:<br>
+  </p>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-1 col-sm-2">
+        <img 
+          class=""
+          style="width: 100%; min-width: 80px; max-width: 100px;"
+          alt="nsf_logo.png" 
+          src="/static/images/nsf_logo.png">
+      </div>
+      <div class="col-lg-11 col-sm-10">
+        <p>
+          <b>
+            National Science Foundation Awards &#35;2510993, &#35;2510994<br>
+            <i>Research: The Connection between Astrophysical Transients and their Host Galaxies Across Cosmic Time</i><br>
+            10/01/2025 &mdash; 09/30/2028<br>
+          </b>
+        <p>
+          <b>
+            National Science Foundation Award &#35;2311355<br>
+            <i>Frameworks: SCiMMA: Real-time Orchestration of Multi-Messenger Astrophysical Observations</i><br>
+            07/01/2023 &mdash; 07/30/2027<br>
+          </b>
+        </p>
+        <p>
+          Any opinions, findings, conclusions or recommendations expressed in this material are those of the author(s)
+          and do not necessarily reflect the views of the National Science Foundation.
+        </p>
+      </div>
+    </div>
+  </div>
+    
+    <p class="mb-3">
+      The public deployment of Blast at <a href="https://blast.scimma.org">https://blast.scimma.org</a> is built and maintained by the <a href="https://ncsa.illinois.edu/">National Center for Supercomputing Applications (NCSA)</a> at the University of Illinois Urbana-Champaign, and it is hosted on cyberinfrastructure provided by the <a href="https://access-ci.org/">NSF ACCESS program</a>.
+    </p>
+    
+    
   <h3 class="mb-3">Contributors</h3>
-  <h5 class="mb-3">Peter McGill      (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">David Jones       (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">Dave Coulter      (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">Lila Braff        (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">Kayla Loertscher  (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">Zhisen Lai        (University of California, Santa Cruz)</h5>
-  <h5 class="mb-3">Jack Kutcka       (University of California, Santa Cruz)</h5>
+  <ul>
+    <li>Peter McGill      (University of California, Santa Cruz)</li>
+    <li>David Jones       (University of Hawai&#x02BBi)</li>
+    <li>T. Andrew Manning (NCSA, University of Illinois Urbana-Champaign)</li>
+    <li>Lila Braff        (University of California, Santa Cruz)</li>
+    <li>Dave Coulter      (Space Telescope Science Institute)</li>
+    <li>Diego Farias      (University of Copenhagen)</li>
+    <li>Ryan Foley        (University of California, Santa Cruz)</li>
+    <li>Alex Gagliano     (Institute For AI and Fundamental Interactions)</li>
+    <li>Jack Kutcka       (University of California, Santa Cruz)</li>
+    <li>Zhisen Lai        (University of California, Santa Cruz)</li>
+    <li>Kayla Loertscher  (University of California, Santa Cruz)</li>
+    <li>Gautham Narayan   (University of Illinois Urbana-Champaign)</li>
+    <li>Stephen Thorp     (Stockholm University)</li>
+    <li>Ashley Villar     (Harvard University)</li>
+    <li>Bingjie Wang      (Penn State University)</li>
+    <li>Rishabh Bezbarua  (University of Illinois Urbana-Champaign)</li>
+  </ul>
 
-</div>
-
-<table class="table">
+<!-- 
+WHEN UPDATING THESE ACKNOWLEDGEMENTS, SYNCHRONIZE WITH 
+    1) THE LIST IN THE DOCUMENTATION FILE "/docs/acknowledgements/software.rst"
+    2) THE BIBTEX FILE "/docs/_static/acknowledgements.bib"
+-->
+<h3 class="mb-3">Software</h3>
+<table class="table table-responsive table-sm" style="table-layout: fixed; width: 100%; text-align: left;">
   <thead>
     <tr>
-      <th scope="col">Project</th>
-      <th scope="col">Usage</th>
-      <th scope="col">Repository</th>
-      <th scope="col">Paper</th>
-      <th scope="col">DOI</th>
-      <th scope="col">Website</th>
+      <th scope="col" style="width: 15%">Project</th>
+      <th scope="col" style="width: 25%">Usage</th>
+      <th scope="col" style="width: 15%">Repository</th>
+      <th scope="col" style="width: 10%">Paper</th>
+      <th scope="col" style="width: 35%">DOI</th>
     </tr>
   </thead>
   <tbody>
-    {% for acknowledgement in acknowledgements %}
     <tr>
-      <td>{{acknowledgement.name}}</td>
-      <td>{{acknowledgement.description}}</td>
-      <td><a class="nav-link" href="{{acknowledgement.repository_url}}/">{{acknowledgement.repository_url}}</a></td>
-      <td><a class="nav-link" href="{{acknowledgement.paper_url}}/">ADS</a></td>
-      <td><a class="nav-link" href="https://www.doi.org/{{acknowledgement.doi}}/">{{acknowledgement.doi}}</a></td>
-      <td><a class="nav-link" href="{{acknowledgement.website_url}}/">{{acknowledgement.website_url}}</a></td>
+      <td class="ack-project-name"><a class="nav-link" href="https://www.astropy.org">Astropy</a></td>
+      <td class="ack-usage">Used in almost all aspects of the project</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/astropy/astropy">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2018AJ....156..123A/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.3847/1538-3881/aabc4f">10.3847/1538-3881/aabc4f</a></td>
     </tr>
-   {% endfor %}
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://numpy.org">NumPy</a></td>
+      <td class="ack-usage">Used in almost all aspects of the project</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/numpy/numpy">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020Natur.585..357H/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.1038/s41586-020-2649-2">10.1038/s41586-020-2649-2</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://bokeh.org/">Bokeh</a></td>
+      <td class="ack-usage">Used to generate interactive data plots</td>
+      <td class="ack-repo"></td>
+      <td class="ack-paper"></td>
+      <td class="ack-doi"></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://photutils.readthedocs.io/en/stable/">photutils</a></td>
+      <td class="ack-usage">Used for the host aperture photometry</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/astropy/photutils">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2022zndo....596036B/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.6385735">10.5281/zenodo.6385735</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://astroquery.readthedocs.io/en/latest/">Astroquery</a></td>
+      <td class="ack-usage">Used for gathering external data for transients</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/astropy/astroquery">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2019AJ....157...98G/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.3847/1538-3881/aafc33">10.3847/1538-3881/aafc33</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://hips.readthedocs.io">HiPS</a></td>
+      <td class="ack-usage">Used in the cutout generation</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/hipspy/hips">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2015A%26A...578A.114F/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.1051/0004-6361/201526075">10.1051/0004-6361/201526075</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://dynesty.readthedocs.io/en/latest/">dynesty</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/joshspeagle/dynesty">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020MNRAS.493.3132S/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.1093/mnras/staa278">10.1093/mnras/staa278</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://prospect.readthedocs.io/en/latest/">Prospector</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/bd-j/prospector">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2021ApJS..254...22J/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.3847/1538-4365/abef67">10.3847/1538-4365/abef67</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2019ascl.soft05026J/abstract">sedpy</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/bd-j/sedpy">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://pypi.org/project/sedpy/">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.4582723">10.5281/zenodo.4582723</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://svo.cab.inta-csic.es/main/index.php">SVO Filter Profile Service</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/hover2pi/svo_filters">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2020sea..confE.182R/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.5479/ADS/bib/2012ivoa.rept.1015R">10.5479/ADS/bib/2012ivoa.rept.1015R</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://dfm.io/python-fsps/current/">Python FSPS</a></td>
+      <td class="ack-usage">Used to generate spectra and magnitude for arbitrary stellar populations</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/dfm/python-fsps/tree/v0.4.1rc1">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://ui.adsabs.harvard.edu/abs/2014zndo.....12157F/abstract">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.5281/zenodo.4737461">10.5281/zenodo.4737461</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://sbi-dev.github.io/sbi/latest/">SBI</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/sbi-dev/sbi">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://joss.theoj.org/papers/10.21105/joss.02505">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.21105/joss.02505">10.21105/joss.02505</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://github.com/wangbingjie/sbi_pp">SBI++</a></td>
+      <td class="ack-usage">Used in the inference of host galaxy parameters</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/wangbingjie/sbi_pp">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="https://iopscience.iop.org/article/10.3847/2041-8213/ace361">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/10.3847/2041-8213/ace361">10.3847/2041-8213/ace361</a></td>
+    </tr>
+   
+    <tr>
+      <td class="ack-project-name"><a class="nav-link" href="https://astro-prost.readthedocs.io/">Prost</a></td>
+      <td class="ack-usage">Used to match transients to host galaxies</td>
+      <td class="ack-repo"><a class="nav-link" href="https://github.com/alexandergagliano/Prost">source repo</a></td>
+      <td class="ack-paper"><a class="nav-link" href="">ADS</a></td>
+      <td class="ack-doi"><a class="nav-link" href="https://www.doi.org/"></a></td>
+    </tr>
   </tbody>
 </table>
 
+</div>
+</div>
 
 {% endblock %}

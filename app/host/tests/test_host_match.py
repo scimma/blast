@@ -1,28 +1,19 @@
 from django.test import TestCase
 
-from ..models import Aperture
-from ..models import Status
-from ..models import TaskRegister
 from ..models import Transient
-from ..transient_tasks import Ghost
+from ..transient_tasks import HostMatch
+from ..host_utils import import_transient_info
 
 
 class TestHostMatch(TestCase):
-
-    fixtures = [
-        "../fixtures/initial/setup_survey_data.yaml",
-        "../fixtures/initial/setup_filter_data.yaml",
-        "../fixtures/initial/setup_catalog_data.yaml",
-        "../fixtures/initial/setup_status.yaml",
-        "../fixtures/initial/setup_tasks.yaml",
-        "../fixtures/initial/setup_acknowledgements.yaml",
-        "../fixtures/test/test_2010h.yaml",
-    ]
+    def setUp(self):
+        with open('''/data/transient_datasets/2026dix.tar.gz''', 'rb') as dataset_fileobj:
+            import_transient_info(dataset_fileobj)
 
     def test_aperture_construction(self):
-        transient = Transient.objects.get(name="2010H")
+        transient = Transient.objects.get(name="2026dix")
 
-        host_cls = Ghost()
+        host_cls = HostMatch(transient_name=transient.name)
 
         status_message = host_cls._run_process(transient)
 

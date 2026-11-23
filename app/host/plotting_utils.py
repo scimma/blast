@@ -1,40 +1,61 @@
+import math
+import os
 from math import pi
+from packaging.version import Version
 
 import numpy as np
 import pandas as pd
 import prospect.io.read_results as reader
 from astropy.coordinates import SkyCoord
+from astropy.cosmology import WMAP9 as cosmo
 from astropy.io import fits
 from astropy.visualization import AsinhStretch
 from astropy.visualization import PercentileInterval
 from astropy.wcs import WCS
 from bokeh.embed import components
 from bokeh.layouts import gridplot
-from bokeh.models import Circle
-from bokeh.models import ColumnDataSource
-from bokeh.models import Cross
-from bokeh.models import Ellipse
-from bokeh.models import Grid
+# from bokeh.models import ColumnDataSource
+from bokeh.models import HoverTool
 from bokeh.models import LabelSet
-from bokeh.models import LinearAxis
-from bokeh.models import LogColorMapper
-from bokeh.models import Plot
-from bokeh.models import Scatter
+from bokeh.models import Range1d
 from bokeh.palettes import Category20
+from bokeh.plotting import ColumnDataSource
 from bokeh.plotting import figure
-from bokeh.plotting import show
 from bokeh.transform import cumsum
-from host.catalog_photometry import filter_information
-from host.host_utils import survey_list
 from host.models import Filter
 from host.photometric_calibration import maggies_to_mJy
-from host.prospector import build_obs  # , build_model
+from host.prospector import build_obs
+from host.models import SEDFittingResult
+from host.models import HostSpectrum
+from bokeh.models import CustomJS
+from host.object_store import ObjectStore
+from django.conf import settings
+from bokeh.core.validation import silence
+from bokeh.core.validation.warnings import MISSING_RENDERERS
 
-from .models import Aperture
+# import extinction
+# from bokeh.models import Circle
+# from bokeh.models import Cross
+# from bokeh.models import Ellipse
+# from bokeh.models import Grid
+# from bokeh.models import Legend
+# from bokeh.models import LinearAxis
+# from bokeh.models import LogColorMapper
+# from bokeh.models import Plot
+# from bokeh.models import Scatter
+# from bokeh.plotting import show
+# from host.catalog_photometry import filter_information
+# from host.host_utils import survey_list
+# from host.photometric_calibration import mJy_to_maggies
+# from host.prospector import build_model
+
+# from .models import Aperture
+
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
 def scale_image(image_data):
-
     transform = AsinhStretch() + PercentileInterval(99.5)
     scaled_data = transform(image_data)
 
@@ -42,21 +63,22 @@ def scale_image(image_data):
 
 
 def plot_image(image_data, figure):
+    # sometimes low image mins mess up the plotting
 
-    image_data = np.nan_to_num(image_data, nan=np.nanmin(image_data))
-    # image_data = np.nan_to_num(image_data, nan=np.median(image_data)) #np.amin(image_data))
+    perc01 = np.nanpercentile(image_data, 1)
+
+    image_data = np.nan_to_num(image_data, nan=perc01)
     image_data = image_data + abs(np.amin(image_data)) + 0.1
 
     scaled_image = scale_image(image_data)
+
     figure.image(image=[scaled_image])
-    # color_mapper = LogColorMapper(palette="Greys256")
     figure.image(
         image=[scaled_image],
         x=0,
         y=0,
-        dw=len(image_data),
-        dh=len(image_data),
-        # color_mapper=color_mapper,
+        dw=np.shape(image_data)[1],
+        dh=np.shape(image_data)[0],
         level="image",
     )
 
@@ -74,7 +96,7 @@ def plot_position(object, wcs, plotting_kwargs=None, plotting_func=None):
 
 def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
     aperture = aperture.to_pixel(wcs)
-    theta_rad = aperture.theta
+    theta_rad = aperture.theta.rad
     x, y = aperture.positions
     plot_dict = {
         "x": x,
@@ -84,6 +106,7 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
         "angle": theta_rad,
         "fill_color": "#cab2d6",
         "fill_alpha": 0.1,
+        "line_width": 4,
     }
 
     plot_dict = {**plot_dict, **plotting_kwargs}
@@ -92,15 +115,15 @@ def plot_aperture(figure, aperture, wcs, plotting_kwargs=None):
 
 
 def plot_image_grid(image_dict, apertures=None):
-
     figures = []
     for survey, image in image_dict.items():
         fig = figure(
             title=survey,
             x_axis_label="",
             y_axis_label="",
-            plot_width=1000,
-            plot_height=1000,
+            # plot_width=1000,
+            # plot_height=1000,
+            sizing_mode="scale_both",
         )
         fig = plot_image(fig, image)
         if apertures is not None:
@@ -116,147 +139,302 @@ def plot_image_grid(image_dict, apertures=None):
     return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
-def plot_cutout_image(
-    cutout=None, transient=None, global_aperture=None, local_aperture=None
-):
+def plot_cutout_image(cutout=None, transient=None, global_aperture=None, local_aperture=None):
+    def generate_plot(fig, image_data):
+        hide_loading_indicator = CustomJS(args=dict(), code="""
+            document.getElementById('loading-indicator').style.display = "none";
+        """)
+        fig.x_range.js_on_change('end', hide_loading_indicator)
+        plot_image(image_data, fig)
+        script, div = components(fig)
+        return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
-    title = cutout.filter if cutout is not None else "No cutout selected"
+    def generate_empty_plot(title):
+        fig = figure(
+            title=f"{title}",
+            x_axis_label="",
+            y_axis_label="",
+            # plot_width=700,
+            # plot_height=700,
+            sizing_mode="scale_both",
+        )
+        fig.axis.visible = False
+        fig.xgrid.visible = False
+        fig.ygrid.visible = False
+        image_data = np.zeros((500, 500))
+        return generate_plot(fig, image_data)
+
+    # If there is no cutout data, generate an empty plot
+    if cutout is None:
+        return generate_empty_plot(title="No cutout selected")
+
+    # Load image data from FITS file
+    cutout_fits_path = cutout.fits.name
+    local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
+    object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
+    s3 = ObjectStore()
+    if s3.object_exists(object_key):
+        # Download FITS file local file cache
+        s3.download_object(path=object_key, file_path=local_tmp_path)
+    else:
+        logger.error(f'''Data object "{object_key}" not found for missing data file "{cutout_fits_path}".''')
+    # If the file is missing for some reason, generate an empty plot with an error title
+    if not os.path.isfile(local_tmp_path):
+        title = f'''Missing data file: "{os.path.basename(cutout_fits_path)}". '''
+        title += '''Reprocess transient to regenerate missing data.'''
+        return generate_empty_plot(title=title)
+    try:
+        with fits.open(local_tmp_path) as fits_file:
+            image_data = fits_file[0].data
+            wcs = WCS(fits_file[0].header)
+    finally:
+        # Delete FITS file from local file cache
+        os.remove(local_tmp_path)
+
+    title = cutout.filter
     fig = figure(
         title=f"{title}",
         x_axis_label="",
         y_axis_label="",
-        plot_width=700,
-        plot_height=700,
+        # plot_width=500,
+        # plot_height=int(np.shape(image_data)[0] / np.shape(image_data)[1] * 700),
+        sizing_mode="scale_both",
     )
-
     fig.axis.visible = False
     fig.xgrid.visible = False
     fig.ygrid.visible = False
 
-    if cutout is not None:
-        with fits.open(cutout.fits.name) as fits_file:
-            image_data = fits_file[0].data
-            wcs = WCS(fits_file[0].header)
+    transient_kwargs = {
+        "legend_label": f"{transient.name}",
+        "size": 30,
+        "line_width": 2,
+        "marker": "cross",
+    }
+    plot_position(
+        transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter
+    )
 
-        transient_kwargs = {
-            "legend_label": f"{transient.name}",
-            "size": 30,
+    if transient.host is not None:
+        host_kwargs = {
+            "legend_label": f"Host: {transient.host.name}",
+            "size": 25,
             "line_width": 2,
+            "line_color": "red",
+            "marker": "x",
         }
         plot_position(
-            transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.cross
+            transient.host,
+            wcs,
+            plotting_kwargs=host_kwargs,
+            plotting_func=fig.scatter,
         )
 
-        if transient.host is not None:
-            host_kwargs = {
-                "legend_label": f"Host: {transient.host.name}",
-                "size": 25,
-                "line_width": 2,
-                "line_color": "red",
-            }
-            plot_position(
-                transient.host, wcs, plotting_kwargs=host_kwargs, plotting_func=fig.x
-            )
-        if global_aperture.exists():
-            filter_name = global_aperture[0].cutout.filter.name
-            plot_aperture(
-                fig,
-                global_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "green",
-                    "legend_label": f"Global Aperture ({filter_name})",
-                },
-            )
+    if global_aperture.exists():
+        plot_aperture(
+            fig,
+            global_aperture[0].sky_aperture,
+            wcs,
+            plotting_kwargs={
+                "fill_alpha": 0.1,
+                "line_color": "green",
+                "legend_label": f"Global Aperture ({title})",
+            },
+        )
 
-        if local_aperture.exists():
-            plot_aperture(
-                fig,
-                local_aperture[0].sky_aperture,
-                wcs,
-                plotting_kwargs={
-                    "fill_alpha": 0.1,
-                    "line_color": "blue",
-                    "legend_label": "Local Aperture",
-                },
-            )
-
-    else:
-        image_data = np.zeros((500, 500))
-
-    plot_image(image_data, fig)
-    script, div = components(fig)
-    return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
+    if local_aperture.exists():
+        plot_aperture(
+            fig,
+            local_aperture[0].sky_aperture,
+            wcs,
+            plotting_kwargs={
+                "fill_alpha": 0.1,
+                "line_color": "blue",
+                "legend_label": "Local Aperture",
+            },
+        )
+    return generate_plot(fig, image_data=image_data)
 
 
-def plot_sed(aperture_photometry=None, sed_results_file=None, type=""):
+def plot_sed(transient=None, sed_results_file=None, type="", sed_modeldata_file=None, offset_sed_model=False):
     """
     Plot SED from aperture photometry.
     """
 
-    if aperture_photometry.exists():
+    try:
+        obs = build_obs(transient, type, use_mag_offset=False)
+    except ValueError:
+        obs = {"filters": [], "maggies": [], "maggies_unc": []}
+    except AssertionError:
+        obs = {"filters": [], "maggies": [], "maggies_unc": []}
 
-        flux = [measurement.flux for measurement in aperture_photometry]
-        flux_error = [measurement.flux_error for measurement in aperture_photometry]
-        wavelength = [
-            measurement.filter.wavelength_eff_angstrom
-            for measurement in aperture_photometry
-        ]
-    else:
-        flux, flux_error, wavelength = [], [], []
+    # def maggies_to_asinh(x):
+    #     """asinh magnitudes"""
+    #     a = 2.50 * np.log10(np.e)
+    #     mu = 35.0
+    #     return -a * math.asinh((x / 2.0) * np.exp(mu / a)) + mu
 
-    flux_error = [0.0 if error is None else error for error in flux_error]
+    # def asinh_to_maggies(x):
+    #     mu = 35.0
+    #     a = 2.50 * np.log10(np.e)
+    #     return np.array([2 * math.sinh((mu - x1) / a) * np.exp(-mu / a) for x1 in x])
+
+    flux, flux_error, wavelength, filters, mag, mag_error = [], [], [], [], [], []
+    for fl, f, fe in zip(obs["filters"], obs["maggies"], obs["maggies_unc"]):
+        wavelength += [fl.wave_effective]
+        flux += [maggies_to_mJy(f)]
+        flux_error += [maggies_to_mJy(fe)]
+        filters += [fl.name]
+        mag += [-2.5 * np.log10(f)]
+        mag_error += [1.086 * fe / f]
 
     fig = figure(
         title="",
-        width=700,
-        height=400,
+        # max_width=600,
+        sizing_mode="stretch_width",
+        max_height=400,
         min_border=0,
         #    toolbar_location=None,
         x_axis_type="log",
-        x_axis_label="Wavelength [Angstrom]",
-        y_axis_label="Flux",
+        x_axis_label="Wavelength [angstrom]",
+        y_axis_label="Flux [microjansky]",
     )
 
-    fig = plot_errorbar(fig, wavelength, flux, yerr=flux_error)
+    if len(flux):
+        fig.y_range = Range1d(-0.05 * np.max(flux), 1.5 * np.max(flux))
+        fig.x_range = Range1d(np.min(wavelength) * 0.5, np.max(wavelength) * 1.5)
+    else:
+        fig.title = "Data Not Available"
 
-    if sed_results_file is not None:
-        print(sed_results_file)
-        result, obs, model = reader.results_from(sed_results_file, dangerous=False)
+    source = ColumnDataSource(
+        data=dict(
+            x=wavelength,
+            y=flux,
+            flux_error=flux_error,
+            filters=filters,
+            mag=mag,
+            mag_error=mag_error,
+        )
+    )
 
-        best = result["bestfit"]
-        a = result["obs"]["redshift"] + 1
-        fig.line(a * best["restframe_wavelengths"], maggies_to_mJy(best["spectrum"]))
+    fig, p = plot_errorbar(
+        fig,
+        wavelength,
+        flux,
+        yerr=flux_error,
+        point_kwargs={"size": 10, "legend_label": "data; MW E(B-V)-corrected"},
+        error_kwargs={"width": 2},
+        source=source,
+    )
+
+    # mouse-over for data
+    TOOLTIPS = [
+        ("flux (uJy)", "$y"),
+        ("flux error (uJy)", "@flux_error"),
+        ("wavelength", "$x"),
+        ("band", "@filters"),
+        ("mag (AB)", "@mag"),
+        ("mag error (AB)", "@mag_error"),
+    ]
+    hover = HoverTool(renderers=[p], tooltips=TOOLTIPS, visible=False)
+    fig.add_tools(hover)
+
+    # second check on SED file
+    # long-term shouldn't be necessary, just a result of debugging
+    if sed_results_file is not None and os.path.exists(sed_results_file) and os.path.exists(sed_modeldata_file):
+        logger.debug(f'''Loading results file "{sed_results_file}"...''')
+        result, obs, _ = reader.results_from(sed_results_file, dangerous=False)
+        logger.debug(f'''Loading model data file "{sed_modeldata_file}"...''')
+        model_data = np.load(sed_modeldata_file, allow_pickle=True)
+
+        # best = result["bestfit"]
+        if transient.best_redshift < 0.015 and offset_sed_model:
+            a = result["obs"]["redshift"] - 0.015 + 1
+            mag_off = (
+                cosmo.distmod(result["obs"]["redshift"]).value
+                - cosmo.distmod(result["obs"]["redshift"] - 0.015).value
+            )
+            logger.debug(f"mag off: {mag_off}")
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec"]) * 10 ** (0.4 * mag_off),
+                legend_label="average model",
+            )
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec_16"]) * 10 ** (0.4 * mag_off),
+                line_dash="dashed",
+                legend_label="68% CI",
+            )
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec_84"]) * 10 ** (0.4 * mag_off),
+                line_dash="dashed",
+            )
+        else:
+            mag_off = 0
+            a = result["obs"]["redshift"] + 1
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec"]),
+                legend_label="average model",
+            )
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec_16"]),
+                line_dash="dashed",
+                legend_label="68% CI",
+            )
+            fig.line(
+                a * model_data["rest_wavelength"],
+                maggies_to_mJy(model_data["spec_84"]),
+                line_dash="dashed",
+            )
+
+        #  pre-SBI++ version: fig.line(a * best["restframe_wavelengths"], maggies_to_mJy(best["spectrum"]))
         if obs["filters"] is not None:
             try:
                 pwave = [
                     Filter.objects.get(name=f).transmission_curve().wave_effective
                     for f in obs["filters"]
                 ]
-            except:
+            except Exception:
                 pwave = [f.wave_effective for f in obs["filters"]]
-            fig.circle(pwave, maggies_to_mJy(best["photometry"]))
 
-    # xaxis = LinearAxis()
-    # figure.add_layout(xaxis, 'below')
+            if transient.best_redshift < 0.015 and offset_sed_model:
+                fig.scatter(
+                    pwave,
+                    maggies_to_mJy(model_data["phot"]) * 10 ** (0.4 * mag_off),
+                    size=10,
+                )
+            else:
+                fig.scatter(pwave, maggies_to_mJy(model_data["phot"]), size=10)
 
-    # yaxis = LinearAxis()
-    # fig.add_layout(yaxis, 'left')
+    fig.legend.location = "top_left"
 
-    # fig.add_layout(Grid(dimension=0, ticker=xaxis.ticker))
-    # fig.add_layout(Grid(dimension=1, ticker=yaxis.ticker))
     script, div = components(fig)
-    return {f"bokeh_sed_{type}_script": script, f"bokeh_sed_{type}_div": div}
+    return {f"bokeh_sed_{type}_script": script, f"bokeh_sed_{type}_div": div, "fig": fig}
 
 
 def plot_errorbar(
-    figure, x, y, xerr=None, yerr=None, color="red", point_kwargs={}, error_kwargs={}
+    figure,
+    x,
+    y,
+    xerr=None,
+    yerr=None,
+    color="red",
+    point_kwargs={},
+    error_kwargs={},
+    source=None,
 ):
     """
     Plot data points with error bars on a bokeh plot
     """
-    figure.circle(x, y, color=color, **point_kwargs)
+
+    # to do the mouse-over
+    if source is not None:
+        p = figure.scatter("x", "y", color=color, source=source, **point_kwargs)
+    else:
+        p = figure.scatter(x, y, color=color, source=source, **point_kwargs)
 
     if xerr:
         x_err_x = []
@@ -273,7 +451,49 @@ def plot_errorbar(
             y_err_x.append((px, px))
             y_err_y.append((py - err, py + err))
         figure.multi_line(y_err_x, y_err_y, color=color, **error_kwargs)
-    return figure
+    return figure, p
+
+
+def plot_bar_chart(data_dict):
+    x_label = ""
+    y_label = "Transients"
+    transient_numbers = list(data_dict.values())
+
+    # bokeh 2.4.x bug where transients has to be string for LabelSet to work
+    vals = pd.DataFrame(
+        {
+            "processing": list(data_dict.keys()),
+            "transients": np.array(transient_numbers).astype(str).tolist(),
+            "index": range(len(data_dict.values())),
+        }
+    )
+    source = ColumnDataSource(vals)
+
+    graph = figure(
+        x_axis_label=x_label,
+        y_axis_label=y_label,
+        x_range=vals["processing"],
+        y_range=Range1d(start=0, end=max(transient_numbers) * 1.1),
+        sizing_mode="scale_both",
+    )
+
+    labels = LabelSet(
+        x="index",
+        y="transients",
+        text="transients",
+        source=source,
+        level="glyph",
+        y_offset=5,
+        x_offset=64,
+        text_align="center",
+    )
+
+    graph.vbar(source=source, x="processing", top="transients", bottom=0, width=0.7, color='#d15e00')
+    graph.add_layout(labels)
+
+    # displaying the model
+    script, div = components(graph)
+    return {"bokeh_cutout_script": script, "bokeh_cutout_div": div}
 
 
 def plot_pie_chart(data_dict):
@@ -307,13 +527,6 @@ def plot_pie_chart(data_dict):
         source=data,
     )
 
-    # data["value"] = data['value'].astype(str)
-    # data["value"] = data["value"].str.pad(35, side="left")
-    # source = ColumnDataSource(data)
-    # labels = LabelSet(x=0, y=1, text='value',
-    #                  angle=cumsum('angle', include_zero=True), source=source, render_mode='canvas')
-    # p.add_layout(labels)
-
     p.axis.axis_label = None
     p.axis.visible = False
     p.grid.grid_line_color = None
@@ -322,7 +535,6 @@ def plot_pie_chart(data_dict):
 
 
 def plot_timeseries():
-
     fig = figure(
         title="",
         width=700,
@@ -336,6 +548,156 @@ def plot_timeseries():
 
     script, div = components(fig)
     return {
-        f"bokeh_processing_trends_script": script,
-        f"bokeh_processing_trends_div": div,
+        "bokeh_processing_trends_script": script,
+        "bokeh_processing_trends_div": div,
+    }
+
+
+def download_file_from_s3(file_path, object_key):
+    s3 = ObjectStore()
+    try:
+        # Download SED results files to local file cache
+        s3.download_object(path=object_key, file_path=file_path)
+        assert os.path.isfile(file_path)
+    except Exception as err:
+        logger.error(f'''Error downloading SED file "{file_path}": {err}''')
+
+
+def delete_cached_file(file_path):
+    if not isinstance(file_path, str):
+        return
+    try:
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+    except Exception as err:
+        logger.error(f'''Error deleting cached SED file "{file_path}": {err}''')
+
+
+def temp_results_paths_from_canonical_path(canonical_path):
+    sed_results_tmp_filepath = os.path.join('/tmp', canonical_path.strip('/').replace('/', '__'))
+    sed_results_object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+    return sed_results_tmp_filepath, sed_results_object_key
+
+
+def render_sed_plot(transient, scope):
+    '''Generate a Bokeh plot of SED results'''
+
+    assert scope in ["local", "global"]
+    # Download the data files if they exist
+    canonical_path = None
+    sed_results_tmp_filepath = None
+    sed_modeldata_tmp_filepath = None
+    sed_obj = SEDFittingResult.objects.filter(transient=transient, aperture__type__exact=scope)
+    offset_sed_model = False
+    if sed_obj.exists():
+        canonical_path = sed_obj[0].posterior.name
+        sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)
+        sed_modeldata_tmp_filepath = sed_results_tmp_filepath.replace(".h5", "_modeldata.npz")
+        sed_modeldata_object_key = sed_results_object_key.replace(".h5", "_modeldata.npz")
+        download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
+        download_file_from_s3(sed_modeldata_tmp_filepath, sed_modeldata_object_key)
+        if sed_obj[0].software_version is None or Version(sed_obj[0].software_version) <= Version('1.13.1'):
+            offset_sed_model = True
+    # Generate a SED plot using Bokeh
+    plot = plot_sed(
+        transient=transient,
+        type=scope,
+        sed_results_file=sed_results_tmp_filepath,
+        sed_modeldata_file=sed_modeldata_tmp_filepath,
+        offset_sed_model=offset_sed_model
+    )
+    # Purge temporary cached files
+    delete_cached_file(sed_results_tmp_filepath)
+    delete_cached_file(sed_modeldata_tmp_filepath)
+    return {
+        **plot,
+        'canonical_path': canonical_path,
+    }
+
+
+def _read_host_spectrum_fits(local_fits_path):
+    """
+    Read a host spectrum FITS file saved by fetch_host_spectrum(): a
+    SPARCL-derived binary table (extension "SPECTRUM" with wavelength/
+    flux columns).
+    """
+    with fits.open(local_fits_path) as hdulist:
+        flux_unit = hdulist[0].header.get('BUNIT', '1e-17 erg cm-2 s-1 AA-1')
+        table = hdulist['SPECTRUM']
+        wavelength = np.asarray(table.data['wavelength'], dtype=np.float64)
+        flux = np.asarray(table.data['flux'], dtype=np.float64)
+        wave_unit = table.columns['wavelength'].unit or 'AA'
+
+    return {
+        'wavelength': wavelength,
+        'flux': flux,
+        'wave_unit': wave_unit,
+        'flux_unit': flux_unit,
+    }
+
+
+def plot_host_spectrum(host_spectrum=None, spectrum_file=None):
+    """
+    Plot the host galaxy spectrum downloaded by fetch_host_spectrum().
+    """
+    fig = figure(
+        title="",
+        sizing_mode="stretch_width",
+        max_height=400,
+        min_border=0,
+        x_axis_label="Wavelength [Angstrom]",
+        y_axis_label="Flux",
+    )
+
+    if spectrum_file is not None and os.path.exists(spectrum_file):
+        spec = _read_host_spectrum_fits(spectrum_file)
+        fig.yaxis.axis_label = f"Flux [{spec['flux_unit']}]"
+
+        source = ColumnDataSource(data=dict(x=spec['wavelength'], y=spec['flux']))
+        legend_label = f"{host_spectrum.source} spectrum" if host_spectrum else "spectrum"
+        line = fig.line('x', 'y', source=source, legend_label=legend_label)
+
+        TOOLTIPS = [
+            ("wavelength", "$x"),
+            ("flux", "$y"),
+        ]
+        hover = HoverTool(renderers=[line], tooltips=TOOLTIPS)
+        fig.add_tools(hover)
+
+        fig.legend.location = "top_left"
+    else:
+        fig.title = "Data Not Available"
+
+    # Silence emptoy plot warnings that pollute the logs.
+    # ref: https://docs.bokeh.org/en/2.4.1/docs/reference/core/validation.html#bokeh-core-validation
+    silence(MISSING_RENDERERS, True)
+    script, div = components(fig)
+    silence(MISSING_RENDERERS, False)
+    return {"bokeh_host_spec_script": script, "bokeh_host_spec_div": div, "fig": fig}
+
+
+def render_host_spectrum_plot(transient):
+    '''Generate a Bokeh plot of the archival host galaxy spectrum'''
+
+    canonical_path = None
+    spectrum_tmp_filepath = None
+    host_spectrum = None
+    if transient.host is not None:
+        host_spectrum_qs = HostSpectrum.objects.filter(host=transient.host)
+        if host_spectrum_qs.exists():
+            host_spectrum = host_spectrum_qs[0]
+    if host_spectrum is not None and host_spectrum.spectrum_file:
+        canonical_path = host_spectrum.spectrum_file.name
+        spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
+        download_file_from_s3(spectrum_tmp_filepath, spectrum_object_key)
+    plot = plot_host_spectrum(
+        host_spectrum=host_spectrum,
+        spectrum_file=spectrum_tmp_filepath,
+    )
+    # Purge temporary cached file
+    delete_cached_file(spectrum_tmp_filepath)
+    return {
+        **plot,
+        'canonical_path': canonical_path,
+        'host_spectrum': host_spectrum,
     }

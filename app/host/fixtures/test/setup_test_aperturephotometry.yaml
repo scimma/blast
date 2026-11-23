@@ -1,9 +1,13 @@
 - model: host.AperturePhotometry
+  pk: 1
   fields:
-      aperture: [PanSTARRS_g_2010H]
-      filter: [PanSTARRS_g]
-      transient: [2010H]
-      flux:
-      flux_error:
-      magnitude:
-      magnitude_error:
+    aperture:
+    - PanSTARRS_g_2010H
+    filter:
+    - PanSTARRS_g
+    transient:
+    - 2010H
+    flux: null
+    flux_error: null
+    magnitude: null
+    magnitude_error: null

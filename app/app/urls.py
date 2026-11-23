@@ -13,15 +13,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-import os
-
 from django.contrib import admin
 from django.urls import include
 from django.urls import path
 
+
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("admin/", admin.site.urls, name='admin'),
     path("", include("host.urls")),
     path("api/", include("api.urls")),
     path("", include("users.urls")),
+    path("oidc/", include("mozilla_django_oidc.urls"))
 ]
+
+handler403 = "host.views.error_view"
+handler404 = "host.views.resource_not_found_view"

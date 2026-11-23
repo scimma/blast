@@ -3,8 +3,15 @@ from django import forms
 
 class TransientSearchForm(forms.Form):
     name = forms.CharField(
-        label="", widget=forms.TextInput(attrs={"placeholder": "e.g. 2022eqw"})
+        label="",
+        widget=forms.TextInput(
+            attrs={"placeholder": "e.g. 2022eqw", "style": "width:10em"}
+        ),
+        required=False,
     )
+
+    # optional "status" is read by the transient_list view
+    status = forms.CharField(label="", initial="all", required=False)
 
 
 class ImageGetForm(forms.Form):
@@ -16,5 +23,40 @@ class ImageGetForm(forms.Form):
         self.fields["filters"] = forms.ChoiceField(
             label="",
             choices=choices,
-            widget=forms.Select(attrs={"placeholder": "select cutout"}),
+            widget=forms.Select(attrs={
+                "placeholder": "select cutout",
+                "class": "custom-select",
+            }),
         )
+
+
+class TransientUploadForm(forms.Form):
+    tns_names = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'style': 'min-width: 30rem;',
+            'cols': 100,
+            'placeholder': '2024abc\n2025xyz'
+        }),
+        label="List of TNS transient names (one per line)",
+        required=False,
+    )
+    full_info = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'style': 'min-width: 30rem;',
+            'cols': 100,
+            'placeholder': 'Identifier, RA, Dec, Redshift, Classification, Display Name'
+        }),
+        label='Transient definition table',
+        required=False,
+    )
+    update_info = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'style': 'min-width: 30rem;',
+            'cols': 100,
+            'placeholder': 'Identifier, RA, Dec, Redshift, Classification, HostName, HostRA, HostDec, HostRedshift, Global_aperture_a, Global_aperture_b, Global_aperture_theta, Comment'
+        }),
+        label='Transient update table',
+        required=False,
+    )
+
+    file = forms.FileField(required=False)

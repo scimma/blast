@@ -1,4 +1,5 @@
 - model: host.Host
+  pk: 1
   fields:
     name: PSO J080624.103+010209.859
     ra_deg: 121.60043802

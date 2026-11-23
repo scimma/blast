@@ -1,6 +1,9 @@
 - model: host.Cutout
+  pk: 20
   fields:
-      name: testone_WISE_W4
-      filter: [WISE_W4]
-      transient: [2022testone]
-      fits: /../cutout_cdn/2010h/WISE/WISE_W4.fits
+    name: testone_WISE_W4
+    filter:
+    - WISE_W4
+    transient:
+    - 2022testone
+    fits: /data/cutout_cdn/2010H/WISE/WISE_W4.fits

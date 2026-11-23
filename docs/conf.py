@@ -23,9 +23,9 @@ django.setup()
 
 # -- Project information -----------------------------------------------------
 
-project = "blast"
-copyright = "2021, Peter McGill"
-author = "Peter McGill"
+project = "Blast"
+copyright = "2024, Peter McGill, David Jones, T. Andrew Manning"
+author = "Peter McGill, David Jones, T. Andrew Manning"
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,24 +1,36 @@
 - model: host.TaskRegister
   fields:
-    transient: [2022testone]
-    task: [Host match]
-    status: [not processed]
-    last_modified: 2000-01-23 01:23:45.678+00:00
+    transient:
+    - 2022testone
+    task:
+    - Host match
+    status:
+    - not processed
+    last_modified: 2000-01-23 01:23:45.678000+00:00
 - model: host.TaskRegister
   fields:
-    transient: [2022testtwo]
-    task: [Host match]
-    status: [not processed]
-    last_modified: 2000-01-23 01:23:45.678+00:00
+    transient:
+    - 2022testtwo
+    task:
+    - Host match
+    status:
+    - not processed
+    last_modified: 2000-01-23 01:23:45.678000+00:00
 - model: host.TaskRegister
   fields:
-    transient: [2022testtwo]
-    task: [Cutout download]
-    status: [not processed]
-    last_modified: 2000-01-23 01:23:45.678+00:00
+    transient:
+    - 2022testtwo
+    task:
+    - Cutout download
+    status:
+    - not processed
+    last_modified: 2000-01-23 01:23:45.678000+00:00
 - model: host.TaskRegister
   fields:
-    transient: [2022testone]
-    task: [Cutout download]
-    status: [not processed]
-    last_modified: 2000-01-23 01:23:45.678+00:00
+    transient:
+    - 2022testone
+    task:
+    - Cutout download
+    status:
+    - not processed
+    last_modified: 2000-01-23 01:23:45.678000+00:00

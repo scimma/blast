@@ -5,7 +5,7 @@ from django.test import TestCase
 class LogInTest(TestCase):
     def setUp(self):
         self.credentials = {"username": "testuser", "password": "secret"}
-        User.objects.create_user(**self.credentials)
+        User.objects.create_user(**self.credentials, is_superuser=True)
 
     def test_login(self):
         # send login data

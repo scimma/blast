@@ -5,7 +5,7 @@
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 2MASS_J:
   hips_id: 'CDS/P/2MASS/J'
   pixel_size_arcsec: 1.0
@@ -13,7 +13,7 @@
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 2MASS_K:
   hips_id: 'CDS/P/2MASS/K'
   pixel_size_arcsec: 1.0
@@ -21,7 +21,7 @@
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 WISE_W1:
   hips_id: 'CDS/P/WISE/W1'
   pixel_size_arcsec: 2.75
@@ -29,7 +29,7 @@ WISE_W1:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 WISE_W2:
   hips_id: 'CDS/P/WISE/W2'
   pixel_size_arcsec: 2.75
@@ -37,7 +37,7 @@ WISE_W2:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 WISE_W3:
   hips_id: 'CDS/P/WISE/W3'
   pixel_size_arcsec: 2.75
@@ -45,7 +45,7 @@ WISE_W3:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 WISE_W4:
   hips_id: 'CDS/P/WISE/W4'
   pixel_size_arcsec: 5.5
@@ -53,7 +53,7 @@ WISE_W4:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: -60.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 GALEX_FUV:
   hips_id: 'CDS/P/GALEXGR6/AIS/FUV'
   pixel_size_arcsec: 1.5
@@ -61,7 +61,7 @@ GALEX_FUV:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: 0.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 GALEX_NUV:
   hips_id: 'CDS/P/GALEXGR6/AIS/NUV'
   pixel_size_arcsec: 1.5
@@ -69,7 +69,7 @@ GALEX_NUV:
   image_pixel_units: 'counts/sec'
   test_ra_deg: 120.0
   test_dec_deg: 0.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 PanSTARRS_g:
   hips_id: 'CDS/P/PanSTARRS/DR1/g'
   pixel_size_arcsec: 0.26
@@ -77,7 +77,7 @@ PanSTARRS_g:
   image_pixel_units: 'counts'
   test_ra_deg: 283.396237
   test_dec_deg: 33.029134
-  download_method: 'custom'
+  image_download_method: 'custom'
 PanSTARRS_r:
   hips_id: 'CDS/P/PanSTARRS/DR1/r'
   pixel_size_arcsec: 0.26
@@ -85,7 +85,7 @@ PanSTARRS_r:
   image_pixel_units: 'counts'
   test_ra_deg: 283.396237
   test_dec_deg: 33.029134
-  download_method: 'custom'
+  image_download_method: 'custom'
 PanSTARRS_i:
   hips_id: 'CDS/P/PanSTARRS/DR1/i'
   pixel_size_arcsec: 0.26
@@ -93,7 +93,7 @@ PanSTARRS_i:
   image_pixel_units: 'counts'
   test_ra_deg: 283.396237
   test_dec_deg: 33.029134
-  download_method: 'custom'
+  image_download_method: 'custom'
 PanSTARRS_z:
   hips_id: 'CDS/P/PanSTARRS/DR1/z'
   pixel_size_arcsec: 0.26
@@ -101,7 +101,7 @@ PanSTARRS_z:
   image_pixel_units: 'counts'
   test_ra_deg: 283.396237
   test_dec_deg: 33.029134
-  download_method: 'custom'
+  image_download_method: 'custom'
 PanSTARRS_y:
   hips_id: 'CDS/P/PanSTARRS/DR1/y'
   pixel_size_arcsec: 0.26
@@ -109,7 +109,7 @@ PanSTARRS_y:
   image_pixel_units: 'counts'
   test_ra_deg: 283.396237
   test_dec_deg: 33.029134
-  download_method: 'custom'
+  image_download_method: 'custom'
 SDSS_i:
   hips_id: 'CDS/P/SDSS9/i'
   pixel_size_arcsec: 0.29296875
@@ -117,7 +117,7 @@ SDSS_i:
   image_pixel_units: ''
   test_ra_deg: 210.0
   test_dec_deg: 30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 SDSS_r:
   hips_id: 'CDS/P/SDSS9/r'
   pixel_size_arcsec: 0.29296875
@@ -125,7 +125,7 @@ SDSS_r:
   image_pixel_units: ''
   test_ra_deg: 210.0
   test_dec_deg: 30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 SDSS_u:
   hips_id: 'CDS/P/SDSS9/u'
   pixel_size_arcsec: 0.29296875
@@ -133,7 +133,7 @@ SDSS_u:
   image_pixel_units: ''
   test_ra_deg: 210.0
   test_dec_deg: 30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 SDSS_z:
   hips_id: 'CDS/P/SDSS9/z'
   pixel_size_arcsec: 0.29296875
@@ -141,7 +141,7 @@ SDSS_z:
   image_pixel_units: ''
   test_ra_deg: 210.0
   test_dec_deg: 30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 DES_Y:
   hips_id: 'CDS/P/DES-DR1/Y'
   pixel_size_arcsec: 0.2637
@@ -149,7 +149,7 @@ DES_Y:
   image_pixel_units: ''
   test_ra_deg: 60.0
   test_dec_deg: -30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 DES_g:
   hips_id: 'CDS/P/DES-DR1/g'
   pixel_size_arcsec: 0.2637
@@ -157,7 +157,7 @@ DES_g:
   image_pixel_units: ''
   test_ra_deg: 60.0
   test_dec_deg: -30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 DES_r:
   hips_id: 'CDS/P/DES-DR1/r'
   pixel_size_arcsec: 0.2637
@@ -165,7 +165,7 @@ DES_r:
   image_pixel_units: ''
   test_ra_deg: 60.0
   test_dec_deg: -30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 DES_i:
   hips_id: 'CDS/P/DES-DR1/i'
   pixel_size_arcsec: 0.2637
@@ -173,7 +173,7 @@ DES_i:
   image_pixel_units: ''
   test_ra_deg: 60.0
   test_dec_deg: -30.0
-  download_method: 'hips'
+  image_download_method: 'hips'
 DES_z:
   hips_id: 'CDS/P/DES-DR1/z'
   pixel_size_arcsec: 0.2637
@@ -181,4 +181,4 @@ DES_z:
   image_pixel_units: ''
   test_ra_deg: 60.0
   test_dec_deg: -30.0
-  download_method: 'hips'
+  image_download_method: 'hips'

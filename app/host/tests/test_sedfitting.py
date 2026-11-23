@@ -1,42 +1,14 @@
-import astropy
-import dynesty
-import fsps
-import h5py
-import numpy as np
-import pandas as pd
-import pylab as plt
-import sedpy
-from astropy.coordinates import SkyCoord
-from astroquery.sdss import SDSS
-from django.conf import settings
-from django.db.models import Q
 from django.test import TestCase
-from numpy.testing import assert_array_equal
 from sedpy.observate import Filter as SedpyFilter
-from sedpy.observate import load_filters
 
-from ..models import AperturePhotometry
 from ..models import Filter
-from ..models import Host
-from ..models import SEDFittingResult
-from ..models import Transient
-from ..transient_tasks import GlobalAperturePhotometry
-from ..transient_tasks import GlobalHostSEDFitting
-from ..transient_tasks import LocalAperturePhotometry
-from ..transient_tasks import LocalHostSEDFitting
-from ..transient_tasks import ValidateGlobalPhotometry
-from ..transient_tasks import ValidateLocalPhotometry
 
 
 class FilterTest(TestCase):
-    fixtures = [
-        "../fixtures/initial/setup_survey_data.yaml",
-        "../fixtures/initial/setup_filter_data.yaml",
-    ]
 
     def test_filter_conversion(self):
         """
-        Test blast filter is converted to sedpy filter
+        Test Blast filter is converted to sedpy filter
         """
 
         for filter in Filter.objects.all():
@@ -51,64 +23,50 @@ class FilterTest(TestCase):
 
 
 class PropsectorBuildObsTest(TestCase):
-    fixtures = [
-        "../fixtures/initial/setup_survey_data.yaml",
-        "../fixtures/initial/setup_filter_data.yaml",
-    ]
 
     def test_build_obs(self):
         pass
 
 
-class SEDFittingFullTest(TestCase):
+# class SEDFittingFullTest(TestCase):
 
-    fixtures = [
-        "../fixtures/initial/setup_survey_data.yaml",
-        "../fixtures/initial/setup_filter_data.yaml",
-        "../fixtures/initial/setup_catalog_data.yaml",
-        "../fixtures/initial/setup_status.yaml",
-        "../fixtures/initial/setup_tasks.yaml",
-        "../fixtures/initial/setup_acknowledgements.yaml",
-        "../Fixtures/test/test_2010h.yaml",
-    ]
+#     def test_prospector_global(self):
 
-    # def test_prospector_global(self):
+#     transient = Transient.objects.get(name="2026dix")
 
-    # transient = Transient.objects.get(name="2010H")
+#     apphot_cls = GlobalAperturePhotometry()
+#     status_message = apphot_cls._run_process(transient)
 
-    # apphot_cls = GlobalAperturePhotometry()
-    # status_message = apphot_cls._run_process(transient)
+#     sed_cls = GlobalHostSEDFitting()
+#     status_message = sed_cls._run_process(transient, mode="test")
 
-    # sed_cls = GlobalHostSEDFitting()
-    # status_message = sed_cls._run_process(transient, mode="test")
+#     pr = SEDFittingResult.objects.filter(
+#        Q(transient=transient)
+#        & Q(aperture__type="global")
+#        & Q(posterior__contains="/tmp")
+#     )
+#     self.assertTrue(len(pr) == 1)
+#     self.assertTrue(status_message == "processed")
+#     self.assertTrue(pr[0].log_ssfr_50 != None)
 
-    # pr = SEDFittingResult.objects.filter(
-    #    Q(transient=transient)
-    #    & Q(aperture__type="global")
-    #    & Q(posterior__contains="/tmp")
-    # )
-    # self.assertTrue(len(pr) == 1)
-    # self.assertTrue(status_message == "processed")
-    # self.assertTrue(pr[0].log_ssfr_50 != None)
+#     def test_prospector_local(self):
 
-    # def test_prospector_local(self):
+#       transient = Transient.objects.get(name="2026dix")
 
-    #   transient = Transient.objects.get(name="2010H")
+#       apphot_cls = LocalAperturePhotometry()
+#       status_message = apphot_cls._run_process(transient)
 
-    #   apphot_cls = LocalAperturePhotometry()
-    #   status_message = apphot_cls._run_process(transient)
+#       valid_cls = ValidateLocalPhotometry()
+#       status_message = valid_cls._run_process(transient)
 
-    #   valid_cls = ValidateLocalPhotometry()
-    #   status_message = valid_cls._run_process(transient)
+#       sed_cls = LocalHostSEDFitting()
+#       status_message = sed_cls._run_process(transient, mode="test")
 
-    #   sed_cls = LocalHostSEDFitting()
-    #   status_message = sed_cls._run_process(transient, mode="test")
-
-    #   pr = SEDFittingResult.objects.filter(
-    #       Q(transient=transient)
-    #       & Q(aperture__type="local")
-    #       & Q(posterior__contains="/tmp")
-    #   )
-    #   self.assertTrue(len(pr) == 1)
-    #   self.assertTrue(status_message == "processed")
-    #   self.assertTrue(pr[0].log_ssfr_50 != None)
+#       pr = SEDFittingResult.objects.filter(
+#           Q(transient=transient)
+#           & Q(aperture__type="local")
+#           & Q(posterior__contains="/tmp")
+#       )
+#       self.assertTrue(len(pr) == 1)
+#       self.assertTrue(status_message == "processed")
+#       self.assertTrue(pr[0].log_ssfr_50 != None)

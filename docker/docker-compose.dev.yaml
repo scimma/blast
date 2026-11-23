@@ -1,0 +1,167 @@
+name: blast-dev-$USER
+
+networks:
+  internal:
+    external: false
+
+services:
+
+  nginx:
+    extends:
+      file: docker-compose.yml
+      service: nginx
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WEB_SERVER_PORT}/healthz"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+      start_interval: 5s
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - 127.0.0.1:${WEB_SERVER_PORT}:${WEB_SERVER_PORT}
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - django-static:/static
+      - init-data:/data
+      - ../nginx/default.conf.tpl:/etc/nginx/conf.d/default.conf.tpl:ro
+      - ../nginx/nginx_init.sh:/docker-entrypoint.d/nginx_init.sh:ro
+
+  app:
+    extends:
+      file: docker-compose.yml
+      service: app
+    restart: on-failure
+    depends_on:
+      celery-beat:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WEB_APP_PORT}/healthz"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+      start_interval: 5s
+    build:
+      context: ../app/
+    ports:
+      - 127.0.0.1:${WEB_APP_PORT}:${WEB_APP_PORT}
+    environment:
+      - "DEV_MODE=1"
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - init-data:/mnt/data
+      - django-static:/app/static
+      - ./dustmapsrc:/tmp/.dustmapsrc:ro
+      - ../app:/app
+
+  database:
+    extends:
+      file: docker-compose.yml
+      service: database
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
+  influxdb:
+    extends:
+      file: docker-compose.yml
+      service: influxdb
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
+  grafana:
+    extends:
+      file: docker-compose.yml
+      service: grafana
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
+  celery-worker:
+    extends:
+      file: docker-compose.yml
+      service: celery-worker
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - init-data:/mnt/data
+      - django-static:/app/static
+      - ./dustmapsrc:/tmp/.dustmapsrc:ro
+      - ../app:/app
+
+  celery-beat:
+    extends:
+      file: docker-compose.yml
+      service: celery-beat
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "bash", "-c", "[ -f /tmp/celery-beat-ready ]"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 600s
+      start_interval: 5s
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - init-data:/mnt/data
+      - django-static:/app/static
+      - ./dustmapsrc:/tmp/.dustmapsrc:ro
+      - ../app:/app
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
+  flower:
+    extends:
+      file: docker-compose.yml
+      service: flower
+    depends_on:
+      celery-beat:
+        condition: service_healthy
+    build:
+      context: ../app/
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+    volumes:
+      - init-data:/mnt/data
+      - django-static:/app/static
+      - ./dustmapsrc:/tmp/.dustmapsrc:ro
+      - ../app:/app
+
+  batch:
+    extends:
+      file: docker-compose.yml
+      service: batch
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev
+
+  object-store:
+    extends:
+      file: docker-compose.yml
+      service: object-store
+    env_file:
+      - ../env/.env.default
+      - ../env/.env.dev

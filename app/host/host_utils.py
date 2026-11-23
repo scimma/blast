@@ -1,48 +1,109 @@
-import glob
-import math
+import json
+from tarfile import open as tar_open
+from datetime import datetime
+from api.serializers import DatasetSerializer
+from packaging.version import Version
 import os
+import math
 import time
 import warnings
 from collections import namedtuple
+from xml.parsers.expat import ExpatError
+from collections.abc import Mapping
+from copy import deepcopy
 
 import astropy.units as u
-import extinction
 import numpy as np
 import yaml
-from astropy.convolution import Gaussian2DKernel
 from astropy.coordinates import SkyCoord
 from astropy.cosmology import FlatLambdaCDM
 from astropy.io import fits
-from astropy.stats import gaussian_fwhm_to_sigma
-from astropy.units import Quantity
 from astropy.wcs import WCS
-from astroquery.hips2fits import hips2fits
 from astroquery.ipac.ned import Ned
 from astroquery.sdss import SDSS
 
 cosmo = FlatLambdaCDM(H0=70, Om0=0.315)
 
 from django.conf import settings
+from django.db.models import Q
+from django.db import transaction
 from dustmaps.sfd import SFDQuery
+
 from photutils.aperture import aperture_photometry
 from photutils.aperture import EllipticalAperture
 from photutils.background import Background2D
-from photutils.segmentation import deblend_sources
 from photutils.segmentation import detect_sources
-from photutils.segmentation import detect_threshold
 from photutils.segmentation import SourceCatalog
 from photutils.utils import calc_total_error
+from photutils.background import LocalBackground
 from photutils.background import MeanBackground, SExtractorBackground
 from astropy.stats import SigmaClip
 
-from .photometric_calibration import ab_mag_to_mJy
 from .photometric_calibration import flux_to_mag
 from .photometric_calibration import flux_to_mJy_flux
 from .photometric_calibration import fluxerr_to_magerr
 from .photometric_calibration import fluxerr_to_mJy_fluxerr
 
-from .models import Cutout
-from .models import Aperture
+from host.models import Aperture
+from host.models import Alias
+from host.models import Host
+from host.models import HostSpectrum
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import Filter
+from host.models import SEDFittingResult
+from host.models import TaskRegister
+from host.models import Task
+from host.models import Transient
+from host.models import Survey
+from host.models import StarFormationHistoryResult
+from host.models import DatasetRevision
+from host.task_prereqs import ImageDownload_prerequisites
+from host.task_prereqs import MWEBV_Transient_prerequisites
+from host.task_prereqs import HostMatch_prerequisites
+from host.task_prereqs import HostInformation_prerequisites
+from host.task_prereqs import LocalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateLocalPhotometry_prerequisites
+from host.task_prereqs import LocalHostSEDFitting_prerequisites
+from host.task_prereqs import MWEBV_Host_prerequisites
+from host.task_prereqs import GlobalApertureConstruction_prerequisites
+from host.task_prereqs import GlobalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateGlobalPhotometry_prerequisites
+from host.task_prereqs import GlobalHostSEDFitting_prerequisites
+from host.task_prereqs import CropTransientImages_prerequisites
+from host.task_prereqs import GenerateThumbnail_prerequisites
+from host.task_prereqs import GenerateThumbnailFinal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
+from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
+
+from .object_store import ObjectStore
+from .models import TaskLock
+from uuid import uuid4
+from shutil import rmtree
+from app.celery import app
+from .models import Status
+from .base_tasks import initialize_all_tasks_status
+
+from host.log import get_logger
+logger = get_logger(__name__)
+
+uuid_regex = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+ARCSEC_DEC_IN_DEG = 0.0002778  # 1 arcsecond declination in degrees
+ARCSEC_RA_IN_DEG = 0.004167  # 1 arcsecond right ascension in degrees
+FILTER_NAMES = [
+    "PanSTARRS_g",
+    "PanSTARRS_r",
+    "PanSTARRS_i",
+    "SDSS_r",
+    "SDSS_i",
+    "SDSS_g",
+    "DES_r",
+    "DES_i",
+    "DES_g",
+    "2MASS_H",
+]
 
 
 def survey_list(survey_metadata_path):
@@ -107,10 +168,10 @@ def build_source_catalog(image, background, threshhold_sigma=3.0, npixels=10):
     )
     if segmentation is None:
         return None
-    deblended_segmentation = deblend_sources(
-        background_subtracted_data, segmentation, npixels=npixels
-    )
-    print(segmentation)
+    # deblended_segmentation = deblend_sources(
+    #     background_subtracted_data, segmentation, npixels=npixels
+    # )
+    logger.debug(segmentation)
     return SourceCatalog(background_subtracted_data, segmentation)
 
 
@@ -218,6 +279,16 @@ def do_aperture_photometry(image, sky_aperture, filter):
 
     background_subtracted_data = image_data - background.background
 
+    # I think we need a local background subtraction for WISE
+    # the others haven't given major problems
+    if "WISE" in filter.name:
+        aper_pix = sky_aperture.to_pixel(wcs)
+        lbg = LocalBackground(aper_pix.a, aper_pix.a * 2)
+        local_background = lbg(
+            background_subtracted_data, aper_pix.positions[0], aper_pix.positions[1]
+        )
+        background_subtracted_data -= local_background
+
     if filter.image_pixel_units == "counts/sec":
         error = calc_total_error(
             background_subtracted_data,
@@ -268,15 +339,17 @@ def do_aperture_photometry(image, sky_aperture, filter):
         zpt = filter.magnitude_zero_point + 2.5 * np.log10(image[0].header["EXPTIME"])
 
     flux = flux_to_mJy_flux(uncalibrated_flux, zpt)
+    flux = flux * 10 ** (-0.4 * filter.ab_offset)
     flux_error = fluxerr_to_mJy_fluxerr(uncalibrated_flux_err, zpt)
+    flux_error = flux_error * 10 ** (-0.4 * filter.ab_offset)
+
     magnitude = flux_to_mag(uncalibrated_flux, zpt)
     magnitude_error = fluxerr_to_magerr(uncalibrated_flux, uncalibrated_flux_err)
     if magnitude != magnitude:
         magnitude, magnitude_error = None, None
     if flux != flux or flux_error != flux_error:
         flux, flux_error = None, None
-
-    wave_eff = filter.transmission_curve().wave_effective
+    # wave_eff = filter.transmission_curve().wave_effective
     return {
         "flux": flux,
         "flux_error": flux_error,
@@ -285,7 +358,7 @@ def do_aperture_photometry(image, sky_aperture, filter):
     }
 
 
-def get_dust_maps(position, media_root=settings.MEDIA_ROOT):
+def get_dust_maps(position):
     """Gets milkyway reddening value"""
 
     ebv = SFDQuery()(position)
@@ -293,11 +366,11 @@ def get_dust_maps(position, media_root=settings.MEDIA_ROOT):
     return 0.86 * ebv
 
 
-def get_local_aperture_size(redshift):
+def get_local_aperture_size(redshift, apr_kpc=2):
     """find the size of a 2 kpc radius in arcsec"""
 
     dadist = cosmo.angular_diameter_distance(redshift).value
-    apr_arcsec = 2 / (
+    apr_arcsec = apr_kpc / (
         dadist * 1000 * (np.pi / 180.0 / 3600.0)
     )  # 2 kpc aperture radius is this many arcsec
 
@@ -313,7 +386,7 @@ def check_local_radius(redshift, image_fwhm_arcsec):
         dadist * 1000 * (np.pi / 180.0 / 3600.0)
     )  # 2 kpc aperture radius is this many arcsec
 
-    return apr_arcsec > image_fwhm_arcsec
+    return "true" if apr_arcsec > image_fwhm_arcsec else "false"
 
 
 def check_global_contamination(global_aperture_phot, aperture_primary):
@@ -323,127 +396,100 @@ def check_global_contamination(global_aperture_phot, aperture_primary):
     aperture = global_aperture_phot.aperture
     # check both the image used to generate aperture
     # and the image used to measure photometry
-    for cutout_name in [
+    for cutout_fits_path in [
         global_aperture_phot.aperture.cutout.fits.name,
         aperture_primary.cutout.fits.name,
     ]:
-
         # UV photons are too sparse, segmentation map
         # builder cannot easily handle these
-        if "/GALEX/" in cutout_name:
+        if "/GALEX/" in cutout_fits_path:
             continue
 
-        # copy the steps to build segmentation map
-        image = fits.open(cutout_name)
-        wcs = WCS(image[0].header)
-        background = estimate_background(image)
-        catalog = build_source_catalog(
-            image, background, threshhold_sigma=5, npixels=15
-        )
+        # Download FITS file to local scratch space
+        s3 = ObjectStore()
+        local_tmp_path = os.path.join('/tmp', cutout_fits_path.strip('/').replace('/', '__'))
+        if os.path.exists(local_tmp_path):
+            # Use a unique name to avoid collisions with concurrent processes
+            local_tmp_path = f'''{local_tmp_path}.{str(uuid4())}'''
+        object_key = os.path.join(settings.S3_BASE_PATH, cutout_fits_path.strip('/'))
+        s3.download_object(path=object_key, file_path=local_tmp_path)
+        assert os.path.isfile(local_tmp_path)
 
-        # catalog is None is no sources are detected in the image
-        # so we don't have to worry about contamination in that case
-        if catalog is None:
-            continue
+        try:
+            # copy the steps to build segmentation map
+            image = fits.open(local_tmp_path)
+            wcs = WCS(image[0].header)
+            background = estimate_background(image)
+            catalog = build_source_catalog(
+                image, background, threshhold_sigma=5, npixels=15
+            )
 
-        source_data = match_source(aperture.sky_coord, catalog, wcs)
+            # catalog is None is no sources are detected in the image
+            # so we don't have to worry about contamination in that case
+            if catalog is None:
+                continue
 
-        mask_image = (
-            aperture.sky_aperture.to_pixel(wcs)
-            .to_mask()
-            .to_image(np.shape(image[0].data))
-        )
-        obj_ids = catalog._segment_img.data[np.where(mask_image == True)]
-        source_obj = source_data._labels
+            source_data = match_source(aperture.sky_coord, catalog, wcs)
 
-        # let's look for contaminants
-        unq_obj_ids = np.unique(obj_ids)
-        if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
-            is_contam = True
+            mask_image = (
+                aperture.sky_aperture.to_pixel(wcs)
+                .to_mask()
+                .to_image(np.shape(image[0].data))
+            )
+            obj_ids = catalog._segmentation_image.data[np.where(mask_image == True)]  # noqa: E712
+            source_obj = source_data._labels
 
+            # let's look for contaminants
+            unq_obj_ids = np.unique(obj_ids)
+            if len(unq_obj_ids[(unq_obj_ids != 0) & (unq_obj_ids != source_obj)]):
+                is_contam = True
+        finally:
+            try:
+                # Delete FITS file from local file cache
+                os.remove(local_tmp_path)
+            except FileNotFoundError:
+                pass
     return is_contam
+
+
+def select_best_cutout(transient_name):
+    cutouts = Cutout.objects.filter(transient__name__exact=transient_name).filter(~Q(fits=""))
+    # Choose the cutout from the available filters using the priority define in select_cutout_aperture()
+    cutout = None
+    cutout_set = select_cutout_aperture(cutouts).filter(~Q(fits=""))
+    if len(cutout_set):
+        cutout = cutout_set[0]
+    return cutout
 
 
 def select_cutout_aperture(cutouts, choice=0):
     """
-    Select cutout for aperture
+    Select cutout for aperture by searching through the available filters.
     """
-    filter_names = [
-        "PanSTARRS_g",
-        "PanSTARRS_r",
-        "PanSTARRS_i",
-        "SDSS_r",
-        "SDSS_i",
-        "SDSS_g",
-        "DES_r",
-        "DES_i",
-        "DES_g",
-        "2MASS_H",
-    ]
-
-    #### choice = 0
-    ### edited to allow initial offset
-    filter_choice = filter_names[choice]
-
-    while not cutouts.filter(filter__name=filter_choice).exists():
-        choice += 1
-        filter_choice = filter_names[choice]
+    # Start iterating through the subset of filters in the list staring at the index specified by "choice".
+    filter_choice = FILTER_NAMES[choice:]
+    for filter_name in FILTER_NAMES[choice:]:
+        cutout_qs = cutouts.filter(filter__name=filter_name).filter(~Q(fits=""))
+        if cutout_qs.exists():
+            logger.debug(f'''Cutouts for filter "{filter_name}": {[str(cutout) for cutout in cutout_qs]}''')
+            filter_choice = filter_name
+            break
 
     return cutouts.filter(filter__name=filter_choice)
 
 
 def select_aperture(transient):
-
-    cutouts = Cutout.objects.filter(transient=transient)
-    if len(cutouts):
-        cutout_for_aperture = select_cutout_aperture(cutouts)
-    if len(cutouts) and len(cutout_for_aperture):
-        global_aperture = Aperture.objects.filter(
-            type__exact="global", transient=transient, cutout=cutout_for_aperture[0]
-        )
-    else:
-        global_aperture = Aperture.objects.none()
-
-    return global_aperture
-
-
-# def find_host_data(position, name='No name'):
-#    """
-#    Finds the information about the host galaxy given the position of the supernova.
-#    Parameters
-#    ----------
-#    :position : :class:`~astropy.coordinates.SkyCoord`
-#        On Sky position of the source to be matched.
-#    :name : str, default='No name'
-#        Name of the the object.
-#    Returns
-#    -------
-#    :host_information : ~astropy.coordinates.SkyCoord`
-#        Host position
-#    """
-#    #getGHOST(real=False, verbose=0)
-#    host_data = getTransientHosts(snCoord=[position],
-#                                         snName=[name],
-#                                         verbose=1, starcut='gentle', ascentMatch=True)
-
-# clean up after GHOST...
-#    dir_list = glob.glob('transients_*/*/*')
-#    for dir in dir_list: os.remove(dir)
-
-#    for level in ['*/*/', '*/']:
-#        dir_list = glob.glob('transients_' + level)
-#        for dir in dir_list: os.rmdir(dir)
-
-
-#    if len(host_data) == 0:
-#        host_position = None
-#    else:
-#        host_position = SkyCoord(ra=host_data['raMean'][0],
-#                             dec=host_data['decMean'][0],
-#                             unit='deg')
-
-
-#    return host_position
+    '''Select the best Aperture object for the input transient.
+       Returns a QuerySet of Aperture objects.'''
+    # Find all cutouts that have an associated FITS image file
+    cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+    # If no cutout images are found, return an empty Aperture set
+    if not len(cutouts):
+        return Aperture.objects.none()
+    cutout_for_aperture = select_cutout_aperture(cutouts)
+    if len(cutout_for_aperture):
+        return Aperture.objects.filter(type__exact="global", transient=transient, cutout=cutout_for_aperture[0])
+    return Aperture.objects.none()
 
 
 def estimate_background(image, filter_name=None):
@@ -487,8 +533,8 @@ def construct_aperture(image, position):
     wcs = WCS(image[0].header)
     background = estimate_background(image)
 
-    ### found an edge case where deblending isn't working how I'd like it to
-    ### so if it's not finding the host, play with the default threshold
+    # found an edge case where deblending isn't working how I'd like it to
+    # so if it's not finding the host, play with the default threshold
     def get_source_data(threshhold_sigma):
         catalog = build_source_catalog(
             image, background, threshhold_sigma=threshhold_sigma
@@ -515,41 +561,68 @@ def construct_aperture(image, position):
     # make sure we know this failed
     if source_separation_arcsec > 5:
         return None
-
     return elliptical_sky_aperture(source_data, wcs)
 
 
 def query_ned(position):
-    """Get a Galaxy's redshift from ned if it is available."""
+    """Get a Galaxy's redshift from NED if it is available."""
 
-    result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
-    result_table = result_table[result_table["Redshift"].mask == False]
+    timeout = settings.QUERY_TIMEOUT
+    time_start = time.time()
+    logger.debug('''Aquiring NED query lock...''')
+    while timeout > time.time() - time_start:
+        if TaskLock.objects.request_lock('ned_query'):
+            break
+        logger.debug('''Waiting to acquire NED query lock...''')
+        time.sleep(1)
 
-    redshift = result_table["Redshift"].value
-
-    if len(redshift):
-        galaxy_data = {"redshift": redshift[0]}
-    else:
-        galaxy_data = {"redshift": None}
+    galaxy_data = {"redshift": None}
+    try:
+        result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
+        result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
+        redshift = result_table["Redshift"].value
+        if len(redshift):
+            pos = SkyCoord(result_table["RA"].value, result_table["DEC"].value, unit=u.deg)
+            sep = position.separation(pos).arcsec
+            iBest = np.where(sep == np.min(sep))[0][0]
+            galaxy_data = {"redshift": redshift[iBest]}
+        assert not math.isnan(galaxy_data['redshift'])
+    except ExpatError as err:
+        logger.error(f"Too many requests to NED: {err}")
+        raise RuntimeError("Too many requests to NED")
+    except Exception as err:
+        logger.warning(f'''Error obtaining redshift from NED: {err}''')
+    finally:
+        # Release the NED query lock
+        logger.debug('''Releasing NED query lock...''')
+        TaskLock.objects.release_lock('ned_query')
 
     return galaxy_data
 
 
 def query_sdss(position):
     """Get a Galaxy's redshift from SDSS if it is available"""
-    result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
 
-    if result_table is not None and "z" in result_table.keys():
+    timeout = settings.QUERY_TIMEOUT
+    time_start = time.time()
+    logger.debug('''Aquiring SDSS query lock...''')
+    while timeout > time.time() - time_start:
+        if TaskLock.objects.request_lock('SDSS_query'):
+            break
+        logger.debug('''Waiting to acquire SDSS query lock...''')
+        time.sleep(1)
+    galaxy_data = {"redshift": None}
+    try:
+        result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
         redshift = result_table["z"].value
-        if len(redshift) > 0:
-            if not math.isnan(redshift[0]):
-                galaxy_data = {"redshift": redshift[0]}
-            else:
-                galaxy_data = {"redshift": None}
-        else:
-            galaxy_data = {"redshift": None}
-    else:
-        galaxy_data = {"redshift": None}
+        assert not math.isnan(redshift[0])
+        galaxy_data["redshift"] = redshift[0]
+    except Exception as err:
+        logger.warning(f'''Error obtaining redshift from SDSS: {err}''')
+    finally:
+        # Release the SDSS query lock
+        logger.debug('''Releasing SDSS query lock...''')
+        TaskLock.objects.release_lock('SDSS_query')
 
     return galaxy_data
 
@@ -561,8 +634,8 @@ def construct_all_apertures(position, image_dict):
         try:
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
-        except:
-            print(f"Could not fit aperture to {name} imaging data")
+        except Exception:
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     return apertures
 
@@ -589,8 +662,8 @@ def pick_largest_aperture(position, image_dict):
         try:
             aperture = construct_aperture(image, position)
             apertures[name] = aperture
-        except:
-            print(f"Could not fit aperture to {name} imaging data")
+        except Exception:
+            logger.warning(f"Could not fit aperture to {name} imaging data")
 
     aperture_areas = {}
     for image_name in image_dict:
@@ -601,3 +674,1062 @@ def pick_largest_aperture(position, image_dict):
 
     max_size_name = max(aperture_areas, key=aperture_areas.get)
     return {max_size_name: apertures[max_size_name]}
+
+
+def get_directory_size(directory):
+    """Returns the `directory` size in bytes."""
+    total = 0
+    # Avoid returning zero length for symlinks
+    directory = os.path.realpath(directory)
+    try:
+        # print("[+] Getting the size of", directory)
+        for entry in os.scandir(directory):
+            if entry.is_file():
+                # if it's a file, use stat() function
+                total += entry.stat().st_size
+            elif entry.is_dir():
+                # if it's a directory, recursively call this function
+                try:
+                    total += get_directory_size(entry.path)
+                except FileNotFoundError:
+                    pass
+    except NotADirectoryError:
+        # if `directory` isn't a directory, get the file size then
+        return os.path.getsize(directory)
+    except PermissionError:
+        # if for whatever reason we can't open the folder, return 0
+        return 0
+    return total
+
+
+def get_job_scratch_prune_lock_id(scratch_root):
+    '''Create or parse a lock file containing a unique ID for the scratch root directory.
+       In conjunction with the TaskLock global mutex, this lock file prevents more than
+       a single process from attempting to prune scratch files therein.'''
+    # Determine worker ID from "prune_lock.yaml" file
+    semaphore_path = os.path.join(scratch_root, 'prune_lock.yaml')
+    try:
+        with open(semaphore_path, 'r') as meta_file:
+            metadata = yaml.load(meta_file, Loader=yaml.SafeLoader)
+        worker_id = metadata['id']
+    except Exception as err:
+        logger.warning(f'Assuming missing or invalid scratch metadata file; creating new one. (Error: {err})')
+        worker_id = str(uuid4())
+        with open(semaphore_path, 'w') as meta_file:
+            yaml.dump({'id': worker_id}, meta_file)
+    return f'prune_scratch_files_{worker_id}'
+
+
+def calculate_units(size):
+    '''Return the best units to express the file size along with the rounded integer in those units.'''
+    units = 'bytes'
+    size_in_units = size
+    if size > 1024**4:
+        units = 'TiB'
+        size_in_units = round(size / 1024**4, 0)
+    elif size > 1024**3:
+        units = 'GiB'
+        size_in_units = round(size / 1024**3, 0)
+    elif size > 1024**2:
+        units = 'MiB'
+        size_in_units = round(size / 1024**2, 0)
+    return units, size_in_units
+
+
+def wait_for_free_space(force_prune=False):
+    # Wait until enough scratch space is available before launching the workflow tasks.
+    for scratch_root in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
+        while True:
+            if not force_prune:
+                # Calculate size of /scratch to determine free space. If JOB_SCRATCH_MAX_SIZE is finite, calculate free
+                # space using the supplied value; otherwise, attempt to calculate using statvfs.
+                scratch_total = settings.JOB_SCRATCH_MAX_SIZE
+                if scratch_total:
+                    scratch_used = get_directory_size(scratch_root)
+                    scratch_free = scratch_total - scratch_used
+                else:
+                    # See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/statvfs.h.html
+                    # and https://docs.python.org/3/library/os.html#os.statvfs
+                    statvfs = os.statvfs(scratch_root)
+                    # Capacity of filesystem in bytes
+                    scratch_total = statvfs.f_frsize * statvfs.f_blocks
+                    # Number of free bytes available to non-privileged process.
+                    scratch_free = statvfs.f_frsize * statvfs.f_bavail
+                free_percentage = round(100.0 * scratch_free / scratch_total)
+                logger.debug(f'''Job scratch free space is {scratch_free} bytes ({free_percentage}%) '''
+                             f'''for a scratch volume capacity of {scratch_total} bytes.''')
+                # If there is sufficient free scratch space, stop waiting
+                if scratch_free > settings.JOB_SCRATCH_FREE_SPACE:
+                    return
+                # If there is insufficient free space, attempt to delete orphaned data
+                logger.info(f'''Insufficient free scratch space {round(scratch_free / 1024**2)} MiB '''
+                            f'''({free_percentage}%). Pruning scratch files...''')
+            lock_id = get_job_scratch_prune_lock_id(scratch_root)
+            if TaskLock.objects.request_lock(lock_id):
+                prune_workflow_scratch_dirs(scratch_root)
+                TaskLock.objects.release_lock(lock_id)
+                break
+            else:
+                # Give the existing prune operation time to complete before recalculating free disk space.
+                logger.debug('''Waiting for running prune operation to complete...''')
+                time.sleep(20)
+
+
+def inspect_worker_tasks():
+    inspect = app.control.inspect()
+    all_worker_tasks = []
+    # Query the task workers to collect the name and arguments for all the queued and active tasks.
+    for inspect_func in [inspect.active, inspect.scheduled, inspect.reserved]:
+        try:
+            items = inspect_func(safe=True).items()
+        except AttributeError:
+            items = []
+        tasks = [task for worker, worker_tasks in items for task in worker_tasks]
+        all_worker_tasks.extend([{'name': task['name'], 'args': str(task['args'])} for task in tasks])
+    return all_worker_tasks
+
+
+def prune_workflow_scratch_dirs(root_path, dry_run=False):
+    # List scratch directories first to ensure that a subsequently launched transient
+    # workflow's scratch files cannot be accidentally deleted.
+    scratch_dirs = os.listdir(root_path)
+    all_tasks = [task for task in inspect_worker_tasks()]
+    total_size = 0
+    for transient_name in scratch_dirs:
+        scratch_path = os.path.join(os.path.realpath(root_path), transient_name)
+        dir_size = get_directory_size(scratch_path)
+        total_size += dir_size
+        # If there is an active or queued task with the transient's name as the argument,
+        # the transient workflow is still processing.
+        if [task for task in all_tasks if task['args'].find(transient_name) >= 0]:
+            logger.debug(f'''["{transient_name}"] is queued or active. Skipping.''')
+            continue
+        # If the workflow is not queued or active, purge the scratch files.
+        log_msg = f'''["{transient_name}"] Purging scratch files ({dir_size} bytes): "{scratch_path}"'''
+        if dry_run:
+            logger.info(f'''{log_msg} [dry-run]''')
+        else:
+            logger.info(log_msg)
+            rmtree(scratch_path, ignore_errors=True)
+
+
+def reset_workflow_if_not_processing(transient, worker_tasks, reset_failed=False):
+    # If there is an active or queued task with the transient's name as the argument,
+    # the transient workflow is still processing.
+    if [task for task in worker_tasks if task['args'].find(transient.name) >= 0]:
+        logger.debug(f'''Workflow for transient "{transient.name}" is queued or running.''')
+        return False
+    logger.debug(f'''Detected stalled workflow for transient "{transient.name}". '''
+                 '''Resetting "processing" statuses to "not processed"...''')
+    # Reset any workflow tasks with errant "processing" status to "not processed" so they will be executed.
+    processing_status = Status.objects.get(message__exact="processing")
+    not_processed_status = Status.objects.get(message__exact="not processed")
+    processing_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                        if task.status == processing_status]
+    failed_tasks = []
+    if reset_failed:
+        failed_tasks = [task for task in TaskRegister.objects.filter(transient__exact=transient)
+                        if task.status.type == 'error']
+    for task in processing_tasks + failed_tasks:
+        task.status = not_processed_status
+        task.save()
+    return True
+
+
+def create_or_update_aperture(query, data):
+    aperture_name = data['name']
+    aperture_query = Aperture.objects.filter(**query)
+    if aperture_query:
+        logger.debug(f'''Aperture object "{data['name']}" exists. Updating with new data...''')
+        Aperture.objects.filter(name__exact=aperture_name).update(**data)
+        aperture = Aperture.objects.get(**query)
+    else:
+        logger.debug(f'''Aperture object "{data['name']}" does not exist. Creating it and '''
+                     '''manually associating it with related objects...''')
+        aperture, created = Aperture.objects.get_or_create(**data)
+        assert created
+        SEDFittingResult.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+        AperturePhotometry.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+        StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture.name).update(aperture=aperture)
+    return aperture
+
+
+def delete_transient(transient_name='', transient=None):
+    err_msg = ''
+    if not transient:
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            err_msg = 'Transient does not exist in the database.'
+            return err_msg
+    try:
+        # TODO: This manual deletion of associated objects should not be necessary, due to the use of
+        #       "models.ForeignKey(X, on_delete=models.CASCADE)" in the model definitions. However, without
+        #       this logic, there are foriegn key constraint violations in the database transactions.
+        for aperture in Aperture.objects.filter(transient=transient):
+            # Delete SEDFittingResult objects but not their associated data files
+            SEDFittingResult.objects.filter(aperture__name__exact=aperture.name).delete()
+            AperturePhotometry.objects.filter(aperture__name__exact=aperture.name).delete()
+            StarFormationHistoryResult.objects.filter(aperture__name__exact=aperture.name).delete()
+            aperture.delete()
+        # Delete Cutout objects but not their associated data files
+        for cutout in Cutout.objects.filter(transient=transient):
+            cutout.delete()
+        transient.delete()
+    except Exception as err:
+        err_msg = str(err)
+    return err_msg
+
+
+def export_dataset(transient_name=''):
+    '''Export all data associated with a transient sufficient to import into another Blast instance.'''
+    transient_search = Transient.objects.filter(name__exact=transient_name)
+    if not transient_search:
+        return {}
+    transient_obj = transient_search[0]
+    transient_data = DatasetSerializer(transient_obj).data
+    logger.debug(f'Exporting transient dataset:\n{json.dumps(transient_data, indent=2)}')
+    return transient_data
+
+
+@transaction.atomic
+def import_transient_info(transient_data_archive):
+    '''Import all data associated with a transient from a Blast export file.'''
+    logger.debug(f'Importing transient archive file "{transient_data_archive}"...')
+
+    imported_transient_names = []
+    import_failures = []
+    s3 = ObjectStore()
+
+    def record_import_error(transient_name, err_msg=''):
+        ''' This uses the top-level variable "import_failures".'''
+        import_failures.append({
+            'transient_name': transient_name,
+            'err_msg': err_msg,
+        })
+
+    def process_transient_dataset(dataset):
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".'''
+        # TODO: Consider writing a separate "DatasetInputSerializer" class to perform validation prior to processing.
+        transient_data = dataset.pop('transient')
+        host_data = dataset.pop('host')
+        host_aliases = host_data.pop('aliases')
+        surveys = dataset.pop('surveys')
+        filters = dataset.pop('filters')
+        cutouts = dataset.pop('cutouts')
+        apertures = dataset.pop('apertures')
+        host_spectra = dataset.pop('host_spectra')
+        workflow_tasks = dataset.pop('workflow_tasks')
+        # Verify that the transient is not already present (by name)
+        transient_name = transient_data['name']
+        if Transient.objects.filter(name__exact=transient_name):
+            record_import_error(transient_name, f'Transient "{transient_name}" already exists')
+            return
+        # Verify that Survey objects exist and are identical.
+        for survey in surveys:
+            survey_name = survey['name']
+            try:
+                Survey.objects.get(name__exact=survey_name)
+            except Survey.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Survey "{survey_name}" does not exist.')
+                return
+        for filter in filters:
+            filter_name = filter['name']
+            try:
+                filter_obj = Filter.objects.get(name__exact=filter_name)
+            except Filter.DoesNotExist:
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Filter "{filter_name}" does not exist.')
+                return
+            try:
+                # The survey names associated with the existing and importing filter should match
+                assert filter_obj.survey.name == [survey['name'] for survey in surveys
+                                                  if survey['id'] == filter['survey']][0]
+                assert filter_obj.kcorrect_name == filter['kcorrect_name']
+                assert filter_obj.sedpy_id == filter['sedpy_id']
+                assert filter_obj.hips_id == filter['hips_id']
+                assert filter_obj.vosa_id == filter['vosa_id']
+            except AssertionError as err:
+                record_import_error(transient_name, f'[{transient_name}] Filter named '
+                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+                return
+            # Allow some Filter fields to evolve
+            try:
+                assert filter_obj.image_download_method == filter['image_download_method']
+                assert filter_obj.pixel_size_arcsec == filter['pixel_size_arcsec']
+                assert filter_obj.image_fwhm_arcsec == filter['image_fwhm_arcsec']
+                assert filter_obj.wavelength_eff_angstrom == filter['wavelength_eff_angstrom']
+                assert filter_obj.wavelength_min_angstrom == filter['wavelength_min_angstrom']
+                assert filter_obj.wavelength_max_angstrom == filter['wavelength_max_angstrom']
+                assert filter_obj.vega_zero_point_jansky == filter['vega_zero_point_jansky']
+                assert filter_obj.magnitude_zero_point == filter['magnitude_zero_point']
+                assert filter_obj.ab_offset == filter['ab_offset']
+                assert filter_obj.magnitude_zero_point_keyword == filter['magnitude_zero_point_keyword']
+                assert filter_obj.image_pixel_units == filter['image_pixel_units']
+            except AssertionError as err:
+                logger.warning(f'[{transient_name}] Filter named '
+                               f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+        # Verify that if the Host exists (by name), that it is identical.
+        # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
+        #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
+        #       missing?
+        host = None
+        if host_data:
+            host_name = host_data['name']
+            ra_deg = host_data['ra_deg']
+            dec_deg = host_data['dec_deg']
+            cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
+                           & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
+                           & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
+                           & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
+            proximate_hosts = Host.objects.filter(cone_search)
+            if proximate_hosts:
+                logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
+                            f'''importing host "{host_name}".''')
+            # If there is an existing proximate host for an unnamed host, claim this is the same host
+            if not host_name and proximate_hosts:
+                host = proximate_hosts[0]
+            elif host_name:
+                # Find existing hosts with the same name
+                host_search = Host.objects.filter(name__exact=host_name)
+                if host_search:
+                    # If the host name matches, require that the position overlaps
+                    proximity_search = host_search.filter(cone_search)
+                    # Consider the import a failure if there is an inconsistent host definition
+                    if not proximity_search:
+                        record_import_error(transient_name,
+                                            f'[{transient_name}] Host with matching name "{host_name}" '
+                                            f'exists, but it is in a different location.')
+                        return
+                    # If the name and location match, claim this is the same host
+                    host = proximity_search[0]
+            # If no host match was found, create a new Host object
+            if not host:
+                host = Host.objects.create(**host_data)
+                # Create Alias objects
+                for alias in host_aliases:
+                    Alias.objects.create(alias=alias, host=host)
+            # Create host spectra
+            for spectrum in host_spectra:
+                if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['spectrum_id']):
+                    logger.info('''An existing host spectrum was found with ID '''
+                                f'''"{spectrum['spectrum_id']}"''')
+                    continue
+                spectrum.pop('id')
+                spectrum.pop('host')
+                HostSpectrum.objects.create(host=host, **spectrum)
+        # Verify that the Cutout objects do not exist (by name).
+        for cutout in cutouts:
+            cutout_name = cutout['name']
+            if Cutout.objects.filter(name__exact=cutout_name).exists():
+                record_import_error(transient_name, f'[{transient_name}] Cutout "{cutout_name}" exists.')
+                return
+        # Verify that each Aperture object does not exist.
+        for aperture in apertures:
+            aperture_name = aperture['aperture']['name']
+            if Aperture.objects.filter(name__exact=aperture_name).exists():
+                record_import_error(transient_name, f'[{transient_name}] Aperture "{aperture_name}" exists.')
+                return
+            # Ignore any orphaned StarFormationHistoryResult objects that may exist because they will not interfere.
+            # Ignore any orphaned AperturePhotometry objects that may exist because they will not interfere.
+            # Ignore any orphaned SEDFittingResult objects that may exist because they will not interfere.
+
+        # Create Transient object
+        transient_data.pop('host')
+        alias_list = transient_data.pop('aliases')
+        transient = Transient.objects.create(host=host, **transient_data)
+        # Create Alias objects
+        for alias in alias_list:
+            Alias.objects.create(alias=alias, transient=transient)
+        # Create Cutout objects
+        for cutout in cutouts:
+            filter_name = [filter['name'] for filter in filters if filter['id'] == cutout['filter']][0]
+            cutout['filter'] = Filter.objects.get(name__exact=filter_name)
+            cutout.pop('transient')
+            Cutout.objects.create(transient=transient, **cutout)
+        # For each Aperture object,
+            # Create Aperture object
+            # Create StarFormationHistoryResult objects
+            # Create AperturePhotometry objects
+            # Create SEDFittingResult objects
+        for aperture in apertures:
+            aperture_info = aperture['aperture']
+            try:
+                cutout_obj = None
+                cutout_name_search = [cutout['name'] for cutout in cutouts if cutout['id'] == aperture_info['cutout']]
+                if cutout_name_search:
+                    cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
+            except Exception as err:
+                logger.error(f'Error finding cutout object {aperture_info['cutout']} '
+                             f'associated with aperture "{aperture_info['name']}"')
+                raise err
+            aperture_info.pop('cutout')
+            aperture_info.pop('transient')
+            aperture_obj = Aperture.objects.create(cutout=cutout_obj, transient=transient, **aperture_info)
+            for aperturephotometry in aperture['aperturephotometry']:
+                filter_name = [filter['name'] for filter in filters if filter['id'] == aperturephotometry['filter']][0]
+                aperturephotometry['filter'] = Filter.objects.get(name__exact=filter_name)
+                aperturephotometry.pop('transient')
+                aperturephotometry.pop('aperture')
+                AperturePhotometry.objects.create(aperture=aperture_obj, transient=transient, **aperturephotometry)
+            # Compile a dictionary of StarFormationHistoryResult objects indexed by their primary key values for
+            # subsequent association with SEDFittingResult objects.
+            sfh_objs = {}
+            for starformationhistoryresult in aperture['starformationhistoryresult']:
+                starformationhistoryresult.pop('transient')
+                starformationhistoryresult.pop('aperture')
+                sfh_objs[starformationhistoryresult['id']] = StarFormationHistoryResult.objects.create(
+                    aperture=aperture_obj, transient=transient, **starformationhistoryresult)
+            for sedfittingresults in aperture['sedfittingresults']:
+                sedfittingresults.pop('transient')
+                sedfittingresults.pop('aperture')
+                logsfh = sedfittingresults.pop('logsfh')
+                sedfittingresult = SEDFittingResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    **sedfittingresults)
+                # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
+                sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                                             for sfh_pk in logsfh])
+        initialize_all_tasks_status(transient)
+        all_trs = TaskRegister.objects.filter(transient__name=transient_name)
+        for tr in workflow_tasks:
+            task_name = tr['task']['name']
+            try:
+                tr_obj = all_trs.get(task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Workflow task "{task_name}" does not exist.')
+                return
+            tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
+            # If the last_modified time is not in the proper ISO format, use null value
+            try:
+                datetime.fromisoformat(tr['last_modified'])
+                tr_obj.last_modified = tr['last_modified']
+            except (ValueError, TypeError):
+                tr_obj.last_modified = None
+            tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
+            tr_obj.save()
+        # Calculate workflow progress and mark tasks as initialized so retriggering works.
+        transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+        transient.tasks_initialized = "True"
+        transient.save()
+        # Record successful database import
+        imported_transient_names.append(transient.name)
+
+    def process_transient_dataset_v2_1_0(dataset):
+        '''Create database objects defined by the dataset definition being imported.
+        This uses the top-level variables "imported_transient_names" and "import_failures".
+        This function is largely redundant with "process_transient_dataset()", but is retained
+        for importing dataset archives generated by Blast versions up to v2.1.0.'''
+        # Verify that the transient is not already present (by name)
+        transient_name = dataset['transient']['fields']['name']
+        if Transient.objects.filter(name__exact=transient_name):
+            record_import_error(transient_name, f'Transient "{transient_name}" already exists')
+            return
+        # Verify that Survey objects exist and are identical.
+        for survey in dataset['surveys']:
+            survey_name = survey['fields']['name']
+            try:
+                Survey.objects.get(name__exact=survey_name)
+            except Survey.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Survey "{survey_name}" does not exist.')
+                return
+        # Verify that Filter objects exist and are identical.
+        for filter in dataset['filters']:
+            filter_name = filter['fields']['name']
+            try:
+                filter_obj = Filter.objects.get(name__exact=filter_name)
+            except Filter.DoesNotExist:
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Filter "{filter_name}" does not exist.')
+                return
+            try:
+                # debug_filter_obj_dict = {
+                #     'survey': filter_obj.survey.name,
+                #     'kcorrect_name': filter_obj.kcorrect_name,
+                #     'sedpy_id': filter_obj.sedpy_id,
+                #     'hips_id': filter_obj.hips_id,
+                #     'vosa_id': filter_obj.vosa_id,
+                #     'image_download_method': filter_obj.image_download_method,
+                #     'pixel_size_arcsec': filter_obj.pixel_size_arcsec,
+                #     'image_fwhm_arcsec': filter_obj.image_fwhm_arcsec,
+                #     'wavelength_eff_angstrom': filter_obj.wavelength_eff_angstrom,
+                #     'wavelength_min_angstrom': filter_obj.wavelength_min_angstrom,
+                #     'wavelength_max_angstrom': filter_obj.wavelength_max_angstrom,
+                #     'vega_zero_point_jansky': filter_obj.vega_zero_point_jansky,
+                #     'magnitude_zero_point': filter_obj.magnitude_zero_point,
+                #     'ab_offset': filter_obj.ab_offset,
+                #     'magnitude_zero_point_keyword': filter_obj.magnitude_zero_point_keyword,
+                #     'image_pixel_units': filter_obj.image_pixel_units,
+                # }
+                # logger.debug(f'''Checking existing filter...\n{json.dumps(debug_filter_obj_dict, indent=2)}''')
+                # The survey names associated with the existing and importing filter should match
+                assert filter_obj.survey.name == [survey['fields']['name'] for survey in dataset['surveys']
+                                                  if survey['pk'] == filter['fields']['survey']][0]
+                assert filter_obj.kcorrect_name == filter['fields']['kcorrect_name']
+                assert filter_obj.sedpy_id == filter['fields']['sedpy_id']
+                assert filter_obj.hips_id == filter['fields']['hips_id']
+                assert filter_obj.vosa_id == filter['fields']['vosa_id']
+            except AssertionError as err:
+                record_import_error(transient_name, f'[{transient_name}] Filter named '
+                                    f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+                return
+            # Allow some Filter fields to evolve
+            try:
+                assert filter_obj.image_download_method == filter['fields']['image_download_method']
+                assert filter_obj.pixel_size_arcsec == filter['fields']['pixel_size_arcsec']
+                assert filter_obj.image_fwhm_arcsec == filter['fields']['image_fwhm_arcsec']
+                assert filter_obj.wavelength_eff_angstrom == filter['fields']['wavelength_eff_angstrom']
+                assert filter_obj.wavelength_min_angstrom == filter['fields']['wavelength_min_angstrom']
+                assert filter_obj.wavelength_max_angstrom == filter['fields']['wavelength_max_angstrom']
+                assert filter_obj.vega_zero_point_jansky == filter['fields']['vega_zero_point_jansky']
+                assert filter_obj.magnitude_zero_point == filter['fields']['magnitude_zero_point']
+                assert filter_obj.ab_offset == filter['fields']['ab_offset']
+                assert filter_obj.magnitude_zero_point_keyword == filter['fields']['magnitude_zero_point_keyword']
+                assert filter_obj.image_pixel_units == filter['fields']['image_pixel_units']
+            except AssertionError as err:
+                logger.warning(f'[{transient_name}] Filter named '
+                               f'"{filter_obj.name}" exists but is not identical to the import: {err}')
+        # Verify that if the Host exists (by name), that it is identical.
+        # TODO: How concerned should we be about duplicates? Should we perform a cone search instead of assuming
+        #       perfect coordinate matching? Should the redshift values be updated from the imported data if they are
+        #       missing?
+        host = None
+        if dataset['host']:
+            host_name = dataset['host']['fields']['name']
+            ra_deg = dataset['host']['fields']['ra_deg']
+            dec_deg = dataset['host']['fields']['dec_deg']
+            cone_search = (Q(ra_deg__gte=ra_deg - ARCSEC_RA_IN_DEG)
+                           & Q(ra_deg__lte=ra_deg + ARCSEC_RA_IN_DEG)
+                           & Q(dec_deg__gte=dec_deg - ARCSEC_DEC_IN_DEG)
+                           & Q(dec_deg__lte=dec_deg + ARCSEC_DEC_IN_DEG))
+            proximate_hosts = Host.objects.filter(cone_search)
+            if proximate_hosts:
+                logger.info(f'''{len(proximate_hosts)} existing hosts were found within an arcsecond of '''
+                            f'''importing host "{host_name}".''')
+            # If there is an existing proximate host for an unnamed host, claim this is the same host
+            if not host_name and proximate_hosts:
+                host = proximate_hosts[0]
+            elif host_name:
+                # Find existing hosts with the same name
+                host_search = Host.objects.filter(name__exact=host_name)
+                if host_search:
+                    # If the host name matches, require that the position overlaps
+                    proximity_search = host_search.filter(cone_search)
+                    # Consider the import a failure if there is an inconsistent host definition
+                    if not proximity_search:
+                        record_import_error(transient_name,
+                                            f'[{transient_name}] Host with matching name "{host_name}" '
+                                            f'exists, but it is in a different location.')
+                        return
+                    # If the name and location match, claim this is the same host
+                    host = proximity_search[0]
+            # If no host match was found, create a new Host object
+            if not host:
+                host = Host.objects.create(
+                    ra_deg=dataset['host']['fields']['ra_deg'],
+                    dec_deg=dataset['host']['fields']['dec_deg'],
+                    name=dataset['host']['fields']['name'],
+                    redshift=dataset['host']['fields']['redshift'],
+                    redshift_err=dataset['host']['fields']['redshift_err'],
+                    photometric_redshift=dataset['host']['fields']['photometric_redshift'],
+                    photometric_redshift_err=dataset['host']['fields']['photometric_redshift_err'],
+                    milkyway_dust_reddening=dataset['host']['fields']['milkyway_dust_reddening'],
+                    software_version=dataset['host']['fields']['software_version'],
+                    # object_id added in v1.12.0
+                    object_id=(dataset['host']['fields']['object_id']
+                               if 'object_id' in dataset['host']['fields'] else None),
+                    # catalog_name added in v1.12.0
+                    catalog_name=(dataset['host']['fields']['catalog_name']
+                                  if 'catalog_name' in dataset['host']['fields'] else None),
+                    # catalog_release added in v1.12.0
+                    catalog_release=(dataset['host']['fields']['catalog_release']
+                                     if 'catalog_release' in dataset['host']['fields'] else None),
+                )
+                # Create Alias objects
+                if 'aliases' in dataset['host']['fields']:
+                    for alias in dataset['host']['fields']['aliases']:
+                        Alias.objects.create(alias=alias, host=host)
+            # host_spectra added in v2.0.0
+            if 'host_spectra' in dataset:
+                for spectrum in dataset['host_spectra']:
+                    if HostSpectrum.objects.filter(spectrum_id__exact=spectrum['fields']['spectrum_id']):
+                        logger.info('''An existing host spectrum was found with ID '''
+                                    f'''"{spectrum['fields']['spectrum_id']}"''')
+                        continue
+                    HostSpectrum.objects.create(
+                        host=host,
+                        source=spectrum['fields']['source'],
+                        spectrum_file=spectrum['fields']['spectrum_file'],
+                        wavelength_min_angstrom=spectrum['fields']['wavelength_min_angstrom'],
+                        wavelength_max_angstrom=spectrum['fields']['wavelength_max_angstrom'],
+                        redshift=spectrum['fields']['redshift'],
+                        ra_deg=spectrum['fields']['ra_deg'],
+                        dec_deg=spectrum['fields']['dec_deg'],
+                        spectrum_id=spectrum['fields']['spectrum_id'],
+                        message=spectrum['fields']['message'],
+                        software_version=spectrum['fields']['software_version'],
+                    )
+        # Verify that the Cutout objects do not exist (by name).
+        for cutout in dataset['cutouts']:
+            cutout_name = cutout['fields']['name']
+            if Cutout.objects.filter(name__exact=cutout_name).exists():
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Cutout "{cutout_name}" exists.')
+                return
+        # Verify that each Aperture object does not exist.
+        for aperture in dataset['apertures']:
+            aperture_name = aperture['fields']['name']
+            if Aperture.objects.filter(name__exact=aperture_name).exists():
+                record_import_error(transient_name,
+                                    f'[{transient_name}] Aperture "{aperture_name}" exists.')
+                return
+            # Ignore any orphaned StarFormationHistoryResult objects that may exist because they will not interfere.
+            # Ignore any orphaned AperturePhotometry objects that may exist because they will not interfere.
+            # Ignore any orphaned SEDFittingResult objects that may exist because they will not interfere.
+
+        # Create Transient object
+        transient = Transient.objects.create(
+            ra_deg=dataset['transient']['fields']['ra_deg'],
+            dec_deg=dataset['transient']['fields']['dec_deg'],
+            name=dataset['transient']['fields']['name'],
+            display_name=dataset['transient']['fields']['display_name'],
+            tns_id=dataset['transient']['fields']['tns_id'],
+            tns_prefix=dataset['transient']['fields']['tns_prefix'],
+            public_timestamp=dataset['transient']['fields']['public_timestamp'],
+            host=host,
+            redshift=dataset['transient']['fields']['redshift'],
+            spectroscopic_class=dataset['transient']['fields']['spectroscopic_class'],
+            photometric_class=dataset['transient']['fields']['photometric_class'],
+            milkyway_dust_reddening=dataset['transient']['fields']['milkyway_dust_reddening'],
+            processing_status=dataset['transient']['fields']['processing_status'],
+            software_version=dataset['transient']['fields']['software_version'],
+        )
+        # Create Alias objects
+        if 'aliases' in dataset['transient']['fields']:
+            for alias in dataset['transient']['fields']['aliases']:
+                Alias.objects.create(alias=alias, transient=transient)
+        # Create Cutout objects
+        for cutout in dataset['cutouts']:
+            filter_name = [filter['fields']['name'] for filter in dataset['filters']
+                           if filter['pk'] == cutout['fields']['filter']][0]
+            Cutout.objects.create(
+                name=cutout['fields']['name'],
+                filter=Filter.objects.get(name__exact=filter_name),
+                transient=transient,
+                fits=cutout['fields']['fits'],
+                message=cutout['fields']['message'],
+                software_version=cutout['fields']['software_version'],
+                cropped=cutout['fields']['cropped'],
+            )
+        # For each Aperture object,
+            # Create Aperture object
+            # Create StarFormationHistoryResult objects
+            # Create AperturePhotometry objects
+            # Create SEDFittingResult objects
+        for aperture in dataset['apertures']:
+            cutout_name_search = [cutout['fields']['name'] for cutout in dataset['cutouts']
+                                  if cutout['pk'] == aperture['fields']['cutout']]
+            if cutout_name_search:
+                cutout_obj = Cutout.objects.get(name__exact=cutout_name_search[0])
+            else:
+                cutout_obj = None
+            aperture_obj = Aperture.objects.create(
+                ra_deg=aperture['fields']['ra_deg'],
+                dec_deg=aperture['fields']['dec_deg'],
+                name=aperture['fields']['name'],
+                cutout=cutout_obj,
+                transient=transient,
+                orientation_deg=aperture['fields']['orientation_deg'],
+                semi_major_axis_arcsec=aperture['fields']['semi_major_axis_arcsec'],
+                semi_minor_axis_arcsec=aperture['fields']['semi_minor_axis_arcsec'],
+                type=aperture['fields']['type'],
+                software_version=aperture['fields']['software_version'],
+            )
+            for aperturephotometry in aperture['aperturephotometry']:
+                filter_name = [filter['fields']['name'] for filter in dataset['filters']
+                               if filter['pk'] == aperturephotometry['fields']['filter']][0]
+                AperturePhotometry.objects.create(
+                    aperture=aperture_obj,
+                    filter=Filter.objects.get(name__exact=filter_name),
+                    transient=transient,
+                    flux=aperturephotometry['fields']['flux'],
+                    flux_error=aperturephotometry['fields']['flux_error'],
+                    magnitude=aperturephotometry['fields']['magnitude'],
+                    magnitude_error=aperturephotometry['fields']['magnitude_error'],
+                    is_validated=aperturephotometry['fields']['is_validated'],
+                    software_version=aperturephotometry['fields']['software_version'],
+                )
+            # Compile a dictionary of StarFormationHistoryResult objects indexed by their primary key values for
+            # subsequent association with SEDFittingResult objects.
+            sfh_objs = {}
+            for starformationhistoryresult in aperture['starformationhistoryresult']:
+                sfh_objs[starformationhistoryresult['pk']] = StarFormationHistoryResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    logsfr_16=starformationhistoryresult['fields']['logsfr_16'],
+                    logsfr_50=starformationhistoryresult['fields']['logsfr_50'],
+                    logsfr_84=starformationhistoryresult['fields']['logsfr_84'],
+                    logsfr_tmin=starformationhistoryresult['fields']['logsfr_tmin'],
+                    logsfr_tmax=starformationhistoryresult['fields']['logsfr_tmax'],
+                    software_version=starformationhistoryresult['fields']['software_version'],
+                )
+            for sedfittingresults in aperture['sedfittingresults']:
+                # logsfh = []
+                # for sfh_pk in sedfittingresults['fields']['logsfh']:
+                #     logsfh.append([sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0])
+                # logsfh = [[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                #           for sfh_pk in sedfittingresults['fields']['logsfh']]
+
+                sedfittingresult = SEDFittingResult.objects.create(
+                    aperture=aperture_obj,
+                    transient=transient,
+                    posterior=sedfittingresults['fields']['posterior'],
+                    log_mass_16=sedfittingresults['fields']['log_mass_16'],
+                    log_mass_50=sedfittingresults['fields']['log_mass_50'],
+                    log_mass_84=sedfittingresults['fields']['log_mass_84'],
+                    mass_surviving_ratio=sedfittingresults['fields']['mass_surviving_ratio'],
+                    log_sfr_16=sedfittingresults['fields']['log_sfr_16'],
+                    log_sfr_50=sedfittingresults['fields']['log_sfr_50'],
+                    log_sfr_84=sedfittingresults['fields']['log_sfr_84'],
+                    log_ssfr_16=sedfittingresults['fields']['log_ssfr_16'],
+                    log_ssfr_50=sedfittingresults['fields']['log_ssfr_50'],
+                    log_ssfr_84=sedfittingresults['fields']['log_ssfr_84'],
+                    # TODO: log_age_16, log_age_50, log_age_84 are deprecated after v1.9.4. Support will be removed in
+                    #       a future release.
+                    log_age_16=sedfittingresults['fields']['log_age_16'] if 'age_16' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_16'],
+                    log_age_50=sedfittingresults['fields']['log_age_50'] if 'age_50' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_50'],
+                    log_age_84=sedfittingresults['fields']['log_age_84'] if 'age_84' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_84'],
+                    age_16=sedfittingresults['fields']['age_16'] if 'age_16' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_16'],
+                    age_50=sedfittingresults['fields']['age_50'] if 'age_50' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_50'],
+                    age_84=sedfittingresults['fields']['age_84'] if 'age_84' in sedfittingresults['fields']
+                    else sedfittingresults['fields']['log_age_84'],
+                    log_tau_16=sedfittingresults['fields']['log_tau_16'],
+                    log_tau_50=sedfittingresults['fields']['log_tau_50'],
+                    log_tau_84=sedfittingresults['fields']['log_tau_84'],
+                    logzsol_16=sedfittingresults['fields']['logzsol_16'],
+                    logzsol_50=sedfittingresults['fields']['logzsol_50'],
+                    logzsol_84=sedfittingresults['fields']['logzsol_84'],
+                    dust2_16=sedfittingresults['fields']['dust2_16'],
+                    dust2_50=sedfittingresults['fields']['dust2_50'],
+                    dust2_84=sedfittingresults['fields']['dust2_84'],
+                    dust_index_16=sedfittingresults['fields']['dust_index_16'],
+                    dust_index_50=sedfittingresults['fields']['dust_index_50'],
+                    dust_index_84=sedfittingresults['fields']['dust_index_84'],
+                    dust1_fraction_16=sedfittingresults['fields']['dust1_fraction_16'],
+                    dust1_fraction_50=sedfittingresults['fields']['dust1_fraction_50'],
+                    dust1_fraction_84=sedfittingresults['fields']['dust1_fraction_84'],
+                    log_fagn_16=sedfittingresults['fields']['log_fagn_16'],
+                    log_fagn_50=sedfittingresults['fields']['log_fagn_50'],
+                    log_fagn_84=sedfittingresults['fields']['log_fagn_84'],
+                    log_agn_tau_16=sedfittingresults['fields']['log_agn_tau_16'],
+                    log_agn_tau_50=sedfittingresults['fields']['log_agn_tau_50'],
+                    log_agn_tau_84=sedfittingresults['fields']['log_agn_tau_84'],
+                    gas_logz_16=sedfittingresults['fields']['gas_logz_16'],
+                    gas_logz_50=sedfittingresults['fields']['gas_logz_50'],
+                    gas_logz_84=sedfittingresults['fields']['gas_logz_84'],
+                    duste_qpah_16=sedfittingresults['fields']['duste_qpah_16'],
+                    duste_qpah_50=sedfittingresults['fields']['duste_qpah_50'],
+                    duste_qpah_84=sedfittingresults['fields']['duste_qpah_84'],
+                    duste_umin_16=sedfittingresults['fields']['duste_umin_16'],
+                    duste_umin_50=sedfittingresults['fields']['duste_umin_50'],
+                    duste_umin_84=sedfittingresults['fields']['duste_umin_84'],
+                    log_duste_gamma_16=sedfittingresults['fields']['log_duste_gamma_16'],
+                    log_duste_gamma_50=sedfittingresults['fields']['log_duste_gamma_50'],
+                    log_duste_gamma_84=sedfittingresults['fields']['log_duste_gamma_84'],
+                    chains_file=sedfittingresults['fields']['chains_file'],
+                    percentiles_file=sedfittingresults['fields']['percentiles_file'],
+                    model_file=sedfittingresults['fields']['model_file'],
+                    software_version=sedfittingresults['fields']['software_version'],
+                )
+                # Collect subset of StarFormationHistoryResult objects matching the list of primary key values
+                sedfittingresult.logsfh.set([[sfh for key, sfh in sfh_objs.items() if key == sfh_pk][0]
+                                             for sfh_pk in sedfittingresults['fields']['logsfh']])
+        initialize_all_tasks_status(transient)
+        all_trs = TaskRegister.objects.filter(transient__name=transient_name)
+        for tr in dataset['workflow_tasks']:
+            task_name = tr['task_name']
+            try:
+                tr_obj = all_trs.get(task__name=task_name)
+            except TaskRegister.DoesNotExist:
+                record_import_error(transient_name, f'[{transient_name}] Workflow task "{task_name}" does not exist.')
+                return
+            tr_obj.status = Status.objects.get(message=tr['status']['message'], type=tr['status']['type'])
+            # If the last_modified time is not in the proper ISO format, use null value
+            try:
+                datetime.fromisoformat(tr['last_modified'])
+                tr_obj.last_modified = tr['last_modified']
+            except (ValueError, TypeError):
+                tr_obj.last_modified = None
+            tr_obj.last_processing_time_seconds = tr['last_processing_time_seconds']
+            tr_obj.save()
+        # Calculate workflow progress and mark tasks as initialized so retriggering works.
+        transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+        transient.tasks_initialized = "True"
+        transient.save()
+        # Record successful database import
+        imported_transient_names.append(transient.name)
+
+    def install_files(transient_info, file_type):
+        logger.debug(f'Installing "{file_type}" files...')
+        if file_type == 'cutout':
+            canonical_path_root = settings.CUTOUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
+            tar_root_path = 'cutouts/'
+            thumbnail_extension = '.fits'
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [cutout['fields']['fits'] for cutout in transient_info['cutouts']]
+            else:
+                canonical_paths = [cutout['fits'] for cutout in transient_info['cutouts']]
+        elif file_type == 'sed':
+            canonical_path_root = settings.SED_OUTPUT_ROOT
+            path_prefix_replacement = f'{os.path.join(canonical_path_root, transient_name)}/'
+            tar_root_path = 'sed_data/'
+            thumbnail_extension = '.h5'
+            canonical_paths = []
+            for sedfittingresult in [aperture['sedfittingresults'] for aperture in transient_info['apertures']
+                                     if aperture['sedfittingresults']]:
+                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                    if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                        canonical_paths.append(sedfittingresult[0]['fields'][sed_file])
+                    else:
+                        canonical_paths.append(sedfittingresult[0][sed_file])
+        elif file_type == 'host_spectra':
+            canonical_path_root = settings.SPECTRA_ROOT
+            path_prefix_replacement = f'{canonical_path_root}/'
+            tar_root_path = 'host_spectra/'
+            thumbnail_extension = '.fits'
+            if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+                canonical_paths = [spectrum['fields']['spectrum_file'] for spectrum in transient_info['host_spectra']]
+            else:
+                canonical_paths = [spectrum['spectrum_file'] for spectrum in transient_info['host_spectra']]
+        # Include possible thumbnail paths
+        thumbail_paths = []
+        logger.debug(canonical_paths)
+        # Generate paths for thumbnails that might exist, ignoring null or empty string values in "canonical_paths"
+        for canonical_path in [c_path for c_path in canonical_paths if c_path]:
+            thumbail_paths.append(canonical_path.replace(thumbnail_extension, '.jpg'))
+        canonical_paths.extend(thumbail_paths)
+        # logger.debug(f'''Files in archive: {[tarinfo for tarinfo in tar_fp]}''')
+        # Iterate over all files in the subfolder of the file type being scanned
+        for tarinfo in [tarinfo for tarinfo in tar_fp if tarinfo.name.startswith(f'{tar_root_path}')]:
+            if not tarinfo.isreg():
+                logger.warning(f'"{tarinfo.name}" is not a file. Skipping.')
+                continue
+            # Verify that the file is listed in the transient metadata
+            expected_canonical_path = tarinfo.name.replace(tar_root_path, path_prefix_replacement)
+            logger.debug(f'Archive file expected canonical path: {expected_canonical_path}')
+            # Skip files in the archive file that are not associated with the imported data objects
+            if not [path for path in canonical_paths if path == expected_canonical_path]:
+                logger.warning(f'Skipping orphaned data file "{tarinfo.name}"')
+                continue
+            object_key = os.path.join(settings.S3_BASE_PATH, expected_canonical_path.strip('/'))
+            s3.put_object(path=object_key, data_bytes_obj=tar_fp.extractfile(tarinfo).read())
+            if not s3.object_exists(object_key):
+                record_import_error(transient_name, err_msg=f'Failed to import file "{tarinfo.name}"')
+
+    # Unpack data archive file
+    with tar_open(fileobj=transient_data_archive, mode="r:gz") as tar_fp:
+        # Import metadata and dataset objects
+        try:
+            metadata_tarinfo = [tarinfo for tarinfo in tar_fp if tarinfo.name == 'transient.json'][0]
+        except IndexError:
+            logger.error('Error importing transient dataset: No "transient.json" file found.')
+            return [], []
+        transient_info = json.load(tar_fp.extractfile(metadata_tarinfo))
+        # Handle variations in data schema from older Blast versions
+        if Version(transient_info['metadata']['app_version']) <= Version('2.1.0'):
+            transient_name = transient_info['transient']['fields']['name']
+        else:
+            transient_name = transient_info['transient']['name']
+        logger.debug(f'''Importing transient "{transient_name}"...''')
+        # Construct the import list
+        if isinstance(transient_info, dict):
+            datasets_to_import = [deepcopy(transient_info)]
+        elif isinstance(transient_info, list):
+            datasets_to_import = [deepcopy(tr_info) for tr_info in transient_info]
+        assert isinstance(datasets_to_import, list)
+        # Construct the database objects for each transient.
+        for dataset in datasets_to_import:
+            # Use a nested function to support aborting upon error within nested for loops.
+            # This uses the top-level variables "imported_transient_names" and "import_failures".
+            # Handle variations in data schema from older Blast versions
+            if Version(dataset['metadata']['app_version']) <= Version('2.1.0'):
+                process_transient_dataset_v2_1_0(dataset)
+            else:
+                process_transient_dataset(dataset)
+        # Import cutout image files
+        install_files(transient_info, 'cutout')
+        # Import SED fit files
+        install_files(transient_info, 'sed')
+        # Import host spectra fit files
+        if transient_info['host']:
+            install_files(transient_info, 'host_spectra')
+
+    # Delete database objects associated with failed imports
+    for import_failure in import_failures:
+        delete_transient(transient_name=import_failure['transient_name'])
+
+    return imported_transient_names, import_failures
+
+
+def get_all_task_prerequisites(transient_name):
+    return {
+        'Cutout download': ImageDownload_prerequisites,
+        'Transient MWEBV': MWEBV_Transient_prerequisites,
+        'Host match': HostMatch_prerequisites,
+        'Host information': HostInformation_prerequisites,
+        'Local aperture photometry': LocalAperturePhotometry_prerequisites,
+        'Validate local photometry': ValidateLocalPhotometry_prerequisites,
+        'Local host SED inference': LocalHostSEDFitting_prerequisites,
+        'Host MWEBV': MWEBV_Host_prerequisites,
+        'Global aperture construction': GlobalApertureConstruction_prerequisites,
+        'Global aperture photometry': GlobalAperturePhotometry_prerequisites,
+        'Validate global photometry': ValidateGlobalPhotometry_prerequisites,
+        'Global host SED inference': GlobalHostSEDFitting_prerequisites,
+        'Crop transient images': CropTransientImages_prerequisites,
+        'Generate thumbnail': GenerateThumbnail_prerequisites,
+        'Generate thumbnail final': GenerateThumbnailFinal_prerequisites,
+        'Generate thumbnail SED local': GenerateThumbnailSEDLocal_prerequisites,
+        'Generate thumbnail SED global': GenerateThumbnailSEDGlobal_prerequisites,
+        'Host spectrum download': HostSpectrumDownload_prerequisites,
+        'Generate thumbnail host spectrum': GenerateThumbnailHostSpec_prerequisites,
+    }
+
+
+def get_processing_status_and_progress(transient):
+    # Collect all workflow tasks.
+    tasks = TaskRegister.objects.filter(transient__name__exact=transient.name)
+    num_total_tasks = len(tasks)
+    # If there are no tasks associated with the transient, the progress is zero.
+    if num_total_tasks == 0:
+        return 0, "processing"
+
+    # Collect incomplete tasks, which include those currently processing and those not yet processed.
+    incomplete_tasks = tasks.filter(status__message__in=['not processed', 'processing'])
+    logger.debug(f'''"{transient.name}" incomplete tasks: {[task.task.name for task in incomplete_tasks]}''')
+
+    # For each unprocessed task in the workflow, determine whether it could possibly run based on its prerequisites.
+    unprocessed_tasks = incomplete_tasks.filter(status__message__exact='not processed')
+    prerequisites = get_all_task_prerequisites(transient.name)
+    blocked_tasks = []
+    for unprocessed_task in unprocessed_tasks:
+        prereq_tasks = prerequisites[unprocessed_task.task.name]
+        prereqs_errored = []
+        # Iterate over the task's prerequisites and check for any that have failed
+        for task_name, status_message in prereq_tasks.items():
+            prereq_task = Task.objects.get(name__exact=task_name)
+            prereqs_errored.extend(tasks.filter(
+                task__exact=prereq_task,
+                status__type__exact='error',
+            ))
+            # If any of the unprocessed task's prerequisites failed, then it will never execute; it is "blocked".
+            if prereqs_errored:
+                logger.debug(f'''"{transient.name}" prereqs_errored: {[task.task.name for task in prereqs_errored]}''')
+                blocked_tasks.append(unprocessed_task)
+                break
+    unblocked_tasks = [task for task in unprocessed_tasks if task not in blocked_tasks]
+    logger.debug(f'''"{transient.name}" unblocked tasks: {[task.task.name for task in unblocked_tasks]}''')
+
+    # The number of remaining tasks is the sum of the unblocked tasks and those currently processing
+    processing_tasks = incomplete_tasks.filter(status__message__exact='processing')
+    num_remaining_tasks = len(unblocked_tasks) + len(processing_tasks)
+    progress_raw = 100 * (1 - num_remaining_tasks / num_total_tasks)
+    progress = int(round(progress_raw, 0))
+    logger.debug(f'''"{transient.name}" progress (raw): {progress_raw}''')
+
+    # If the progress is not 100%, then the workflow is still processing
+    if progress < 100:
+        processing_status = 'processing'
+    # If the progress is 100%, then the workflow is finished.
+    elif progress == 100:
+        # It is blocked if there are errors; otherwise it is complete.
+        if tasks.filter(status__type='error'):
+            processing_status = 'blocked'
+        else:
+            processing_status = 'completed'
+
+    return progress, processing_status
+
+
+def _canonicalize(value):
+    """Convert a value into a consistently comparable form."""
+    if isinstance(value, Mapping):
+        return (
+            "dict",
+            tuple(
+                sorted(
+                    (
+                        repr(key),
+                        _canonicalize(val),
+                    )
+                    for key, val in value.items()
+                )
+            ),
+        )
+
+    if isinstance(value, list):
+        # Sorting makes list order irrelevant while preserving duplicates.
+        items = [_canonicalize(item) for item in value]
+        return ("list", tuple(sorted(items, key=repr)))
+
+    if isinstance(value, tuple):
+        return ("tuple", tuple(_canonicalize(item) for item in value))
+
+    return ("value", value)
+
+
+def _values_equal(first, second):
+    return _canonicalize(first) == _canonicalize(second)
+
+
+def equal_dicts(first, second, path=""):
+    """Recursively print differences between two dictionaries."""
+
+    all_keys = first.keys() | second.keys()
+    # If there are no keys then the two are equal
+    if not all_keys:
+        return True
+
+    for key in all_keys:
+        current_path = f"{path}.{key}" if path else str(key)
+
+        if key not in first:
+            logger.debug(f"Missing from first: {current_path} = {second[key]!r}")
+            continue
+
+        if key not in second:
+            logger.debug(f"Missing from second: {current_path} = {first[key]!r}")
+            continue
+
+        value1 = first[key]
+        value2 = second[key]
+
+        if isinstance(value1, Mapping) and isinstance(value2, Mapping):
+            is_equal = equal_dicts(value1, value2, current_path)
+        elif _values_equal(value1, value2):
+            is_equal = True
+        else:
+            logger.debug(
+                f"Different at {current_path}: "
+                f"{value1!r} != {value2!r}"
+            )
+            is_equal = False
+    return is_equal
+
+
+def get_latest_dataset_revision(transient_name):
+    """Return the revision index of the latest dataset version"""
+    try:
+        transient = Transient.objects.get(name__exact=transient_name)
+    except Transient.DoesNotExist:
+        logger.warning(f'Transient not found: "{transient_name}"')
+        return None
+    latest_dataset_revision = DatasetRevision.objects.filter(transient=transient).order_by("-revision", "pk").first()
+    return latest_dataset_revision

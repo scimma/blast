@@ -1,14 +1,364 @@
-import itertools
-
+import os
+import json
+import tarfile
+from io import BytesIO
 from astropy.coordinates import SkyCoord
-from host.models import Transient
+import django_filters
+from django.conf import settings
+from django.http import StreamingHttpResponse
+from django.http import JsonResponse
+from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter
 from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from rest_framework import serializers
+from rest_framework import viewsets
 from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import BasePermission
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import NotFound
+from host.object_store import ObjectStore
+from host.models import Aperture
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import Filter
+from host.models import SEDFittingResult
+from host.models import TaskRegister
+from host.models import Task
+from host.models import Transient
+from host.models import Host
+from host.models import Alias
+from host.models import DatasetRevision
+from host.decorators import log_usage_metric
+from host.host_utils import delete_transient
+from host.host_utils import get_latest_dataset_revision
+from host.transient_tasks import dataset_revision
+from api.serializers import DatasetSerializer
+from api.serializers import TransientSerializer
+from api.serializers import ApertureSerializer
+from api.serializers import CutoutSerializer
+from api.serializers import FilterSerializer
+from api.serializers import AperturePhotometrySerializer
+from api.serializers import SEDFittingResultSerializer
+from api.serializers import TaskRegisterSerializer
+from api.serializers import TaskSerializer
+from api.serializers import HostSerializer
+from api.serializers import AliasSerializer
 
-from . import datamodel
-from .components import data_model_components
+from host.log import get_logger
+logger = get_logger(__name__)
+
+
+def stream_download_file(file_path, file_name=None):
+    # Stream the data file from the S3 bucket
+    s3 = ObjectStore()
+    object_key = os.path.join(settings.S3_BASE_PATH, file_path.strip('/'))
+    filename = file_name if file_name else os.path.basename(file_path)
+    obj_stream = s3.stream_object(object_key)
+    response = StreamingHttpResponse(streaming_content=obj_stream)
+    response["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+############################################################
+# Filter Sets
+class TransientFilter(django_filters.FilterSet):
+    name = django_filters.CharFilter(
+        field_name="name", lookup_expr="exact",
+        help_text="Find specific transient by name")
+    redshift_lte = django_filters.NumberFilter(
+        field_name="redshift", lookup_expr="lte",
+        help_text="Find transients with redshift less than value")
+    redshift_gte = django_filters.NumberFilter(
+        field_name="redshift", lookup_expr="gte",
+        help_text="Find transients with redshift greater than value")
+    host_redshift_lte = django_filters.NumberFilter(
+        field_name="host__redshift", lookup_expr="lte",
+        help_text="Find transients with host redshift less than value")
+    host_redshift_gte = django_filters.NumberFilter(
+        field_name="host__redshift", lookup_expr="gte",
+        help_text="Find transients with host redshift greater than value")
+    host_photometric_redshift_lte = django_filters.NumberFilter(
+        field_name="host__photometric_redshift", lookup_expr="lte",
+        help_text="Find transients with host photometric redshift less than value")
+    host_photometric_redshift_gte = django_filters.NumberFilter(
+        field_name="host__photometric_redshift", lookup_expr="gte",
+        help_text="Find transients with host photometric redshift greater than value")
+
+    class Meta:
+        model = Transient
+        fields = ("name",)
+
+
+class HostFilter(django_filters.FilterSet):
+    redshift_lte = django_filters.NumberFilter(
+        field_name="redshift", lookup_expr="lte")
+    redshift_gte = django_filters.NumberFilter(
+        field_name="redshift", lookup_expr="gte")
+    photometric_redshift_lte = django_filters.NumberFilter(
+        field_name="photometric_redshift", lookup_expr="lte"
+    )
+    photometric_redshift_gte = django_filters.NumberFilter(
+        field_name="photometric_redshift", lookup_expr="gte"
+    )
+
+    class Meta:
+        model = Host
+        fields = ("name",)
+
+
+class AliasFilter(django_filters.FilterSet):
+    alias = django_filters.Filter(field_name="alias")
+    transient = django_filters.Filter(field_name="transient")
+    host = django_filters.Filter(field_name="host")
+
+    class Meta:
+        model = Alias
+        fields = ()
+
+
+class ApertureFilter(django_filters.FilterSet):
+    transient = django_filters.Filter(field_name="transient__name")
+
+    class Meta:
+        model = Aperture
+        fields = ()
+
+
+class TaskRegisterFilter(django_filters.FilterSet):
+    transient = django_filters.Filter(field_name="transient__name")
+    status = django_filters.Filter(field_name="status__message")
+    task = django_filters.Filter(field_name="task__name")
+
+    class Meta:
+        model = TaskRegister
+        fields = ()
+
+
+class FilterFilter(django_filters.FilterSet):
+    class Meta:
+        model = Filter
+        fields = ("name",)
+
+
+class CutoutFilter(django_filters.FilterSet):
+    filter = django_filters.Filter(field_name="filter__name")
+    transient = django_filters.Filter(field_name="transient__name")
+
+    class Meta:
+        model = Cutout
+        fields = ("name",)
+
+
+class AperturePhotometryFilter(django_filters.FilterSet):
+    filter = django_filters.Filter(field_name="filter__name")
+    transient = django_filters.Filter(field_name="transient__name")
+
+    class Meta:
+        model = AperturePhotometry
+        fields = ()
+
+
+class SEDFittingResultFilter(django_filters.FilterSet):
+    transient = django_filters.Filter(field_name="transient__name")
+    aperture_type = django_filters.Filter(field_name="aperture__type")
+
+    class Meta:
+        model = SEDFittingResult
+        fields = ()
+
+
+############################################################
+# ViewSets
+@method_decorator(log_usage_metric(), name="dispatch")
+@extend_schema(
+    summary="Transient search",
+    # description=dedent('''''')
+)
+class TransientViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Transient.objects.all()
+    serializer_class = TransientSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TransientFilter
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class ApertureViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Aperture.objects.all()
+    serializer_class = ApertureSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ApertureFilter
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class CutoutViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Cutout.objects.all()
+    serializer_class = CutoutSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = CutoutFilter
+
+    @extend_schema(
+        responses={
+            200: OpenApiResponse(description="Successful file download"),
+            404: OpenApiResponse(description="File not found"),
+        }
+    )
+    @method_decorator(log_usage_metric(), name="dispatch")
+    @action(methods=['get'], detail=True, url_path="download")
+    def download(self, request, pk=None):
+        cutout = self.get_object()
+        return stream_download_file(cutout.fits.name, f'{cutout.name}.fits')
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class FilterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Filter.objects.all()
+    serializer_class = FilterSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FilterFilter
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class AperturePhotometryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = AperturePhotometry.objects.all()
+    serializer_class = AperturePhotometrySerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = AperturePhotometryFilter
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class SEDFittingResultViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = SEDFittingResult.objects.all()
+    serializer_class = SEDFittingResultSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = SEDFittingResultFilter
+
+    allowed_file_types = {'chains', 'model', 'percentiles'}
+
+    @extend_schema(
+        parameters=[OpenApiParameter(
+            name="file_type",
+            type=str,
+            location=OpenApiParameter.PATH,
+            enum=list(allowed_file_types),
+            required=True,
+            description='File type to download',
+        )],
+        responses={
+            200: OpenApiResponse(description="Successful file download"),
+            400: OpenApiResponse(description="Unknown file type"),
+        }
+    )
+    @method_decorator(log_usage_metric(), name="dispatch")
+    @action(methods=['get'], detail=True, url_path=r"download/(?P<file_type>[^/.]+)")
+    def download(self, request, pk=None, file_type: str = None):
+        if file_type not in self.allowed_file_types:
+            return Response({'error': "unknown file type"}, status=400)
+        sed_result = self.get_object()
+        file_field = getattr(sed_result, f"{file_type}_file")
+        return stream_download_file(file_field.name)
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class TaskRegisterViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = TaskRegister.objects.all()
+    serializer_class = TaskRegisterSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TaskRegisterFilter
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class TaskViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class HostViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = Host.objects.all()
+    serializer_class = HostSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = HostFilter
+    lookup_value_regex = r"[^/]+[/]?"
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class AliasViewSet(viewsets.ModelViewSet):
+    def get_permissions(self):
+        if self.request.method == "DELETE":
+            return [HasPermissionDeleteAlias()]
+        elif self.request.method == "POST":
+            return [HasPermissionCreateAlias()]
+        else:
+            return [IsAuthenticated()]
+    queryset = Alias.objects.select_related("transient", "host")
+    serializer_class = AliasSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = AliasFilter
+
+    # Disable the PUT method
+    http_method_names = [
+        "get",
+        "post",
+        "patch",
+        "delete",
+        "head",
+        "options",
+    ]
+
+    # Create a serializer solely to support the drf_spectacular "extend_schema" decorator
+    # for the sake of OpenAPI spec generation.
+    class AliasCreateRequestSerializer(serializers.Serializer):
+        alias = serializers.CharField()
+        transient = serializers.CharField(required=False, allow_blank=False)
+        host = serializers.CharField(required=False, allow_blank=False)
+
+        def validate(self, attrs):
+            transient = attrs.get("transient")
+            host = attrs.get("host")
+            if not transient and not host:
+                raise serializers.ValidationError("Provide either 'transient' or 'host'.")
+            return attrs
+
+    @extend_schema(
+        request=AliasCreateRequestSerializer,
+        responses={
+            201: AliasSerializer,
+        },
+    )
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        transient_name = self.request.data.get("transient")
+        host_name = self.request.data.get("host")
+
+        if bool(transient_name) == bool(host_name):
+            raise serializers.ValidationError("Specify EITHER 'transient' or 'host'.")
+
+        if transient_name:
+            try:
+                transient = Transient.objects.get(name__exact=transient_name)
+            except Transient.DoesNotExist:
+                raise NotFound({"transient": f"No transient found with name '{transient_name}'."})
+            serializer.save(transient=transient)
+        else:
+            try:
+                host = Host.objects.get(name__exact=host_name)
+            except Host.DoesNotExist:
+                raise NotFound({"host": f"No host found with name '{host_name}'."})
+            serializer.save(host=host)
 
 
 def transient_exists(transient_name: str) -> bool:
@@ -37,53 +387,264 @@ def ra_dec_valid(ra: str, dec: str) -> bool:
     """
     try:
         ra, dec = float(ra), float(dec)
-        coord = SkyCoord(ra=ra, dec=dec, unit="deg")
+        SkyCoord(ra=ra, dec=dec, unit="deg")
         valid = True
-    except:
+    except Exception as err:
+        logger.warning(f'Coordinates {(ra, dec)} are invalid: {err}')
         valid = False
     return valid
 
 
-@api_view(["GET"])
-def get_transient_science_payload(request, transient_name):
-    if not transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} not in database"},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+# @api_view(["POST"])
+# def post_transient(request, transient_name, transient_ra, transient_dec):
+#     if transient_exists(transient_name):
+#         return Response(
+#             {"message": f"{transient_name} already in database"},
+#             status=status.HTTP_409_CONFLICT,
+#         )
 
-    component_groups = [
-        component_group(transient_name) for component_group in data_model_components
-    ]
-    components = datamodel.unpack_component_groups(component_groups)
-    data = datamodel.serialize_blast_science_data(components)
-    return Response(data, status=status.HTTP_200_OK)
+#     if not ra_dec_valid(transient_ra, transient_dec):
+#         return Response(
+#             {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
+#             status.HTTP_400_BAD_REQUEST,
+#         )
+
+#     data_string = (
+#         f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
+#     )
+#     Transient.objects.create(
+#         name=transient_name,
+#         ra_deg=float(transient_ra),
+#         dec_deg=float(transient_dec),
+#         tns_id=1,
+#     )
+#     return Response(
+#         {"message": f"transient successfully posted: {data_string}"},
+#         status=status.HTTP_201_CREATED,
+#     )
+
+# TODO: Secure this endpoint with Django REST Framework permission_classes
+# @api_view(["PUT"])
+# @permission_classes([IsAuthenticated])
+# def launch_workflow(request, transient_name):
+#     print(f'Launching transient workflow for "{transient_name}"...')
+#     result = transient_workflow.delay(transient_name)
+#     return Response({'message': f'Launched workflow for "{transient_name}": {result.task_id}'})
 
 
-@api_view(["POST"])
-def post_transient(request, transient_name, transient_ra, transient_dec):
-    if transient_exists(transient_name):
-        return Response(
-            {"message": f"{transient_name} already in database"},
-            status=status.HTTP_409_CONFLICT,
-        )
+class HasPermissionCreateAlias(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.add_alias")
 
-    if not ra_dec_valid(transient_ra, transient_dec):
-        return Response(
-            {"message": f"bad ra and dec: ra={transient_ra}, dec={transient_dec}"},
-            status.HTTP_400_BAD_REQUEST,
-        )
 
-    data_string = (
-        f"{transient_name}: ra = {float(transient_ra)}, dec= {float(transient_dec)}"
+class HasPermissionDeleteAlias(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.delete_alias")
+
+
+class HasPermissionDeleteTransient(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.has_perm("host.delete_transient")
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class DatasetExportView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = DatasetSerializer
+
+    def get(self, request, transient_name=''):
+        try:
+            Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        dr = get_latest_dataset_revision(transient_name)
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
+        if not dataset:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        logger.info(f'Exporting all data for "{transient_name}", including files.')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
+        s3 = ObjectStore()
+        tar_bytes_io = BytesIO()
+        # Generate in-memory compressed archive file object of all data to stream
+        with tarfile.open(fileobj=tar_bytes_io, mode="w:gz") as tar_fp:
+            # Add transient dataset document to archive
+            transient_info_fileobj = BytesIO(bytes(json.dumps(dataset), 'utf-8'))
+            transient_info_fileobj.seek(0)
+            # Assign standard generic filename to ease parsing of metadata upon import
+            tarinfo = tarfile.TarInfo(name='transient.json')
+            tarinfo.size = transient_info_fileobj.getbuffer().nbytes
+            tar_fp.addfile(tarinfo, fileobj=transient_info_fileobj)
+            # Download cutout FITS image files into memory
+            for cutout in dataset['cutouts']:
+                canonical_path = cutout['fits']
+                if not canonical_path:
+                    continue
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                cutout_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each cutout file are unique
+                tarinfo = tarfile.TarInfo(
+                    name=canonical_path.replace(os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts'))
+                tarinfo.size = cutout_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=cutout_fileobj)
+                # Include thumbnail images
+                thumbnail_object_key = object_key.replace('.fits', '.jpg')
+                if not s3.object_exists(path=thumbnail_object_key):
+                    continue
+                thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                thumbnail_tar_path = canonical_path.replace(
+                    os.path.join(settings.CUTOUT_ROOT, transient_name), 'cutouts').replace('.fits', '.jpg')
+                tarinfo = tarfile.TarInfo(
+                    name=thumbnail_tar_path)
+                tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+
+            # Collect SED fit files into memory
+            sedfittingresults = []
+            for aperture in dataset['apertures']:
+                if aperture['sedfittingresults']:
+                    sedfittingresults.extend(aperture['sedfittingresults'])
+            for sedfittingresult in sedfittingresults:
+                for sed_file in ['posterior', 'chains_file', 'percentiles_file', 'model_file']:
+                    canonical_path = sedfittingresult[sed_file]
+                    object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                    sed_fileobj = BytesIO(s3.get_object(path=object_key))
+                    # This assumes that the canonical paths for each sed file are unique
+                    tarinfo = tarfile.TarInfo(
+                        name=canonical_path.replace(os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data'))
+                    tarinfo.size = sed_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=sed_fileobj)
+                    # Include thumbnail images
+                    thumbnail_object_key = object_key.replace('.h5', '.jpg')
+                    if not s3.object_exists(path=thumbnail_object_key):
+                        continue
+                    thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                    thumbnail_tar_path = canonical_path.replace(
+                        os.path.join(settings.SED_OUTPUT_ROOT, transient_name), 'sed_data').replace('.h5', '.jpg')
+                    tarinfo = tarfile.TarInfo(
+                        name=thumbnail_tar_path)
+                    tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                    tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+
+            # Download host spectra FITS file into memory
+            for spectrum in dataset['host_spectra']:
+                canonical_path = spectrum['spectrum_file']
+                if not canonical_path:
+                    continue
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+                spectrum_fileobj = BytesIO(s3.get_object(path=object_key))
+                # This assumes that the canonical paths for each spectrum file are unique
+                tarinfo = tarfile.TarInfo(
+                    name=canonical_path.replace(os.path.join(settings.SPECTRA_ROOT, dataset['host']['name']),
+                                                os.path.join('host_spectra', dataset['host']['name'])))
+                tarinfo.size = spectrum_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=spectrum_fileobj)
+                # Include thumbnail images
+                thumbnail_object_key = object_key.replace('.fits', '.jpg')
+                if not s3.object_exists(path=thumbnail_object_key):
+                    continue
+                thumbail_fileobj = BytesIO(s3.get_object(path=thumbnail_object_key))
+                thumbnail_tar_path = canonical_path.replace(os.path.join(
+                    settings.SPECTRA_ROOT, dataset['host']['name']),
+                    os.path.join('host_spectra', dataset['host']['name'])).replace('.fits', '.jpg')
+                tarinfo = tarfile.TarInfo(
+                    name=thumbnail_tar_path)
+                tarinfo.size = thumbail_fileobj.getbuffer().nbytes
+                tar_fp.addfile(tarinfo, fileobj=thumbail_fileobj)
+        tar_bytes_io.seek(0)
+        response = StreamingHttpResponse(streaming_content=tar_bytes_io)
+        response["Content-Disposition"] = f"attachment; filename={f'{transient_name}.tar.gz'}"
+        return response
+
+
+@method_decorator(log_usage_metric(), name="dispatch")
+class DatasetView(APIView):
+    def get_permissions(self):
+        method = self.request.method
+        if method == "DELETE":
+            return [HasPermissionDeleteTransient()]
+        else:
+            return [IsAuthenticated()]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("transient_name", str, OpenApiParameter.PATH),
+                    OpenApiParameter(name="revision", type=int, location=OpenApiParameter.QUERY,
+                                     required=False, description="Dataset revision")],
+        request=None,
+        responses={
+            200: DatasetSerializer,
+            404: OpenApiResponse(description="Transient not found"),
+        }
     )
-    Transient.objects.create(
-        name=transient_name,
-        ra_deg=float(transient_ra),
-        dec_deg=float(transient_dec),
-        tns_id=1,
+    def get(self, request, transient_name=''):
+        revision = request.query_params.get('revision', '')
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        dataset = None
+        drs = DatasetRevision.objects.filter(transient=transient)
+        if revision:
+            revision = int(revision)
+            try:
+                dr = drs.get(revision__exact=revision)
+            except DatasetRevision.DoesNotExist:
+                return JsonResponse(data={"message": f'Dataset revision {revision} for "{transient_name}" not found'},
+                                    status=status.HTTP_404_NOT_FOUND)
+            dataset = dr.data
+        if not dataset:
+            dr = drs.order_by("-revision", "pk").first()
+        if not dr:
+            dr = dataset_revision(transient_name)
+        dataset = dr.data
+        logger.info(f'Exporting only tabular data (no data files) for "{transient_name}".')
+        logger.debug(f'''Exported transient tabular data:\n{json.dumps(dataset, indent=2)}''')
+        return JsonResponse(dataset)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="transient_name",
+                type=str,
+                location=OpenApiParameter.PATH,
+                required=True,
+                description="Dataset/Transient name",
+            ),
+            OpenApiParameter(
+                name="files",
+                type=bool,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Delete dataset files",
+            ),
+        ],
+        responses={
+            204: OpenApiResponse(description="Dataset deleted"),
+            404: OpenApiResponse(description="Dataset not found"),
+        }
     )
-    return Response(
-        {"message": f"transient successfully posted: {data_string}"},
-        status=status.HTTP_201_CREATED,
-    )
+    def delete(self, request, transient_name=''):
+        files = request.query_params.get('files', "false").lower() == "true"
+        # Acquire the transient object or return 404 not found
+        try:
+            transient = Transient.objects.get(name__exact=transient_name)
+        except Transient.DoesNotExist:
+            return JsonResponse(data={"message": f"{transient_name} not in database"}, status=status.HTTP_404_NOT_FOUND)
+        # Delete database objects associated with the transient dataset
+        logger.debug(f'Deleting objects assocated with transient "{transient_name}"...')
+        err_msg = delete_transient(transient=transient)
+        if files:
+            # Delete files in transient dataset
+            s3 = ObjectStore()
+            cutout_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                            settings.CUTOUT_ROOT.strip('/'), transient_name)
+            logger.debug(f'Deleting files in "{cutout_file_path}"...')
+            s3.delete_directory(root_path=cutout_file_path)
+            sed_file_path = os.path.join(settings.S3_BASE_PATH.strip('/'),
+                                         settings.SED_OUTPUT_ROOT.strip('/'), transient_name)
+            logger.debug(f'Deleting files in "{sed_file_path}"...')
+            s3.delete_directory(root_path=sed_file_path)
+        if err_msg:
+            return JsonResponse(data={"message": err_msg}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(data={}, status=status.HTTP_204_NO_CONTENT)

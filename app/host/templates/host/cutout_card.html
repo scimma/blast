@@ -3,18 +3,76 @@
 {% load crispy_forms_tags %}
 
 <!-- title -->
-{% block title %} <h5> Imaging data </h5>{% endblock %}
+{% block title %}<h4>Imaging data</h4>{% endblock %}
 
 <!-- body -->
 {% block body %}
-{{ bokeh_cutout_div | safe }}
+<div id="cutout-img-div" class="d-flex justify-content-center align-items-center">
+    <div id="cutout-loader-mask" class="loader-mask"></div>
+    <div id="loading-indicator" class="loader"></div>
+    <div id="cutout-img-bokeh" style="width: 100%;">
+    {% if bokeh_cutout_div %}
+    {{ bokeh_cutout_div | safe }}
+    {% else %}
+    <button title="Click the image to load the interactive plot." id="cutout-img-button" onclick="cutoutImgClick('{{ transient.name }}', '{{ cutout.name }}')">
+        <img id="cutout-img" src="data:image/png;base64,{{ image_data_encoded }}" style="width: 100%;"/>
+    </button>
+    <br>
+    {% endif %}
+    </div>
+</div>
 <form class="form" , method="POST">
     {% csrf_token %}
     <div class="input-group mb-10">
-        {{ form.filters }}
+        {{ filter_select_form.filters }}
         <div class="input-group-append">
-            <button type="submit" ,class="btn btn-outline-success" ,type="button">Get Cutout</button>
+            <button class="btn btn-primary" type="button"
+                onclick="cutoutImgClick('{{ transient.name }}', document.getElementById('id_filters').value)">Get Cutout</button>
         </div>
     </div>
 </form>
+<script>
+    document.getElementById('loading-indicator').style.display = "none";
+    function cutoutImgClick(transient, filter) {
+        document.getElementById('loading-indicator').style.display = "block";
+        $("#cutout-loader-mask").show();
+        $.ajax({
+            url: "{% url 'cutout_fits_plot' %}",
+            type: "GET",
+            data: {
+                transient_name: transient,
+                filter: filter
+            },
+            success: function (resp) {
+                document.getElementById("cutout-img-bokeh").innerHTML = resp.bokeh_cutout_div;
+                document.getElementById("bokeh-cutout-script-wrapper").innerHTML = ''
+                var cutout_script = document.createElement("script");
+                cutout_script.type = 'text/javascript';
+                var raw_script = resp.bokeh_cutout_script;
+                var raw_script_trimmed = raw_script.trim();
+                var closeMarker = "<" + "/script>";
+                var openTagEnd = raw_script_trimmed.indexOf(">") + 1;
+                var closeTagStart = raw_script_trimmed.lastIndexOf(closeMarker);
+                var script_trimmed = raw_script_trimmed.substring(openTagEnd, closeTagStart);
+                cutout_script.text = script_trimmed;
+                document.getElementById("bokeh-cutout-script-wrapper").appendChild(cutout_script);
+                document.getElementById('cutout-img-div').style.display = "block";
+                document.getElementById('loading-indicator').style.display = "none";
+                $("#cutout-loader-mask").hide();
+            },
+        });
+    }
+</script>
+<style>
+    #cutout-img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    #cutout-img-button {
+        background: transparent;
+        border: none !important;
+    }
+</style>
+<div id="bokeh-cutout-script-wrapper"></div>
 {% endblock %}

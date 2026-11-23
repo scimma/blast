@@ -1,42 +1,307 @@
 import math
+import os
+from shutil import rmtree
+import io
 
 import numpy as np
 from astropy.io import fits
+from celery import shared_task
+from abc import abstractmethod
+from django.db.models import Q
+from host.base_tasks import task_soft_time_limit
+from host.base_tasks import task_time_limit
+from time import process_time
+from billiard.exceptions import SoftTimeLimitExceeded
+from django.utils import timezone
+from copy import deepcopy
+from host.task_prereqs import ImageDownload_prerequisites
+from host.task_prereqs import MWEBV_Transient_prerequisites
+from host.task_prereqs import HostMatch_prerequisites
+from host.task_prereqs import HostInformation_prerequisites
+from host.task_prereqs import LocalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateLocalPhotometry_prerequisites
+from host.task_prereqs import LocalHostSEDFitting_prerequisites
+from host.task_prereqs import MWEBV_Host_prerequisites
+from host.task_prereqs import GlobalApertureConstruction_prerequisites
+from host.task_prereqs import GlobalAperturePhotometry_prerequisites
+from host.task_prereqs import ValidateGlobalPhotometry_prerequisites
+from host.task_prereqs import GlobalHostSEDFitting_prerequisites
+from host.task_prereqs import CropTransientImages_prerequisites
+from host.task_prereqs import GenerateThumbnail_prerequisites
+from host.task_prereqs import GenerateThumbnailFinal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDLocal_prerequisites
+from host.task_prereqs import GenerateThumbnailSEDGlobal_prerequisites
+from host.task_prereqs import HostSpectrumDownload_prerequisites
+from host.task_prereqs import GenerateThumbnailHostSpec_prerequisites
 
-from .base_tasks import TransientTaskRunner
-from .cutouts import download_and_save_cutouts
-from .ghost import run_ghost
-from .host_utils import check_global_contamination
-from .host_utils import check_local_radius
-from .host_utils import construct_aperture
-from .host_utils import do_aperture_photometry
-from .host_utils import get_dust_maps
-from .host_utils import get_local_aperture_size
-from .host_utils import query_ned
-from .host_utils import query_sdss
-from .host_utils import select_cutout_aperture
-from .models import Aperture
-from .models import AperturePhotometry
-from .models import Cutout
-from .models import SEDFittingResult
-from .prospector import build_model
-from .prospector import build_obs
-from .prospector import fit_model
-from .prospector import prospector_result_to_blast
+from host.cutouts import download_and_save_cutouts
+from host.prost import run_prost
+from host.host_utils import export_dataset
+from host.host_utils import select_aperture
+from host.host_utils import check_global_contamination
+from host.host_utils import check_local_radius
+from host.host_utils import construct_aperture
+from host.host_utils import FILTER_NAMES
+from host.host_utils import do_aperture_photometry
+from host.host_utils import get_dust_maps
+from host.host_utils import get_local_aperture_size
+from host.host_utils import query_ned
+from host.host_utils import query_sdss
+from host.host_utils import select_cutout_aperture
+from host.host_utils import select_best_cutout
+from host.host_utils import create_or_update_aperture
+from host.host_utils import get_processing_status_and_progress
+from host.host_utils import equal_dicts
+from host.host_utils import get_latest_dataset_revision
+from host.host_spectrum import fetch_host_spectrum
+from host.plotting_utils import plot_position
+from host.plotting_utils import plot_aperture
+from host.plotting_utils import plot_image
+from host.plotting_utils import render_sed_plot
+from host.plotting_utils import render_host_spectrum_plot
+from host.plotting_utils import temp_results_paths_from_canonical_path
+from host.plotting_utils import download_file_from_s3
+from host.models import Aperture
+from host.models import AperturePhotometry
+from host.models import Cutout
+from host.models import SEDFittingResult
+from host.models import StarFormationHistoryResult
+from host.models import Transient
+from host.models import HostSpectrum
+from host.models import DatasetRevision
+from host.prospector import build_model
+from host.prospector import build_obs
+from host.prospector import fit_model
+from host.prospector import prospector_result_to_blast
+from host.object_store import ObjectStore
+from host.base_tasks import TaskRunner
+from host.crop_images import crop_images
+from bokeh.io import export_png
+from bokeh.plotting import figure
+from PIL import Image
+from astropy.wcs import WCS
+from django.conf import settings
 
-"""This module contains all of the TransientTaskRunners in blast."""
+"""This module contains all of the TransientTaskRunners in Blast."""
+
+from host.models import TaskRegister
+from host.models import Status
+from host.models import Task
+
+from host.log import get_logger
+logger = get_logger(__name__)
 
 
-class Ghost(TransientTaskRunner):
+class TransientTaskRunner(TaskRunner):
     """
-    TaskRunner to run the GHOST matching algorithm.
+    Abstract base class for a TransientTaskRunner.
+
+    Attributes:
+        task_frequency_seconds (int): Positive integer defining the frequency
+            the task in run at. Defaults to 60 seconds.
+        task_initially_enabled (bool): True means the task is initially enabled,
+            False means the task is initially disabled. Default is enabled
+            (True).
+        task_name (str): Name of the task the TaskRunner works on.
+        task_type (str): Type of task the TaskRunner works on.
+        task_function_name(str): Name of the function used to register the task
+            in celery.
+        processing_status (models.Status): Status of the task while runner is
+            running a task.
+        failed_status (model.Status): Status of the task is if the runner fails.
+        prerequisites (dict): Prerequisite tasks and statuses required for the
+            runner to process.
+    """
+
+    def __init__(self, transient_name=None):
+        """
+        Initialized method which sets up the task runner.
+        """
+
+        self.prerequisites = self._prerequisites()
+        assert transient_name
+        self.transient_name = transient_name
+
+    def find_register_items_meeting_prerequisites(self):
+        """
+        Finds the register items meeting the prerequisites.
+
+        Returns:
+            (QuerySet): Task register items meeting prerequisites.
+        """
+        task = Task.objects.get(name__exact=self.task_name)
+        task_register = TaskRegister.objects.all()
+        if self.transient_name:
+            current_transients = Transient.objects.filter(
+                name__exact=self.transient_name
+            )
+        else:
+            current_transients = Transient.objects.all()
+
+        for task_name, status_message in self.prerequisites.items():
+            task_prereq = Task.objects.get(name__exact=task_name)
+            status = Status.objects.get(message__exact=status_message)
+
+            current_transients = current_transients & Transient.objects.filter(
+                taskregister__task=task_prereq, taskregister__status=status
+            )
+
+        return task_register.filter(transient__in=list(current_transients), task=task)
+
+    def _select_highest_priority(self, register):
+        """
+        Select highest priority task by finding the one with the oldest
+        transient timestamp.
+
+        Args:
+            register (QuerySet): register of tasks to select from.
+        Returns:
+            register item (model.TaskRegister): highest priority register item.
+        """
+        return register.order_by("transient__public_timestamp")[0]
+
+    def _update_status(self, task_status, updated_status):
+        """
+        Update the processing status of a task.
+
+        Parameters:
+            task_status (models.TaskProcessingStatus): task processing status to be
+                updated.
+            updated_status (models.Status): new status to update the task with.
+        Returns:
+            None: Saves the new updates to the backend.
+        """
+        task_status.status = updated_status
+        task_status.last_modified = timezone.now()
+        task_status.save()
+
+    def select_register_item(self):
+        """
+        Selects register item to be processed by task runner.
+
+        Returns:
+            register item (models.TaskRegister): returns item if one exists,
+                returns None otherwise.
+        """
+        register = self.find_register_items_meeting_prerequisites()
+        return self._select_highest_priority(register) if register.exists() else None
+
+    def run_process(self, task_register_item=None):
+        """Runs task runner process.
+
+        The logic of this function is a bit confusing due to the change in Blast's workflow execution method (see
+        commit 23d34a1ca8e1d6086672b4b0a60fe9f74fb3bdfa 2024/05/06). Originally, this function was executed periodically
+        by calling it from the subclasses corresponding to the various stages of the transient workflow.
+        This execution method was independent of individual transients: The algorithm of the "select_register_item()"
+        function was designed to identify all the transients whose workflows had reached the task associated with the
+        calling subclass (e.g. "ValidateLocalPhotometry.run_process()") by analyzing the "prerequisites" for each
+        registered task to determine if they had been met, and then select which transient's workflow task to run using
+        a priority system based on the transient discovery time.
+
+        The current workflow execution method is quite different: Now the DAG of tasks defining a workflow are
+        executed by the Celery Canvas system. The workflow definition in this Canvas system is therefore redundant
+        with the original Blast mechanism of "prerequisites" as a definition of workflow task dependencies (i.e. the DAG
+        structure). Because the "task_register_item" in this method is still selected using the same logic, however,
+        these prerequisites must remain consistent with the Canvas workflow definition.
+
+        The primary reason for retaining this redundant workflow graph definition is that it allows all the Celery tasks
+        associated with a workflow to complete even if the actual data processing (i.e. subclass implementations of the
+        `_run_process` abstract method) invoked by that Celery task fails, thereby ensuring that ancillary work such as
+        updating workflow progress or cleaning up temporary files can be done at the end of the workflow. Therefore,
+        each Celery task executing this `run_process` method on a worker must succeed; all exceptions generated by the
+        `_run_process` method must be handled so that ALL workflow tasks have a chance to run. The definition of
+        prerequisites for each TransientTaskRunner subclass will efficiently short-circuit actual data processing of
+        tasks blocked by failed task dependencies via the "select_register_item" method.
+        """
+        if task_register_item is None:
+            task_register_item = self.select_register_item()
+
+        if task_register_item is not None:
+            logger.debug(f'''{task_register_item.task.name}: {task_register_item.status.message}''')
+            self._update_status(task_register_item, Status.objects.get(message__exact="processing"))
+            transient = task_register_item.transient
+
+            start_time = process_time()
+            status_message = ''
+            try:
+                status_message = self._run_process(transient)
+            except SoftTimeLimitExceeded:
+                status_message = "time limit exceeded"
+                raise
+            except Exception:
+                status_message = self._failed_status_message()
+                logger.error(f'''"{self.task_name}" error message: "{status_message}"''')
+                raise
+            finally:
+                end_time = process_time()
+                logger.debug(f'''"{self.task_name}" status message: "{status_message}"''')
+                status = Status.objects.get(message__exact=status_message)
+                self._update_status(task_register_item, status)
+                processing_time = round(end_time - start_time, 2)
+                task_register_item.last_processing_time_seconds = processing_time
+                task_register_item.save()
+                # The processing status should be calculated
+                transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+                transient.save()
+            return transient.name
+
+    @abstractmethod
+    def _run_process(self, transient):
+        """
+        Run process function to be implemented by child classes.
+
+        Args:
+            transient (models.Transient): transient for the task runner to
+                process
+        Returns:
+            runner status (models.Status): status of the task after the task
+                runner has completed.
+        """
+        pass
+
+    @abstractmethod
+    def _prerequisites(self):
+        """
+        Task prerequisites to be implemented by child classes.
+
+        Returns:
+            prerequisites (dict): key is the name of the task, value is the task
+                status.
+        """
+        pass
+
+    @abstractmethod
+    def _failed_status_message(self):
+        """
+        Message of the failed status.
+
+        Returns:
+            failed message (str): Name of the message of the failed status.
+        """
+        pass
+
+    @property
+    def task_type(self):
+        return "transient"
+
+    @property
+    def task_function_name(self) -> str:
+        """
+        TaskRunner function name to be registered by celery.
+        """
+        return "host.transient_tasks." + self.task_name.replace(" ", "_").lower()
+
+
+class HostMatch(TransientTaskRunner):
+    """
+    TaskRunner to run the host matching algorithm.
     """
 
     def _prerequisites(self):
         """
         Only prerequisite is that the host match task is not processed.
         """
-        return {"Host match": "not processed"}
+        return HostMatch_prerequisites
 
     @property
     def task_name(self):
@@ -47,25 +312,29 @@ class Ghost(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is no GHOST match status.
+        Emit status message for failure consistent with the available Status objects
         """
-        return "no GHOST match"
+        return "failed"
 
     def _run_process(self, transient):
         """
-        Run the GHOST matching algorithm.
+        Run the host matching algorithm.
         """
-        host = run_ghost(transient)
-
-        if host is not None:
-            host.save()
-            transient.host = host
-            transient.save()
-            status_message = "processed"
-        else:
-            status_message = "no ghost match"
-
-        return status_message
+        result = run_prost(transient)
+        error = result['error']
+        if error:
+            logger.error(f'Error with host matching: {error}')
+            raise Exception(error)
+        host = result['host']
+        if host is None:
+            return "no host match"
+        host.save()
+        transient.host = host
+        transient.save()
+        if result['new']:
+            logger.info(f'''Created new Host object: "{host.name}" (object ID "{host.object_id}" from '''
+                        f'''catalog "{host.catalog_name}", release "{host.catalog_release}")''')
+        return "processed"
 
 
 class MWEBV_Transient(TransientTaskRunner):
@@ -77,7 +346,7 @@ class MWEBV_Transient(TransientTaskRunner):
         """
         Only prerequisite is that the transient MWEBV task is not processed.
         """
-        return {"Transient MWEBV": "not processed"}
+        return MWEBV_Transient_prerequisites
 
     @property
     def task_name(self):
@@ -99,7 +368,7 @@ class MWEBV_Transient(TransientTaskRunner):
 
         try:
             mwebv = get_dust_maps(transient.sky_coord)
-        except:
+        except Exception:
             mwebv = None
 
         if mwebv is not None:
@@ -121,7 +390,7 @@ class MWEBV_Host(TransientTaskRunner):
         """
         Only prerequisite is that the host MWEBV task is not processed.
         """
-        return {"Host match": "processed", "Host MWEBV": "not processed"}
+        return MWEBV_Host_prerequisites
 
     @property
     def task_name(self):
@@ -143,7 +412,7 @@ class MWEBV_Host(TransientTaskRunner):
         if transient.host is not None:
             try:
                 mwebv = get_dust_maps(transient.host.sky_coord)
-            except:
+            except Exception:
                 mwebv = None
 
             if mwebv is not None:
@@ -165,7 +434,7 @@ class ImageDownload(TransientTaskRunner):
         """
         No prerequisites
         """
-        return {"Cutout download": "not processed"}
+        return ImageDownload_prerequisites
 
     @property
     def task_name(self):
@@ -176,7 +445,7 @@ class ImageDownload(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is no GHOST match status.
+        Emit status message for failure consistent with the available Status objects
         """
         return "failed"
 
@@ -184,8 +453,21 @@ class ImageDownload(TransientTaskRunner):
         """
         Download cutout images
         """
-        download_and_save_cutouts(transient)
-        return "processed"
+
+        # If the downloaded images have already been cropped
+        task = Task.objects.get(name__exact="Crop transient images")
+        task_register = TaskRegister.objects.get(transient=transient, task=task)
+        if task_register.status.message == "processed":
+            overwrite = True
+        else:
+            overwrite = False
+
+        message = download_and_save_cutouts(
+            transient,
+            overwrite=overwrite
+        )
+
+        return message
 
 
 class GlobalApertureConstruction(TransientTaskRunner):
@@ -195,11 +477,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Host match": "processed",
-            "Global aperture construction": "not processed",
-        }
+        return GlobalApertureConstruction_prerequisites
 
     @property
     def task_name(self):
@@ -217,24 +495,48 @@ class GlobalApertureConstruction(TransientTaskRunner):
     def _run_process(self, transient):
         """Code goes here"""
 
-        cutouts = Cutout.objects.filter(transient=transient)
-
+        if not transient.host:
+            logger.info(f"""No host associated with "{transient.name}".""")
+            return self. _failed_status_message()
+        if not transient.host.sky_coord:
+            logger.info(f"""No sky_coord associated with "{transient.name}" host.""")
+            return self. _failed_status_message()
+        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         choice = 0
         aperture = None
+        s3 = ObjectStore()
         while aperture is None and choice <= 8:
-            aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
-
-            image = fits.open(aperture_cutout[0].fits.name)
-            aperture = construct_aperture(image, transient.host.sky_coord)
+            try:
+                aperture_cutout = select_cutout_aperture(cutouts, choice=choice)
+                # Download FITS file local file cache
+                canonical_fits_basepath = aperture_cutout[0].fits.name
+                object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+                tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+                local_fits_path = f'''{tmp_fits_basepath}.GlobalApertureConstruction'''
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                # Construct aperture
+                image = fits.open(local_fits_path)
+                aperture = construct_aperture(image, transient.host.sky_coord)
+            except Exception as err:
+                logger.warning(f'Unable to construct aperture "{FILTER_NAMES[choice]}" using {err}')
+                local_fits_path = ''
+            finally:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
             choice += 1
         if aperture is None:
-            return "failed"
+            return self. _failed_status_message()
 
         query = {"name": f"{aperture_cutout[0].name}_global"}
         data = {
             "name": f"{aperture_cutout[0].name}_global",
             "cutout": aperture_cutout[0],
-            "orientation_deg": (180 / np.pi) * aperture.theta.value,
+            "orientation_deg": (180 / np.pi) * aperture.theta.rad,
             "ra_deg": aperture.positions.ra.degree,
             "dec_deg": aperture.positions.dec.degree,
             "semi_major_axis_arcsec": aperture.a.value,
@@ -243,7 +545,7 @@ class GlobalApertureConstruction(TransientTaskRunner):
             "type": "global",
         }
 
-        self._overwrite_or_create_object(Aperture, query, data)
+        create_or_update_aperture(query, data)
         return "processed"
 
 
@@ -254,12 +556,7 @@ class LocalAperturePhotometry(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Local aperture photometry": "not processed",
-            "Host match": "processed",
-            "Host information": "processed",
-        }
+        return LocalAperturePhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -277,14 +574,14 @@ class LocalAperturePhotometry(TransientTaskRunner):
     def _run_process(self, transient):
         """Code goes here"""
 
-        if transient.best_redshift is None:
+        if transient.best_redshift is None or transient.best_redshift < 0:
             return "failed"
 
         aperture_size = get_local_aperture_size(transient.best_redshift)
-
-        query = {"name__exact": f"{transient.name}_local"}
+        aperture_name = f"{transient.name}_local"
+        query = {"name__exact": aperture_name}
         data = {
-            "name": f"{transient.name}_local",
+            "name": aperture_name,
             "orientation_deg": 0.0,
             "ra_deg": transient.sky_coord.ra.degree,
             "dec_deg": transient.sky_coord.dec.degree,
@@ -294,14 +591,22 @@ class LocalAperturePhotometry(TransientTaskRunner):
             "type": "local",
         }
 
-        self._overwrite_or_create_object(Aperture, query, data)
-        aperture = Aperture.objects.get(**query)
-        cutouts = Cutout.objects.filter(transient=transient)
+        aperture = create_or_update_aperture(query, data)
 
+        logger.debug(aperture)
+        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
+
+        s3 = ObjectStore()
         for cutout in cutouts:
-            image = fits.open(cutout.fits.name)
-
+            canonical_fits_basepath = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+            local_fits_path = f'''{tmp_fits_basepath}.LocalAperturePhotometry'''
             try:
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                image = fits.open(local_fits_path)
                 photometry = do_aperture_photometry(
                     image, aperture.sky_aperture, cutout.filter
                 )
@@ -325,8 +630,12 @@ class LocalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-            except Exception as e:
-                raise
+            finally:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
         return "processed"
 
 
@@ -337,11 +646,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Cutout download": "processed",
-            "Global aperture construction": "processed",
-            "Global aperture photometry": "not processed",
-        }
+        return GlobalAperturePhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -359,7 +664,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
     def _run_process(self, transient):
         """Code goes here"""
 
-        cutouts = Cutout.objects.filter(transient=transient)
+        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         choice = 0
         aperture = None
         for choice in range(9):
@@ -371,31 +676,49 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                 aperture = aperture[0]
                 break
         query = {"name": f"{cutout_for_aperture.name}_global"}
+        s3 = ObjectStore()
         for cutout in cutouts:
-            image = fits.open(cutout.fits.name)
-
+            canonical_fits_basepath = cutout.fits.name
+            object_key = os.path.join(settings.S3_BASE_PATH, canonical_fits_basepath.strip('/'))
+            tmp_fits_basepath = os.path.join('/tmp', canonical_fits_basepath.strip('/').replace('/', '__'))
+            local_fits_path = f'''{tmp_fits_basepath}.GlobalAperturePhotometry'''
+            try:
+                # Download FITS file local file cache
+                s3.download_object(path=object_key, file_path=local_fits_path)
+                assert os.path.isfile(local_fits_path)
+                image = fits.open(local_fits_path)
+            finally:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
             # make new aperture
             # adjust semi-major/minor axes for size
-            if f"{cutout.name}_global" != aperture.name:
+            aperture_name = f"{cutout.name}_global"
+            if aperture_name != aperture.name:
 
                 if not len(
-                    Aperture.objects.filter(cutout__name=f"{cutout.name}_global")
+                    Aperture.objects.filter(cutout__name=aperture_name)
                 ):
-
+                    # quadrature differences in resolution
                     semi_major_axis = (
-                        aperture.semi_major_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        np.sqrt(
+                            aperture.semi_major_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                        )
                     )
                     semi_minor_axis = (
-                        aperture.semi_minor_axis_arcsec
-                        - aperture.cutout.filter.image_fwhm_arcsec  # / 2.354
-                        + cutout.filter.image_fwhm_arcsec  # / 2.354
+                        np.sqrt(
+                            aperture.semi_minor_axis_arcsec**2.
+                            - aperture.cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                            + cutout.filter.image_fwhm_arcsec**2.  # / 2.354  # noqa: W503
+                        )
                     )
-
-                    query = {"name": f"{cutout.name}_global"}
+                    query = {"name": aperture_name}
                     data = {
-                        "name": f"{cutout.name}_global",
+                        "name": aperture_name,
                         "cutout": cutout,
                         "orientation_deg": aperture.orientation_deg,
                         "ra_deg": aperture.ra_deg,
@@ -406,10 +729,7 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                         "type": "global",
                     }
 
-                    self._overwrite_or_create_object(Aperture, query, data)
-                    aperture = Aperture.objects.get(
-                        transient=transient, name=f"{cutout.name}_global"
-                    )
+                    aperture = create_or_update_aperture(query, data)
 
             try:
                 photometry = do_aperture_photometry(
@@ -436,8 +756,12 @@ class GlobalAperturePhotometry(TransientTaskRunner):
                     data["magnitude_error"] = photometry["magnitude_error"]
 
                 self._overwrite_or_create_object(AperturePhotometry, query, data)
-            except Exception as e:
-                raise
+            finally:
+                try:
+                    # Delete FITS file from local file cache
+                    os.remove(local_fits_path)
+                except FileNotFoundError:
+                    pass
 
         return "processed"
 
@@ -453,10 +777,7 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         Prerequisites are that the validate local photometry task is
         not processed and the local photometry task is processed.
         """
-        return {
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "not processed",
-        }
+        return ValidateLocalPhotometry_prerequisites
 
     @property
     def task_name(self):
@@ -467,7 +788,7 @@ class ValidateLocalPhotometry(TransientTaskRunner):
 
     def _failed_status_message(self):
         """
-        Failed status is local photometry validation failed.
+        Emit status message for failure consistent with the available Status objects
         """
         return "phot valid failed"
 
@@ -484,14 +805,13 @@ class ValidateLocalPhotometry(TransientTaskRunner):
         # we can't measure the local aperture if we don't know the redshift
         if redshift is None:
             for local_aperture_phot in local_aperture_photometry:
-                local_aperture_phot.is_validated = False
+                local_aperture_phot.is_validated = "false"
                 local_aperture_phot.save()
 
         if not len(local_aperture_photometry):
-            return "phot valid failed"
+            return self._failed_status_message()
 
         for local_aperture_phot in local_aperture_photometry:
-
             is_validated = check_local_radius(
                 redshift,
                 local_aperture_phot.filter.image_fwhm_arcsec,
@@ -499,7 +819,13 @@ class ValidateLocalPhotometry(TransientTaskRunner):
             local_aperture_phot.is_validated = is_validated
             local_aperture_phot.save()
 
-        return "processed"
+        validated_local_aperture_photometry = AperturePhotometry.objects.filter(
+            transient=transient, aperture__type="local", is_validated="true"
+        )
+        if len(validated_local_aperture_photometry):
+            return "processed"
+        else:
+            return "no valid phot"
 
 
 class ValidateGlobalPhotometry(TransientTaskRunner):
@@ -510,24 +836,21 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
 
     def _prerequisites(self):
         """
-        Prerequisites are that the validate local photometry task
-        is not processed and the local photometry task is processed.
+        Prerequisites are that the validate global photometry task
+        is not processed and the global photometry task is processed.
         """
-        return {
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "not processed",
-        }
+        return ValidateGlobalPhotometry_prerequisites
 
     @property
     def task_name(self):
         """
-        Task status to be altered is validate local photometry.
+        Task status to be altered is validate global photometry.
         """
         return "Validate global photometry"
 
     def _failed_status_message(self):
         """
-        Failed status is local photometry validation failed.
+        Emit status message for failure consistent with the available Status objects
         """
         return "phot valid failed"
 
@@ -536,7 +859,7 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         Run the global photometry validation
         """
 
-        cutouts = Cutout.objects.filter(transient=transient)
+        cutouts = Cutout.objects.filter(transient=transient).filter(~Q(fits=""))
         cutout_for_aperture = select_cutout_aperture(cutouts)[0]
         aperture_primary = Aperture.objects.get(
             cutout__name=cutout_for_aperture.name, type="global"
@@ -547,8 +870,11 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
         )
 
         if not len(global_aperture_photometry):
-            return "global photometry validation failed"
+            return self._failed_status_message()
 
+        is_contam_list = []
+        # issue_warning = True
+        # no_contam_count = 0
         for global_aperture_phot in global_aperture_photometry:
             # check if there are contaminating objects in the
             # cutout image used for aperture construction at
@@ -556,35 +882,41 @@ class ValidateGlobalPhotometry(TransientTaskRunner):
             # AND
             # if there are contaminating objects detected in
             # the cutout image used for the photometry
+
+            for aperture in [
+                global_aperture_phot.aperture,
+                aperture_primary,
+            ]:
+                try:
+                    # Ensure that the path is not empty
+                    assert aperture.cutout.fits.name
+                except AssertionError:
+                    logger.error(f'Missing cutout FITS path value for aperture "{aperture.name}".')
+                    return self._failed_status_message()
+
             is_contam = check_global_contamination(
                 global_aperture_phot, aperture_primary
             )
-            global_aperture_phot.is_validated = not is_contam
+
+            # if all of our photometry is contaminated, the best move is just to
+            # go ahead and compute things, then warn the user
+            # otherwise, nearby galaxies are gonna be a huge pain
+            is_contam_list += [is_contam]
+        # issue warning and proceed if max 2 un-contaminated photometry points
+        issue_warning = (
+            True if len(np.where(~np.array(is_contam_list))[0]) <= 2 else False
+        )
+
+        for global_aperture_phot, is_contam in zip(
+            global_aperture_photometry, is_contam_list
+        ):
+            if issue_warning:
+                contam_message = "contamination warning" if is_contam else "true"
+            else:
+                contam_message = "false" if is_contam else "true"
+            global_aperture_phot.is_validated = contam_message
             global_aperture_phot.save()
 
-        return "processed"
-
-
-class TransientInformation(TransientTaskRunner):
-    """Task Runner to gather information about the Transient"""
-
-    def _prerequisites(self):
-        return {"Transient information": "not processed"}
-
-    @property
-    def task_name(self):
-        return "Transient information"
-
-    def _failed_status_message(self):
-        """
-        Failed status if not aperture is found
-        """
-        return "failed"
-
-    def _run_process(self, transient):
-        """Code goes here"""
-
-        # get_dust_maps(10)
         return "processed"
 
 
@@ -595,7 +927,7 @@ class HostInformation(TransientTaskRunner):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {"Host match": "processed", "Host information": "not processed"}
+        return HostInformation_prerequisites
 
     @property
     def task_name(self):
@@ -608,42 +940,51 @@ class HostInformation(TransientTaskRunner):
         return "failed"
 
     def _run_process(self, transient):
-        """Code goes here"""
+        '''Obtain a redshift value and return the task status:
+           "no host", "processed", or "no host redshift"
+        '''
 
-        host = transient.host
-        if host is None:
+        if transient.host is None:
             return "no host"
 
-        galaxy_ned_data = query_ned(host.sky_coord)
-        ### too many SDSS errors
+        # First try obtaining redshift from SDSS.
+        redshift = None
         try:
-            galaxy_sdss_data = query_sdss(host.sky_coord)
-        except:
-            galaxy_sdss_data = None
+            galaxy_sdss_data = query_sdss(transient.host.sky_coord)
+            redshift = galaxy_sdss_data["redshift"]
+        except Exception as err:
+            logger.warning(f''''Error querying SDSS: {err}''')
+        # If SDSS query fails to return a valid value, query NED.
+        if not redshift:
+            try:
+                galaxy_ned_data = query_ned(transient.host.sky_coord)
+                assert not math.isnan(galaxy_ned_data["redshift"])
+                redshift = galaxy_ned_data["redshift"]
+            except Exception as err:
+                logger.warning(f''''Error querying NED: {err}''')
 
-        status_message = "processed"
-
+        # If one of the queries yielded a redshift value, assign it.
+        if redshift and not math.isnan(redshift):
+            transient.host.redshift = redshift
+            transient.save()
         if (
-            galaxy_sdss_data is not None
-            and galaxy_sdss_data["redshift"] is not None
-            and not math.isnan(galaxy_sdss_data["redshift"])
+            transient.host.redshift
+            or transient.host.photometric_redshift is not None
+            or transient.redshift is not None
         ):
-            host.redshift = galaxy_sdss_data["redshift"]
-        elif galaxy_ned_data["redshift"] is not None and not math.isnan(
-            galaxy_ned_data["redshift"]
-        ):
-            host.redshift = galaxy_ned_data["redshift"]
+            status_message = "processed"
         else:
             status_message = "no host redshift"
 
-        host.save()
         return status_message
 
 
 class HostSEDFitting(TransientTaskRunner):
     """Task Runner to run host galaxy inference with prospector"""
 
-    def _run_process(self, transient, aperture_type="global", mode="fast"):
+    def _run_process(
+        self, transient, aperture_type="global", mode="fast", sbipp=True, save=True
+    ):
         """Run the SED-fitting task"""
 
         query = {
@@ -651,16 +992,45 @@ class HostSEDFitting(TransientTaskRunner):
             "type__exact": aperture_type,
         }
 
+        # # If all output files already exist, consider the task complete.
+        # object_key_base_path = os.path.join(settings.S3_BASE_PATH, settings.SED_OUTPUT_ROOT.strip('/'),
+        #                                     transient.name,, f'''{transient.name}_{aperture_type}''')
+        # object_key_hdf5_file = f'''{object_key_base_path}.h5'''
+        # object_key_chain_file = f'''{object_key_base_path}_chain.npz'''
+        # object_key_perc_file = f'''{object_key_base_path}_perc.npz'''
+        # object_key_modeldata_file = f'''{object_key_base_path}_modeldata.npz'''
+        # s3 = ObjectStore()
+        # all_outputs_exist = True
+        # for obj_key in [object_key_hdf5_file, object_key_chain_file, object_key_perc_file, object_key_modeldata_file]:
+        #     logger.debug(f'Checking if output file exists: "{obj_key}"...')
+        #     all_outputs_exist = all_outputs_exist & s3.object_exists(obj_key)
+        #     if not all_outputs_exist:
+        #         logger.debug(f'Output file missing: "{obj_key}".')
+        #         break
+        # if all_outputs_exist:
+        #     logger.warning('All SED output files exist. Skipping SED fitting calculation...')
+        #     return "processed"
+
+        if transient.best_redshift is None or transient.best_redshift > 1.0:
+            # training sample doesn't work here
+            return "redshift too high"
+        if transient.best_redshift < 0.015:
+            fit_type = 'lowz'
+        elif transient.best_redshift < 0.2:
+            fit_type = 'midz'
+        else:
+            fit_type = 'standard'
+
         aperture = Aperture.objects.filter(**query)
         if len(aperture) == 0:
             raise RuntimeError(f"no apertures found for transient {transient.name}")
 
-        observations = build_obs(transient, aperture_type)
+        observations = build_obs(transient, aperture_type, use_mag_offset=False)
         model_components = build_model(observations)
 
-        if mode == "test":
+        if mode == "test" and not sbipp:
             # garbage results but the test runs
-            print("running in test mode")
+            logger.warning("running in test mode")
             fitting_settings = dict(
                 nlive_init=1,
                 nested_method="rwalk",
@@ -671,9 +1041,9 @@ class HostSEDFitting(TransientTaskRunner):
                 nested_maxiter=1,
                 verbose=True,
             )
-        elif mode == "fast":
+        elif mode == "fast" and not sbipp:
             # 3000 - "reasonable but approximate posteriors"
-            print("running in fast mode")
+            logger.warning("running in fast mode")
             fitting_settings = dict(
                 nlive_init=400,
                 nested_method="rwalk",
@@ -687,10 +1057,19 @@ class HostSEDFitting(TransientTaskRunner):
                 nested_target_n_effective=10000,
             )
 
-        print("starting model fit")
-        posterior = fit_model(observations, model_components, fitting_settings)
+        logger.info("starting model fit")
+        posterior, errflag = fit_model(
+            observations,
+            model_components,
+            fitting_settings,
+            sbipp=sbipp,
+            fit_type=fit_type,
+        )
+        if errflag:
+            return "not enough filters"
+
         if mode == "test":
-            prosp_results = prospector_result_to_blast(
+            prosp_results, sfh_results = prospector_result_to_blast(
                 transient,
                 aperture[0],
                 posterior,
@@ -699,12 +1078,38 @@ class HostSEDFitting(TransientTaskRunner):
                 sed_output_root="/tmp",
             )
         else:
-            prosp_results = prospector_result_to_blast(
-                transient, aperture[0], posterior, model_components, observations
+            prosp_results, sfh_results = prospector_result_to_blast(
+                transient,
+                aperture[0],
+                posterior,
+                model_components,
+                observations,
+                sbipp=sbipp,
             )
+        if save:
+            pr = SEDFittingResult.objects.filter(
+                transient=transient, aperture__type=aperture_type
+            )
+            if len(pr):
+                pr.update(**prosp_results)
+                pr = pr[0]
+            else:
+                pr = SEDFittingResult.objects.create(**prosp_results)
+            for sfh_r in sfh_results:
+                ps = pr.logsfh.filter(
+                    logsfr_tmin=sfh_r['logsfr_tmin']
+                )
+                sfh_r['transient'] = transient
+                sfh_r['aperture'] = aperture[0]
 
-        pr = SEDFittingResult.objects.create(**prosp_results)
-
+                if len(ps):
+                    ps.update(**sfh_r)
+                else:
+                    ps = StarFormationHistoryResult.objects.create(**sfh_r)
+                    pr.logsfh.add(ps)
+        else:
+            logger.info("printing results")
+            logger.info(prosp_results)
         return "processed"
 
 
@@ -715,13 +1120,7 @@ class LocalHostSEDFitting(HostSEDFitting):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Host match": "processed",
-            "Host information": "processed",
-            "Local aperture photometry": "processed",
-            "Validate local photometry": "processed",
-            "Local host SED inference": "not processed",
-        }
+        return LocalHostSEDFitting_prerequisites
 
     @property
     def task_name(self):
@@ -739,9 +1138,11 @@ class LocalHostSEDFitting(HostSEDFitting):
     def _run_process(self, transient, mode="fast"):
         """Run the SED-fitting task"""
 
-        super()._run_process(transient, aperture_type="local", mode=mode)
+        status_message = super()._run_process(
+            transient, aperture_type="local", mode=mode
+        )
 
-        return "processed"
+        return status_message
 
 
 class GlobalHostSEDFitting(HostSEDFitting):
@@ -751,13 +1152,7 @@ class GlobalHostSEDFitting(HostSEDFitting):
         """
         Need both the Cutout and Host match to be processed
         """
-        return {
-            "Host match": "processed",
-            "Host information": "processed",
-            "Global aperture photometry": "processed",
-            "Validate global photometry": "processed",
-            "Global host SED inference": "not processed",
-        }
+        return GlobalHostSEDFitting_prerequisites
 
     @property
     def task_name(self):
@@ -772,9 +1167,684 @@ class GlobalHostSEDFitting(HostSEDFitting):
         """
         return "failed"
 
-    def _run_process(self, transient, mode="fast"):
+    def _run_process(self, transient, mode="fast", save=True):
         """Run the SED-fitting task"""
 
-        super()._run_process(transient, aperture_type="global", mode=mode)
+        status_message = super()._run_process(
+            transient, aperture_type="global", mode=mode, save=save
+        )
 
-        return "processed"
+        return status_message
+
+
+class GenerateThumbnail(TransientTaskRunner):
+    """
+    TaskRunner to generate a static compressed thumbnail of the interactive data widgets.
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnail_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient, widget='cutout'):
+        s3 = ObjectStore()
+
+        def upload_and_verify_object(thumbnail_object_key, thumbnail_filepath):
+            s3.put_object(path=thumbnail_object_key, file_path=thumbnail_filepath)
+            assert s3.object_exists(thumbnail_object_key)
+
+        def generate_and_store_thumbnail(
+                fig,
+                thumbnail_filepath,
+                thumbnail_filepath_png,
+                width,
+                height,
+                thumbnail_object_key):
+            export_png(fig, filename=thumbnail_filepath_png, width=width, height=height)
+            png_image = Image.open(thumbnail_filepath_png)
+            # Resize PNG image to reduce file size.
+            png_width, png_height = png_image.size
+            # Take the smaller of the actual and input width values.
+            png_resized_width = min(png_width, width)
+            # Maintain the aspect ratio when resizing.
+            png_resized_height = int(png_height * (png_resized_width / png_width))
+            png_image = png_image.resize((png_resized_width, png_resized_height), Image.Resampling.LANCZOS)
+            # Export to JPG for final thumbnail file
+            cutout_jpg = png_image.convert("RGB")
+            cutout_jpg.save(thumbnail_filepath, optimize=True, quality=85, format="JPEG")
+            os.remove(thumbnail_filepath_png)
+            # Upload to the object store
+            # Try uploading the thumbail once more if there is a failure.
+            try:
+                upload_and_verify_object(thumbnail_object_key, thumbnail_filepath)
+            except AssertionError as err:
+                logger.error(f'Error uploading thumbnail (retrying once more): {err}')
+                upload_and_verify_object(thumbnail_object_key, thumbnail_filepath)
+            finally:
+                os.remove(thumbnail_filepath)
+
+        try:
+            status_message = "processed"
+            assert widget in ['cutout', 'local', 'global', 'host_spec']
+            # Generate a thumbnail for a SED plot
+            if widget in ['local', 'global']:
+                render = render_sed_plot(transient, scope=widget)
+                fig = render['fig']
+                # Modify Bokeh figure options to improve similarity to rendered interactive plot
+                fig.sizing_mode = "fixed"
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
+                # Export plot to thumbnail
+                canonical_path = render['canonical_path']
+                sed_results_tmp_filepath, sed_results_object_key = temp_results_paths_from_canonical_path(canonical_path)  # noqa
+                download_file_from_s3(sed_results_tmp_filepath, sed_results_object_key)
+                thumbnail_filepath = sed_results_tmp_filepath.replace(".h5", ".jpg")
+                thumbnail_object_key = sed_results_object_key.replace(".h5", ".jpg")
+                thumbnail_filepath_png = sed_results_tmp_filepath.replace(".h5", ".png")
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400,
+                                             thumbnail_object_key)
+            # Generate a thumbnail for a cutout plot
+            elif widget == 'cutout':
+                # Select the cutout image to export
+                cutout = select_best_cutout(transient.name)
+                if cutout is None:
+                    return 'not enough filters'
+                # Download FITS file to local cache
+                if not cutout.fits.name:
+                    logger.error(f'''No FITS file for cutout "{cutout}".''')
+                    return "failed"
+                local_fits_path = os.path.join('/tmp', cutout.fits.name.strip('/').replace('/', '__'))
+                object_key = os.path.join(settings.S3_BASE_PATH, cutout.fits.name.strip('/'))
+                if s3.object_exists(object_key):
+                    # Download FITS file local file cache
+                    s3.download_object(path=object_key, file_path=local_fits_path)
+                else:
+                    logger.error(f'''Missing data file: "{object_key}".''')
+                # If the file is missing for some reason, return failure
+                if not os.path.isfile(local_fits_path):
+                    logger.error(f'''Error saving FITS image to local cache: "{cutout.fits.name}".''')
+                    return "failed"
+                # Load image data into memory
+                with fits.open(local_fits_path) as fits_file:
+                    image_data = fits_file[0].data
+                    wcs = WCS(fits_file[0].header)
+                # Delete FITS file from local file cache
+                os.remove(local_fits_path)
+                # Construct the Bokeh figure to plot
+                # TODO: Refactor to deduplicate code in host.plotting_utils.plot_cutout_image()
+                #       Some of the formatting options have been modified to make the exported thumbnail
+                #       look more like the rendered interactive plot.
+                title = cutout.filter
+                fig = figure(
+                    title=f"{title}",
+                    x_axis_label="",
+                    y_axis_label="",
+                    sizing_mode="fixed",
+                )
+                fig.axis.visible = False
+                fig.xgrid.visible = False
+                fig.ygrid.visible = False
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                transient_kwargs = {
+                    "legend_label": f"{transient.name}",
+                    "size": 30,
+                    "line_width": 2,
+                    "marker": "cross",
+                }
+                plot_position(transient, wcs, plotting_kwargs=transient_kwargs, plotting_func=fig.scatter)
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
+
+                if transient.host is not None:
+                    host_kwargs = {
+                        "legend_label": f"Host: {transient.host.name}",
+                        "size": 30,
+                        "line_width": 2,
+                        "line_color": "red",
+                        "marker": "x",
+                    }
+                    plot_position(
+                        transient.host,
+                        wcs,
+                        plotting_kwargs=host_kwargs,
+                        plotting_func=fig.scatter,
+                    )
+
+                # Plot global aperture
+                global_aperture = select_aperture(transient).prefetch_related()
+                if global_aperture.exists():
+                    plot_aperture(
+                        fig,
+                        global_aperture[0].sky_aperture,
+                        wcs,
+                        plotting_kwargs={
+                            "fill_alpha": 0.1,
+                            "line_color": "green",
+                            "legend_label": f"Global Aperture ({title})",
+                            "line_width": 4,
+                        },
+                    )
+
+                # Plot local aperture
+                local_aperture = Aperture.objects.filter(type__exact="local", transient=transient).prefetch_related()
+                if local_aperture.exists():
+                    plot_aperture(
+                        fig,
+                        local_aperture[0].sky_aperture,
+                        wcs,
+                        plotting_kwargs={
+                            "fill_alpha": 0.1,
+                            "line_color": "blue",
+                            "legend_label": "Local Aperture",
+                            "line_width": 4,
+                        },
+                    )
+                # Incorporate cutout image data into figure
+                plot_image(image_data, fig)
+                # Export plot to thumbnail
+                canonical_path = cutout.fits.name
+                thumbnail_object_key = os.path.join(
+                    settings.S3_BASE_PATH, canonical_path.replace(".fits", ".jpg").strip('/'))
+                thumbnail_filepath = os.path.join(
+                    '/tmp', canonical_path.replace(".fits", ".jpg").strip('/').replace('/', '__'))
+                thumbnail_filepath_png = os.path.join(
+                    '/tmp', canonical_path.replace(".fits", ".png").strip('/').replace('/', '__'))
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 800, 800,
+                                             thumbnail_object_key)
+
+            # Generate a thumbnail for a host spectrum plot
+            elif widget == 'host_spec':
+                render = render_host_spectrum_plot(transient)
+                fig = render['fig']
+                fig.sizing_mode = "fixed"
+                fig.title.text_font_size = "16px"
+                fig.title.text_font = "sans serif"
+                fig.title.text_font_style = "bold"
+                fig.axis.axis_label_text_font_size = "16px"
+                if fig.legend:
+                    fig.legend.label_text_font_size = "16px"
+                    fig.legend.label_text_font = "sans serif"
+                    fig.legend.label_text_font_style = "normal"
+                # Export plot to thumbnail
+                canonical_path = render['canonical_path']
+                spectrum_tmp_filepath, spectrum_object_key = temp_results_paths_from_canonical_path(canonical_path)
+                download_file_from_s3(spectrum_tmp_filepath, spectrum_object_key)
+                thumbnail_filepath = spectrum_tmp_filepath.replace(".fits", ".jpg")
+                thumbnail_object_key = spectrum_object_key.replace(".fits", ".jpg")
+                thumbnail_filepath_png = spectrum_tmp_filepath.replace(".fits", ".png")
+                # Export to PNG
+                generate_and_store_thumbnail(fig, thumbnail_filepath, thumbnail_filepath_png, 688, 400,
+                                             thumbnail_object_key)
+
+        except Exception as err:
+            logger.error(f'Error generating thumbnail: {err}')
+            status_message = "failed"
+        return status_message
+
+
+class GenerateThumbnailFinal(GenerateThumbnail):
+    """
+    Supports a second invocation of the thumbnail generation task
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnailFinal_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail final"
+
+
+class GenerateThumbnailSEDLocal(GenerateThumbnail):
+    """
+    Generate a thumbnail of the local SED fit
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnailSEDLocal_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail SED local"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='local')
+
+
+class GenerateThumbnailSEDGlobal(GenerateThumbnail):
+    """
+    Generate a thumbnail of the global SED fit
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnailSEDGlobal_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail SED global"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='global')
+
+
+class GenerateThumbnailHostSpec(GenerateThumbnail):
+    """
+    Generate a thumbnail of the host galaxy spectrum
+    """
+
+    def _prerequisites(self):
+        return GenerateThumbnailHostSpec_prerequisites
+
+    @property
+    def task_name(self):
+        return "Generate thumbnail host spectrum"
+
+    def _run_process(self, transient):
+        return super()._run_process(transient, widget='host_spec')
+
+
+class CropTransientImages(TransientTaskRunner):
+    """
+    TaskRunner to crop cutout images to save disk space.
+    """
+
+    def _prerequisites(self):
+        return CropTransientImages_prerequisites
+
+    @property
+    def task_name(self):
+        return "Crop transient images"
+
+    def _failed_status_message(self):
+        return "failed"
+
+    def _run_process(self, transient):
+        status_message = "processed"
+        crop_images(transient)
+        return status_message
+
+
+def _save_spectrum_to_s3(hdulist, s3_key):
+    """
+    Write an astropy HDUList to bytes and upload to the object store.
+
+    Parameters
+    ----------
+    :hdulist : :class:`~astropy.io.fits.HDUList`
+        The spectrum FITS object to upload.
+    :s3_key : str
+        Full S3 object key including base path.
+
+    Returns
+    -------
+    :success : bool
+        True if upload succeeded, False otherwise.
+    """
+    s3 = ObjectStore()
+    try:
+        buf = io.BytesIO()
+        hdulist.writeto(buf, overwrite=True)
+        buf.seek(0)
+        s3.put_object(path=s3_key, data_bytes_obj=buf.read())
+        return True
+    except Exception as err:
+        logger.error(f'''Error saving spectrum to S3 key "{s3_key}": {err}''')
+        return False
+
+
+class HostSpectrumDownload(TransientTaskRunner):
+    """
+    TaskRunner to download a host galaxy spectrum from public spectroscopic
+    archives using a unified hierarchical function (DESI -> SDSS -> BOSS -> NED).
+    """
+
+    def _prerequisites(self):
+        """
+        Need both the Cutout and Host match to be processed
+        """
+        return HostSpectrumDownload_prerequisites
+
+    @property
+    def task_name(self):
+        """
+        Task status to be altered is Host spectrum download.
+        """
+        return 'Host spectrum download'
+
+    def _failed_status_message(self):
+        """
+        Emit status message for failure consistent with the available Status objects
+        """
+        return 'failed'
+
+    def _run_process(self, transient):
+        """
+        Execute the hierarchical spectrum fetcher and save the resulting
+        dataset to the S3 store and local database.
+        """
+        if transient.host is None:
+            logger.info(f'''No host for transient "{transient.name}" — skipping spectrum download.''')
+            return 'no host spectrum'
+
+        # Call the single unified fetching function
+        try:
+            spectrum_data = fetch_host_spectrum(transient.host.sky_coord)
+        except Exception as err:
+            logger.warning(f'''Error executing unified host spectrum fetcher: {err}''')
+            return 'failed'
+
+        if spectrum_data is None:
+            return 'processed'
+
+        # Dynamically inspect the FITS header to identify which source succeeded
+        hdulist = spectrum_data['hdulist']
+        data_release = hdulist[0].header.get('DATA_RELEASE', '').upper()
+        origin = hdulist[0].header.get('ORIGIN', '').upper()
+
+        if 'DESI' in data_release or 'DESI' in origin:
+            source_name = 'DESI'
+        elif 'BOSS' in data_release or 'BOSS' in origin:
+            source_name = 'BOSS'
+        elif 'SDSS' in data_release or 'SDSS' in origin:
+            source_name = 'SDSS'
+        else:
+            source_name = 'NED'
+
+        # Initialize the database object placeholder to resolve the upload path
+        spectrum_obj = HostSpectrum(host=transient.host, source=source_name)
+        canonical_path = HostSpectrum._meta.get_field('spectrum_file').upload_to(spectrum_obj)
+        s3_key = os.path.join(settings.S3_BASE_PATH, canonical_path.strip('/'))
+
+        if not _save_spectrum_to_s3(hdulist, s3_key):
+            logger.error(f'''Failed to save {source_name} spectrum to S3 for host "{transient.host.name}".''')
+            return 'failed'
+
+        # Store or overwrite the spectrum info in your database
+        query = {'host': transient.host, 'source': source_name}
+        data = {
+            'host': transient.host,
+            'source': source_name,
+            'spectrum_file': canonical_path,
+            'wavelength_min_angstrom': spectrum_data['wavelength_min_angstrom'],
+            'wavelength_max_angstrom': spectrum_data['wavelength_max_angstrom'],
+            'redshift': spectrum_data['redshift'],
+            'ra_deg': spectrum_data.get('ra_deg'),
+            'dec_deg': spectrum_data.get('dec_deg'),
+            'spectrum_id': spectrum_data['spectrum_id']
+        }
+        self._overwrite_or_create_object(HostSpectrum, query, data)
+
+        # Enforce priority overrides: Delete lower-tier spectrum assets if they exist
+        priority_order = ['DESI', 'SDSS', 'BOSS', 'NED']
+        if source_name in priority_order:
+            idx = priority_order.index(source_name)
+            lower_priority_sources = priority_order[idx + 1:]
+            if lower_priority_sources:
+                HostSpectrum.objects.filter(host=transient.host, source__in=lower_priority_sources).delete()
+
+        logger.info(
+            f'''{source_name} spectrum saved for host "{transient.host.name}": '''
+            f'''id={spectrum_data["spectrum_id"]}, z={spectrum_data["redshift"]}'''
+        )
+        return 'processed'
+
+
+# Transient workflow tasks
+
+@shared_task(
+    name="Host Match", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
+)
+def host_match(transient_name):
+    HostMatch(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate SED local thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_sed_local(transient_name):
+    GenerateThumbnailSEDLocal(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate SED global thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_sed_global(transient_name):
+    GenerateThumbnailSEDGlobal(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate host spectrum thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_host_spec(transient_name):
+    GenerateThumbnailHostSpec(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate thumbnail",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail(transient_name):
+    GenerateThumbnail(transient_name).run_process()
+
+
+@shared_task(
+    name="Generate thumbnail final",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def generate_thumbnail_final(transient_name):
+    GenerateThumbnailFinal(transient_name).run_process()
+
+
+@shared_task(
+    name="Crop transient images",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def crop_transient_images(transient_name):
+    CropTransientImages(transient_name).run_process()
+
+
+@shared_task(
+    name="Global Aperture Construction",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def global_aperture_construction(transient_name):
+    GlobalApertureConstruction(transient_name).run_process()
+
+
+@shared_task(
+    name="Global Aperture Photometry",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def global_aperture_photometry(transient_name):
+    GlobalAperturePhotometry(transient_name).run_process()
+
+
+@shared_task(
+    name="Global Host SED Fitting",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def global_host_sed_fitting(transient_name):
+    GlobalHostSEDFitting(transient_name).run_process()
+
+
+@shared_task(
+    name="Host Information",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def host_information(transient_name):
+    HostInformation(transient_name).run_process()
+
+
+@shared_task(
+    name="Image Download",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def image_download(transient_name):
+    ImageDownload(transient_name).run_process()
+
+
+@shared_task(
+    name="Local Aperture Photometry",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def local_aperture_photometry(transient_name):
+    LocalAperturePhotometry(transient_name).run_process()
+
+
+@shared_task(
+    name="Local Host SED Fitting",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def local_host_sed_fitting(transient_name):
+    LocalHostSEDFitting(transient_name).run_process()
+
+
+@shared_task(
+    name="Host MWEBV", time_limit=task_time_limit, soft_time_limit=task_soft_time_limit
+)
+def mwebv_host(transient_name):
+    MWEBV_Host(transient_name).run_process()
+
+
+@shared_task(
+    name="Transient MWEBV",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def mwebv_transient(transient_name):
+    MWEBV_Transient(transient_name).run_process()
+
+
+@shared_task(
+    name="Validate Global Photometry",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def validate_global_photometry(transient_name):
+    ValidateGlobalPhotometry(transient_name).run_process()
+
+
+@shared_task(
+    name="Validate Local Photometry",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def validate_local_photometry(transient_name):
+    ValidateLocalPhotometry(transient_name).run_process()
+
+
+@shared_task(
+    name="Host spectrum download",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def host_spectrum_download(transient_name):
+    HostSpectrumDownload(transient_name).run_process()
+
+
+@shared_task(
+    name="Get Final Progress",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def final_progress(transient_name):
+    transient = Transient.objects.get(name=transient_name)
+    transient.progress, transient.processing_status = get_processing_status_and_progress(transient)
+    logger.debug(f'''Final progress: {(transient.progress, transient.processing_status)}''')
+    transient.save()
+    # Clean up scratch directories
+    for base_path in [settings.CUTOUT_ROOT, settings.SED_OUTPUT_ROOT]:
+        try:
+            rmtree(os.path.join(base_path, transient.name))
+        except FileNotFoundError:
+            pass
+
+
+@shared_task(
+    name="Dataset version control",
+    time_limit=task_time_limit,
+    soft_time_limit=task_soft_time_limit,
+)
+def dataset_version_control(transient_name):
+    dataset_revision(transient_name)
+
+
+def dataset_revision(transient_name):
+    """Create a new dataset revision if needed. Return the latest DatasetRevision object."""
+    transient = Transient.objects.get(name=transient_name)
+    # Export tabular data
+    dataset = export_dataset(transient.name)
+    # Create a candidate DR for comparison
+    candidate_dr = DatasetRevision(transient=transient, data=dataset)
+    # Fetch latest DR
+    previous_dr = get_latest_dataset_revision(transient.name)
+    if previous_dr is None:
+        # Save candidate DR to the database as the first revision
+        assert candidate_dr.revision == 0
+        candidate_dr.save()
+        logger.debug(f'New dataset revision created: {candidate_dr}')
+        return candidate_dr
+    # If there is an existing DR, compare and create a new DR if any differences are detected.
+    try:
+        # Must have the same number of files
+        assert len(candidate_dr.data['files']) == len(previous_dr.data['files'])
+        # If any changes to output files are detected, make a new revision
+        for canonical_path, checksum in previous_dr.data['files'].items():
+            assert candidate_dr.data['files'][canonical_path] == checksum
+        # If any changes to the immutable tabular data fields are detected, make a new revision
+        # Check app version in metadata
+        candidate_app_version = candidate_dr.data['metadata']['app_version']
+        previous_app_version = previous_dr.data['metadata']['app_version']
+        assert candidate_app_version == previous_app_version
+        # Compare the rest of the data structure
+        previous_dr_data = deepcopy(previous_dr.data)
+        candidate_dr_data = deepcopy(candidate_dr.data)
+        previous_dr_data.pop('metadata')
+        candidate_dr_data.pop('metadata')
+        previous_dr_data.pop('workflow_tasks')
+        candidate_dr_data.pop('workflow_tasks')
+        assert equal_dicts(previous_dr_data, candidate_dr_data)
+        logger.info(f'Dataset "{transient.name}" unchanged. No dataset revision created.')
+        return previous_dr
+    except (AssertionError, IndexError) as err:
+        logger.debug(err)
+        # Increment the revision index
+        candidate_dr.revision = previous_dr.revision + 1
+        candidate_dr.save()
+        logger.debug(f'New dataset revision created: {candidate_dr}')
+        return candidate_dr

@@ -563,7 +563,6 @@ class TrainSBI(CronJobBase):
                     list_phot_errs_single = np.append(
                         list_phot_errs_single, [phot_err_mags]
                     )
-#                    import pdb; pdb.set_trace()
                 # adding in the redshift here
                 list_phot.append(
                     np.concatenate(

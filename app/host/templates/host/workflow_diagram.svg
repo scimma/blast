@@ -1,0 +1,980 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
+    width="100%" viewBox="-0.5 -0.5 699 858"
+    style="background-color: rgb(255, 255, 255);">
+    <defs />
+    <rect fill="#ffffff" width="100%" height="100%" x="0" y="0" />
+    <g>
+        <g data-cell-id="0">
+            <g data-cell-id="1">
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-28">
+                    <g>
+                        <path d="M 351.52 335 L 351.52 355.05 L 351.52 347.05 L 351.52 356.9"
+                            fill="none" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 351.52 363.65 L 347.02 354.65 L 351.52 356.9 L 356.02 354.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-30">
+                    <g>
+                        <path d="M 351.52 242 L 351.52 262 L 351.52 255.05 L 351.52 264.9"
+                            fill="none" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 351.52 271.65 L 347.02 262.65 L 351.52 264.9 L 356.02 262.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-31">
+                    <g>
+                        <path d="M 351.52 60 L 351.52 80 L 351.52 69.05 L 351.52 78.9" fill="none"
+                            stroke="rgb(0, 0, 0)" stroke-width="3" stroke-miterlimit="10"
+                            pointer-events="stroke" />
+                        <path d="M 351.52 85.65 L 347.02 76.65 L 351.52 78.9 L 356.02 76.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-33">
+                    <g>
+                        <path d="M 351.52 149 L 351.52 169.05 L 351.52 162 L 351.52 171.9"
+                            fill="none" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 351.52 178.65 L 347.02 169.65 L 351.52 171.9 L 356.02 169.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-35">
+                    <g>
+                        <path d="M 301.5 427 L 301.52 484.48 L 100 484.48 L 100 531.9" fill="none"
+                            stroke="rgb(0, 0, 0)" stroke-width="3" stroke-miterlimit="10"
+                            pointer-events="stroke" />
+                        <path d="M 100 538.65 L 95.5 529.65 L 100 531.9 L 104.5 529.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-43">
+                    <g>
+                        <path d="M 100 692 L 100 711.9" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 100 718.65 L 95.5 709.65 L 100 711.9 L 104.5 709.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-44">
+                    <g>
+                        <path d="M 100 782 L 100 826 L 241.4 826" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 248.15 826 L 239.15 830.5 L 241.4 826 L 239.15 821.5 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-45">
+                    <g>
+                        <path d="M 351.5 602 L 351.5 785.9" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 351.5 792.65 L 347 783.65 L 351.5 785.9 L 356 783.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-53">
+                    <g>
+                        <path d="M 351.5 427 L 351.5 531.9" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 351.5 538.65 L 347 529.65 L 351.5 531.9 L 356 529.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-54">
+                    <g>
+                        <path d="M 401.5 427 L 401.52 484.48 L 598 484.48 L 598 531.9" fill="none"
+                            stroke="rgb(0, 0, 0)" stroke-width="3" stroke-miterlimit="10"
+                            pointer-events="stroke" />
+                        <path d="M 598 538.65 L 593.5 529.65 L 598 531.9 L 602.5 529.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-48">
+                    <g>
+                        <path d="M 598 602 L 598 621.9" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 598 628.65 L 593.5 619.65 L 598 621.9 L 602.5 619.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                <g data-cell-id="SDMgPuopT3TSf_6QKOC3-50">
+                    <g>
+                        <path d="M 598 692 L 598 711.9" fill="none" stroke="rgb(0, 0, 0)"
+                            stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                        <path d="M 598 718.65 L 593.5 709.65 L 598 711.9 L 602.5 709.65 Z"
+                            fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                            stroke-miterlimit="10" pointer-events="all" />
+                    </g>
+                </g>
+                {% for item in workflow_diagrams %}{% if item.name == 'Cutout download' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-17">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-32">
+                        <g>
+                            <rect x="251.5" y="0" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 7px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    Cu<span
+                                                        style="background-color: initial; font-size: 14px;">tout
+                                                    download</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="23" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Cutout download</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-2">
+                        <g>
+                            <rect x="277" y="31" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 44px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="48" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Transient information' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-18">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-34">
+                        <g>
+                            <rect x="251.5" y="89" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 96px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Transient
+                                                            information</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="112" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Transient information&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-3">
+                        <g>
+                            <rect x="277" y="120" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 133px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="137" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Transient MWEBV' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-19">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-37">
+                        <g>
+                            <rect x="251.5" y="182" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 189px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Transient
+                                                            MWEBV</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="205" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Transient MWEBV&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-5">
+                        <g>
+                            <rect x="277" y="213" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 226px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="230" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Host match' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-20">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-29">
+                        <g>
+                            <rect x="251.5" y="275" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 282px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">Host match</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="298" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Host match</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-4">
+                        <g>
+                            <rect x="277" y="306" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 319px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="323" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Host information' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-21">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-36">
+                        <g>
+                            <rect x="251.5" y="367" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 374px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Host
+                                                            information</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="390" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Host information&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-7">
+                        <g>
+                            <rect x="277" y="398" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 411px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="415" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Local aperture photometry' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-22">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-49">
+                        <g>
+                            <rect x="498" y="542" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 549px; margin-left: 499px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">Local aperture
+                                                        photometry</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="598" y="565" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Local aperture photometry</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-12">
+                        <g>
+                            <rect x="519" y="574" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 587px; margin-left: 520px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="594" y="591" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Validate local photometry' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-23">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-51">
+                        <g>
+                            <rect x="498" y="632" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 639px; margin-left: 499px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">Validate local
+                                                        photometry</div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="598" y="655" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Validate local photometry&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-13">
+                        <g>
+                            <rect x="519" y="664" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 677px; margin-left: 520px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="594" y="681" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Local host SED inference' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-24">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-52">
+                        <g>
+                            <rect x="498" y="722" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 729px; margin-left: 499px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Local
+                                                            host SED inference</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="598" y="745" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Local host SED inference&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-14">
+                        <g>
+                            <rect x="519" y="754" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 767px; margin-left: 520px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="594" y="771" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Host MWEBV' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-25">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-38">
+                        <g>
+                            <rect x="251.5" y="542" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 549px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Host MWEBV</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="565" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Host MWEBV&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-15">
+                        <g>
+                            <rect x="277" y="574" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 587px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="591" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Global host SED inference' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-26">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-46">
+                        <g>
+                            <rect x="251.5" y="796" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 803px; margin-left: 253px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Global host SED inference</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="352" y="819" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Global host SED inference&#xa;</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-16">
+                        <g>
+                            <rect x="277" y="827" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 840px; margin-left: 278px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="351" y="844" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Validate global photometry' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-27">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-41">
+                        <g>
+                            <rect x="0" y="722" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 729px; margin-left: 1px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <div style="font-size: 14px;">
+                                                        <span
+                                                            style="background-color: initial; font-size: 14px;">Validate global photometry</span>
+                                                    </div>
+                                                    <div style="font-size: 14px;">
+                                                        <div style="font-size: 14px;"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="100" y="745" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Validate global photometr...</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-10">
+                        <g>
+                            <rect x="25.5" y="754" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 767px; margin-left: 26px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="100" y="771" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+                {% endif %}{% endfor %}
+                {% for item in workflow_diagrams %}{% if item.name == 'Global aperture construction' %}
+                <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-29">
+                    <g />
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-39">
+                        <g>
+                            <rect x="0" y="542" width="200" height="60" fill="{{ item.fill_color }}"="rgb(255, 255, 255)"
+                                stroke="rgb(0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 549px; margin-left: 1px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">Global aperture construction</div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="100" y="565" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="14px"
+                                        text-anchor="middle">Global aperture construct...</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-9">
+                        <g>
+                            <rect x="25.5" y="574" width="149" height="26" fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)" pointer-events="all" />
+                        </g>
+                        <g>
+                            <g transform="translate(-0.5 -0.5)">
+                                <switch>
+                                    <foreignObject pointer-events="none" width="100%" height="100%"
+                                        requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                        style="overflow: visible; text-align: left;">
+                                        <div xmlns="http://www.w3.org/1999/xhtml"
+                                            style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 587px; margin-left: 26px;">
+                                            <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                <div
+                                                    style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                    <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                            </div>
+                                        </div>
+                                    </foreignObject>
+                                    <text x="100" y="591" fill="rgb(0, 0, 0)"
+                                        font-family="&quot;Helvetica&quot;" font-size="12px"
+                                        text-anchor="middle">status</text>
+                                </switch>
+                            </g>
+                        </g>
+                    </g>
+                    {% endif %}{% endfor %}
+                    {% for item in workflow_diagrams %}{% if item.name == 'Global aperture photometry' %}
+                    <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-28">
+                        <g />
+                        <g data-cell-id="SDMgPuopT3TSf_6QKOC3-40">
+                            <g>
+                                <rect x="0" y="632" width="200" height="60" fill="{{ item.fill_color }}" stroke="rgb(0, 0, 0)"
+                                    pointer-events="all" />
+                            </g>
+                            <g>
+                                <g transform="translate(-0.5 -0.5)">
+                                    <switch>
+                                        <foreignObject pointer-events="none" width="100%"
+                                            height="100%"
+                                            requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                            style="overflow: visible; text-align: left;">
+                                            <div xmlns="http://www.w3.org/1999/xhtml"
+                                                style="display: flex; align-items: unsafe flex-start; justify-content: unsafe center; width: 198px; height: 1px; padding-top: 639px; margin-left: 1px;">
+                                                <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                    style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                    <div
+                                                        style="display: inline-block; font-size: 14px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">Global aperture photometry<div
+                                                            style="font-size: 14px;">
+                                                            <div style="font-size: 14px;"></div>
+                                                        </div></div>
+                                                </div>
+                                            </div>
+                                        </foreignObject>
+                                        <text x="100" y="655" fill="rgb(0, 0, 0)"
+                                            font-family="&quot;Helvetica&quot;" font-size="14px"
+                                            text-anchor="middle">Global aperture photometr...</text>
+                                    </switch>
+                                </g>
+                            </g>
+                        </g>
+                        <g data-cell-id="yzTpFm-gZU9oOf9mGB5J-8">
+                            <g>
+                                <rect x="25.5" y="664" width="149" height="26"
+                                    fill="rgb(255, 255, 255, 0)" stroke="rgb(0, 0, 0, 0)"
+                                    pointer-events="all" />
+                            </g>
+                            <g>
+                                <g transform="translate(-0.5 -0.5)">
+                                    <switch>
+                                        <foreignObject pointer-events="none" width="100%"
+                                            height="100%"
+                                            requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"
+                                            style="overflow: visible; text-align: left;">
+                                            <div xmlns="http://www.w3.org/1999/xhtml"
+                                                style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 147px; height: 1px; padding-top: 677px; margin-left: 26px;">
+                                                <div data-drawio-colors="color: rgb(0, 0, 0); "
+                                                    style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                                                    <div
+                                                        style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal; font-weight: bold;">
+                                                        <span class="{{ item.badge }}">{{ item.message }}</span></div>
+                                                </div>
+                                            </div>
+                                        </foreignObject>
+                                        <text x="100" y="681" fill="rgb(0, 0, 0)"
+                                            font-family="&quot;Helvetica&quot;" font-size="12px"
+                                            text-anchor="middle">status</text>
+                                    </switch>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                    {% endif %}{% endfor %}
+                    <g data-cell-id="SDMgPuopT3TSf_6QKOC3-42">
+                        <g>
+                            <path d="M 100 602 L 100 621.9" fill="none" stroke="rgb(0, 0, 0)"
+                                stroke-width="3" stroke-miterlimit="10" pointer-events="stroke" />
+                            <path d="M 100 628.65 L 95.5 619.65 L 100 621.9 L 104.5 619.65 Z"
+                                fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-width="3"
+                                stroke-miterlimit="10" pointer-events="all" />
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

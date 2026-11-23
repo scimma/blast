@@ -2,15 +2,15 @@
   fields:
     name: 2022testone
     tns_id: 9999
-    public_timestamp: 2022-02-04 07:29:02.112+00:00
+    public_timestamp: 2022-02-04 07:29:02.112000+00:00
     tns_prefix: AT
-    ra_deg: 120.0273250
+    ra_deg: 120.027325
     dec_deg: 2.1707639
 - model: host.Transient
   fields:
     name: 2022testtwo
     tns_id: 9998
-    public_timestamp: 2022-05-04 07:29:02.112+00:00
+    public_timestamp: 2022-05-04 07:29:02.112000+00:00
     tns_prefix: AT
-    ra_deg: 123.0273250
+    ra_deg: 123.027325
     dec_deg: 2.1707639
