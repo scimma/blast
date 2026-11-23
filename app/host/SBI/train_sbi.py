@@ -4,6 +4,7 @@
 """Implementation of SBI++ training for Blast"""
 import argparse
 import glob
+import json
 import math
 import os
 import pickle
@@ -89,19 +90,169 @@ DEFAULT_ZPHOT_SUMMARY_FILE = "host/SBI/SBI_model_zphot_summary.p"
 ZRED_PRIOR_PAD = 1e-3  # upper edge of the zred prior is zmax + this
 MASSFUNC_ZMIN = 0.2  # below this z, logmass is drawn flat instead of from the mass function
 
+EXCLUDED_FILTERS = ("DES_i", "DES_Y")
+
+# Filters for the simulated photometry, in the order the database returns them
+# for Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y")). The trained
+# model's inputs are in this order, so it must match the fitting code. Update
+# it by hand if filters are added to the database (or run with --filters db).
+DEFAULT_FILTERS = [
+    "2MASS_H", "2MASS_J", "2MASS_K",
+    "WISE_W1", "WISE_W2", "WISE_W3", "WISE_W4",
+    "GALEX_NUV", "GALEX_FUV",
+    "PanSTARRS_g", "PanSTARRS_r", "PanSTARRS_i", "PanSTARRS_z", "PanSTARRS_y",
+    "SDSS_i", "SDSS_r", "SDSS_u", "SDSS_z", "SDSS_g",
+    "DES_g", "DES_r", "DES_z",
+]
+
 _all_filters = None
+_filter_file = os.environ.get("SBI_FILTER_FILE") or None  # set by --filter-file
+_filter_names = list(DEFAULT_FILTERS)  # set by --filters; ["db"] = use the database
+# same location as settings.TRANSMISSION_CURVES_ROOT in a standard checkout
+DEFAULT_TRANSMISSION_DIR = os.environ.get(
+    "TRANSMISSION_CURVES_ROOT",
+    os.path.abspath(os.path.join(_APP_DIR, "..", "data", "transmission")),
+)
+_transmission_dir = DEFAULT_TRANSMISSION_DIR
+
+
+class CachedFilter:
+    """Stand-in for host.models.Filter, built from a --filter-file export.
+
+    Provides the two things this script uses: .name and .transmission_curve().
+    """
+
+    def __init__(self, name, wavelength, transmission):
+        self.name = name
+        self.wavelength = np.asarray(wavelength, dtype=float)
+        self.transmission = np.asarray(transmission, dtype=float)
+
+    def __str__(self):
+        return self.name
+
+    def transmission_curve(self):
+        from sedpy import observate
+
+        return observate.Filter(
+            kname=self.name, nick=self.name, data=(self.wavelength, self.transmission)
+        )
+
+
+def _load_db_filters():
+    _setup_django()
+    from django.db.models import Q
+    from host.models import Filter
+
+    query = Q()
+    for name in EXCLUDED_FILTERS:
+        query &= ~Q(name=name)
+    return list(Filter.objects.filter(query))
+
+
+def _load_filter_file(path):
+    with open(path) as fin:
+        data = json.load(fin)
+    return [
+        CachedFilter(f["name"], f["wavelength"], f["transmission"])
+        for f in data["filters"]
+    ]
+
+
+def _read_curve(path):
+    """Read a transmission curve the same way Filter.transmission_curve() does."""
+    import pandas as pd
+
+    curve = pd.read_csv(path, sep=r"\s+", header=None)
+    return curve[0].to_numpy(), curve[1].to_numpy()
+
+
+def _load_transmission_dir(directory, names):
+    """Build filters straight from the transmission-curve files.
+
+    names == ["auto"] uses every curve in the directory (minus *_corrmodel
+    files and EXCLUDED_FILTERS) in alphabetical order.
+    """
+    if list(names) == ["auto"]:
+        names = sorted(
+            os.path.splitext(f)[0]
+            for f in os.listdir(directory)
+            if f.endswith(".txt") and not f.endswith("_corrmodel.txt")
+        )
+        names = [n for n in names if n not in EXCLUDED_FILTERS]
+        print(
+            "WARNING: --filters auto uses alphabetical order. The model's inputs "
+            "must be in the same filter order when it is applied.",
+            flush=True,
+        )
+    filters = []
+    for name in names:
+        path = os.path.join(directory, f"{name}.txt")
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"No transmission curve for {name}: {path}")
+        filters.append(CachedFilter(name, *_read_curve(path)))
+    return filters
 
 
 def get_all_filters():
-    """Filters used for the simulated photometry (fetched from the database once)."""
+    """Filters used for the simulated photometry, in a fixed order.
+
+    In priority order: the --filter-file export, or the --filters names
+    (DEFAULT_FILTERS unless overridden) read from --transmission-dir.
+    --filters db reads the database instead, which is the only option that
+    needs Django.
+    """
     global _all_filters
     if _all_filters is None:
-        _setup_django()
-        from django.db.models import Q
-        from host.models import Filter
-
-        _all_filters = list(Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y")))
+        if _filter_file:
+            _all_filters = _load_filter_file(_filter_file)
+            source = _filter_file
+        elif _filter_names == ["db"]:
+            _all_filters = _load_db_filters()
+            source = "the database"
+        else:
+            _all_filters = _load_transmission_dir(_transmission_dir, _filter_names)
+            source = _transmission_dir
+        print(
+            f"Using {len(_all_filters)} filters from {source}: "
+            f"{[f.name for f in _all_filters]}",
+            flush=True,
+        )
     return _all_filters
+
+
+def export_filters(path):
+    """Write the filter list and raw transmission curves to a JSON file.
+
+    Run once wherever the database works; afterwards --do-phot can use
+    --filter-file and never needs Django. The file fixes the filter order,
+    which must match the order used when the trained model is applied.
+    """
+    filters = _load_db_filters()
+    from django.conf import settings
+
+    out = []
+    for f in filters:
+        wavelength, transmission = _read_curve(
+            f"{settings.TRANSMISSION_CURVES_ROOT}/{f.name}.txt"
+        )
+        out.append(
+            {
+                "name": f.name,
+                "wavelength": wavelength.tolist(),
+                "transmission": transmission.tolist(),
+            }
+        )
+    _ensure_parent_dir(path)
+    with open(path, "w") as fout:
+        json.dump(
+            {
+                "excluded": list(EXCLUDED_FILTERS),
+                "transmission_curves_root": str(settings.TRANSMISSION_CURVES_ROOT),
+                "filters": out,
+            },
+            fout,
+        )
+    print(f"Wrote {len(out)} filters to {path}: {[f['name'] for f in out]}", flush=True)
 
 massmet = np.loadtxt("host/SBI/priors/gallazzi_05_massmet.txt")
 
@@ -574,11 +725,15 @@ class TrainSBI(CronJobBase):
         model_file=None,
         summary_file=None,
         do_zphot_model=None,
+        filter_file=None,
+        export_filters_file=None,
+        filters=None,
+        transmission_dir=None,
     ):
         """Entry point for both `manage.py runcrons` and the command line.
 
         Anything not passed explicitly falls back to an environment variable
-        (DO_PHOT, DO_TRAIN, DO_ZPHOT_MODEL, OUTFILE, ZMIN, ZMAX) and then to the module defaults,
+        (DO_PHOT, DO_TRAIN, DO_ZPHOT_MODEL, OUTFILE, ZMIN, ZMAX, SBI_FILTER_FILE) and then to the module defaults,
         so `runcrons` with no environment set behaves as before (train only).
         """
         do_phot = _env_bool("DO_PHOT", False) if do_phot is None else do_phot
@@ -613,6 +768,18 @@ class TrainSBI(CronJobBase):
             f"do_zphot_model={do_zphot_model} zmin={zmin} zmax={zmax}",
             flush=True,
         )
+
+        if export_filters_file:
+            export_filters(export_filters_file)
+
+        global _filter_file, _filter_names, _transmission_dir, _all_filters
+        if filter_file:
+            _filter_file = filter_file
+        if filters:
+            _filter_names = list(filters)
+        if transmission_dir:
+            _transmission_dir = transmission_dir
+        _all_filters = None
 
         if do_phot:
             self.make_phot(outfile, zmin=zmin, zmax=zmax, nsamples=nsamples)
@@ -835,6 +1002,21 @@ def parse_args(argv=None):
                         help="train a photometric-redshift model: redshift is removed "
                         "from the observed data and inferred along with the other "
                         "parameters; changes the default output names to *_zphot*")
+    parser.add_argument("--filter-file", default=os.environ.get("SBI_FILTER_FILE"),
+                        help="JSON filter list from --export-filters; with it, --do-phot "
+                        "does not need Django or the database (default: $SBI_FILTER_FILE)")
+    parser.add_argument("--filters", nargs="+", metavar="NAME", default=None,
+                        help="filter names, in order, to read from --transmission-dir "
+                        "(default: the built-in DEFAULT_FILTERS list, matching the "
+                        "database order); 'db' = read the filter list from the "
+                        "database; 'auto' = every curve in --transmission-dir except "
+                        f"{', '.join(EXCLUDED_FILTERS)}, alphabetically")
+    parser.add_argument("--transmission-dir", default=DEFAULT_TRANSMISSION_DIR,
+                        help="directory of <filter>.txt transmission curves "
+                        "(default: $TRANSMISSION_CURVES_ROOT or %(default)s)")
+    parser.add_argument("--export-filters", dest="export_filters_file", metavar="FILE",
+                        help="write the database filter list and transmission curves "
+                        "to FILE (needs the database), e.g. host/SBI/sbi_filters.json")
     parser.add_argument("--zmin", type=float, default=DEFAULT_ZMIN,
                         help="lower redshift limit (default: %(default)s)")
     parser.add_argument("--zmax", type=float, default=DEFAULT_ZMAX,
@@ -858,12 +1040,16 @@ def parse_args(argv=None):
                         f"or {DEFAULT_ZPHOT_SUMMARY_FILE} with --do-zphot-model)")
     args = parser.parse_args(argv)
 
-    if not (args.do_phot or args.do_train):
-        parser.error("give at least one of --do-phot / --do-train")
+    if not (args.do_phot or args.do_train or args.export_filters_file):
+        parser.error("give at least one of --do-phot / --do-train / --export-filters")
     if args.do_zphot_model and not args.do_train:
         parser.error("--do-zphot-model only affects training; add --do-train")
     if args.zmin < 0 or args.zmax <= args.zmin:
         parser.error("need 0 <= --zmin < --zmax")
+    if args.filter_file and args.filters:
+        parser.error("give --filter-file or --filters, not both")
+    if args.filters and len(args.filters) > 1 and {"db", "auto"} & set(args.filters):
+        parser.error("'db' and 'auto' can't be combined with filter names")
     return args
 
 
