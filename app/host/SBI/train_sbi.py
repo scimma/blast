@@ -8,24 +8,6 @@ import math
 import os
 import pickle
 import sys
-
-# ---------------------------------------------------------------------------
-# Django bootstrap. Lets this module run standalone
-#   (cd app && python -m host.SBI.train_sbi --do-phot ...)
-# as well as through `python manage.py runcrons ...`, where Django is
-# already configured and this block is a no-op.
-# ---------------------------------------------------------------------------
-_APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if _APP_DIR not in sys.path:
-    sys.path.insert(0, _APP_DIR)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
-
-import django
-from django.apps import apps
-
-if not apps.ready:
-    django.setup()
-
 import h5py
 import numpy as np
 import torch
