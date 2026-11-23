@@ -2,9 +2,29 @@
 # D. Jones - 5/26/23
 # modified by B. Wang - 6/7/23
 """Implementation of SBI++ training for Blast"""
+import argparse
+import glob
 import math
 import os
 import pickle
+import sys
+
+# ---------------------------------------------------------------------------
+# Django bootstrap. Lets this module run standalone
+#   (cd app && python -m host.SBI.train_sbi --do-phot ...)
+# as well as through `python manage.py runcrons ...`, where Django is
+# already configured and this block is a no-op.
+# ---------------------------------------------------------------------------
+_APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
+
+import django
+from django.apps import apps
+
+if not apps.ready:
+    django.setup()
 
 import h5py
 import numpy as np
@@ -18,23 +38,33 @@ from django_cron import Schedule
 from host.models import *
 from host.photometric_calibration import ab_mag_to_mJy
 from host.photometric_calibration import mJy_to_maggies
-from host.prospector import build_model
-from host.prospector import build_obs
 from prospect.fitting import fit_model as fit_model_prospect
 from prospect.io import write_results as writer
 from prospect.models import priors
 from prospect.models import SpecModel
 from prospect.models.sedmodel import PolySpecModel
 from prospect.models.templates import TemplateLibrary
+from prospect.models import priors_beta
 from prospect.sources import CSPSpecBasis
 from prospect.sources import FastStepBasis
 from prospect.utils.obsutils import fix_obs
 from sbi import inference as Inference
-from sbi import utils as Ut
+from sbi.neural_nets import posterior_nn
 
-_outfile = os.environ.get("OUTFILE")
+# ---------------------------------------------------------------------------
+# Defaults (all overridable on the command line; paths are relative to app/)
+# ---------------------------------------------------------------------------
+DEFAULT_ZMIN = 0.0
+DEFAULT_ZMAX = 0.2
+DEFAULT_NSAMPLES = 150000
+DEFAULT_PHOT_FILE = "host/SBI/sbi_phot_1.h5"
+DEFAULT_TRAIN_FILES = [f"host/SBI/sbi_phot_{i}.h5" for i in range(1, 11)]
+DEFAULT_MERGED_FILE = "host/SBI/sbi_phot.h5"
+DEFAULT_MODEL_FILE = "host/SBI/SBI_model.pt"  # trained ANPE state dict
+DEFAULT_SUMMARY_FILE = "host/SBI/SBI_model_summary.p"  # training summary (convergence etc.)
 
-# torch
+ZRED_PRIOR_PAD = 1e-3  # upper edge of the zred prior is zmax + this
+MASSFUNC_ZMIN = 0.2  # below this z, logmass is drawn flat instead of from the mass function
 
 all_filters = Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y"))
 massmet = np.loadtxt("host/SBI/priors/gallazzi_05_massmet.txt")
@@ -42,13 +72,16 @@ massmet = np.loadtxt("host/SBI/priors/gallazzi_05_massmet.txt")
 nhidden = 500  # architecture
 nblocks = 15  # architecture
 
-fanpe = "host/SBI/SBI_model.pt"  # name for the .pt file where the trained model will be saved
-fsumm = "host/SBI/SBI_model_summary.p"  # name for the .p file where the training summary will be saved; useful if want to check the convergence, etc.
-
 if torch.cuda.is_available():
     device = "cuda"
 else:
     device = "cpu"
+
+
+def _ensure_parent_dir(path):
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
 
 
 def maggies_to_asinh(x):
@@ -85,7 +118,7 @@ def build_obs(**extras):  ##transient, aperture_type):
     return fix_obs(obs_data)
 
 
-def build_model(obs=None, **extras):
+def build_model(obs=None, zmin=DEFAULT_ZMIN, zmax=DEFAULT_ZMAX, **extras):
     """prospector-alpha"""
     fit_order = [
         "zred",
@@ -112,7 +145,7 @@ def build_model(obs=None, **extras):
         "N": 1,
         "isfree": True,
         "init": 0.5,
-        "prior": priors.FastUniform(a=0, b=0.2),
+        "prior": priors.FastUniform(a=zmin, b=zmax + ZRED_PRIOR_PAD),
     }
 
     model_params["logmass"] = {
@@ -120,7 +153,7 @@ def build_model(obs=None, **extras):
         "isfree": True,
         "init": 8.0,
         "units": "Msun",
-        "prior": priors.FastUniform(a=7.0, b=12.5),
+        "prior": priors.FastUniform(a=6.0, b=12.0),
     }
 
     model_params["logzsol"] = {
@@ -179,7 +212,7 @@ def build_model(obs=None, **extras):
     def logsfr_ratios_to_masses(
         logmass=None, logsfr_ratios=None, agebins=None, **extras
     ):
-        """This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
+        r"""This converts from an array of log_10(SFR_j / SFR_{j+1}) and a value of
         log10(\Sum_i M_i) to values of M_i.  j=0 is the most recent bin in lookback
         time.
         """
@@ -371,10 +404,10 @@ def loc(mass):
     return np.interp(mass, massmet[:, 0], massmet[:, 1])
 
 
-def draw_thetas(flat=False):
+def draw_thetas(flat=False, zmin=DEFAULT_ZMIN, zmax=DEFAULT_ZMAX):
     if flat:
-        zred = priors.FastUniform(a=0.0, b=0.2 + 1e-3).sample()
-        logmass = priors.FastUniform(a=7.0, b=12.5).sample()
+        zred = priors.FastUniform(a=zmin, b=zmax + ZRED_PRIOR_PAD).sample()
+        logmass = priors.FastUniform(a=6.0, b=12.0).sample()
         logzsol = priors.FastUniform(a=-1.98, b=0.19).sample()
 
         logsfrratio_0 = priors.FastUniform(a=-5.0, b=5.0).sample()
@@ -395,8 +428,13 @@ def draw_thetas(flat=False):
         log_duste_gamma = priors.FastUniform(a=-4.0, b=0.0).sample()
 
     else:
-        zred = priors.FastUniform(a=0.0, b=0.2 + 1e-3).sample()
-        logmass = priors.FastUniform(a=7.0, b=12.5).sample()
+        zred = priors.FastUniform(a=zmin, b=zmax + ZRED_PRIOR_PAD).sample()
+
+        if zred < MASSFUNC_ZMIN:
+            logmass = priors.FastUniform(a=6.0, b=12.0).sample()
+        else:
+            cdf_mass = priors_beta.cdf_mass_func_at_z(zred, np.arange(6,12,0.0001), const_phi=False, bounds=[6.0, 12.0])
+            logmass = priors_beta.draw_sample(np.arange(6,12,0.0001), cdf=cdf_mass)
         logzsol = priors.FastTruncatedNormal(
             a=-1.98, b=0.19, mu=loc(logmass), sig=scale(logmass)
         ).sample()
@@ -460,6 +498,18 @@ def draw_thetas(flat=False):
     )
 
 
+def _env_bool(name, default):
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    return val.strip().lower() in ("1", "true", "yes", "y", "on")
+
+
+def _env_float(name, default):
+    val = os.environ.get(name)
+    return default if val is None else float(val)
+
+
 class TrainSBI(CronJobBase):
     RUN_EVERY_MINS = 3
 
@@ -474,10 +524,63 @@ class TrainSBI(CronJobBase):
             build_noise(**kwargs),
         )
 
-    def do(self, do_phot=True, do_train=False):
-        # parameters
-        needed_size = 150000
-        run_params = {"ichunk": 0, "needed_size": needed_size}
+    def do(
+        self,
+        do_phot=None,
+        do_train=None,
+        outfile=None,
+        zmin=None,
+        zmax=None,
+        nsamples=None,
+        train_files=None,
+        merged_file=None,
+        model_file=None,
+        summary_file=None,
+    ):
+        """Entry point for both `manage.py runcrons` and the command line.
+
+        Anything not passed explicitly falls back to an environment variable
+        (DO_PHOT, DO_TRAIN, OUTFILE, ZMIN, ZMAX) and then to the module defaults,
+        so `runcrons` with no environment set behaves as before (train only).
+        """
+        do_phot = _env_bool("DO_PHOT", False) if do_phot is None else do_phot
+        do_train = _env_bool("DO_TRAIN", True) if do_train is None else do_train
+        outfile = outfile or os.environ.get("OUTFILE") or DEFAULT_PHOT_FILE
+        zmin = _env_float("ZMIN", DEFAULT_ZMIN) if zmin is None else zmin
+        zmax = _env_float("ZMAX", DEFAULT_ZMAX) if zmax is None else zmax
+        nsamples = DEFAULT_NSAMPLES if nsamples is None else nsamples
+        train_files = train_files or DEFAULT_TRAIN_FILES
+        merged_file = DEFAULT_MERGED_FILE if merged_file is None else merged_file
+        model_file = model_file or DEFAULT_MODEL_FILE
+        summary_file = summary_file or DEFAULT_SUMMARY_FILE
+
+        if zmin < 0 or zmax <= zmin:
+            raise ValueError(f"Need 0 <= zmin < zmax (got zmin={zmin}, zmax={zmax})")
+
+        print(
+            f"TrainSBI: do_phot={do_phot} do_train={do_train} zmin={zmin} zmax={zmax}",
+            flush=True,
+        )
+
+        if do_phot:
+            self.make_phot(outfile, zmin=zmin, zmax=zmax, nsamples=nsamples)
+
+        if do_train:
+            self.train(
+                train_files,
+                merged_file=merged_file,
+                model_file=model_file,
+                summary_file=summary_file,
+            )
+
+        print("Finished.")
+
+    def make_phot(self, outfile, zmin=DEFAULT_ZMIN, zmax=DEFAULT_ZMAX, nsamples=DEFAULT_NSAMPLES):
+        """Simulate noisy photometry for `nsamples` draws and write it to `outfile`."""
+        print(f"Simulating {nsamples} SEDs for {zmin} <= z <= {zmax} -> {outfile}", flush=True)
+        _ensure_parent_dir(outfile)
+
+        run_params = {"ichunk": 0, "needed_size": nsamples, "zmin": zmin, "zmax": zmax}
         run_params["add_duste"] = True
         run_params["add_igm"] = True
         run_params["add_neb"] = True
@@ -485,141 +588,202 @@ class TrainSBI(CronJobBase):
         run_params["optmization"] = False
         run_params["emcee"] = False
 
-        if do_phot:
-            obs, model, sps, noise = self.build_all(**run_params)
+        obs, model, sps, noise = self.build_all(**run_params)
 
-            run_params["sps_libraries"] = sps.ssp.libraries
-            run_params["param_file"] = __file__
+        run_params["sps_libraries"] = sps.ssp.libraries
+        run_params["param_file"] = __file__
 
-            # get the minimum, maximum magnitudes
-            cat_min, cat_max, cat_full = {}, {}, {}
-            for f in all_filters:
-                mag, snr = np.loadtxt(
-                    f"host/SBI/snrfiles/{f.name}_magvsnr.txt", unpack=True
-                )
-
-                cat_min[f.name] = np.min(mag)
-                cat_max[f.name] = np.max(mag)
-                cat_full[f.name] = (mag, snr)
-
-            ### start putting together the synthetic data
-            list_thetas = []
-            list_mfrac = []
-            list_phot = []
-            while len(list_phot) < needed_size:
-                if not len(list_phot) % 3:
-                    theta = draw_thetas(flat=True)
-                else:
-                    theta = draw_thetas(flat=False)
-
-                # call prospector
-                # generate the model SED at given theta
-                spec, phot, mfrac = model.predict(theta, obs=obs, sps=sps)
-
-                predicted_mags = -2.5 * np.log10(phot)
-                theta[1] += np.log10(mfrac)
-
-                flag = True
-                for i, f in enumerate(all_filters):
-                    # probably gonna have some unit issues here
-                    # expand the magnitude range a bit
-                    flag &= (predicted_mags[i] >= cat_min[f.name] - 1) & (
-                        predicted_mags[i] <= cat_max[f.name] + 2
-                    )
-
-                # if all phot is within valid range, we can proceed
-                if not flag:
-                    continue
-
-                list_thetas.append(theta)
-                list_mfrac.append(mfrac)
-
-                # simulate the noised-up photometry
-                list_phot_single = np.array([])
-                list_phot_errs_single = np.array([])
-                for i, f in enumerate(all_filters):
-                    snr = np.interp(
-                        predicted_mags[i], cat_full[f.name][0], cat_full[f.name][1]
-                    )
-                    phot_err = phot[i] / snr
-                    phot_random = np.random.normal(phot[i], phot_err)
-                    phot_random_mags = maggies_to_asinh(phot_random)
-                    phot_err_mags = 2.5 / np.log(10) * phot_err / phot[i]
-
-                    list_phot_single = np.append(list_phot_single, [phot_random_mags])
-                    list_phot_errs_single = np.append(
-                        list_phot_errs_single, [phot_err_mags]
-                    )
-                # adding in the redshift here
-                list_phot.append(
-                    np.concatenate(
-                        (list_phot_single, list_phot_errs_single, [theta[0]]),
-                    )
-                )
-                print(len(list_phot))
-
-            save_phot = True
-            if save_phot:
-                hf_phot = h5py.File(_outfile, "w")
-                hf_phot.create_dataset("wphot", data=obs["phot_wave"])
-                hf_phot.create_dataset("phot", data=list_phot)
-                hf_phot.create_dataset("mfrac", data=list_mfrac)
-                hf_phot.create_dataset("theta", data=list_thetas)
-
-                try:
-                    hf_phot.close()
-                except AttributeError:
-                    pass
-
-        if do_train:
-            data = h5py.File("host/SBI/sbi_phot_1.h5", "r")
-            list_thetas, list_phot, list_mfrac, list_phot_wave = (
-                np.array(data["theta"]),
-                np.array(data["phot"]),
-                np.array(data["mfrac"]),
-                np.array(data["wphot"]),
+        # get the minimum, maximum magnitudes
+        cat_min, cat_max, cat_full = {}, {}, {}
+        for f in all_filters:
+            mag, snr, snrstd = np.loadtxt(
+                f"host/SBI/snrfiles/{f.name}_magvsnr.txt", unpack=True
             )
-            for i in range(2, 11):
-                data2 = h5py.File(f"host/SBI/sbi_phot_{i}.h5", "r")
-                list_thetas = np.append(list_thetas, np.array(data2["theta"]), axis=0)
-                list_phot = np.append(list_phot, np.array(data2["phot"]), axis=0)
-                list_mfrac = np.append(list_mfrac, np.array(data2["mfrac"]), axis=0)
-                list_phot_wave = np.append(
-                    list_phot_wave, np.array(data2["wphot"]), axis=0
+
+            cat_min[f.name] = np.min(mag)
+            cat_max[f.name] = np.max(mag)
+            cat_full[f.name] = (mag, snr, snrstd)
+
+        ### start putting together the synthetic data
+        list_thetas = []
+        list_mfrac = []
+        list_phot = []
+        while len(list_phot) < nsamples:
+            list_phot_len = len(list_phot)
+            if not list_phot_len % 10: print(list_phot_len)
+            if not list_phot_len % 3:
+                theta = draw_thetas(flat=True, zmin=zmin, zmax=zmax)
+            else:
+                theta = draw_thetas(flat=False, zmin=zmin, zmax=zmax)
+
+            # call prospector
+            # generate the model SED at given theta
+            spec, phot, mfrac = model.predict(theta, obs=obs, sps=sps)
+
+            predicted_mags = -2.5 * np.log10(phot)
+
+            flag = True
+            for i, f in enumerate(all_filters):
+                # probably gonna have some unit issues here
+                # expand the magnitude range a bit
+                flag &= (predicted_mags[i] >= cat_min[f.name] - 1) & (
+                    predicted_mags[i] <= cat_max[f.name] + 2
                 )
-                hf_phot = h5py.File("host/SBI/sbi_phot.h5", "w")
+
+            # if all phot is within valid range, we can proceed
+            if not flag:
+                continue
+
+            list_thetas.append(theta)
+            list_mfrac.append(mfrac)
+
+            # simulate the noised-up photometry
+            list_phot_single = np.array([])
+            list_phot_errs_single = np.array([])
+            for i, f in enumerate(all_filters):
+                snr = np.interp(
+                    predicted_mags[i], cat_full[f.name][0], cat_full[f.name][1]
+                )
+                snrstd = np.interp(
+                    predicted_mags[i], cat_full[f.name][0], cat_full[f.name][2]
+                )
+                snr_sim = np.random.normal(snr,snrstd)
+                if snr_sim < 0.010: snr_sim = 0.010
+                phot_err = phot[i] / snr_sim
+                phot_random = np.random.normal(phot[i], phot_err)
+                phot_random_mags = maggies_to_asinh(phot_random)
+                phot_err_mags = 2.5 / np.log(10) * phot_err / phot[i]
+
+                list_phot_single = np.append(list_phot_single, [phot_random_mags])
+                list_phot_errs_single = np.append(
+                    list_phot_errs_single, [phot_err_mags]
+                )
+#                    import pdb; pdb.set_trace()
+            # adding in the redshift here
+            list_phot.append(
+                np.concatenate(
+                    (list_phot_single, list_phot_errs_single, [theta[0]]),
+                )
+            )
+            print(len(list_phot))
+
+        with h5py.File(outfile, "w") as hf_phot:
+            hf_phot.create_dataset("wphot", data=obs["phot_wave"])
+            hf_phot.create_dataset("phot", data=list_phot)
+            hf_phot.create_dataset("mfrac", data=list_mfrac)
+            hf_phot.create_dataset("theta", data=list_thetas)
+            hf_phot.attrs["zmin"] = zmin
+            hf_phot.attrs["zmax"] = zmax
+        print(f"Wrote {outfile}", flush=True)
+
+    def train(
+        self,
+        train_files,
+        merged_file=DEFAULT_MERGED_FILE,
+        model_file=DEFAULT_MODEL_FILE,
+        summary_file=DEFAULT_SUMMARY_FILE,
+    ):
+        """Combine the simulated-photometry files and train the ANPE."""
+        # expand any wildcards (quoted on the command line so they resolve
+        # relative to app/, not the directory the job was submitted from)
+        files = []
+        for pattern in train_files:
+            matches = sorted(glob.glob(pattern))
+            if not matches:
+                raise FileNotFoundError(f"No training file matches {pattern!r}")
+            files.extend(m for m in matches if m not in files)
+        print(f"Training on {len(files)} file(s): {files}", flush=True)
+
+        thetas, phots, mfracs = [], [], []
+        list_phot_wave = None
+        for fname in files:
+            with h5py.File(fname, "r") as data:
+                thetas.append(np.array(data["theta"]))
+                phots.append(np.array(data["phot"]))
+                mfracs.append(np.array(data["mfrac"]))
+                wphot = np.array(data["wphot"])
+            if list_phot_wave is None:
+                list_phot_wave = wphot
+            elif not np.allclose(wphot, list_phot_wave):
+                raise ValueError(f"{fname} uses a different filter set from {files[0]}")
+
+        list_thetas = np.concatenate(thetas, axis=0)
+        list_phot = np.concatenate(phots, axis=0)
+        list_mfrac = np.concatenate(mfracs, axis=0)
+
+        if merged_file:
+            _ensure_parent_dir(merged_file)
+            with h5py.File(merged_file, "w") as hf_phot:
                 hf_phot.create_dataset("wphot", data=list_phot_wave)
                 hf_phot.create_dataset("phot", data=list_phot)
                 hf_phot.create_dataset("mfrac", data=list_mfrac)
                 hf_phot.create_dataset("theta", data=list_thetas)
-                hf_phot.close()
+            print(f"Wrote merged training set {merged_file}", flush=True)
 
-            x_train = np.array(list_thetas)
-            y_train = np.array(list_phot)
-            # now do the training
-            anpe = Inference.SNPE(
-                density_estimator=Ut.posterior_nn(
-                    "maf", hidden_features=nhidden, num_transforms=nblocks
-                ),
-                device=device,
-            )
-            # because we append_simulations, training set == prior
-            anpe.append_simulations(
-                torch.as_tensor(x_train.astype(np.float32), device="cpu"),
-                torch.as_tensor(y_train.astype(np.float32), device="cpu"),
-            )
-            p_x_y_estimator = anpe.train()
+        x_train = np.array(list_thetas)
+        y_train = np.array(list_phot)
+        # now do the training
+        anpe = Inference.SNPE(
+            density_estimator=posterior_nn(
+                "maf", hidden_features=nhidden, num_transforms=nblocks
+            ),
+            device=device,
+        )
+        # because we append_simulations, training set == prior
+        anpe.append_simulations(
+            torch.as_tensor(x_train.astype(np.float32), device="cpu"),
+            torch.as_tensor(y_train.astype(np.float32), device="cpu"),
+        )
+        p_x_y_estimator = anpe.train()
 
-            # save trained ANPE
-            torch.save(p_x_y_estimator.state_dict(), fanpe)
+        # save trained ANPE
+        _ensure_parent_dir(model_file)
+        torch.save(p_x_y_estimator.state_dict(), model_file)
 
-            # save training summary
-            pickle.dump(anpe._summary, open(fsumm, "wb"))
-            print(anpe._summary)
+        # save training summary
+        _ensure_parent_dir(summary_file)
+        with open(summary_file, "wb") as fout:
+            pickle.dump(anpe._summary, fout)
+        print(anpe._summary)
+        print(f"Wrote {model_file} and {summary_file}", flush=True)
 
-        print("Finished.")
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Simulate photometry and/or train the SBI++ model for Blast. "
+        "Run from the app/ directory; relative paths are resolved from there."
+    )
+    parser.add_argument("--do-phot", action="store_true",
+                        help="simulate a training set of noisy photometry")
+    parser.add_argument("--do-train", action="store_true",
+                        help="train the neural posterior estimator")
+    parser.add_argument("--zmin", type=float, default=DEFAULT_ZMIN,
+                        help="lower redshift limit (default: %(default)s)")
+    parser.add_argument("--zmax", type=float, default=DEFAULT_ZMAX,
+                        help="upper redshift limit (default: %(default)s)")
+    parser.add_argument("--nsamples", type=int, default=DEFAULT_NSAMPLES,
+                        help="simulated SEDs to keep with --do-phot (default: %(default)s)")
+    parser.add_argument("--outfile", default=os.environ.get("OUTFILE", DEFAULT_PHOT_FILE),
+                        help="HDF5 file written by --do-phot (default: $OUTFILE or %(default)s)")
+    parser.add_argument("--train-files", nargs="+", default=DEFAULT_TRAIN_FILES,
+                        help="HDF5 files (or quoted wildcards) to train on "
+                        "(default: host/SBI/sbi_phot_1.h5 ... sbi_phot_10.h5)")
+    parser.add_argument("--merged-file", default=DEFAULT_MERGED_FILE,
+                        help="where to write the combined training set; '' to skip "
+                        "(default: %(default)s)")
+    parser.add_argument("--model-file", default=DEFAULT_MODEL_FILE,
+                        help="trained model output (.pt) (default: %(default)s)")
+    parser.add_argument("--summary-file", default=DEFAULT_SUMMARY_FILE,
+                        help="training summary output (.p) (default: %(default)s)")
+    args = parser.parse_args(argv)
+
+    if not (args.do_phot or args.do_train):
+        parser.error("give at least one of --do-phot / --do-train")
+    if args.zmin < 0 or args.zmax <= args.zmin:
+        parser.error("need 0 <= --zmin < --zmax")
+    return args
 
 
 if __name__ == "__main__":
-    ts = TrainSBI()
-    ts.main()
+    args = parse_args()
+    TrainSBI().do(**vars(args))
