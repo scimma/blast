@@ -44,6 +44,10 @@ DEFAULT_TRAIN_FILES = [f"host/SBI/sbi_phot_{i}.h5" for i in range(1, 11)]
 DEFAULT_MERGED_FILE = "host/SBI/sbi_phot.h5"
 DEFAULT_MODEL_FILE = "host/SBI/SBI_model.pt"  # trained ANPE state dict
 DEFAULT_SUMMARY_FILE = "host/SBI/SBI_model_summary.p"  # training summary (convergence etc.)
+# --do-zphot-model defaults, kept separate so the two models never overwrite each other
+DEFAULT_ZPHOT_MERGED_FILE = "host/SBI/sbi_phot_zphot.h5"
+DEFAULT_ZPHOT_MODEL_FILE = "host/SBI/SBI_model_zphot.pt"
+DEFAULT_ZPHOT_SUMMARY_FILE = "host/SBI/SBI_model_zphot_summary.p"
 
 ZRED_PRIOR_PAD = 1e-3  # upper edge of the zred prior is zmax + this
 MASSFUNC_ZMIN = 0.2  # below this z, logmass is drawn flat instead of from the mass function
@@ -518,11 +522,12 @@ class TrainSBI(CronJobBase):
         merged_file=None,
         model_file=None,
         summary_file=None,
+        do_zphot_model=None,
     ):
         """Entry point for both `manage.py runcrons` and the command line.
 
         Anything not passed explicitly falls back to an environment variable
-        (DO_PHOT, DO_TRAIN, OUTFILE, ZMIN, ZMAX) and then to the module defaults,
+        (DO_PHOT, DO_TRAIN, DO_ZPHOT_MODEL, OUTFILE, ZMIN, ZMAX) and then to the module defaults,
         so `runcrons` with no environment set behaves as before (train only).
         """
         do_phot = _env_bool("DO_PHOT", False) if do_phot is None else do_phot
@@ -532,15 +537,29 @@ class TrainSBI(CronJobBase):
         zmax = _env_float("ZMAX", DEFAULT_ZMAX) if zmax is None else zmax
         nsamples = DEFAULT_NSAMPLES if nsamples is None else nsamples
         train_files = train_files or DEFAULT_TRAIN_FILES
-        merged_file = DEFAULT_MERGED_FILE if merged_file is None else merged_file
-        model_file = model_file or DEFAULT_MODEL_FILE
-        summary_file = summary_file or DEFAULT_SUMMARY_FILE
+        do_zphot_model = (
+            _env_bool("DO_ZPHOT_MODEL", False) if do_zphot_model is None else do_zphot_model
+        )
+        # the photo-z model gets its own default output names so it never
+        # overwrites the spec-z model (explicit paths always win)
+        if do_zphot_model:
+            merged_default = DEFAULT_ZPHOT_MERGED_FILE
+            model_default = DEFAULT_ZPHOT_MODEL_FILE
+            summary_default = DEFAULT_ZPHOT_SUMMARY_FILE
+        else:
+            merged_default = DEFAULT_MERGED_FILE
+            model_default = DEFAULT_MODEL_FILE
+            summary_default = DEFAULT_SUMMARY_FILE
+        merged_file = merged_default if merged_file is None else merged_file
+        model_file = model_file or model_default
+        summary_file = summary_file or summary_default
 
         if zmin < 0 or zmax <= zmin:
             raise ValueError(f"Need 0 <= zmin < zmax (got zmin={zmin}, zmax={zmax})")
 
         print(
-            f"TrainSBI: do_phot={do_phot} do_train={do_train} zmin={zmin} zmax={zmax}",
+            f"TrainSBI: do_phot={do_phot} do_train={do_train} "
+            f"do_zphot_model={do_zphot_model} zmin={zmin} zmax={zmax}",
             flush=True,
         )
 
@@ -553,6 +572,7 @@ class TrainSBI(CronJobBase):
                 merged_file=merged_file,
                 model_file=model_file,
                 summary_file=summary_file,
+                do_zphot_model=do_zphot_model,
             )
 
         print("Finished.")
@@ -664,8 +684,15 @@ class TrainSBI(CronJobBase):
         merged_file=DEFAULT_MERGED_FILE,
         model_file=DEFAULT_MODEL_FILE,
         summary_file=DEFAULT_SUMMARY_FILE,
+        do_zphot_model=False,
     ):
-        """Combine the simulated-photometry files and train the ANPE."""
+        """Combine the simulated-photometry files and train the ANPE.
+
+        Each row of the stored "phot" array is [mags, mag errors, redshift].
+        With do_zphot_model the redshift column is dropped from the observed
+        data, so the network has to infer zred (theta[0]) from photometry alone.
+        The simulated files themselves are the same for both models.
+        """
         # expand any wildcards (quoted on the command line so they resolve
         # relative to app/, not the directory the job was submitted from)
         files = []
@@ -704,6 +731,19 @@ class TrainSBI(CronJobBase):
 
         x_train = np.array(list_thetas)
         y_train = np.array(list_phot)
+        if do_zphot_model:
+            # sanity check: the last observed column should be the true redshift
+            if not np.allclose(y_train[:, -1], x_train[:, 0]):
+                raise ValueError(
+                    "Last column of 'phot' does not match theta[:, 0] (zred); "
+                    "refusing to drop it for the photo-z model"
+                )
+            y_train = y_train[:, :-1]
+            print(
+                f"Photo-z model: dropped redshift from observed data "
+                f"({y_train.shape[1]} observed columns)",
+                flush=True,
+            )
         # now do the training
         anpe = Inference.SNPE(
             density_estimator=posterior_nn(
@@ -739,6 +779,10 @@ def parse_args(argv=None):
                         help="simulate a training set of noisy photometry")
     parser.add_argument("--do-train", action="store_true",
                         help="train the neural posterior estimator")
+    parser.add_argument("--do-zphot-model", action="store_true",
+                        help="train a photometric-redshift model: redshift is removed "
+                        "from the observed data and inferred along with the other "
+                        "parameters; changes the default output names to *_zphot*")
     parser.add_argument("--zmin", type=float, default=DEFAULT_ZMIN,
                         help="lower redshift limit (default: %(default)s)")
     parser.add_argument("--zmax", type=float, default=DEFAULT_ZMAX,
@@ -750,17 +794,22 @@ def parse_args(argv=None):
     parser.add_argument("--train-files", nargs="+", default=DEFAULT_TRAIN_FILES,
                         help="HDF5 files (or quoted wildcards) to train on "
                         "(default: host/SBI/sbi_phot_1.h5 ... sbi_phot_10.h5)")
-    parser.add_argument("--merged-file", default=DEFAULT_MERGED_FILE,
+    parser.add_argument("--merged-file", default=None,
                         help="where to write the combined training set; '' to skip "
-                        "(default: %(default)s)")
-    parser.add_argument("--model-file", default=DEFAULT_MODEL_FILE,
-                        help="trained model output (.pt) (default: %(default)s)")
-    parser.add_argument("--summary-file", default=DEFAULT_SUMMARY_FILE,
-                        help="training summary output (.p) (default: %(default)s)")
+                        f"(default: {DEFAULT_MERGED_FILE}, or "
+                        f"{DEFAULT_ZPHOT_MERGED_FILE} with --do-zphot-model)")
+    parser.add_argument("--model-file", default=None,
+                        help=f"trained model output (.pt) (default: {DEFAULT_MODEL_FILE}, "
+                        f"or {DEFAULT_ZPHOT_MODEL_FILE} with --do-zphot-model)")
+    parser.add_argument("--summary-file", default=None,
+                        help=f"training summary output (.p) (default: {DEFAULT_SUMMARY_FILE}, "
+                        f"or {DEFAULT_ZPHOT_SUMMARY_FILE} with --do-zphot-model)")
     args = parser.parse_args(argv)
 
     if not (args.do_phot or args.do_train):
         parser.error("give at least one of --do-phot / --do-train")
+    if args.do_zphot_model and not args.do_train:
+        parser.error("--do-zphot-model only affects training; add --do-train")
     if args.zmin < 0 or args.zmax <= args.zmin:
         parser.error("need 0 <= --zmin < --zmax")
     return args
