@@ -27,4 +27,6 @@ The SBI example will need to be adapted to your cluster environment.  It assumes
 called "blast" and an environment variable $BLAST_HOME_DIR for your top-level blast code directory.  The details
 of the slurm environment/partitions/nodes will also need to be adjusted.
 
+To run the photo-z model, use the :code:`--do-zphot-model` argument.
+
 Once the new model has been trained, it will need to be added to the S3 bucket for use in Blast.
