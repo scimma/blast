@@ -10,7 +10,8 @@ import astropy.table as at
 def main(
     batchfile,
     batchdir,
-    blastdir="/n/holystore01/LABS/berger_lab/Lab/djones01/blast/app",
+    blastdir="/lustre/hpc/storage/dark/YSE/blast/app",
+#/n/holystore01/LABS/berger_lab/Lab/djones01/blast/app",
 ):
     data = at.Table.read(batchfile)
 

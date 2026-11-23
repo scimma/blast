@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --output=<outdir>/blast_transient_<transient_name>.log
 #SBATCH --mem=12GB
-#SBATCH -p shared
+#SBATCH -p dark
 
 export BLAST_TRANSIENT_NAME=<transient_name>
 export BLAST_TRANSIENT_RA=<transient_ra>

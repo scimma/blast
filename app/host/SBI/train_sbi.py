@@ -3,6 +3,7 @@
 # modified by B. Wang - 6/7/23
 """Implementation of SBI++ training for Blast"""
 import math
+import os
 import pickle
 
 import h5py
@@ -25,12 +26,15 @@ from prospect.models import priors
 from prospect.models import SpecModel
 from prospect.models.sedmodel import PolySpecModel
 from prospect.models.templates import TemplateLibrary
+from prospect.models import priors_beta
 from prospect.sources import CSPSpecBasis
 from prospect.sources import FastStepBasis
 from prospect.utils.obsutils import fix_obs
 from sbi import inference as Inference
-from sbi import utils as Ut
+from sbi.neural_nets import posterior_nn
 
+_outfile = os.environ.get("OUTFILE")
+_zmax = 0.2
 # torch
 
 all_filters = Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y"))
@@ -56,7 +60,6 @@ def maggies_to_asinh(x):
 
 
 def build_obs(**extras):  ##transient, aperture_type):
-
     """
     This functions is required by prospector and should return
     a dictionary defined by
@@ -65,7 +68,6 @@ def build_obs(**extras):  ##transient, aperture_type):
     """
     filters = []
     for filter in all_filters:
-
         filters.append(filter.transmission_curve())
 
     obs_data = dict(
@@ -111,7 +113,7 @@ def build_model(obs=None, **extras):
         "N": 1,
         "isfree": True,
         "init": 0.5,
-        "prior": priors.FastUniform(a=0, b=0.4),
+        "prior": priors.FastUniform(a=0.0, b=_zmax + 1e-3),
     }
 
     model_params["logmass"] = {
@@ -119,7 +121,7 @@ def build_model(obs=None, **extras):
         "isfree": True,
         "init": 8.0,
         "units": "Msun",
-        "prior": priors.FastUniform(a=7.0, b=12.5),
+        "prior": priors.FastUniform(a=6.0, b=12.0),
     }
 
     model_params["logzsol"] = {
@@ -250,7 +252,7 @@ def build_model(obs=None, **extras):
         "isfree": True,
         "init": 0.7,
         "units": "",
-        "prior": priors.FastUniform(a=-1.0, b=0.4),
+        "prior": priors.FastUniform(a=-1.0, b=0.2),
     }
 
     # --- Nebular Emission ---
@@ -371,10 +373,9 @@ def loc(mass):
 
 
 def draw_thetas(flat=False):
-
     if flat:
-        zred = priors.FastUniform(a=0.0, b=0.4 + 1e-3).sample()
-        logmass = priors.FastUniform(a=7.0, b=12.5).sample()
+        zred = priors.FastUniform(a=0.0, b=_zmax + 1e-3).sample()
+        logmass = priors.FastUniform(a=6.0, b=12.0).sample()
         logzsol = priors.FastUniform(a=-1.98, b=0.19).sample()
 
         logsfrratio_0 = priors.FastUniform(a=-5.0, b=5.0).sample()
@@ -395,8 +396,13 @@ def draw_thetas(flat=False):
         log_duste_gamma = priors.FastUniform(a=-4.0, b=0.0).sample()
 
     else:
-        zred = priors.FastUniform(a=0.0, b=0.4 + 1e-3).sample()
-        logmass = priors.FastUniform(a=7.0, b=12.5).sample()
+        zred = priors.FastUniform(a=0.0, b=_zmax + 1e-3).sample()
+
+        if zred < 0.2:
+            logmass = priors.FastUniform(a=6.0, b=12.0).sample()
+        else:
+            cdf_mass = priors_beta.cdf_mass_func_at_z(zred, np.arange(6,12,0.0001), const_phi=False, bounds=[6.0, 12.0])
+            logmass = priors_beta.draw_sample(np.arange(6,12,0.0001), cdf=cdf_mass)
         logzsol = priors.FastTruncatedNormal(
             a=-1.98, b=0.19, mu=loc(logmass), sig=scale(logmass)
         ).sample()
@@ -461,7 +467,6 @@ def draw_thetas(flat=False):
 
 
 class TrainSBI(CronJobBase):
-
     RUN_EVERY_MINS = 3
 
     schedule = Schedule(run_every_mins=RUN_EVERY_MINS)
@@ -475,9 +480,9 @@ class TrainSBI(CronJobBase):
             build_noise(**kwargs),
         )
 
-    def do(self):
-
+    def do(self, do_phot=False, do_train=True):
         # parameters
+
         needed_size = 150000
         run_params = {"ichunk": 0, "needed_size": needed_size}
         run_params["add_duste"] = True
@@ -487,110 +492,144 @@ class TrainSBI(CronJobBase):
         run_params["optmization"] = False
         run_params["emcee"] = False
 
-        obs, model, sps, noise = self.build_all(**run_params)
+        if do_phot:
+            obs, model, sps, noise = self.build_all(**run_params)
 
-        run_params["sps_libraries"] = sps.ssp.libraries
-        run_params["param_file"] = __file__
+            run_params["sps_libraries"] = sps.ssp.libraries
+            run_params["param_file"] = __file__
 
-        # get the minimum, maximum magnitudes
-        cat_min, cat_max, cat_full = {}, {}, {}
-        for f in all_filters:
-            mag, snr = np.loadtxt(
-                f"host/SBI/snrfiles/{f.name}_magvsnr.txt", unpack=True
+            # get the minimum, maximum magnitudes
+            cat_min, cat_max, cat_full = {}, {}, {}
+            for f in all_filters:
+                mag, snr, snrstd = np.loadtxt(
+                    f"host/SBI/snrfiles/{f.name}_magvsnr.txt", unpack=True
+                )
+
+                cat_min[f.name] = np.min(mag)
+                cat_max[f.name] = np.max(mag)
+                cat_full[f.name] = (mag, snr, snrstd)
+
+            ### start putting together the synthetic data
+            list_thetas = []
+            list_mfrac = []
+            list_phot = []
+            while len(list_phot) < needed_size:
+                list_phot_len = len(list_phot)
+                if not list_phot_len % 10: print(list_phot_len)
+                if not list_phot_len % 3:
+                    theta = draw_thetas(flat=True)
+                else:
+                    theta = draw_thetas(flat=False)
+
+                # call prospector
+                # generate the model SED at given theta
+                spec, phot, mfrac = model.predict(theta, obs=obs, sps=sps)
+
+                predicted_mags = -2.5 * np.log10(phot)
+
+                flag = True
+                for i, f in enumerate(all_filters):
+                    # probably gonna have some unit issues here
+                    # expand the magnitude range a bit
+                    flag &= (predicted_mags[i] >= cat_min[f.name] - 1) & (
+                        predicted_mags[i] <= cat_max[f.name] + 2
+                    )
+
+                # if all phot is within valid range, we can proceed
+                if not flag:
+                    continue
+
+                list_thetas.append(theta)
+                list_mfrac.append(mfrac)
+
+                # simulate the noised-up photometry
+                list_phot_single = np.array([])
+                list_phot_errs_single = np.array([])
+                for i, f in enumerate(all_filters):
+                    snr = np.interp(
+                        predicted_mags[i], cat_full[f.name][0], cat_full[f.name][1]
+                    )
+                    snrstd = np.interp(
+                        predicted_mags[i], cat_full[f.name][0], cat_full[f.name][2]
+                    )
+                    snr_sim = np.random.normal(snr,snrstd)
+                    if snr_sim < 0.010: snr_sim = 0.010
+                    phot_err = phot[i] / snr_sim
+                    phot_random = np.random.normal(phot[i], phot_err)
+                    phot_random_mags = maggies_to_asinh(phot_random)
+                    phot_err_mags = 2.5 / np.log(10) * phot_err / phot[i]
+
+                    list_phot_single = np.append(list_phot_single, [phot_random_mags])
+                    list_phot_errs_single = np.append(
+                        list_phot_errs_single, [phot_err_mags]
+                    )
+#                    import pdb; pdb.set_trace()
+                # adding in the redshift here
+                list_phot.append(
+                    np.concatenate(
+                        (list_phot_single, list_phot_errs_single, [theta[0]]),
+                    )
+                )
+                print(len(list_phot))
+
+            save_phot = True
+            if save_phot:
+                hf_phot = h5py.File(_outfile, "w")
+                hf_phot.create_dataset("wphot", data=obs["phot_wave"])
+                hf_phot.create_dataset("phot", data=list_phot)
+                hf_phot.create_dataset("mfrac", data=list_mfrac)
+                hf_phot.create_dataset("theta", data=list_thetas)
+
+                try:
+                    hf_phot.close()
+                except AttributeError:
+                    pass
+
+        if do_train:
+            data = h5py.File("host/SBI/sbi_phot_1.h5", "r")
+            list_thetas, list_phot, list_mfrac, list_phot_wave = (
+                np.array(data["theta"]),
+                np.array(data["phot"]),
+                np.array(data["mfrac"]),
+                np.array(data["wphot"]),
             )
-
-            cat_min[f.name] = np.min(mag)
-            cat_max[f.name] = np.max(mag)
-            cat_full[f.name] = (mag, snr)
-
-        ### start putting together the synthetic data
-        list_thetas = []
-        list_mfrac = []
-        list_phot = []
-        while len(list_phot) < needed_size:
-            if not len(list_phot) % 3:
-                theta = draw_thetas(flat=True)
-            else:
-                theta = draw_thetas(flat=False)
-
-            # call prospector
-            # generate the model SED at given theta
-            spec, phot, mfrac = model.predict(theta, obs=obs, sps=sps)
-            predicted_mags = -2.5 * np.log10(phot)
-
-            flag = True
-            for i, f in enumerate(all_filters):
-                # probably gonna have some unit issues here
-                flag &= (predicted_mags[i] >= cat_min[f.name]) & (
-                    predicted_mags[i] <= cat_max[f.name]
+            for i in range(2, 11):
+                data2 = h5py.File(f"host/SBI/sbi_phot_{i}.h5", "r")
+                list_thetas = np.append(list_thetas, np.array(data2["theta"]), axis=0)
+                list_phot = np.append(list_phot, np.array(data2["phot"]), axis=0)
+                list_mfrac = np.append(list_mfrac, np.array(data2["mfrac"]), axis=0)
+                list_phot_wave = np.append(
+                    list_phot_wave, np.array(data2["wphot"]), axis=0
                 )
-
-            # if all phot is within valid range, we can proceed
-            if not flag:
-                continue
-
-            list_thetas.append(theta)
-            list_mfrac.append(mfrac)
-
-            # simulate the noised-up photometry
-            list_phot_single = np.array([])
-            list_phot_errs_single = np.array([])
-            for i, f in enumerate(all_filters):
-                snr = np.interp(
-                    predicted_mags[i], cat_full[f.name][0], cat_full[f.name][1]
-                )
-                phot_err = phot[i] / snr
-                phot_random = np.random.normal(phot[i], phot_err)
-                phot_random_mags = maggies_to_asinh(phot_random)
-                phot_err_mags = 2.5 / np.log(10) * phot_err / phot[i]
-
-                list_phot_single = np.append(list_phot_single, [phot_random_mags])
-                list_phot_errs_single = np.append(
-                    list_phot_errs_single, [phot_err_mags]
-                )
-            # adding in the redshift here
-            list_phot.append(
-                np.concatenate(
-                    (list_phot_single, list_phot_errs_single, [theta[0]]),
-                )
-            )
-            print(len(list_phot))
-
-        save_phot = True
-        if save_phot:
-            hf_phot = h5py.File("host/SBI/sbi_phot.h5", "w")
-            hf_phot.create_dataset("wphot", data=obs["phot_wave"])
-            hf_phot.create_dataset("phot", data=list_phot)
-            hf_phot.create_dataset("mfrac", data=list_mfrac)
-            hf_phot.create_dataset("theta", data=list_thetas)
-
-            try:
+                hf_phot = h5py.File("host/SBI/sbi_phot.h5", "w")
+                hf_phot.create_dataset("wphot", data=list_phot_wave)
+                hf_phot.create_dataset("phot", data=list_phot)
+                hf_phot.create_dataset("mfrac", data=list_mfrac)
+                hf_phot.create_dataset("theta", data=list_thetas)
                 hf_phot.close()
-            except (AttributeError):
-                pass
 
-        x_train = np.array(list_thetas)
-        y_train = np.array(list_phot)
-        # now do the training
-        anpe = Inference.SNPE(
-            density_estimator=Ut.posterior_nn(
-                "maf", hidden_features=nhidden, num_transforms=nblocks
-            ),
-            device=device,
-        )
-        # because we append_simulations, training set == prior
-        anpe.append_simulations(
-            torch.as_tensor(x_train.astype(np.float32), device="cpu"),
-            torch.as_tensor(y_train.astype(np.float32), device="cpu"),
-        )
-        p_x_y_estimator = anpe.train()
+            x_train = np.array(list_thetas)
+            y_train = np.array(list_phot)
+            # now do the training
+            anpe = Inference.SNPE(
+                density_estimator=posterior_nn(
+                    "maf", hidden_features=nhidden, num_transforms=nblocks
+                ),
+                device=device,
+            )
+            # because we append_simulations, training set == prior
+            anpe.append_simulations(
+                torch.as_tensor(x_train.astype(np.float32), device="cpu"),
+                torch.as_tensor(y_train.astype(np.float32), device="cpu"),
+            )
+            p_x_y_estimator = anpe.train()
 
-        # save trained ANPE
-        torch.save(p_x_y_estimator.state_dict(), fanpe)
+            # save trained ANPE
+            torch.save(p_x_y_estimator.state_dict(), fanpe)
 
-        # save training summary
-        pickle.dump(anpe._summary, open(fsumm, "wb"))
-        print(anpe._summary)
+            # save training summary
+            pickle.dump(anpe._summary, open(fsumm, "wb"))
+            print(anpe._summary)
 
         print("Finished.")
 
