@@ -8,18 +8,55 @@ import math
 import os
 import pickle
 import sys
+
+# ---------------------------------------------------------------------------
+# Django bootstrap. Django is only set up when something actually needs the
+# database (the filter list used to simulate photometry, i.e. --do-phot).
+# --do-train runs without loading any Django apps. Under
+# `python manage.py runcrons ...` Django is already set up and this is a no-op.
+# ---------------------------------------------------------------------------
+_APP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _APP_DIR not in sys.path:
+    sys.path.insert(0, _APP_DIR)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
+
+
+def _django_ready():
+    try:
+        from django.apps import apps
+    except ImportError:
+        return False
+    return apps.ready
+
+
+def _setup_django():
+    """Load the Django apps (and database connection) on first use."""
+    if not _django_ready():
+        import django
+
+        django.setup()
+
+
+# django_cron's models need a configured Django, so only import it when Django
+# is already running (runcrons); standalone runs use a stand-in base class.
+if _django_ready():
+    from django_cron import CronJobBase
+    from django_cron import Schedule
+else:
+
+    class CronJobBase:
+        pass
+
+    def Schedule(**kwargs):
+        return None
+
+
 import h5py
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from astropy.cosmology import WMAP9 as cosmo
-from django.db.models import Q
-from django_cron import CronJobBase
-from django_cron import Schedule
-from host.models import *
-from host.photometric_calibration import ab_mag_to_mJy
-from host.photometric_calibration import mJy_to_maggies
 from prospect.fitting import fit_model as fit_model_prospect
 from prospect.io import write_results as writer
 from prospect.models import priors
@@ -52,7 +89,20 @@ DEFAULT_ZPHOT_SUMMARY_FILE = "host/SBI/SBI_model_zphot_summary.p"
 ZRED_PRIOR_PAD = 1e-3  # upper edge of the zred prior is zmax + this
 MASSFUNC_ZMIN = 0.2  # below this z, logmass is drawn flat instead of from the mass function
 
-all_filters = Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y"))
+_all_filters = None
+
+
+def get_all_filters():
+    """Filters used for the simulated photometry (fetched from the database once)."""
+    global _all_filters
+    if _all_filters is None:
+        _setup_django()
+        from django.db.models import Q
+        from host.models import Filter
+
+        _all_filters = list(Filter.objects.filter(~Q(name="DES_i") & ~Q(name="DES_Y")))
+    return _all_filters
+
 massmet = np.loadtxt("host/SBI/priors/gallazzi_05_massmet.txt")
 
 nhidden = 500  # architecture
@@ -84,6 +134,7 @@ def build_obs(**extras):  ##transient, aperture_type):
     https://prospect.readthedocs.io/en/latest/dataformat.html.
 
     """
+    all_filters = get_all_filters()
     filters = []
     for filter in all_filters:
         filters.append(filter.transmission_curve())
@@ -590,6 +641,7 @@ class TrainSBI(CronJobBase):
         run_params["optmization"] = False
         run_params["emcee"] = False
 
+        all_filters = get_all_filters()
         obs, model, sps, noise = self.build_all(**run_params)
 
         run_params["sps_libraries"] = sps.ssp.libraries
