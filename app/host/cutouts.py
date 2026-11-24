@@ -368,6 +368,7 @@ def WISE_cutout(position, image_size=None, filter=None):
     """
     Download WISE image cutout from IRSA.
     API documentation: https://irsa.ipac.caltech.edu/ibe/sia.html
+    API documentation: https://irsa.ipac.caltech.edu/ibe/docs/wise/allwise/p3am_cdd/
 
     Parameters
     ----------
@@ -390,43 +391,56 @@ def WISE_cutout(position, image_size=None, filter=None):
     url = (f'https://irsa.ipac.caltech.edu/SIA'
            f'?COLLECTION=wise_allwise'
            f'&POS=circle+{position.ra.deg}+{position.dec.deg}+0.002777'
-           f'&RESPONSEFORMAT=CSV'
+           f'&RESPONSEFORMAT=JSON'
            f'&BAND={band_to_wavelength[filter]}'
            f'&FORMAT=image/fits')
-    r = requests.get(url)
-    url = None
-    for t in r.text.split(","):
-        if t.startswith("https"):
-            url = t[:]
-            break
-
-    # remove the AWS crap messing up the CSV format
-    line_out = ""
-    for line in r.text.split("\n"):
-        try:
-            idx1 = line.index("{")
-        except ValueError:
-            line_out += line[:] + "\n"
-            continue
-        idx2 = line.index("}")
-        newline = line[0 : idx1 + 1] + line[idx2:] + "\n"
-        line_out += newline
-
-    data = at.Table.read(line_out, format="ascii.csv")
-    exptime = data["t_exptime"][0]
-
-    if url is not None:
-        fits_image = fits.open(url, cache=None)
-
+    response = requests.get(url)
+    response_data = response.json()
+    logger.debug(f'''WISE response:\n{json.dumps(response_data)}''')
+    try:
+        # Extract the JSON object containing the data in the query results
+        results = [item for item in response_data['VOTABLE']['RESOURCE_ARRAY']
+                   if item["<xmlattr>"]["type"] == "results"][0]
+        # TODO: Why can the TABLEDATA have more than one row of values? Is the first row always
+        #       the one we want?
+        table_data = results["TABLE"]["DATA"]["TABLEDATA"][0]
+        # Parse the data table field metadata to determine which data table index contains the desired parameter values.
+        col_idx = {}
+        for col_name in ['access_url', 't_exptime']:
+            col_idx[col_name] = int([item["<xmlattr>"]["ID"] for item in results["TABLE"]["FIELD_ARRAY"]
+                                     if item["<xmlattr>"]["name"] == col_name][0].replace('col_', ''))
+    except Exception as err:
+        logger.error(f'Error parsing WISE query response: {err}')
+        return None
+    try:
+        exptime = table_data[col_idx['t_exptime']]
+    except Exception as err:
+        logger.error(f'Error parsing t_exptime from WISE query response: {err}')
+        return None
+    try:
+        url = table_data[col_idx['access_url']]
+    except Exception as err:
+        logger.error(f'Error parsing t_exptime from WISE query response: {err}')
+        return None
+    # Intensity FITS image URL example:
+    #     https://irsa.ipac.caltech.edu/ibe/data/wise/allwise/p3am_cdd
+    #     /{coaddgrp:s}/{coadd_ra:s}/{coadd_id:s}/{coadd_id:s}-w{band:1d}-int-3.fits
+    # Discard the prefix to extract the relative image path like "/17/1761/1761p393_ac51/1761p393_ac51-w1-int-3.fits"
+    url_rel_path = url.replace('https://irsa.ipac.caltech.edu/ibe/data/wise/allwise/p3am_cdd', '')
+    bucket_name = "nasa-irsa-wise"
+    images_prefix = "wise/allwise/images/p3am_cdd"
+    object_key = f"{bucket_name}/{images_prefix}{url_rel_path}"
+    logger.debug(f'''WISE image S3 object key: "{object_key}"''')
+    try:
+        fits_image = fits.open(f's3://{object_key}', cache=None, use_fsspec=True, fsspec_kwargs={"anon": True})
         wcs = WCS(fits_image[0].header)
         cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
         fits_image[0].data = cutout.data
         fits_image[0].header.update(cutout.wcs.to_header())
         fits_image[0].header["EXPTIME"] = exptime
-
-    else:
+    except Exception as err:
         fits_image = None
-
+        logger.error(f'Error downloading WISE image: {err}')
     return fits_image
 
 
@@ -682,7 +696,7 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg"),
     assert download_sleep_time >= 0
     while status == 1 and n_iter < download_max_tries:
         if n_iter > 0:
-            logger.info(f'Retrying download ({n_iter}/{download_max_tries}) "{survey}"...')
+            logger.info(f'Retrying download ({n_iter + 1}/{download_max_tries}) "{survey}"...')
         if survey.image_download_method == "hips":
             try:
                 fits = hips_cutout(transient, survey, image_size=num_pixels)
