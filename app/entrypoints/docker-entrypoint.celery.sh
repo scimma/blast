@@ -11,7 +11,7 @@ bash entrypoints/install_dustmaps_config.sh
 bash entrypoints/initialize_data_dirs.sh
 
 if [[ $DEV_MODE == 1 ]]; then
-  watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- \
+  watchmedo auto-restart --directory=./ --pattern=*.py --ignore-patterns="local_util.py" --recursive -- \
   celery -A app worker -l ${CELERY_LOG_LEVEL:-DEBUG} \
     --queues ${CELERY_QUEUES:-celery} \
     --max-memory-per-child ${CELERY_MAX_MEMORY_PER_CHILD:-12000} \

@@ -13,6 +13,27 @@ Types of changes:
 - `Fixed`: for any bug fixes.
 - `Security`: in case of vulnerabilities.
 
+## [3.1.3]
+
+### Changed
+
+- Switched to the new [MAST Image Cutout Service](https://cutouts.mast.stsci.edu/docs/api/cutouts/async.html)
+  async API to download PanSTARRS data.
+- WISE images are now downloaded [from the AllWISE image data S3 bucket](https://irsa.ipac.caltech.edu/cloud_access/ibe_to_cloud_paths.html).
+- NED and SDSS redshift queries are now retried upon failure, using a new env var `QUERY_RETRIES` that acts
+  as a general setting for how many times to retry a failed remote request.
+- Removed the `QUERY_TIMEOUT` env var and introduced `TASK_LOCK_EXPIRATION_TIMES`, a comma-separated list of
+  timeout values in seconds, where each item in the list is a unique task lock name and the number of seconds,
+  separated by a colon. Include the name "default" to set a default value.
+  For example: `default:65,tns_query:30,ned_query:90` will use 30 sec and 90 sec for TNS and NED, but 65 sec
+  for all other task locks.
+
+### Fixed
+
+- If no service monitor URL is provided, the integration is gracefully disabled instead of displaying failed
+  connection errors.
+- Removed hard-coded value for number of image download attempts that was overriding `CUTOUT_DOWNLOAD_MAX_TRIES`.
+
 ## [3.1.2]
 
 ### Added

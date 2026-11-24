@@ -4,7 +4,7 @@ from pathlib import Path
 ######################################################################
 # Blast application config
 #
-APP_VERSION = '3.1.2'
+APP_VERSION = '3.1.3'
 # Data paths
 DUSTMAPS_DATA_ROOT = os.environ.get("DUSTMAPS_DATA_ROOT", "/data/dustmaps")
 CUTOUT_ROOT = os.environ.get("CUTOUT_ROOT", "/data/cutout_cdn")
@@ -18,12 +18,21 @@ TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/tra
 TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 # Email address for support requests
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
-SERVICE_MONITOR_URL = os.getenv('SERVICE_MONITOR_URL', "https://monitor.ncsa.illinois.edu/status/blast")
-SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "https://monitor.ncsa.illinois.edu/api/status-page/blast")  # noqa
+SERVICE_MONITOR_URL = os.getenv('SERVICE_MONITOR_URL', "")
+SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "")
 # Workflow task options
 SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
-QUERY_TIMEOUT = int(os.environ.get("QUERY_TIMEOUT", "60"))
+
+# TASK_LOCK_EXPIRATION_TIMES is a comma-separated list of timeout values in seconds, where each item in the list is a
+#   unique task lock name and the number of seconds, separated by a colon. Include the name "default" to set a default
+#   value. For example: "default:65,tns_query:30,ned_query:90" will use 30 sec and 90 sec for TNS and NED, but 65 sec
+#   for all other task locks.
+TASK_LOCK_EXPIRATION_TIMES = {name: int(value) for name, value in
+                              [item.split(':') for item in os.environ.get("TASK_LOCK_EXPIRATION_TIMES", "").split(',')
+                               if item]}
+# QUERY_RETRIES is the default limit on the number of times a remote service query will be retried until successful.
+QUERY_RETRIES = int(os.environ.get("QUERY_RETRIES", "10"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]
 CUTOUT_OVERWRITE = os.environ.get("CUTOUT_OVERWRITE", "False").lower() in ["true", "t", "1"]
 CUTOUT_DOWNLOAD_SLEEP_TIME = int(os.getenv("CUTOUT_DOWNLOAD_SLEEP_TIME", "0"))
@@ -51,6 +60,9 @@ USAGE_METRICS_IGNORE_REQUESTS = [
         'method': 'GET',
     },
 ]
+# API token used to access the MAST Cutouts API, one of the Barbara A. Mikulski Archive for Space Telescopes’ (MAST)
+# web service APIs. See https://cutouts.mast.stsci.edu/docs/ for docs.
+MAST_API_TOKEN = os.getenv('MAST_API_TOKEN', '')
 
 ######################################################################
 # Django apps and middlewares

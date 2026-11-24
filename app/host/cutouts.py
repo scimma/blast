@@ -1,4 +1,5 @@
 import os
+import json
 import re
 import time
 from io import BytesIO
@@ -7,7 +8,6 @@ import astropy.table as at
 import astropy.units as u
 import astropy.utils.data
 import numpy as np
-import pandas as pd
 import requests
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -28,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from .models import Cutout
 from .models import Filter
-
+from host.mast import MastCutoutAPI
 from host.log import get_logger
 logger = get_logger(__name__)
 
@@ -146,8 +146,7 @@ def download_and_save_cutouts(
         #   (4) the Cutout object did not already exist.
         if overwrite or not cutout_file_exists or cutout_object.cropped or new_cutout_object:
             logger.debug(f'Downloading cutout "{cutout_name}"...')
-            fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
-                                       download_sleep_time=5)
+            fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
             # If a download error occurred, report it and exit.
             if status == 1:
                 logger.error(f'Download error for "{cutout_name}": {err}')
@@ -222,34 +221,6 @@ def download_and_save_cutouts(
         return status_failed
 
 
-def panstarrs_image_filename(position, image_size=None, filter=None):
-    """Query PanSTARRS service to get a list of image names
-
-    Parameters
-    ----------
-    :position : :class:`~astropy.coordinates.SkyCoord`
-        Target centre position of the cutout image to be downloaded.
-    :size : int: cutout image size in pixels.
-    :filter: str: PanSTARRS filter (g r i z y)
-    Returns
-    -------
-    :filename: str: file name of the cutout
-    """
-
-    service = "https://ps1images.stsci.edu/cgi-bin/ps1filenames.py"
-    url = (
-        f"{service}?ra={position.ra.degree}&dec={position.dec.degree}"
-        f"&size={image_size}&format=fits&filters={filter}"
-    )
-
-    ### was having SSL errors with pandas, so let's run it through requests
-    ### optionally, can edit to do this in an unsafe way
-    r = requests.get(url, stream=True)
-    r.raw.decode_content = True
-    filename_table = pd.read_csv(r.raw, sep=r"\s+")["filename"]
-    return filename_table[0] if len(filename_table) > 0 else None
-
-
 def hips_cutout(position, survey, image_size=None):
     """
     Download fits image from hips2fits service.
@@ -284,7 +255,7 @@ def hips_cutout(position, survey, image_size=None):
 
 def panstarrs_cutout(position, image_size=None, filter=None):
     """
-    Download PanSTARRS cutout from their own service
+    Download PanSTARRS cutout from the MAST cutout service service
 
     Parameters
     ----------
@@ -297,32 +268,40 @@ def panstarrs_cutout(position, image_size=None, filter=None):
     :cutout : :class:`~astropy.io.fits.HDUList` or None
     """
 
-    filename = panstarrs_image_filename(position, image_size=image_size, filter=filter)
-    if filename is not None:
-        service = "https://ps1images.stsci.edu/cgi-bin/fitscut.cgi?"
-        fits_url = (
-            f"{service}ra={position.ra.degree}&dec={position.dec.degree}"
-            f"&size={image_size}&format=fits&red={filename}"
-        )
-        try:
-            r = requests.get(fits_url, stream=True)
-        except Exception as err:
-            logger.error(f'Error downloading PanSTARRS image: "{err}". Retrying...')
-            time.sleep(5)
-            r = requests.get(fits_url, stream=True)
-        fits_image = fits.open(BytesIO(r.content))
-        # Remove the mutable download date field from the FITS header
-        # for the sake of dataset version control.
+    api = MastCutoutAPI({
+        'api_token': settings.MAST_API_TOKEN,
+        'positions': [(position.ra.degree, position.dec.degree)],
+        'size_px': image_size,
+        'filters': filter.split(','),
+    })
+    fits_data = api.fetch_data()
+    try:
+        # Assume we are constrained to a single cutout per MAST job for now.
+        fits_datum = fits_data[0]
+        logger.debug(f'''PanSTARRS_{filter} cutout metadata: {json.dumps(fits_datum['metadata'])}''')
+        fits_image = fits_datum['fits']
         extension = 0
-        header = fits_image[extension].header
-        keyword = 'DATE'
-        if keyword in header:
-            header[keyword] = ''
-        else:
-            raise KeyError(f"PanSTARRS FITS file header keyword {keyword!r} was not found in extension {extension!r}.")
-    else:
+        for ext in range(len(fits_image)):
+            # Remove the mutable date fields from the FITS header for the sake of dataset version control.
+            # For example:
+            #     CHECKSUM= 'Qai2SVh2Qah2QUh2'   / HDU checksum updated 2026-11-19T19:29:48
+            #     DATASUM = '1230604659'         / data unit checksum updated 2026-11-19T19:29:48
+            for keyword, split_str in [('CHECKSUM', '/ HDU checksum updated'),
+                                       ('DATASUM', '/ data unit checksum updated')]:
+                if keyword in fits_image[ext].header:
+                    fits_image[ext].header[keyword] = fits_image[ext].header[keyword].split(split_str)[0]
+            data = fits_image[ext].data
+            if data is not None:
+                extension = ext
+        if extension > 0:
+            primary = fits.PrimaryHDU(
+                data=fits_image[extension].data,
+                header=fits_image[extension].header.copy(),
+            )
+            fits_image = fits.HDUList([primary])
+    except Exception as err:
+        logger.error(f'''Error fetching cutout data from MAST cutout service: {err}''')
         fits_image = None
-
     return fits_image
 
 
@@ -389,6 +368,7 @@ def WISE_cutout(position, image_size=None, filter=None):
     """
     Download WISE image cutout from IRSA.
     API documentation: https://irsa.ipac.caltech.edu/ibe/sia.html
+    API documentation: https://irsa.ipac.caltech.edu/ibe/docs/wise/allwise/p3am_cdd/
 
     Parameters
     ----------
@@ -411,43 +391,56 @@ def WISE_cutout(position, image_size=None, filter=None):
     url = (f'https://irsa.ipac.caltech.edu/SIA'
            f'?COLLECTION=wise_allwise'
            f'&POS=circle+{position.ra.deg}+{position.dec.deg}+0.002777'
-           f'&RESPONSEFORMAT=CSV'
+           f'&RESPONSEFORMAT=JSON'
            f'&BAND={band_to_wavelength[filter]}'
            f'&FORMAT=image/fits')
-    r = requests.get(url)
-    url = None
-    for t in r.text.split(","):
-        if t.startswith("https"):
-            url = t[:]
-            break
-
-    # remove the AWS crap messing up the CSV format
-    line_out = ""
-    for line in r.text.split("\n"):
-        try:
-            idx1 = line.index("{")
-        except ValueError:
-            line_out += line[:] + "\n"
-            continue
-        idx2 = line.index("}")
-        newline = line[0 : idx1 + 1] + line[idx2:] + "\n"
-        line_out += newline
-
-    data = at.Table.read(line_out, format="ascii.csv")
-    exptime = data["t_exptime"][0]
-
-    if url is not None:
-        fits_image = fits.open(url, cache=None)
-
+    response = requests.get(url)
+    response_data = response.json()
+    logger.debug(f'''WISE response:\n{json.dumps(response_data)}''')
+    try:
+        # Extract the JSON object containing the data in the query results
+        results = [item for item in response_data['VOTABLE']['RESOURCE_ARRAY']
+                   if item["<xmlattr>"]["type"] == "results"][0]
+        # TODO: Why can the TABLEDATA have more than one row of values? Is the first row always
+        #       the one we want?
+        table_data = results["TABLE"]["DATA"]["TABLEDATA"][0]
+        # Parse the data table field metadata to determine which data table index contains the desired parameter values.
+        col_idx = {}
+        for col_name in ['access_url', 't_exptime']:
+            col_idx[col_name] = int([item["<xmlattr>"]["ID"] for item in results["TABLE"]["FIELD_ARRAY"]
+                                     if item["<xmlattr>"]["name"] == col_name][0].replace('col_', ''))
+    except Exception as err:
+        logger.error(f'Error parsing WISE query response: {err}')
+        return None
+    try:
+        exptime = table_data[col_idx['t_exptime']]
+    except Exception as err:
+        logger.error(f'Error parsing t_exptime from WISE query response: {err}')
+        return None
+    try:
+        url = table_data[col_idx['access_url']]
+    except Exception as err:
+        logger.error(f'Error parsing t_exptime from WISE query response: {err}')
+        return None
+    # Intensity FITS image URL example:
+    #     https://irsa.ipac.caltech.edu/ibe/data/wise/allwise/p3am_cdd
+    #     /{coaddgrp:s}/{coadd_ra:s}/{coadd_id:s}/{coadd_id:s}-w{band:1d}-int-3.fits
+    # Discard the prefix to extract the relative image path like "/17/1761/1761p393_ac51/1761p393_ac51-w1-int-3.fits"
+    url_rel_path = url.replace('https://irsa.ipac.caltech.edu/ibe/data/wise/allwise/p3am_cdd', '')
+    bucket_name = "nasa-irsa-wise"
+    images_prefix = "wise/allwise/images/p3am_cdd"
+    object_key = f"{bucket_name}/{images_prefix}{url_rel_path}"
+    logger.debug(f'''WISE image S3 object key: "{object_key}"''')
+    try:
+        fits_image = fits.open(f's3://{object_key}', cache=None, use_fsspec=True, fsspec_kwargs={"anon": True})
         wcs = WCS(fits_image[0].header)
         cutout = Cutout2D(fits_image[0].data, position, image_size, wcs=wcs)
         fits_image[0].data = cutout.data
         fits_image[0].header.update(cutout.wcs.to_header())
         fits_image[0].header["EXPTIME"] = exptime
-
-    else:
+    except Exception as err:
         fits_image = None
-
+        logger.error(f'Error downloading WISE image: {err}')
     return fits_image
 
 
@@ -703,7 +696,7 @@ def cutout(transient, survey, fov=Quantity(0.1, unit="deg"),
     assert download_sleep_time >= 0
     while status == 1 and n_iter < download_max_tries:
         if n_iter > 0:
-            logger.info(f'Retrying download ({n_iter}/{download_max_tries}) "{survey}"...')
+            logger.info(f'Retrying download ({n_iter + 1}/{download_max_tries}) "{survey}"...')
         if survey.image_download_method == "hips":
             try:
                 fits = hips_cutout(transient, survey, image_size=num_pixels)

@@ -567,35 +567,41 @@ def construct_aperture(image, position):
 def query_ned(position):
     """Get a Galaxy's redshift from NED if it is available."""
 
-    timeout = settings.QUERY_TIMEOUT
-    time_start = time.time()
-    logger.debug('''Aquiring NED query lock...''')
-    while timeout > time.time() - time_start:
-        if TaskLock.objects.request_lock('ned_query'):
-            break
-        logger.debug('''Waiting to acquire NED query lock...''')
-        time.sleep(1)
-
     galaxy_data = {"redshift": None}
-    try:
-        result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
-        result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
-        redshift = result_table["Redshift"].value
-        if len(redshift):
-            pos = SkyCoord(result_table["RA"].value, result_table["DEC"].value, unit=u.deg)
-            sep = position.separation(pos).arcsec
-            iBest = np.where(sep == np.min(sep))[0][0]
-            galaxy_data = {"redshift": redshift[iBest]}
-        assert not math.isnan(galaxy_data['redshift'])
-    except ExpatError as err:
-        logger.error(f"Too many requests to NED: {err}")
-        raise RuntimeError("Too many requests to NED")
-    except Exception as err:
-        logger.warning(f'''Error obtaining redshift from NED: {err}''')
-    finally:
-        # Release the NED query lock
-        logger.debug('''Releasing NED query lock...''')
-        TaskLock.objects.release_lock('ned_query')
+    num_retries = settings.QUERY_RETRIES
+    attempt_idx = 0
+    while attempt_idx < num_retries:
+        attempt_idx += 1
+        logger.debug('''Aquiring NED query lock...''')
+        while True:
+            if TaskLock.objects.request_lock('ned_query'):
+                break
+            logger.debug('''Waiting to acquire NED query lock...''')
+            time.sleep(1)
+
+        try:
+            # From https://ned.ipac.caltech.edu/Documents/Guides/Interface/QueryAuto :
+            # "Do not query NED more frequently than 1 per second; wait at least 1 second
+            #  between receiving a reply and making a new query."
+            time.sleep(1)
+            logger.debug(f'''[{attempt_idx}/{num_retries}] Querying NED...''')
+            result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
+            result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
+            redshift = result_table["Redshift"].value
+            if len(redshift):
+                pos = SkyCoord(result_table["RA"].value, result_table["DEC"].value, unit=u.deg)
+                sep = position.separation(pos).arcsec
+                iBest = np.where(sep == np.min(sep))[0][0]
+                galaxy_data = {"redshift": redshift[iBest]}
+            assert not math.isnan(galaxy_data['redshift'])
+            # Break out of the retry loop
+            attempt_idx = num_retries
+        except Exception as err:
+            logger.warning(f'''Error obtaining redshift from NED: {err}''')
+        finally:
+            # Release the NED query lock
+            logger.debug('''Releasing NED query lock...''')
+            TaskLock.objects.release_lock('ned_query')
 
     return galaxy_data
 
@@ -603,26 +609,31 @@ def query_ned(position):
 def query_sdss(position):
     """Get a Galaxy's redshift from SDSS if it is available"""
 
-    timeout = settings.QUERY_TIMEOUT
-    time_start = time.time()
-    logger.debug('''Aquiring SDSS query lock...''')
-    while timeout > time.time() - time_start:
-        if TaskLock.objects.request_lock('SDSS_query'):
-            break
-        logger.debug('''Waiting to acquire SDSS query lock...''')
-        time.sleep(1)
     galaxy_data = {"redshift": None}
-    try:
-        result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
-        redshift = result_table["z"].value
-        assert not math.isnan(redshift[0])
-        galaxy_data["redshift"] = redshift[0]
-    except Exception as err:
-        logger.warning(f'''Error obtaining redshift from SDSS: {err}''')
-    finally:
-        # Release the SDSS query lock
-        logger.debug('''Releasing SDSS query lock...''')
-        TaskLock.objects.release_lock('SDSS_query')
+    num_retries = settings.QUERY_RETRIES
+    attempt_idx = 0
+    while attempt_idx < num_retries:
+        attempt_idx += 1
+        logger.debug('''Aquiring SDSS query lock...''')
+        while True:
+            if TaskLock.objects.request_lock('SDSS_query'):
+                break
+            logger.debug('''Waiting to acquire SDSS query lock...''')
+            time.sleep(1)
+        try:
+            logger.debug(f'''[{attempt_idx}/{num_retries}] Querying SDSS...''')
+            result_table = SDSS.query_region(position, spectro=True, radius=1.0 * u.arcsec)
+            redshift = result_table["z"].value
+            assert not math.isnan(redshift[0])
+            galaxy_data["redshift"] = redshift[0]
+            # Break out of the retry loop
+            attempt_idx = num_retries
+        except Exception as err:
+            logger.warning(f'''Error obtaining redshift from SDSS: {err}''')
+        finally:
+            # Release the SDSS query lock
+            logger.debug('''Releasing SDSS query lock...''')
+            TaskLock.objects.release_lock('SDSS_query')
 
     return galaxy_data
 
