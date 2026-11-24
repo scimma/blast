@@ -24,6 +24,13 @@ SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "")
 SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
 
+# TASK_LOCK_EXPIRATION_TIMES is a comma-separated list of timeout values in seconds, where each item in the list is a
+#   unique task lock name and the number of seconds, separated by a colon. Include the name "default" to set a default
+#   value. For example: "default:65,tns_query:30,ned_query:90" will use 30 sec and 90 sec for TNS and NED, but 65 sec
+#   for all other task locks.
+TASK_LOCK_EXPIRATION_TIMES = {name: int(value) for name, value in
+                              [item.split(':') for item in os.environ.get("TASK_LOCK_EXPIRATION_TIMES", "").split(',')
+                               if item]}
 # QUERY_RETRIES is the default limit on the number of times a remote service query will be retried until successful.
 QUERY_RETRIES = int(os.environ.get("QUERY_RETRIES", "10"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]

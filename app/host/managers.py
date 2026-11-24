@@ -60,10 +60,11 @@ class TaskLockManager(models.Manager):
     def new_expiration_time(self, name):
         '''Calculate the expiration time for a new lock, which can vary depending on the lock purpose.
         Expiration timeout values must be in units of seconds.'''
-        if name in ['tns_query', 'ned_query']:
-            expiration_period = settings.QUERY_TIMEOUT
-        else:
-            expiration_period = 60
+        expiration_period = 60
+        if 'default' in settings.TASK_LOCK_EXPIRATION_TIMES:
+            expiration_period = settings.TASK_LOCK_EXPIRATION_TIMES['default']
+        if name in settings.TASK_LOCK_EXPIRATION_TIMES:
+            expiration_period = settings.TASK_LOCK_EXPIRATION_TIMES[name]
         time_threshold = datetime.now(timezone.utc) + timedelta(seconds=expiration_period)
         return time_threshold
 
