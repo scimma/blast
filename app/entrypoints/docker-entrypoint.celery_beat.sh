@@ -46,7 +46,7 @@ fi
 bash entrypoints/wait-for-it.sh ${MESSAGE_BROKER_HOST}:${MESSAGE_BROKER_PORT} --timeout=0
 
 if [[ $DEV_MODE == 1 ]]; then
-  watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- \
+  watchmedo auto-restart --directory=./ --pattern=*.py --ignore-patterns="local_util.py" --recursive -- \
   celery -A app beat -l ${CELERY_LOG_LEVEL:-DEBUG}
 else
   celery -A app beat -l ${CELERY_LOG_LEVEL:-INFO}
