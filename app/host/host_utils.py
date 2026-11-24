@@ -578,6 +578,10 @@ def query_ned(position):
 
     galaxy_data = {"redshift": None}
     try:
+        # From https://ned.ipac.caltech.edu/Documents/Guides/Interface/QueryAuto :
+        # "Do not query NED more frequently than 1 per second; wait at least 1 second
+        #  between receiving a reply and making a new query."
+        time.sleep(1)
         result_table = Ned.query_region(position, radius=1.0 * u.arcsec)
         result_table = result_table[result_table["Redshift"].mask == False]  # noqa: E712
         redshift = result_table["Redshift"].value
@@ -587,9 +591,6 @@ def query_ned(position):
             iBest = np.where(sep == np.min(sep))[0][0]
             galaxy_data = {"redshift": redshift[iBest]}
         assert not math.isnan(galaxy_data['redshift'])
-    except ExpatError as err:
-        logger.error(f"Too many requests to NED: {err}")
-        raise RuntimeError("Too many requests to NED")
     except Exception as err:
         logger.warning(f'''Error obtaining redshift from NED: {err}''')
     finally:
