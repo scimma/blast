@@ -1,5 +1,6 @@
 {% load latexify %}
 {% load host_tags %}
+{% service_monitor_url as monitor_url %}
 <!DOCTYPE html>
 <html lang="en">
 <div id="sizer">
@@ -217,12 +218,13 @@
       </div>
       <div class="container-fluid d-flex flex-row-reverse">
         <ul class="navbar-nav ml-auto d-flex align-items-center">
+          {% if monitor_url != "" %}
           <li class="nav-item">
-            <a class="nav-link" id="status-link" href="{% service_monitor_url %}" target="_blank" title="Service Status">
+            <a class="nav-link" id="status-link" href="{{ monitor_url }}" target="_blank" title="Service Status">
               <i class="bi bi-circle-fill" id="status-icon"></i> Status
             </a>
           </li>
-
+          {% endif %}
           {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'admin:index' %}"> Admin </a>
@@ -331,6 +333,7 @@
     integrity="
     sha512-as9/oV0X0fT3O2lsRUY+vLRdPV2AZ+hoJqSNfZ/XxnGDJ4rjtAIlFnuMj0Bz/dfqEA/MKO2ahlOj0pUyLqnR6A==" crossorigin="anonymous"></script>
   {% include "latexify/scripts.html" %}
+  {% if monitor_url != "" %}
   <script>
     /* Query service monitor status and indicate active incidents */
     (function () {
@@ -360,6 +363,7 @@
         });
     })();
   </script>
+  {% endif %}
   {% block script %}{% endblock %}
 </body>
 </html>

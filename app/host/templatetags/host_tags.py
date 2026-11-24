@@ -12,7 +12,7 @@ def app_version(prefix):
 
 @register.simple_tag(name="service_monitor_url")
 def service_monitor_url():
-    return f'''{settings.SERVICE_MONITOR_URL}'''
+    return settings.SERVICE_MONITOR_URL or ""
 
 
 @register.simple_tag(name="support_email")

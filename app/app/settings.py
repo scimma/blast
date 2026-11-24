@@ -18,8 +18,8 @@ TRANSMISSION_CURVES_ROOT = os.environ.get("TRANSMISSION_CURVES_ROOT", "/data/tra
 TNS_STAGING_ROOT = os.environ.get("TNS_STAGING_ROOT", "/data/tns_staging")
 # Email address for support requests
 SUPPORT_EMAIL = os.getenv('SUPPORT_EMAIL', "devnull@example.com")
-SERVICE_MONITOR_URL = os.getenv('SERVICE_MONITOR_URL', "https://monitor.ncsa.illinois.edu/status/blast")
-SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "https://monitor.ncsa.illinois.edu/api/status-page/blast")  # noqa
+SERVICE_MONITOR_URL = os.getenv('SERVICE_MONITOR_URL', "")
+SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "")
 # Workflow task options
 SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))

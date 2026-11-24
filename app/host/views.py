@@ -954,11 +954,12 @@ def team(request):
 @log_usage_metric()
 def status_monitor_proxy(request):
     """Server-side pass-through for the status monitor API (it doesn't allow browser CORS reads)."""
-
+    if settings.SERVICE_MONITOR_API_URL == "":
+        return HttpResponse({}, content_type="application/json")
     try:
         data = cache.get("status_monitor_json")
     except Exception:
-        logger.warning("cache unavailable for status monitor, fetching directly")
+        logger.info("cache unavailable for status monitor, fetching directly")
         data = None
     if data is None:
         try:
