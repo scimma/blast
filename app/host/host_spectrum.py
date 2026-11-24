@@ -32,10 +32,8 @@ def fetch_host_spectrum(position):
         Dict with keys 'hdulist', 'spectrum_id', 'redshift',
         'wavelength_min_angstrom', 'wavelength_max_angstrom', or None.
     """
-    timeout = settings.QUERY_TIMEOUT
-    time_start = time.time()
     logger.debug('''Acquiring host spectrum query lock...''')
-    while timeout > time.time() - time_start:
+    while True:
         if TaskLock.objects.request_lock('host_spectrum_query'):
             break
         logger.debug('''Waiting to acquire host spectrum query lock...''')

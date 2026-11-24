@@ -23,7 +23,7 @@ SERVICE_MONITOR_API_URL = os.getenv('SERVICE_MONITOR_API_URL', "")
 # Workflow task options
 SPARCL_WAIT_TIME_SEC = int(os.environ.get("SPARCL_WAIT_TIME_SEC", "2"))
 TNS_INGEST_TIMEOUT = int(os.environ.get("TNS_INGEST_TIMEOUT", "120"))
-QUERY_TIMEOUT = int(os.environ.get("QUERY_TIMEOUT", "60"))
+
 # QUERY_RETRIES is the default limit on the number of times a remote service query will be retried until successful.
 QUERY_RETRIES = int(os.environ.get("QUERY_RETRIES", "10"))
 TNS_SIMULATE = os.environ.get("TNS_SIMULATE", "false").lower() in ["true", "t", "1"]
