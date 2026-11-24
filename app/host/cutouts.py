@@ -146,8 +146,7 @@ def download_and_save_cutouts(
         #   (4) the Cutout object did not already exist.
         if overwrite or not cutout_file_exists or cutout_object.cropped or new_cutout_object:
             logger.debug(f'Downloading cutout "{cutout_name}"...')
-            fits, status, err = cutout(transient.sky_coord, filter, fov=fov, download_max_tries=2,
-                                       download_sleep_time=5)
+            fits, status, err = cutout(transient.sky_coord, filter, fov=fov)
             # If a download error occurred, report it and exit.
             if status == 1:
                 logger.error(f'Download error for "{cutout_name}": {err}')
